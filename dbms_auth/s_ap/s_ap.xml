@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+  <include file="./s_ap/pkg.sql" />
+  <include file="./s_ap/pkg_log.sql" />
+  <include file="./s_ap/pkg_access.sql" />
+  <include file="./s_ap/pkg_user.sql" />
+<include file="./s_ap/pkg_account.sql" />
+<include file="./s_ap/pkg_json_account.sql" />
+<include file="./s_ap/pkg_json_user.sql" />
+</databaseChangeLog>

@@ -1,0 +1,8 @@
+[[data]]
+ck_id = "bfl-app-01.developers"
+cv_ip = "192.168.154.46"
+[[data]]
+[data."$$indexCreated"]
+fieldName = "ck_id"
+unique = true
+sparse = false

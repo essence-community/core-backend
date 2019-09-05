@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+    <include file="./s_mp/pkg.sql" />
+    <include file="./s_mp/pkg_util.sql" />
+    <include file="./s_mp/pkg_log.sql" />
+    <include file="./s_mp/pkg_patcher.sql" />
+    <include file="./s_mp/pkg_access.sql" />
+    <include file="./s_mp/pkg_user.sql" />
+    <include file="./s_mp/pkg_scenario.sql" />
+    <include file="./s_mp/pkg_semaphore.sql" />
+    <include file="./s_mp/pkg_notification.sql" />
+    <include file="./s_mp/pkg_report.sql" />
+    <include file="./s_mp/pkg_meta.sql" />
+    <include file="./s_mp/pkg_json_meta.sql" />
+    <include file="./s_mp/pkg_json_notification.sql" />
+    <include file="./s_mp/pkg_json_scenario.sql" />
+    <include file="./s_mp/pkg_json_user.sql" />
+    <include file="./s_mp/pkg_json_util.sql" />
+    <include file="./s_mp/pkg_json_report.sql" />
+    <include file="./s_mp/pkg_json_semaphore.sql" />
+    <include file="./s_mp/pkg_json.sql" />
+</databaseChangeLog>

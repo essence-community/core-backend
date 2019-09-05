@@ -1,0 +1,10 @@
+{
+    "name": "@ungate-sheduler/getdataintegration",
+    "version": "1.0.0",
+    "description": "Плагин планировщика",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "Ivan Artemov (artemov_i@tii.ru)",
+    "license": "ISC"
+}

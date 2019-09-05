@@ -1,0 +1,36 @@
+{
+    "name": "@ungate/plugininf",
+    "version": "1.0.0",
+    "description": "Общие классы",
+    "main": "index.js",
+    "author": "Ivan Artemov (artemov_i@tii.ru)",
+    "license": "ISC",
+    "dependencies": {
+        "cron": "^1.6.0",
+        "js2xmlparser": "^3.0.0",
+        "lodash": "^4.17.11",
+        "nedb": "^1.8.0",
+        "nedb-multi": "^1.2.2",
+        "oracledb": "^3.0.1",
+        "pg": "^7.6.1",
+        "pg-cursor": "^1.3.0",
+        "pg-query-stream": "^2.0.0",
+        "rufus": "^0.5.7",
+        "soap": "^0.25.0",
+        "yesql": "^3.2.2"
+    },
+    "devDependencies": {
+        "@types/cron": "^1.6.0",
+        "@types/es6-promise": "^3.3.0",
+        "@types/lodash": "^4.14.119",
+        "@types/node": "^10.12.12",
+        "@types/oracledb": "^1.11.34",
+        "@types/pg": "^7.4.11",
+        "@types/pg-query-stream": "^1.0.2",
+        "@types/promise": "^7.1.30",
+        "@types/request": "^2.48.1",
+        "@types/soap": "^0.21.0",
+        "@types/yesql": "^3.2.1",
+        "tslint": "^5.11.0"
+    }
+}

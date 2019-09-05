@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+    <include file="./t_query/AuthGetAccountInfoFieldEdit.sql" />
+<include file="./t_query/AuthGetAccountInfoField.sql" />
+<include file="./t_query/AuthShowAccountInfo.sql" />
+<include file="./t_query/AuthShowAccount.sql" />
+<include file="./t_query/AuthShowAction.sql" />
+<include file="./t_query/AuthShowAvailableAccount.sql" />
+<include file="./t_query/AuthShowAvailableAction.sql" />
+<include file="./t_query/AuthShowAvailableRoleAction.sql" />
+<include file="./t_query/AuthShowAvailableRole.sql" />
+<include file="./t_query/AuthShowParamsInfo.sql" />
+<include file="./t_query/AuthShowParamsInfoType.sql" />
+<include file="./t_query/AuthShowRole.sql" />
+<include file="./t_query/AuthShowSelectedAccount.sql" />
+<include file="./t_query/AuthShowSelectedAction.sql" />
+<include file="./t_query/AuthShowSelectedRoleAction.sql" />
+<include file="./t_query/AuthShowSelectedRole.sql" />
+<include file="./t_query/Login.sql" />
+</databaseChangeLog>

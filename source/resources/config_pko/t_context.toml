@@ -1,0 +1,19 @@
+[[data]]
+ck_id = "core"
+cv_path = "/api"
+cv_description = "Основные настройки метаинформации"
+ck_d_plugin = "CoreOracleContext"
+
+  [data.cct_params]
+  debug = true
+  disableCache = true
+  user = "s_mc"
+  password = "s_mc"
+  poolMin = 1
+  poolMax = 100
+  connectString = "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=192.168.155.18)(PORT=1521))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=BFL)))"
+[[data]]
+[data."$$indexCreated"]
+fieldName = "ck_id"
+unique = true
+sparse = false

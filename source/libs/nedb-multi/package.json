@@ -1,0 +1,18 @@
+{
+    "name": "@ungate/nedb-multi",
+    "version": "1.0.0",
+    "description": "Fork nedb-multi",
+    "main": "index.js",
+    "author": "Ivan Artemov (artemov_i@tii.ru)",
+    "license": "ISC",
+    "dependencies": {
+        "@iarna/toml": "^2.2.1",
+        "axon": "^2.0.3",
+        "errio": "^1.2.2",
+        "js-yaml": "^3.12.1",
+        "lodash": "^4.17.11",
+        "msgpack-lite": "^0.1.26",
+        "nedb": "^1.8.0",
+        "nedb-multi": "^1.2.2"
+    }
+}

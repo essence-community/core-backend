@@ -1,0 +1,270 @@
+import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
+import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
+import IContext from "@ungate/plugininf/lib/IContext";
+import IProvider from "@ungate/plugininf/lib/IProvider";
+import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
+import IResult from "@ungate/plugininf/lib/IResult";
+import NullAuthProvider from "@ungate/plugininf/lib/NullAuthProvider";
+import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
+import { ReadStreamToArray } from "@ungate/plugininf/lib/stream/Util";
+import { isEmpty } from "@ungate/plugininf/lib/util/Util";
+import * as fs from "fs";
+import { forEach, noop } from "lodash";
+import Constants from "../../core/Constants";
+import GateSession from "../../core/session/GateSession";
+import PluginController, { IPlugins } from "./PluginController";
+
+interface IActionOptions {
+    gateContext: IContext;
+    provider: IProvider;
+    plugins: IPlugins[];
+    query: IGateQuery;
+}
+
+class ActionController {
+    public execute(options: IActionOptions): Promise<IResult> {
+        switch (options.gateContext.actionName) {
+            case "sql":
+                return this.handlerSql(options);
+            case "dml":
+                return this.handlerDml(options);
+            case "auth":
+                return this.handlerAuth(options);
+            case "file":
+                return this.handlerFile(options);
+            case "upload":
+                return this.handlerUpload(options);
+            case "getfile":
+                return this.handlerGetFile(options);
+            default:
+                throw new ErrorException(ErrorGate.NOT_IMPLEMENTED);
+        }
+    }
+    private async handlerAuth({
+        gateContext,
+        provider,
+        plugins,
+        query,
+    }: IActionOptions): Promise<IResult> {
+        let session;
+        if (gateContext.request.method.toUpperCase() !== "POST") {
+            throw new ErrorException(ErrorGate.REQUIRED_POST);
+        }
+        const resPlugin = await PluginController.applyPluginBeforeSession(
+            gateContext,
+            plugins,
+        );
+        if (resPlugin) {
+            session = await GateSession.createSession(
+                null,
+                "plugin",
+                resPlugin,
+            );
+        }
+        if (!session) {
+            const data = await (provider as NullAuthProvider).processAuth(
+                gateContext,
+                query,
+            );
+            if (gateContext.connection) {
+                const conn = gateContext.connection;
+                try {
+                    await conn.commit();
+                    await conn.release();
+                } catch (e) {
+                    conn.release().then(noop, noop);
+                    gateContext.error(e);
+                }
+            }
+            if (!data || isEmpty(data.ck_user)) {
+                throw new ErrorException(ErrorGate.AUTH_DENIED);
+            }
+            if (
+                await PluginController.applyPluginBeforeSaveSession(
+                    gateContext,
+                    plugins,
+                    data,
+                )
+            ) {
+                session = await (provider as NullAuthProvider).createSession(
+                    data.ck_user,
+                    data.data,
+                );
+            }
+        }
+        if (!session) {
+            throw new ErrorException(ErrorGate.AUTH_DENIED);
+        }
+        gateContext.debug(`Success authorization: ${JSON.stringify(session)}`);
+        return {
+            data: ResultStream([session]),
+            type: "success",
+        };
+    }
+    private handlerDml({
+        gateContext,
+        provider,
+        query,
+    }: IActionOptions): Promise<IResult> {
+        gateContext.trace("Process Dml");
+        return new Promise((resolve, reject) => {
+            provider
+                .processDml(gateContext, query)
+                .then((data) => {
+                    if (
+                        Object.prototype.hasOwnProperty.call(
+                            query.outParams,
+                            "EXTRACT_META_DATA",
+                        )
+                    ) {
+                        gateContext.metaData = isEmpty(data.metaData)
+                            ? {}
+                            : {
+                                  columnsBc: data.metaData,
+                              };
+                    }
+                    resolve({ type: "success", data: data.stream });
+                })
+                .catch((err) => {
+                    gateContext.error(
+                        `${gateContext.queryName}, Dml.processDml(${query.queryStr}): ${err.message}`,
+                        err,
+                    );
+                    return reject(err);
+                });
+        });
+    }
+    private handlerSql({
+        gateContext,
+        provider,
+        query,
+    }: IActionOptions): Promise<IResult> {
+        gateContext.trace("Process Sql");
+        return new Promise((resolve, reject) => {
+            provider
+                .processSql(gateContext, query)
+                .then((data) => {
+                    if (
+                        Object.prototype.hasOwnProperty.call(
+                            query.outParams,
+                            "EXTRACT_META_DATA",
+                        )
+                    ) {
+                        gateContext.metaData = isEmpty(data.metaData)
+                            ? {}
+                            : {
+                                  columnsBc: data.metaData,
+                              };
+                    }
+                    resolve({ type: "success", data: data.stream });
+                })
+                .catch((err) => {
+                    gateContext.error(
+                        `${gateContext.queryName}, Sql.processSql(${query.queryStr}): ${err.message}`,
+                        err,
+                    );
+                    return reject(err);
+                });
+        });
+    }
+    private handlerFile({
+        gateContext,
+        provider,
+        query,
+    }: IActionOptions): Promise<IResult> {
+        gateContext.trace("Process File");
+        return new Promise((resolve, reject) => {
+            provider
+                .processDml(gateContext, query)
+                .then((data) => {
+                    resolve({ type: "attachment", data: data.stream });
+                })
+                .catch((err) => {
+                    gateContext.error(
+                        `${gateContext.queryName}, File.processFile(${query.queryStr}): ${err.message}`,
+                        err,
+                    );
+                    return reject(err);
+                });
+        });
+    }
+    private handlerUpload({
+        gateContext,
+        provider,
+        query,
+    }: IActionOptions): Promise<IResult> {
+        gateContext.trace("Process Upload");
+        const result = [];
+        forEach(gateContext.request.body, (value, key) => {
+            if (value && value.length) {
+                result.push(
+                    value.reduce(
+                        (prom, val) =>
+                            prom.then((arr) => {
+                                query.inParams[key] = provider.fileInParams(
+                                    fs.readFileSync(val.path, null),
+                                );
+                                query.inParams[
+                                    `${key}${Constants.UPLOAD_FILE_NAME_SUFFIX}`
+                                ] = val.originalFilename;
+                                query.inParams[
+                                    `${key}${Constants.UPLOAD_FILE_MIMETYPE_SUFFIX}`
+                                ] = val.headers["content-type"];
+                                return provider
+                                    .processDml(gateContext, query)
+                                    .then((data) =>
+                                        ReadStreamToArray(data.stream),
+                                    )
+                                    .then(async (res) => arr.concat(res));
+                            }),
+                        Promise.resolve([]),
+                    ),
+                );
+            }
+        });
+        return Promise.all(result)
+            .then(
+                async (arr) =>
+                    ({
+                        data: ResultStream(
+                            arr && arr.length
+                                ? arr.reduce((ar, val) => [...ar, ...val], [])
+                                : [],
+                        ),
+                        type: "success",
+                    } as IResult),
+            )
+            .catch((err) => {
+                gateContext.error(
+                    `${gateContext.queryName},` +
+                        ` Upload.processDml(${query.queryStr}): ${err.message}`,
+                    err,
+                );
+                throw err;
+            });
+    }
+    private handlerGetFile({
+        gateContext,
+        provider,
+        query,
+    }: IActionOptions): Promise<IResult> {
+        gateContext.trace("Process GetFile");
+        return new Promise((resolve, reject) => {
+            provider
+                .processDml(gateContext, query)
+                .then((data) => {
+                    resolve({ type: "file", data: data.stream });
+                })
+                .catch((err) => {
+                    gateContext.error(
+                        `${gateContext.queryName},` +
+                            ` GetFile.processDml(${query.queryStr}): ${err.message}`,
+                        err,
+                    );
+                    return reject(err);
+                });
+        });
+    }
+}
+
+export default new ActionController();

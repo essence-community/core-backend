@@ -1,0 +1,36 @@
+[[data]]
+cv_description = "Оповещение bfl"
+ck_d_plugin = "CoreOracleNotification"
+ck_id = "bfl"
+
+  [data.cct_params]
+  authProvider = "auth"
+  user = "s_bc"
+  password = "s_bc"
+  connectString = "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=bfl-db)(PORT=1521))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=BFL)))"
+
+[[data]]
+cv_description = "Оповещение meta"
+ck_d_plugin = "CoreOracleNotification"
+ck_id = "meta"
+
+  [data.cct_params]
+  authProvider = "auth"
+  user = "s_mc"
+  password = "s_mc"
+  connectString = "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=bfl-db)(PORT=1521))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=BFL)))"
+
+[[data]]
+cv_description = "Семафор meta"
+ck_d_plugin = "CoreOracleSemaphore"
+ck_id = "semaphore"
+
+  [data.cct_params]
+  user = "s_mc"
+  password = "s_mc"
+  connectString = "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=bfl-db)(PORT=1521))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=BFL)))"
+[[data]]
+[data."$$indexCreated"]
+fieldName = "ck_id"
+unique = true
+sparse = false

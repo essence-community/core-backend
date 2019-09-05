@@ -1,0 +1,16 @@
+{
+    "name": "@ungate-provider/ad-auth",
+    "version": "1.0.0",
+    "description": "Провайдер авторизации Active Directory",
+    "author": "Ivan Artemov (artemov_i@tii.ru)",
+    "license": "ISC",
+    "dependencies": {
+        "@ungate/plugininf": "^1.0.0",
+        "activedirectory": "^0.7.2",
+        "jsrsasign": "^8.0.12",
+        "lodash": "^4.17.11"
+    },
+    "devDependencies": {
+        "@types/lodash": "^4.14.120"
+    }
+}
