@@ -26,6 +26,11 @@ export default abstract class NullAuthProvider extends NullProvider {
                 name: "Возвращаем только полученую сессию",
                 type: "boolean",
             },
+            sessionDuration: {
+                defaultValue: 60,
+                name: "Время жизни сессии в минутах по умолчанию 60 минут",
+                type: "integer",
+            },
         };
     }
     public isAuth: boolean = true;
