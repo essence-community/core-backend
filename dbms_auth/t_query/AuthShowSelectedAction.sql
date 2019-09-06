@@ -9,7 +9,8 @@ select /*Pagination*/
        t.*
   from (
 select
-    a.ck_id as ck_action,
+  ra.ck_id,
+  a.ck_id as ck_action,
 	a.cv_name,
 	a.cv_description,
 	ra.ck_user,

@@ -325,7 +325,7 @@ begin
   perform pkg_account.p_lock_account(vot_account_role.ck_account::varchar);
   for vot_account_role_r in (
     select
-      nullif(trim(r.res->>'ck_id'), '') as ck_role
+      nullif(trim(r.res->>'ck_role'), '') as ck_role
     from jsonb_array_elements(pc_json->'data') as r(res)
   ) loop 
 	vot_account_role.ck_role = vot_account_role_r.ck_role;
@@ -422,10 +422,10 @@ begin
   perform pkg_account.p_lock_action(vot_role_action.ck_action::varchar);
   for vot_role_action_r in (
     select
-      nullif(trim(r.res->>'ck_id'), '') as ck_id
+      nullif(trim(r.res->>'ck_role'), '') as ck_role
     from jsonb_array_elements(pc_json->'data') as r(res)
   ) loop 
-	vot_role_action.ck_role = vot_role_action_r.ck_id;
+	vot_role_action.ck_role = vot_role_action_r.ck_role;
   	perform pkg_account.p_modify_role_action(vv_action, vot_role_action);
   end loop;
   -- логируем данные
@@ -568,7 +568,7 @@ begin
   perform pkg_account.p_lock_role(vot_account_role.ck_role::varchar);
   for vot_account_role_r in (
     select
-      nullif(trim(r.res->>'ck_id'), '') as ck_account
+      nullif(trim(r.res->>'ck_account'), '') as ck_account
     from jsonb_array_elements(pc_json->'data') as r(res)
   ) loop 
 	vot_account_role.ck_account = vot_account_role_r.ck_account;
