@@ -472,7 +472,7 @@ begin
     if pot_class_attr.cl_required is null or pot_class_attr.cl_required not in (0, 1) then
       perform pkg.p_set_error(38);
     end if;
-    if pot_class_attr.ck_attr in ('width', 'columnwidth') and pot_class_attr.cv_value is not null and
+    if pot_class_attr.ck_attr in ('width', 'columnwidth', 'contentwidth') and pot_class_attr.cv_value is not null and 
        pkg_util.f_check_string_is_percentage(pot_class_attr.cv_value) = 0 then
       perform pkg.p_set_error(55);
     end if;
@@ -1197,7 +1197,7 @@ begin
     -- check percentage for "width"/"columnwidth"
     for vcur_check in (select 1
                          from s_mt.t_class_attr ca
-                        where ca.ck_attr in ('width', 'columnwidth')
+                        where ca.ck_attr in ('width', 'columnwidth', 'contentwidth')
                           and ca.ck_id = pot_object_attr.ck_class_attr
                           and pot_object_attr.cv_value is not null
                           and pkg_util.f_check_string_is_percentage(pot_object_attr.cv_value) = 0) loop
@@ -1830,7 +1830,7 @@ begin
     -- check percentage for "width"/"columnwidth"
     for vcur_check in (select 1
                          from s_mt.t_class_attr ca
-                        where ca.ck_attr in ('width', 'columnwidth')
+                        where ca.ck_attr in ('width', 'columnwidth', 'contentwidth')
                           and ca.ck_id = pot_page_object_attr.ck_class_attr
                           and pot_page_object_attr.cv_value is not null
                           and pkg_util.f_check_string_is_percentage(pot_page_object_attr.cv_value) = 0) loop
