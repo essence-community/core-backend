@@ -76,8 +76,13 @@ export function initProcess(
             (message as ISenderOptions).id !== process.pid &&
             controller[(message as ISenderOptions).command]
         ) {
-            if ('object' === typeof (message as ISenderOptions).data && (message as ISenderOptions).data.type === 'Buffer') {
-                (message as ISenderOptions).data = MSG.decode(Buffer.from((message as ISenderOptions).data.data));
+            if (
+                "object" === typeof (message as ISenderOptions).data &&
+                (message as ISenderOptions).data.type === "Buffer"
+            ) {
+                (message as ISenderOptions).data = MSG.decode(
+                    Buffer.from((message as ISenderOptions).data.data),
+                );
             }
             const data = await controller[
                 (message as ISenderOptions).command
