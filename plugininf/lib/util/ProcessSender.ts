@@ -1,5 +1,6 @@
 import Logger from "../Logger";
 const logger = Logger.getLogger("ProcessSender");
+import * as MSG from "msgpack-lite";
 
 export type TTarget =
     | "cluster"
@@ -38,6 +39,9 @@ export async function sendProcess(
         );
     }
     if (process && process.send) {
+        if (option.data) {
+            option.data = MSG.encode(option.data);
+        }
         process.send(option);
     }
 }
@@ -72,6 +76,9 @@ export function initProcess(
             (message as ISenderOptions).id !== process.pid &&
             controller[(message as ISenderOptions).command]
         ) {
+            if ('object' === typeof (message as ISenderOptions).data && (message as ISenderOptions).data.type === 'Buffer') {
+                (message as ISenderOptions).data = MSG.decode(Buffer.from((message as ISenderOptions).data.data));
+            }
             const data = await controller[
                 (message as ISenderOptions).command
             ].call(controller, (message as ISenderOptions).data);
