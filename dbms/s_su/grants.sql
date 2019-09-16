@@ -263,3 +263,7 @@ GRANT SELECT, UPDATE, INSERT, DELETE ON TABLE public.dual TO s_mp;
 GRANT SELECT, UPDATE, INSERT, DELETE ON TABLE s_mt.t_dynamic_report TO s_mp;
 
 GRANT SELECT ON TABLE s_mt.t_dynamic_report TO s_mc;
+
+GRANT SELECT, UPDATE, INSERT, DELETE ON TABLE s_mt.t_module_class TO s_mp;
+
+GRANT SELECT ON TABLE s_mt.t_module_class TO s_mc;

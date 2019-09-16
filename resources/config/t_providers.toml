@@ -3,87 +3,42 @@ ck_id = "admingate"
 cv_description = "Провайдер администрирования"
 ck_d_plugin = "admingate"
 cl_autoload = 0
-
-  [data.cct_params]
-  defaultNeedSession = true
-  defaultType = 0
-  defaultUseMacros = false
-  needSession = "true"
-  cctBuckets = '{"reports":{"accessKeyId":"QMPFV8D7WEED_65D1SOJ","secretAccessKey":"rBEdnuNX1b1Yt0f_SWGsl-Iu1H2PkEZFCvitDQ=="},"module":{"accessKeyId":"VYBDS-M9UAXEA13OAZG8","secretAccessKey":"fLK_vaKQCd0i0lqKHpEVlmtQk37jKiI0Tywrmw=="}}'
-  cvRiakUrl = "http://192.168.154.27:8080"
+cct_params = { }
 
 [[data]]
 ck_id = "auth"
 cv_description = "Провайдер авторизации"
 cl_autoload = true
-ck_d_plugin = "AuthCrmWs"
+ck_d_plugin = "AuthMock"
 
   [data.cct_params]
-  cronReset = "0 0 1 * * *"
-  cnSystem = 23
-  clAudit = true
-  queryAuth = "qiGUICCrmLogin"
-  queryMetaUsers = "qiGUICCrmGetUserInfo"
-  queryUsersActions = "qiGUICCrmGetUsersActions"
-  queryUsersDepartments = "qiGUICCrmGetUsersDepartments"
-  queryDepartments = "qiGUICCrmGetDepartments"
-  queryToken = "qiGUICCrmGetToken"
-  queryGetCrmUrl = "GetURLforCRM"
-  urlCrmTemplate = "http://192.168.154.110/ru.tii.crm_training/loginSilent.jsf?accessToken={cv_token}"
-  sessionDuration = 9_999
-  urlWSDL = "http://192.168.154.110/ru.tii.crm.ws.iota3/services/CrmWs?wsdl"
-  nsiGateUrl = "http://zeta/gate_nsi_api_test"
+  adminUser = "admin_core"
+  adminPassword = "123456"
+  viewUser = "view_core"
 
 [[data]]
-ck_id = "bfl"
-cv_description = "Провайдер работы с БФЛ"
-cl_autoload = true
-ck_d_plugin = "OracleDb"
+ck_id = "authcore"
+cl_autoload = 1
+ck_d_plugin = "coreauthpg"
+cv_description = "Провайдер внутренней авторизации"
 
   [data.cct_params]
-  core = true
-  user = "s_bc"
-  password = "s_bc"
-  poolMin = 5
-  poolMax = 100
-  connectString = "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=bfl-db)(PORT=1521))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=BFL)))"
+  connectString = "postgres://s_ac:s_ac@postgres:5432/core_auth"
+  poolMax = 10
+  sessionDuration = 2_000
+  onlySession = false
 
 [[data]]
 ck_id = "meta"
 cv_description = "Провайдер работы с метаинформацией"
 cl_autoload = true
-ck_d_plugin = "OracleDb"
+ck_d_plugin = "PostgreSQLDb"
 
   [data.cct_params]
   core = true
-  user = "s_mc"
-  password = "s_mc"
-  poolMin = 5
+  poolMin = 1
   poolMax = 100
-  connectString = "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=bfl-db)(PORT=1521))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=BFL)))"
-
-[[data]]
-ck_id = "s_ic"
-cv_description = "Провайдер работы с Интеграцией"
-ck_d_plugin = "CoreOracleIntegration"
-
-  [data.cct_params]
-  user = "s_ic"
-  password = "s_ic"
-  poolMin = 5
-  poolMax = 100
-  connectString = "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=bfl-db)(PORT=1521))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=BFL)))"
-  proxy = "http://proxy.developers:8080"
-
-[[data]]
-ck_id = "uspo"
-ck_d_plugin = "PostgreSQLDb"
-cv_description = "Провайдер USPO"
-
-  [data.cct_params]
-  tempTableSession = false
-  poolMax = 100
-  connectString = "postgres://uspo_dev:uspo_dev@192.168.154.46:5432/uspo_dev"
+  connectString = "postgres://s_su:s_su@postgres:5432/core"
 [[data]]
 [data."$$indexCreated"]
 fieldName = "ck_id"

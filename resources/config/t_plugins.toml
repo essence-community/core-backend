@@ -1,23 +1,26 @@
 [[data]]
-cv_name = "preparequery"
-cv_description = "Плагин преобразования запросов filter,sort"
-ck_d_provider = "bfl"
-ck_d_plugin = "PrepareQuery"
-cl_required = 1
+cv_name = "ModuleStorage"
+cv_description = "Место хранения модулей"
+ck_d_provider = "meta"
+ck_d_plugin = "ModuleStorage"
+cl_required = 0
 cl_default = 0
-cct_params = { }
-ck_id = "PrepareQuerybfl"
-cn_order = 1
+ck_id = "ModuleStorage:meta"
+cn_order = 3
+
+  [data.cct_params]
+  cvTypeStorage = "dir"
+  cvPath = "/dist/module"
 
 [[data]]
 cv_name = "preparequery"
 cv_description = "Плагин преобразования запросов filter,sort"
-ck_d_provider = "s_ic"
+ck_d_provider = "authcore"
 ck_d_plugin = "PrepareQuery"
 cl_required = 1
 cl_default = 0
 cct_params = { }
-ck_id = "PrepareQueryintegration"
+ck_id = "PrepareQuery:authcore"
 cn_order = 1
 
 [[data]]
@@ -28,90 +31,17 @@ ck_d_plugin = "PrepareQuery"
 cl_required = 1
 cl_default = 0
 cct_params = { }
-ck_id = "PrepareQuerymeta"
+ck_id = "PrepareQuery:meta"
 cn_order = 1
-
-[[data]]
-cv_name = "preparequery"
-cv_description = "Плагин преобразования запросов filter,sort"
-ck_d_provider = "uspo"
-ck_d_plugin = "PrepareQuery"
-cl_required = 1
-cl_default = 0
-cct_params = { }
-ck_id = "PrepareQueryuspo"
-cn_order = 1
-
-[[data]]
-cv_name = "printjasperserver"
-ck_d_provider = "meta"
-ck_d_plugin = "USPOIntegration"
-cv_description = "Плагин печати"
-cl_required = 0
-cl_default = 0
-ck_id = "TRdnORgtbfZQgUDg"
-cn_order = 3
-
-  [data.cct_params]
-  urlReceiver = "http://192.168.154.46:8000/uspo-print-receiver-dev"
-  prefixPath = "/reportserverbfl-dev"
-  exportUrl = "c821e316-173d-4f71-b6a5-6a16f3bde6b3"
-  queryNotification = "MTAddNotification"
-
-[[data]]
-cv_name = "printjasperserver"
-ck_d_provider = "bfl"
-ck_d_plugin = "USPOIntegration"
-cv_description = "Плагин печати"
-cl_required = 0
-cl_default = 0
-ck_id = "VR5Ml7YjzeBNT80c"
-cn_order = 3
-
-  [data.cct_params]
-  urlReceiver = "http://192.168.154.46:8000/uspo-print-receiver-dev"
-  prefixPath = "/reportserverbfl-dev"
-  exportUrl = "c821e316-173d-4f71-b6a5-6a16f3bde6b3"
-  queryNotification = "MTAddNotification"
-
-[[data]]
-cv_name = "printjasperserver"
-ck_d_provider = "uspo"
-ck_d_plugin = "USPOIntegration"
-cv_description = "Плагин печати"
-cl_required = 0
-cl_default = 0
-ck_id = "VR5Ml7YjzeUSPO"
-cn_order = 3
-
-  [data.cct_params]
-  urlReceiver = "http://192.168.154.46:8000/uspo-print-receiver-dev"
-  prefixPath = "/reportserverbfl-dev"
-  exportUrl = "c821e316-173d-4f71-b6a5-6a16f3bde6b3"
-  queryNotification = "MTAddNotification"
 
 [[data]]
 cv_name = "extractrow"
 cv_description = "Плагин распаковывания вложеного json"
-ck_d_provider = "bfl"
+ck_d_provider = "authcore"
 ck_d_plugin = "JsonRowColumnExtractor"
 cl_required = 1
 cl_default = 0
-ck_id = "extractRowbfl"
-cn_order = 2
-
-  [data.cct_params]
-  extractSingleColumn = true
-  columns = "json,result"
-
-[[data]]
-cv_name = "extractrow"
-cv_description = "Плагин распаковывания вложеного json"
-ck_d_provider = "s_ic"
-ck_d_plugin = "JsonRowColumnExtractor"
-cl_required = 1
-cl_default = 0
-ck_id = "extractRowintegration"
+ck_id = "extractRow:authcore"
 cn_order = 2
 
   [data.cct_params]
@@ -125,43 +55,12 @@ ck_d_provider = "meta"
 ck_d_plugin = "JsonRowColumnExtractor"
 cl_required = 1
 cl_default = 0
-ck_id = "extractRowmeta"
+ck_id = "extractRow:meta"
 cn_order = 2
 
   [data.cct_params]
   extractSingleColumn = true
   columns = "json,result"
-
-[[data]]
-cv_name = "extractrow"
-cv_description = "Плагин распаковывания вложеного json"
-ck_d_provider = "uspo"
-ck_d_plugin = "JsonRowColumnExtractor"
-cl_required = 1
-cl_default = 0
-ck_id = "extractRowuspo"
-cn_order = 2
-
-  [data.cct_params]
-  extractSingleColumn = true
-  columns = "json,result"
-
-[[data]]
-ck_id = "filestore:bfl"
-cv_name = "filestore"
-ck_d_provider = "bfl"
-ck_d_plugin = "s3storage"
-cl_required = 0
-cn_order = 100
-cl_default = 0
-cv_description = "Сохранение файла в RIAK"
-
-  [data.cct_params]
-  cvBucket = "bfl-docs"
-  cvDirColumn = "ck_d_doc"
-  cvKeyId = "ZDFWWAPG9_9TVDWUZYDE"
-  cvS3Url = "http://192.168.154.27:8080"
-  cvSecretKey = "h5g3Wydjb8LX_x1LOCMKAA2T0_swCybKjzVhqA=="
 [[data]]
 [data."$$indexCreated"]
 fieldName = "ck_id"

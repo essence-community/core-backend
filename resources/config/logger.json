@@ -2,12 +2,12 @@
     "handlers": {
         "errors": {
             "class": "rufus/handlers/file",
-            "file": "./logs/error.log",
+            "file": "/var/log/ungate_error.log",
             "level": "ERROR"
         },
         "main": {
             "class": "rufus/handlers/rotating",
-            "file": "c:/logs/main.log",
+            "file": "/var/log/ungate_main.log",
             "maxSize": "30mb",
             "maxFile": "30"
         },
@@ -18,7 +18,7 @@
     "loggers": {
         "root": {
             "level": "TRACE",
-            "handlers": ["main", "console"]
+            "handlers": ["main", "errors"]
         }
     }
 }
