@@ -802,16 +802,16 @@ begin
                               jt.cv_description,
                               jt.cv_name,
                               jt.cv_type,
-                              c.ck_id as ck_class,
-                              ca.ck_id as ck_class_attr,
+                              wmc.ck_class,
+                              wmc.ck_class_attr,
                               case
-                                when c.ck_id is not null then
+                                when wmc.ck_class is not null then
                                 'U'
                                 else
                                 'I'
                               end as cv_action,
                               case
-                                when ca.ck_id is not null then
+                                when wmc.ck_class_attr is not null then
                                 'U'
                                 else
                                 'I'
@@ -821,13 +821,14 @@ begin
                                       (vcur_class.cj_class#>>'{class,cv_description}') as cv_description,
                                       (vcur_class.cj_class#>>'{class,cv_name}') as cv_name,
                                       (vcur_class.cj_class#>>'{class,cv_type}') as cv_type
-                                from dual) jt     
-                        left join s_mt.t_module m 
-                           on (pv_action = u::varchar and m.ck_id = pot_module.ck_id)
-                           or (pv_action = i::varchar and m.ck_id = vv_id)
-                        left join s_mt.t_module_class mc on m.ck_id = mc.ck_module
-                        left join s_mt.t_class c on mc.ck_class = c.ck_id and upper(jt.cv_name) = upper(c.cv_name)
-                        left join s_mt.t_class_attr ca on c.ck_id = ca.ck_class and ca.ck_attr = 'type') loop
+                                from dual) jt
+                        left join (select c.ck_id as ck_class, ca.ck_id as ck_class_attr, m.ck_id as ck_module, ca.cv_value from s_mt.t_module m
+                             join s_mt.t_module_class mc on m.ck_id = mc.ck_module
+                             join s_mt.t_class c on mc.ck_class = c.ck_id
+                             left join s_mt.t_class_attr ca on c.ck_id = ca.ck_class and ca.ck_attr = 'type') as wmc
+                          on (pv_action = u::varchar and wmc.ck_module = pot_module.ck_id)
+                           or (pv_action = i::varchar and (wmc.ck_module = vv_id or wmc.cv_value = jt.cv_type))
+                        ) loop
             vot_class.ck_id          := vcur.ck_class;
             vot_class.cv_name        := vcur.cv_name;
             vot_class.cl_final       := vcur.cl_final::smallint;
@@ -872,12 +873,10 @@ begin
                                       (t.dt->>'cv_description') as cv_description 
                                 from jsonb_array_elements(vcur_class.cj_class->'attributes') as t(dt)) jt
                         full join (select distinct a.ck_id, a.ck_attr_type, a.cv_description, c.cv_name
-                                    from s_mt.t_module m
-                                    inner join s_mt.t_module_class mc on mc.ck_module = m.ck_id
-                                    inner join s_mt.t_class c on mc.ck_class = c.ck_id and upper(c.cv_name) = upper(vcur_class.cj_class#>>'{class,cv_name}')
+                                    from s_mt.t_class c
                                     inner join s_mt.t_class_attr ca on c.ck_id = ca.ck_class
                                     inner join s_mt.t_attr a on ca.ck_attr = a.ck_id
-                                    where (m.ck_id = pot_module.ck_id or (pv_action = i::varchar and m.ck_id = vv_id))
+                                    where c.ck_id = vot_class.ck_id
                                       and a.ck_id != 'type') ca on jt.ck_id = ca.ck_id
                                                               and jt.ck_attr_type = ca.ck_attr_type
                         left join s_mt.t_attr atr on atr.ck_id = jt.ck_id) loop
@@ -926,11 +925,9 @@ begin
                                       (t.dt->>'cv_description') as cv_description 
                                 from jsonb_array_elements(vcur_class.cj_class->'class_attributes') as t(dt)) jt
                         full join (select ca.ck_id, ca.ck_attr
-                                    from s_mt.t_module m
-                                    inner join s_mt.t_module_class mc on mc.ck_module = m.ck_id
-                                    inner join s_mt.t_class c on mc.ck_class = c.ck_id and upper(c.cv_name) = upper(vcur_class.cj_class#>>'{class,cv_name}')
+                                    from s_mt.t_class c
                                     inner join s_mt.t_class_attr ca on c.ck_id = ca.ck_class
-                                    where (m.ck_id = pot_module.ck_id or (pv_action = i::varchar and m.ck_id = vv_id))
+                                    where c.ck_id = vot_class.ck_id
                                       and ca.ck_attr != 'type') ca on jt.ck_attr = ca.ck_attr
                         where jt.ck_attr is not null
                           or ca.ck_attr is not null) loop
@@ -978,11 +975,9 @@ begin
                         from (
                               -- Выбираем все связи класса, для того чтобы удалить лишние или проверять что такое связи ещё нет и добавить её
                               select ch.ck_id, ch.ck_class_parent, ch.ck_class_child, ch.ck_class_attr
-                                from s_mt.t_module m
-                                inner join s_mt.t_module_class mc on mc.ck_module = m.ck_id
-                                inner join s_mt.t_class c on mc.ck_class = c.ck_id and upper(c.cv_name) = upper(vcur_class.cj_class#>>'{class,cv_name}')
+                                from s_mt.t_class c
                                 inner join s_mt.t_class_hierarchy ch on c.ck_id in (ch.ck_class_parent, ch.ck_class_child)
-                                where m.ck_id = pot_module.ck_id or (pv_action = i::varchar and m.ck_id = vv_id)) ch
+                                where c.ck_id = vot_class.ck_id) ch
                         full join (
                                   -- Собираем идентификаторы связок, которые будет проверять и добавлять при необходимости
                                   select t.ck_class_parent, t.ck_class_child, ca.ck_id as ck_class_attr
@@ -1017,7 +1012,7 @@ begin
             vot_class_hierarchy.ck_user         := vot_class.ck_user;
             vot_class_hierarchy.ct_change       := vot_class.ct_change;
             if (vot_class_hierarchy.ck_id is not null and vcur.cv_action = 'D') or 
-            (vot_class_hierarchy.ck_class_parent is not null and vot_class_hierarchy.ck_class_child and vot_class_hierarchy.ck_class_attr) then
+            (vot_class_hierarchy.ck_class_parent is not null and vot_class_hierarchy.ck_class_child is not null and vot_class_hierarchy.ck_class_attr is not null) then
                 vot_class_hierarchy := pkg_meta.p_modify_class_hierarchy(vcur.cv_action, vot_class_hierarchy);
             end if;
             
