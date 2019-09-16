@@ -863,7 +863,7 @@ begin
                                 when jt.ck_id is not null and atr.ck_id is null then
                                 'I'
                                 when jt.ck_id is null and ca.ck_id is not null then
-                                'D'
+                                null
                                 else
                                 'U'
                               end as cv_action,
@@ -886,19 +886,7 @@ begin
             vot_attr.ck_user        := pot_module.ck_user;
             vot_attr.ct_change      := CURRENT_TIMESTAMP;
           
-            if vcur.cv_action = d::varchar then
-              select count(*) cn
-              into vn_count
-              from s_mt.t_attr a
-              join s_mt.t_class_attr ca on ca.ck_attr = a.ck_id
-              join s_mt.t_class c on c.ck_id = ca.ck_class
-              where a.ck_id = vcur.ck_id and c.ck_id != vot_class.ck_id
-              and c.cv_name <> vcur.cv_name;
-              if vn_count > 0 then
-                exit;
-              end if;
-            end if;
-            if nullif(gv_error::varchar, '') is null then
+            if vcur.cv_action is not null and nullif(gv_error::varchar, '') is null then
               vot_attr := pkg_meta.p_modify_attr(vcur.cv_action, vot_attr);
             end if;
           end loop;
