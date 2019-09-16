@@ -826,8 +826,8 @@ begin
                              join s_mt.t_module_class mc on m.ck_id = mc.ck_module
                              join s_mt.t_class c on mc.ck_class = c.ck_id
                              left join s_mt.t_class_attr ca on c.ck_id = ca.ck_class and ca.ck_attr = 'type') as wmc
-                          on (pv_action = u::varchar and wmc.ck_module = pot_module.ck_id)
-                           or (pv_action = i::varchar and (wmc.ck_module = vv_id or wmc.cv_value = jt.cv_type))
+                          on ((pv_action = u::varchar and wmc.ck_module = pot_module.ck_id)
+                           or (pv_action = i::varchar and wmc.ck_module = vv_id)) and wmc.cv_value = jt.cv_type
                         ) loop
             vot_class.ck_id          := vcur.ck_class;
             vot_class.cv_name        := vcur.cv_name;
@@ -856,29 +856,21 @@ begin
           end if;
 
           -- Добавляем/Изменяем атрибуты
-          for vcur in (select coalesce(jt.ck_attr_type, ca.ck_attr_type) as ck_attr_type,
-                              coalesce(jt.cv_description, ca.cv_description) as cv_description,
-                              coalesce(jt.ck_id, ca.ck_id) as ck_id,
+          for vcur in (select coalesce(jt.ck_attr_type, atr.ck_attr_type) as ck_attr_type,
+                              coalesce(jt.cv_description, atr.cv_description) as cv_description,
+                              coalesce(jt.ck_id, atr.ck_id) as ck_id,
                               case
                                 when jt.ck_id is not null and atr.ck_id is null then
                                 'I'
-                                when jt.ck_id is null and ca.ck_id is not null then
+                                when jt.ck_id is null then
                                 null
                                 else
                                 'U'
-                              end as cv_action,
-                              ca.cv_name
+                              end as cv_action
                         from (select (t.dt->>'ck_attr') as ck_id, 
                                       (t.dt->>'ck_attr_type') as ck_attr_type, 
                                       (t.dt->>'cv_description') as cv_description 
                                 from jsonb_array_elements(vcur_class.cj_class->'attributes') as t(dt)) jt
-                        full join (select distinct a.ck_id, a.ck_attr_type, a.cv_description, c.cv_name
-                                    from s_mt.t_class c
-                                    inner join s_mt.t_class_attr ca on c.ck_id = ca.ck_class
-                                    inner join s_mt.t_attr a on ca.ck_attr = a.ck_id
-                                    where c.ck_id = vot_class.ck_id
-                                      and a.ck_id != 'type') ca on jt.ck_id = ca.ck_id
-                                                              and jt.ck_attr_type = ca.ck_attr_type
                         left join s_mt.t_attr atr on atr.ck_id = jt.ck_id) loop
             vot_attr.ck_id          := vcur.ck_id;
             vot_attr.ck_attr_type   := vcur.ck_attr_type;
