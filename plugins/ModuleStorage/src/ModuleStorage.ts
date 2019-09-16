@@ -282,6 +282,7 @@ export default class ModuleStorage extends NullPlugin {
                 buffer.on("error", (err) => reject(err));
                 buffer.on("end", () => resolve());
                 buffer.pipe(ws);
+                return;
             }
             fs.writeFile(`${param.cvPath}${path}`, buffer, (err) => {
                 if (err) {
