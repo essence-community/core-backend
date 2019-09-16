@@ -134,3 +134,41 @@ COMMENT ON COLUMN s_mt.t_dynamic_report.ck_user IS 'Индетификатор �
 COMMENT ON COLUMN s_mt.t_dynamic_report.ct_change IS 'Время модификации';
 ALTER TABLE s_mt.t_dynamic_report ALTER COLUMN ck_query TYPE varchar(255) USING ck_query::varchar;
 ALTER TABLE s_mt.t_dynamic_report ALTER COLUMN ck_page TYPE varchar(32) USING ck_page::varchar;
+
+--changeset artemov_i:CORE-206 dbms:postgresql
+ALTER TABLE s_mt.t_module ADD cc_config text NOT NULL;
+COMMENT ON COLUMN s_mt.t_module.cc_config IS 'Файл описания модуля';
+ALTER TABLE s_mt.t_module ALTER COLUMN cc_manifest SET NOT NULL;
+ALTER TABLE s_mt.t_module ALTER COLUMN ck_class SET NOT NULL;
+ALTER TABLE s_mt.t_module ADD cv_version_api varchar(100) NOT NULL;
+COMMENT ON COLUMN s_mt.t_module.cv_version_api IS 'Версия апи';
+ALTER TABLE s_mt.t_module ALTER COLUMN cv_version TYPE varchar(100) USING cv_version::varchar;
+
+--changeset artemov_i:CORE-206_1 dbms:postgresql
+CREATE TABLE s_mt.t_module_class (
+	ck_id varchar(32) NOT NULL DEFAULT public.sys_guid(),
+	ck_module varchar(32) NOT NULL,
+	ck_class varchar(32) NOT NULL,
+	ck_user varchar(150) NOT NULL,
+	ct_change timestamptz NOT NULL,
+	CONSTRAINT cin_p_module_class PRIMARY KEY (ck_id),
+	CONSTRAINT cin_u_module_class_1 UNIQUE (ck_module,ck_class)
+);
+ALTER TABLE s_mt.t_module_class ADD CONSTRAINT cin_r_module_class_1 FOREIGN KEY (ck_module) REFERENCES s_mt.t_module(ck_id);
+ALTER TABLE s_mt.t_module_class ADD CONSTRAINT cin_r_module_class_2 FOREIGN KEY (ck_class) REFERENCES s_mt.t_class(ck_id);
+
+COMMENT ON TABLE s_mt.t_module_class IS 'Связь модулей с классами';
+
+COMMENT ON COLUMN s_mt.t_module_class.ck_id IS 'Идентификатор';
+COMMENT ON COLUMN s_mt.t_module_class.ck_module IS 'Идентификатор модуля';
+COMMENT ON COLUMN s_mt.t_module_class.ck_class IS 'Идентификатор класса';
+COMMENT ON COLUMN s_mt.t_module_class.ck_user IS 'Идентификатор юзера аудит';
+COMMENT ON COLUMN s_mt.t_module_class.ct_change IS 'Время модификации';
+
+insert into s_mt.t_module_class (ck_module, ck_class, ck_user, ct_change)
+select ck_id as ck_module, ck_class, ck_user, ct_change from s_mt.t_module;
+
+ALTER TABLE s_mt.t_module DROP COLUMN ck_class;
+
+INSERT INTO s_mt.t_sys_setting (ck_id,cv_value,ck_user,ct_change,cv_description)
+	VALUES ('module_url','/api_module','4fd05ca9-3a9e-4d66-82df-886dfa082113','2019-09-14 23:54:25.693','Контекст получения модулей');

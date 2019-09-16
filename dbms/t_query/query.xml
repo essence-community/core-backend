@@ -89,6 +89,7 @@
     <include file="./t_query/GTGetSchedulerParam.sql" />
     <include file="./t_query/MTClassAttrList.sql" />
     <include file="./t_query/GetModuleList.sql" />
+    <include file="./t_query/GetModuleClassList.sql" />
     <include file="./t_query/MTPageObject.sql" />
     <include file="./t_query/MTIcon.sql" />
     <include file="./t_query/MTRefreshPageObject.sql" />

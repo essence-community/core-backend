@@ -263,13 +263,14 @@ begin
   perform pkg.p_reset_response();
   --JSON -> rowtype
   vot_module.ck_id = nullif(trim(pc_json->'data'->>'ck_id'), '');
-  vot_module.ck_class = nullif(trim(pc_json->'data'->>'ck_class'), '');
   vot_module.cv_name = nullif(trim(pc_json->'data'->>'cv_name'), '');
   vot_module.ck_user = pv_user;
   vot_module.ct_change = CURRENT_TIMESTAMP;
   vot_module.cv_version = nullif(trim(pc_json->'data'->>'cv_version'), '');
+  vot_module.cv_version_api = nullif(trim(pc_json->'data'->>'cv_version_api'), '');
   vot_module.cl_available = (pc_json->'data'->>'cl_available')::int2;
-  vot_module.cc_manifest = trim(pc_json->'data'->>'manifest')::jsonb;
+  vot_module.cc_manifest = trim(pc_json->'data'->>'cc_manifest')::json;
+  vot_module.cc_config = trim(pc_json->'data'->>'cc_config')::json;
   vv_action = (pc_json->'service'->>'cv_action');
   -- Проверим права доступа
   perform pkg_access.p_check_access(pv_user, vot_module.ck_id);

@@ -5,3 +5,4 @@ yarn-error.log
 nohup.out
 source/server/bin/Constants.js
 bin
+*.log
