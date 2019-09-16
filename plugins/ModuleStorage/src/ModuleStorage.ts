@@ -145,7 +145,9 @@ export default class ModuleStorage extends NullPlugin {
             forEach(gateContext.request.body as Files, (val) => {
                 if (val && val.length) {
                     val.forEach((value) => {
-                        rows.push(this.extractZip(gateContext, json, value, query));
+                        rows.push(
+                            this.extractZip(gateContext, json, value, query),
+                        );
                     });
                 }
             });
@@ -291,28 +293,30 @@ export default class ModuleStorage extends NullPlugin {
     }
     private deletePath(path: string): Promise<void> {
         return new Promise((resolve, reject) => {
-            this.clients.headObject({
-                Bucket: this.params.cvS3Bucket,
-                Key: path,
-            }, (er) => {
+            this.clients.headObject(
+                {
+                    Bucket: this.params.cvS3Bucket,
+                    Key: path,
+                },
+                (er) => {
                     if (er) {
                         this.logger.debug(er);
                         return resolve();
                     }
-                this.clients.deleteObject(
-                    {
-                        Bucket: this.params.cvS3Bucket,
-                        Key: path,
-                    },
-                    (err) => {
-                        if (err) {
-                            return reject(err);
-                        }
-                        return resolve();
-                    },
-                );   
-            })
-            
+                    this.clients.deleteObject(
+                        {
+                            Bucket: this.params.cvS3Bucket,
+                            Key: path,
+                        },
+                        (err) => {
+                            if (err) {
+                                return reject(err);
+                            }
+                            return resolve();
+                        },
+                    );
+                },
+            );
         });
     }
     private deletePathDir(path: string): Promise<void> {

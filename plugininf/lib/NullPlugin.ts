@@ -7,8 +7,7 @@ import IObjectParam from "./IObjectParam";
 import IPlugin, { IPluginRequestContext } from "./IPlugin";
 import IQuery, { IGateQuery } from "./IQuery";
 import IResult from "./IResult";
-import Logger from './Logger';
-
+import Logger from "./Logger";
 
 export default abstract class NullPlugin implements IPlugin {
     public name: string;
