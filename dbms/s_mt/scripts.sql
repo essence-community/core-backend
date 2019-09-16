@@ -136,11 +136,11 @@ ALTER TABLE s_mt.t_dynamic_report ALTER COLUMN ck_query TYPE varchar(255) USING 
 ALTER TABLE s_mt.t_dynamic_report ALTER COLUMN ck_page TYPE varchar(32) USING ck_page::varchar;
 
 --changeset artemov_i:CORE-206 dbms:postgresql
-ALTER TABLE s_mt.t_module ADD cc_config text NOT NULL;
+ALTER TABLE s_mt.t_module ADD cc_config text NOT NULL DEFAULT '{}'::varchar;
 COMMENT ON COLUMN s_mt.t_module.cc_config IS 'Файл описания модуля';
 ALTER TABLE s_mt.t_module ALTER COLUMN cc_manifest SET NOT NULL;
 ALTER TABLE s_mt.t_module ALTER COLUMN ck_class SET NOT NULL;
-ALTER TABLE s_mt.t_module ADD cv_version_api varchar(100) NOT NULL;
+ALTER TABLE s_mt.t_module ADD cv_version_api varchar(100) NOT NULL DEFAULT ''::varchar;
 COMMENT ON COLUMN s_mt.t_module.cv_version_api IS 'Версия апи';
 ALTER TABLE s_mt.t_module ALTER COLUMN cv_version TYPE varchar(100) USING cv_version::varchar;
 
