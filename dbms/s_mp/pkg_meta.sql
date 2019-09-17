@@ -781,7 +781,7 @@ begin
                             inner join s_mt.t_class c on ch.ck_class_parent = c.ck_id
                             inner join s_mt.t_module_class mc on mc.ck_class = c.ck_id
                             inner join s_mt.t_module m on m.ck_id = mc.ck_module
-                            where m.ck_id != pot_module.ck_id
+                            where m.ck_id != pot_module.ck_id and trim(lower(m.cv_name)) != trim(lower(pot_module.cv_name))
                             ) t
                     where (t.cn_available <> 1 and t.cl_available = 0 or t.cl_available = 0)) loop
       if vcur.cv_class != '""' then
