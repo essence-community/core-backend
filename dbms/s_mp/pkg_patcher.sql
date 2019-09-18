@@ -13,7 +13,7 @@ AS $function$
 declare
   vot_class_attr record;
 begin
-  for vot_class_attr in (select attr.ck_class, attr.ck_attr, a.ck_attr_type
+  for vot_class_attr in (select attr.ck_id, a.ck_attr_type
                            from s_mt.t_class_attr attr
                            join s_mt.t_attr a
                              on attr.ck_attr = a.ck_id
@@ -22,48 +22,27 @@ begin
                                    from jsonb_array_elements_text(pj_json))) loop
     if vot_class_attr.ck_attr_type = 'basic' then
       delete from s_mt.t_page_object_attr pa
-       where pa.ck_page_object in
-             (select po.ck_id
-                from s_mt.t_page_object po
-                join s_mt.t_object o
-                  on po.ck_object = o.ck_id
-               where o.ck_class = vot_class_attr.ck_class)
-         and pa.ck_class_attr = vot_class_attr.ck_attr;
+       where pa.ck_class_attr = vot_class_attr.ck_id;
       delete from s_mt.t_object_attr oa
-       where oa.ck_object in
-             (select o.ck_id
-                from s_mt.t_object o
-               where o.ck_class = vot_class_attr.ck_class)
-         and oa.ck_class_attr = vot_class_attr.ck_attr;
+       where oa.ck_class_attr = vot_class_attr.ck_id;
       delete from s_mt.t_class_attr ca
-       where ca.ck_id = vot_class_attr.ck_class
-         and ca.ck_attr = vot_class_attr.ck_attr;
+       where ca.ck_id = vot_class_attr.ck_id;
     end if;
     if vot_class_attr.ck_attr_type = 'system' then
       delete from s_mt.t_class_attr ca
-       where ca.ck_id = vot_class_attr.ck_class
-         and ca.ck_attr = vot_class_attr.ck_attr;
+       where ca.ck_id = vot_class_attr.ck_id;
     end if;
     if vot_class_attr.ck_attr_type = 'placement' then
       delete from s_mt.t_class_hierarchy ch
-       where ch.ck_class_parent = vot_class_attr.ck_class
-         and ch.ck_class_attr = vot_class_attr.ck_attr;
+       where ch.ck_class_attr = vot_class_attr.ck_id;
       delete from s_mt.t_class_attr ca
-       where ca.ck_id = vot_class_attr.ck_class
-         and ca.ck_attr = vot_class_attr.ck_attr;
+       where ca.ck_id = vot_class_attr.ck_id;
     end if;
     if vot_class_attr.ck_attr_type = 'behavior' then
       delete from s_mt.t_page_object_attr pa
-       where pa.ck_page_object in
-             (select po.ck_id
-                from s_mt.t_page_object po
-                join s_mt.t_object o
-                  on po.ck_object = o.ck_id
-               where o.ck_class = vot_class_attr.ck_class)
-         and pa.ck_class_attr = vot_class_attr.ck_attr;
+       where pa.ck_class_attr = vot_class_attr.ck_id;
       delete from s_mt.t_class_attr ca
-       where ca.ck_id = vot_class_attr.ck_class
-         and ca.ck_attr = vot_class_attr.ck_attr;
+       where ca.ck_id = vot_class_attr.ck_id;
     end if;
   end loop;
 end;
