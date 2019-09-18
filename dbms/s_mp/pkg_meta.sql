@@ -1637,6 +1637,7 @@ begin
 
       if nullif(gv_error::varchar, '') is null then
         /*При вставке записи берем все дочерние элементы и вставляем в той же иерархии, что и в объекте.*/
+        pot_page_object.ck_id := sys_guid();
         insert into s_mt.t_page_object(ck_id, ck_parent, ck_master, ck_object, ck_page, cn_order, ck_user, ct_change)
         (
           select
@@ -1652,7 +1653,7 @@ begin
             with recursive
               t(ck_id, ck_parent, ck_object, ck_object_parent, cn_level, cn_order) as (
                 select
-                  cast(sys_guid() as varchar(32)),
+                  pot_page_object.ck_id,
                   pot_page_object.ck_parent,
                   a.ck_id,
                   a.ck_parent,
