@@ -172,3 +172,6 @@ ALTER TABLE s_mt.t_module DROP COLUMN ck_class;
 
 INSERT INTO s_mt.t_sys_setting (ck_id,cv_value,ck_user,ct_change,cv_description)
 	VALUES ('module_url','/api_module','4fd05ca9-3a9e-4d66-82df-886dfa082113','2019-09-14 23:54:25.693','Контекст получения модулей');
+
+--changeset kutsenko:CORE-1249 dbms:postgresql
+UPDATE s_mt.t_sys_setting SET ck_id='g_sys_module_url' WHERE ck_id='module_url';
