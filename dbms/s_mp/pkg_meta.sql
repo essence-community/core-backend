@@ -1600,11 +1600,11 @@ begin
       for vcur_object in (
         select 1
         from s_mt.t_page_object o
-        where ((pot_page_object.ck_parent is not null and o.ck_parent = pot_page_object.ck_parent) or o.ck_parent is null)
+        where ((pot_page_object.ck_parent is not null and o.ck_parent = pot_page_object.ck_parent)
+         or (pot_page_object.ck_parent is null and o.ck_parent is null))
          and o.ck_page = pot_page_object.ck_page
          and o.cn_order = pot_page_object.cn_order
-         and ((o.ck_id != pot_page_object.ck_id and pv_action = u::varchar)
-              or (pot_page_object.ck_id is null and pv_action = i::varchar))
+         and ((pot_page_object.ck_id is not null and o.ck_id != pot_page_object.ck_id) or pot_page_object.ck_id is null) 
       ) loop
         perform  pkg.p_set_error(34);
         return;
