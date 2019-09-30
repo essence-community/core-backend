@@ -795,7 +795,7 @@ begin
     end if;
     if pot_module.cl_available = 1 or vv_id is null then
       --распаковываем манифест
-      for vcur_class in (select value as cj_class from jsonb_array_elements(pot_module.cc_manifest)) loop
+      for vcur_class in (select value as cj_class from jsonb_array_elements(pot_module.cc_manifest::jsonb)) loop
           -- Добавляем/Изменяем класс модуля
           for vcur in (select jt.cl_dataset,
                               jt.cl_final,
@@ -930,7 +930,7 @@ begin
           end if;
       end loop;
 
-      for vcur_class in (select value as cj_class from jsonb_array_elements(pot_module.cc_manifest)) loop
+      for vcur_class in (select value as cj_class from jsonb_array_elements(pot_module.cc_manifest::jsonb)) loop
           --Находим класс
           select ck_id
             into vot_class.ck_id
