@@ -1,7 +1,7 @@
 cd %~dp0
 set PATHLIQUIBASE=liquibase
 if exist liquibase\liquibase (
-    set PATHLIQUIBASE=
+    set PATHLIQUIBASE=liquibase\liquibase
 )
 if exist ..\dbms\liquibase\liquibase (
     set PATHLIQUIBASE=..\dbms\liquibase\liquibase
