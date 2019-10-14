@@ -323,7 +323,7 @@ class MainController {
                         { cl_required: 1 },
                     ],
                 },
-                { ck_d_provider: gateContext.providerName },
+                { ck_d_provider: { $in: ["all", gateContext.providerName] } },
             ],
         });
         configs.sort((val1, val2) => val1.cn_order - val2.cn_order);

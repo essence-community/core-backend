@@ -175,3 +175,7 @@ INSERT INTO s_mt.t_sys_setting (ck_id,cv_value,ck_user,ct_change,cv_description)
 
 --changeset kutsenko:CORE-1249 dbms:postgresql
 UPDATE s_mt.t_sys_setting SET ck_id='g_sys_module_url' WHERE ck_id='module_url';
+
+--changeset kutsenko:CORE-1267 dbms:postgresql
+INSERT INTO s_mt.t_sys_setting (ck_id,cv_value,ck_user,ct_change,cv_description)
+	VALUES ('g_sys_gate_url','/api','-11','2019-10-11 13:10:31.709','URL шлюза');
