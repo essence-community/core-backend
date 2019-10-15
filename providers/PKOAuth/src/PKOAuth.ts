@@ -371,8 +371,19 @@ export default class PKOAuth extends NullAuthProvider {
                 reject(new ErrorException(ErrorGate.AUTH_DENIED));
                 return;
             }
+            if (isEmpty(user.userCertificate)) {
+                this.log.error("User not valid certificate %j, userCertificate not pem", user);
+                reject(new ErrorException(ErrorGate.AUTH_DENIED));
+                return;
+            }
             const x509 = new X509();
-            x509.readCertPEM(user.userCertificate);
+            try {
+                x509.readCertPEM(user.userCertificate);
+            } catch (e) {
+                this.log.error("User not valid certificate %j", user, e);
+                reject(new ErrorException(ErrorGate.AUTH_DENIED));
+                return;
+            }
             if (
                 x509.getSerialNumberHex().toLocaleUpperCase() !==
                 (gateContext.request.headers[
@@ -380,9 +391,9 @@ export default class PKOAuth extends NullAuthProvider {
                 ] as string).toLocaleUpperCase()
             ) {
                 this.log.error(
-                    `Not valid certificate Serial-ad: ${x509
+                    `Not valid certificate Serial-In-AD: ${x509
                         .getSerialNumberHex()
-                        .toLocaleUpperCase()}, Serial-forwarded: ${(gateContext
+                        .toLocaleUpperCase()}, Serial-Forwarded: ${(gateContext
                         .request.headers[
                         "forwarded-ssl-client-m-serial"
                     ] as string).toLocaleUpperCase()}`,

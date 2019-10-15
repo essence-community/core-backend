@@ -68,7 +68,7 @@ class MainController {
                         session
                             ? [
                                   {
-                                      session: requestContext.sessionId,
+                                      session: session.session,
                                       ...session.data,
                                   },
                               ]
