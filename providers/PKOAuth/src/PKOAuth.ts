@@ -372,7 +372,10 @@ export default class PKOAuth extends NullAuthProvider {
                 return;
             }
             if (isEmpty(user.userCertificate)) {
-                this.log.error("User not valid certificate %j, userCertificate not pem", user);
+                this.log.error(
+                    "User not valid certificate %j, userCertificate not pem",
+                    user,
+                );
                 reject(new ErrorException(ErrorGate.AUTH_DENIED));
                 return;
             }
