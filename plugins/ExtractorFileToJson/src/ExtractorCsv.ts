@@ -30,31 +30,31 @@ export interface ICsvOptions {
 }
 
 export const getColumnNumber = (columnName) => {
-    let i = columnName.search(/\d/)
-    let colNum = 0
+    let i = columnName.search(/\d/);
+    let colNum = 0;
     columnName = +columnName.replace(/\D/g, (letter) => {
-      colNum += (parseInt(letter, 36) - 9) * Math.pow(26, --i)
-      return ''
-    })
-  
-    return colNum
-  }
-  
- export const getColumnName = (columnNumber: string | number) => {
+        colNum += (parseInt(letter, 36) - 9) * Math.pow(26, --i);
+        return "";
+    });
+
+    return colNum;
+};
+
+export const getColumnName = (columnNumber: string | number) => {
     if (isEmpty(columnNumber)) {
         return "";
-    } 
-  
-     let columnName = '';
-     let dividend = parseInt(columnNumber as string, 10);
-     let modulo = 0;
+    }
+
+    let columnName = "";
+    let dividend = parseInt(columnNumber as string, 10);
+    let modulo = 0;
     while (dividend > 0) {
         modulo = (dividend - 1) % 26;
         columnName = String.fromCharCode(65 + modulo).toString() + columnName;
-        dividend = Math.floor(((dividend - modulo) / 26));
+        dividend = Math.floor((dividend - modulo) / 26);
     }
-     return columnName;
-  }
+    return columnName;
+};
 
 export class ExtractorCsv extends EventEmitter {
     private csv: CsvParserStream;

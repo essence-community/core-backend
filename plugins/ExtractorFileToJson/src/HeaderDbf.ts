@@ -1,6 +1,6 @@
-import { isEmpty } from '@ungate/plugininf/lib/util/Util';
+import { isEmpty } from "@ungate/plugininf/lib/util/Util";
 import * as fs from "fs";
-import { getColumnName } from './ExtractorCsv';
+import { getColumnName } from "./ExtractorCsv";
 
 export interface IField {
     name: string;
@@ -44,7 +44,9 @@ export default class HeaderDbf {
                 result.push(buffer.slice(i, i + 32));
             }
 
-            this.fields = result.map((buf, index) => this.parseFieldSubRecord(buf, index));
+            this.fields = result.map((buf, index) =>
+                this.parseFieldSubRecord(buf, index),
+            );
 
             callback();
         });
@@ -65,7 +67,9 @@ export default class HeaderDbf {
             .replace(/[\u0000]+$/, "")
             .replace(/.*(\d*).*/gi, "$1");
         return {
-            name: isEmpty(name) ? getColumnName(index+1) : getColumnName(name),
+            name: isEmpty(name)
+                ? getColumnName(index + 1)
+                : getColumnName(name),
             type: buffer.slice(11, 12).toString(this.encoding),
             // tslint:disable-next-line: object-literal-sort-keys
             displacement: this.convertBinaryToInteger(buffer.slice(12, 16)),

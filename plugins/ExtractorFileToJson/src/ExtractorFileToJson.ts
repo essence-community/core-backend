@@ -192,15 +192,19 @@ export default class ExtractorFileToJson extends NullPlugin {
                         this.params.cnRowSize,
                         {
                             encoding: json.data.cv_file_encoding || "utf-8",
-                            escape: json.data.cv_csv_escape || "\"",
-                            delimiter: json.data.cv_csv_delimiter || this.params.cvCsvDelimiter,
+                            escape: json.data.cv_csv_escape || '"',
+                            delimiter:
+                                json.data.cv_csv_delimiter ||
+                                this.params.cvCsvDelimiter,
                             quote: Object.prototype.hasOwnProperty.call(
                                 json.data,
                                 "cv_csv_quote",
-                            ) ? json.data.cv_csv_quote : "\"",
+                            )
+                                ? json.data.cv_csv_quote
+                                : '"',
                             objectMode: true,
                             ignoreEmpty: json.data.cv_csv_ignore_empty || false,
-                        }
+                        },
                     );
                     const queues = [];
                     let numPack = -1;
@@ -338,10 +342,15 @@ export default class ExtractorFileToJson extends NullPlugin {
         pack: any[],
         query: IGateQuery,
         index: number = 1,
-        numPack: number = 0
+        numPack: number = 0,
     ) {
         if (this.logger.isDebugEnabled()) {
-            this.logger.debug("Num sheet: %s, Num pack: %s\nPack: %j", index, numPack, pack);
+            this.logger.debug(
+                "Num sheet: %s, Num pack: %s\nPack: %j",
+                index,
+                numPack,
+                pack,
+            );
         }
         query.inParams.json = JSON.stringify({
             ...json,
