@@ -146,7 +146,8 @@ export default class ExtractorFileToJson extends NullPlugin {
             }
             const json = JSON.parse(query.inParams.json);
             if (json.service.cv_action.toUpperCase() === "D") {
-                return this.deletePath(json.data.cv_file_guid);
+                await this.deletePath(json.data.cv_file_guid);
+                return;
             } else {
                 const file = await this.getFile(json.data.cv_file_guid);
                 const values = await this.extract(
@@ -156,6 +157,7 @@ export default class ExtractorFileToJson extends NullPlugin {
                     query,
                     false,
                 );
+                fs.unlinkSync(file.path);
                 return {
                     data: ResultStream(values),
                     type: "success",
