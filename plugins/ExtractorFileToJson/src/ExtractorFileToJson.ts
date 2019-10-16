@@ -81,6 +81,7 @@ export default class ExtractorFileToJson extends NullPlugin {
             );
             this.saveFile = storage.saveFile.bind(this);
             this.deletePath = storage.deletePath.bind(this);
+            this.getFile = storage.getFile.bind(this);
             return;
         }
         const s3storage = new S3Storage(
@@ -89,6 +90,7 @@ export default class ExtractorFileToJson extends NullPlugin {
         );
         this.saveFile = s3storage.saveFile.bind(this);
         this.deletePath = s3storage.deletePath.bind(this);
+        this.getFile = s3storage.getFile.bind(this);
     }
 
     public async beforeQueryExecutePerform(
@@ -145,6 +147,19 @@ export default class ExtractorFileToJson extends NullPlugin {
             const json = JSON.parse(query.inParams.json);
             if (json.service.cv_action.toUpperCase() === "D") {
                 return this.deletePath(json.data.cv_file_guid);
+            } else {
+                const file = await this.getFile(json.data.cv_file_guid);
+                const values = await this.extract(
+                    gateContext,
+                    json,
+                    file,
+                    query,
+                    false,
+                );
+                return {
+                    data: ResultStream(values),
+                    type: "success",
+                } as IResult;
             }
         }
         return;
@@ -161,16 +176,20 @@ export default class ExtractorFileToJson extends NullPlugin {
         json: any,
         file: IFile,
         query: IGateQuery,
+        isSave: boolean = true,
     ) {
         const cvFileUuid = json.data.cv_file_guid || uuidv4();
-        await this.saveFile(
-            cvFileUuid,
-            fs.createReadStream(file.path),
-            file.headers["content-type"],
-            file.size,
-        );
-
-        const rows = [];
+        if (isSave) {
+            await this.saveFile(
+                cvFileUuid,
+                fs.createReadStream(file.path),
+                file.headers["content-type"],
+                {
+                    originalFilename: file.originalFilename,
+                },
+                file.size,
+            );
+        }
         const newJson = JSON.stringify({
             ...json,
             data: {
@@ -184,96 +203,92 @@ export default class ExtractorFileToJson extends NullPlugin {
             file.originalFilename.toLowerCase().endsWith(".csv") ||
             file.headers["content-type"] === "text/csv"
         ) {
-            rows.push(
-                new Promise((resolve, reject) => {
-                    let result = [];
-                    const extractCsv = new ExtractorCsv(
-                        file.path,
-                        this.params.cnRowSize,
-                        {
-                            encoding: json.data.cv_file_encoding || "utf-8",
-                            escape: json.data.cv_csv_escape || '"',
-                            delimiter:
-                                json.data.cv_csv_delimiter ||
-                                this.params.cvCsvDelimiter,
-                            quote: Object.prototype.hasOwnProperty.call(
-                                json.data,
-                                "cv_csv_quote",
-                            )
-                                ? json.data.cv_csv_quote
-                                : '"',
-                            objectMode: true,
-                            ignoreEmpty: json.data.cv_csv_ignore_empty || false,
-                        },
+            return new Promise((resolve, reject) => {
+                let result = [];
+                const extractCsv = new ExtractorCsv(
+                    file.path,
+                    this.params.cnRowSize,
+                    {
+                        encoding: json.data.cv_file_encoding || "utf-8",
+                        escape: json.data.cv_csv_escape || '"',
+                        delimiter:
+                            json.data.cv_csv_delimiter ||
+                            this.params.cvCsvDelimiter,
+                        quote: Object.prototype.hasOwnProperty.call(
+                            json.data,
+                            "cv_csv_quote",
+                        )
+                            ? json.data.cv_csv_quote
+                            : '"',
+                        objectMode: true,
+                        ignoreEmpty: json.data.cv_csv_ignore_empty || false,
+                    },
+                );
+                const queues = [];
+                let numPack = -1;
+                extractCsv.on("error", (err) => reject(err));
+                extractCsv.on("end", () =>
+                    Promise.all(queues)
+                        .then(() => resolve(result))
+                        .catch((e) => reject(e)),
+                );
+                extractCsv.on("pack", (pack) => {
+                    extractCsv.pause();
+                    queues.push(
+                        this.readSheet(
+                            gateContext,
+                            newJson,
+                            pack,
+                            query,
+                            1,
+                            (numPack += 1),
+                        ).then((res) => {
+                            result = [...result, ...res];
+                            extractCsv.resume();
+                            return res;
+                        }),
                     );
-                    const queues = [];
-                    let numPack = -1;
-                    extractCsv.on("error", (err) => reject(err));
-                    extractCsv.on("end", () =>
-                        Promise.all(queues)
-                            .then(() => resolve(result))
-                            .catch((e) => reject(e)),
-                    );
-                    extractCsv.on("pack", (pack) => {
-                        extractCsv.pause();
-                        queues.push(
-                            this.readSheet(
-                                gateContext,
-                                newJson,
-                                pack,
-                                query,
-                                1,
-                                (numPack += 1),
-                            ).then((res) => {
-                                result = [...result, ...res];
-                                extractCsv.resume();
-                                return res;
-                            }),
-                        );
-                    });
-                }),
-            );
+                });
+            });
         }
         if (
             file.originalFilename.toLowerCase().endsWith(".xlsx") ||
             file.headers["content-type"] ===
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         ) {
-            rows.push(
-                new Promise((resolve, reject) => {
-                    let result = [];
-                    const extractorXlsx = new ExtractorXlsx(
-                        file.path,
-                        this.params.cnRowSize,
+            return new Promise((resolve, reject) => {
+                let result = [];
+                const extractorXlsx = new ExtractorXlsx(
+                    file.path,
+                    this.params.cnRowSize,
+                );
+                const queues = [];
+                let numPack = -1;
+                extractorXlsx.on("error", (err) => reject(err));
+                extractorXlsx.on("end", () =>
+                    Promise.all(queues)
+                        .then(() => resolve(result))
+                        .catch((e) => reject(e)),
+                );
+                extractorXlsx.on("pack", (pack, id) => {
+                    extractorXlsx.pause();
+                    queues.push(
+                        this.readSheet(
+                            gateContext,
+                            newJson,
+                            pack,
+                            query,
+                            id,
+                            (numPack += 1),
+                        ).then((res) => {
+                            result = [...result, ...res];
+                            extractorXlsx.resume();
+                            return res;
+                        }),
                     );
-                    const queues = [];
-                    let numPack = -1;
-                    extractorXlsx.on("error", (err) => reject(err));
-                    extractorXlsx.on("end", () =>
-                        Promise.all(queues)
-                            .then(() => resolve(result))
-                            .catch((e) => reject(e)),
-                    );
-                    extractorXlsx.on("pack", (pack, id) => {
-                        extractorXlsx.pause();
-                        queues.push(
-                            this.readSheet(
-                                gateContext,
-                                newJson,
-                                pack,
-                                query,
-                                id,
-                                (numPack += 1),
-                            ).then((res) => {
-                                result = [...result, ...res];
-                                extractorXlsx.resume();
-                                return res;
-                            }),
-                        );
-                    });
-                    extractorXlsx.process();
-                }),
-            );
+                });
+                extractorXlsx.process();
+            });
         }
         if (
             file.originalFilename.toLowerCase().endsWith(".dbf") ||
@@ -281,51 +296,55 @@ export default class ExtractorFileToJson extends NullPlugin {
             file.headers["content-type"] === "application/dbf" ||
             file.headers["content-type"] === "application/x-dbf"
         ) {
-            rows.push(
-                new Promise((resolve, reject) => {
-                    let result = [];
-                    const queues = [];
-                    let numPack = -1;
-                    const extractorDbf = new ExtractorDbf(
-                        file.path,
-                        this.params.cnRowSize,
-                        json.data.cv_file_encoding || "utf-8",
+            return new Promise((resolve, reject) => {
+                let result = [];
+                const queues = [];
+                let numPack = -1;
+                const extractorDbf = new ExtractorDbf(
+                    file.path,
+                    this.params.cnRowSize,
+                    json.data.cv_file_encoding || "utf-8",
+                );
+                extractorDbf.on("error", (err) => reject(err));
+                extractorDbf.on("end", () =>
+                    Promise.all(queues)
+                        .then(() => resolve(result))
+                        .catch((e) => reject(e)),
+                );
+                extractorDbf.on("pack", (pack) => {
+                    extractorDbf.pause();
+                    queues.push(
+                        this.readSheet(
+                            gateContext,
+                            newJson,
+                            pack,
+                            query,
+                            1,
+                            (numPack += 1),
+                        ).then((res) => {
+                            result = [...result, ...res];
+                            extractorDbf.resume();
+                            return res;
+                        }),
                     );
-                    extractorDbf.on("error", (err) => reject(err));
-                    extractorDbf.on("end", () =>
-                        Promise.all(queues)
-                            .then(() => resolve(result))
-                            .catch((e) => reject(e)),
-                    );
-                    extractorDbf.on("pack", (pack) => {
-                        extractorDbf.pause();
-                        queues.push(
-                            this.readSheet(
-                                gateContext,
-                                newJson,
-                                pack,
-                                query,
-                                1,
-                                (numPack += 1),
-                            ).then((res) => {
-                                result = [...result, ...res];
-                                extractorDbf.resume();
-                                return res;
-                            }),
-                        );
-                    });
-                }),
-            );
+                });
+            });
         }
-        return Promise.all(rows);
+        throw new ErrorException(
+            -1,
+            `Неизвестный формат файла ${file.originalFilename} mime ${file.headers["content-type"]}`,
+        );
     }
     private saveFile = (
         path: string,
         buffer: any,
         content: string,
+        metaData?: Record<string, string>,
         size?: number,
     ) => Promise.resolve();
     private deletePath = (path: string) => Promise.resolve();
+    private getFile = (key: string): Promise<IFile> =>
+        Promise.resolve({} as IFile);
 
     /**
      * Читаем страницы

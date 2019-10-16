@@ -1,10 +1,13 @@
 import * as fs from "fs";
+import * as os from "os";
 import * as Path from "path";
 import { IRufusLogger } from "rufus";
-import { IPluginParams } from "./ExtractorFileToJson.types";
+import * as uuidv4 from "uuidv4";
+import { IFile, IPluginParams } from "./ExtractorFileToJson.types";
 export class DirStorage {
     private params: IPluginParams;
     private logger: IRufusLogger;
+    private UPLOAD_DIR: string = process.env.GATE_UPLOAD_DIR || os.tmpdir();
     constructor(params: IPluginParams, logger: IRufusLogger) {
         this.params = params;
         this.logger = logger;
@@ -18,12 +21,13 @@ export class DirStorage {
      * @returns
      */
     public saveFile(
-        path: string,
+        key: string,
         buffer: any,
         content: string,
+        metaData: Record<string, string> = {},
         size: number = Buffer.byteLength(buffer),
     ): Promise<void> {
-        const prePath = path.startsWith("/") ? path : `/${path}`;
+        const prePath = key.startsWith("/") ? key : `/${key}`;
         return new Promise((resolve, reject) => {
             const dir = Path.dirname(`${this.params.cvPath}${prePath}`);
             if (!fs.existsSync(dir)) {
@@ -31,6 +35,14 @@ export class DirStorage {
                     recursive: true,
                 });
             }
+            fs.writeFileSync(
+                `${this.params.cvPath}${prePath}.meta`,
+                JSON.stringify({
+                    ...metaData,
+                    ContentLength: size,
+                    ContentType: content,
+                }),
+            );
             if (buffer.pipe) {
                 const ws = fs.createWriteStream(
                     `${this.params.cvPath}${prePath}`,
@@ -49,8 +61,8 @@ export class DirStorage {
             });
         });
     }
-    public deletePath(path: string): Promise<void> {
-        const prePath = path.startsWith("/") ? path : `/${path}`;
+    public deletePath(key: string): Promise<void> {
+        const prePath = key.startsWith("/") ? key : `/${key}`;
         return new Promise((resolve, reject) => {
             const file = `${this.params.cvPath}${prePath}`;
             if (!fs.existsSync(file)) {
@@ -61,6 +73,35 @@ export class DirStorage {
                     return reject(err);
                 }
                 resolve();
+            });
+        });
+    }
+
+    public getFile(key: string): Promise<IFile> {
+        const prePath = key.startsWith("/") ? key : `/${key}`;
+        return new Promise((resolve, reject) => {
+            const readFile = fs.createReadStream(
+                `${this.params.cvPath}${prePath}`,
+            );
+            const filePath = Path.join(this.UPLOAD_DIR, uuidv4());
+            const readMetaData = JSON.parse(
+                fs
+                    .readFileSync(`${this.params.cvPath}${prePath}.meta`)
+                    .toString(),
+            );
+            readFile.on("error", (err) => reject(err));
+            const writeFile = fs.createWriteStream(filePath);
+            writeFile.on("error", (err) => reject(err));
+            writeFile.on("end", () => {
+                resolve({
+                    fieldName: "upload",
+                    headers: {
+                        "content-type": readMetaData.ContentType,
+                    },
+                    originalFilename: readMetaData.originalFilename,
+                    path: filePath,
+                    size: readMetaData.ContentLength,
+                });
             });
         });
     }
