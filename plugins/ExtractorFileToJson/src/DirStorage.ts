@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as os from "os";
-import * as Path from "path";
+import * as path from "path";
 import { IRufusLogger } from "rufus";
 import { Readable } from "stream";
 import * as uuidv4 from "uuidv4";
@@ -32,7 +32,7 @@ export class DirStorage {
     ): Promise<void> {
         const prePath = key.startsWith("/") ? key : `/${key}`;
         return new Promise((resolve, reject) => {
-            const dir = Path.dirname(`${this.params.cvPath}${prePath}`);
+            const dir = path.dirname(`${this.params.cvPath}${prePath}`);
             if (!fs.existsSync(dir)) {
                 fs.mkdirSync(dir, {
                     recursive: true,
@@ -86,7 +86,7 @@ export class DirStorage {
             const readFile = fs.createReadStream(
                 `${this.params.cvPath}${prePath}`,
             );
-            const filePath = Path.join(this.UPLOAD_DIR, uuidv4());
+            const filePath = path.join(this.UPLOAD_DIR, uuidv4());
             const readMetaData = JSON.parse(
                 fs
                     .readFileSync(`${this.params.cvPath}${prePath}.meta`)
