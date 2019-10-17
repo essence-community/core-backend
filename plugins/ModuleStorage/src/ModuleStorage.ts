@@ -55,11 +55,12 @@ export default class ModuleStorage extends NullPlugin {
                 defaultValue: "riak",
                 name: "Тип хранилища: dir|aws|riak",
                 type: "string",
+                required: true,
             },
-
             cvPath: {
                 name: "Адрес Riak|Dir|Aws",
                 type: "string",
+                required: true,
             },
             cvS3Bucket: {
                 name: "Наименование корзины s3",
@@ -69,7 +70,6 @@ export default class ModuleStorage extends NullPlugin {
                 name: "Id key S3 Storage",
                 type: "string",
             },
-
             cvS3SecretKey: {
                 name: "Id key S3 Storage",
                 type: "password",

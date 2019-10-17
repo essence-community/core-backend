@@ -1,0 +1,21 @@
+{
+    "name": "@ungate-plugin/extract-file-to-json",
+    "version": "1.0.0",
+    "description": "Плагин преобразования табличных файлов в json",
+    "author": "Ivan Artemov (artemov_i@tii.ru)",
+    "license": "ISC",
+    "dependencies": {
+        "@ungate/plugininf": "^1.0.0",
+        "aws-sdk": "^2.404.0",
+        "fast-csv": "^3.4.0",
+        "lodash": "^4.17.11",
+        "mime": "^2.4.4",
+        "uuidv4": "^2.0.0",
+        "xlsx-stream-reader": "^1.1.0"
+    },
+    "devDependencies": {
+        "@types/aws-sdk": "^2.7.0",
+        "@types/lodash": "^4.14.120",
+        "@types/mime": "^2.0.1"
+    }
+}
