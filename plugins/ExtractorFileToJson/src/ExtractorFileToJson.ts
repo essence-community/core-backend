@@ -163,7 +163,7 @@ export default class ExtractorFileToJson extends NullPlugin {
         return;
     }
     /**
-     * Распаковываем zip и сохраняем в хранилище
+     * Распаковываем и сохраняем в хранилище
      * @param gateContext
      * @param json
      * @param file
@@ -199,94 +199,17 @@ export default class ExtractorFileToJson extends NullPlugin {
         } as IJson;
         if (
             file.originalFilename.toLowerCase().endsWith(".csv") ||
-            file.headers["content-type"] === "text/csv"
+            file.headers["content-type"] === "text/csv" ||
+            file.headers["content-type"] === "application/csv"
         ) {
-            return new Promise((resolve, reject) => {
-                let result = [];
-                const extractCsv = new ExtractorCsv(
-                    file.path,
-                    this.params.cnRowSize,
-                    {
-                        encoding: json.data.cv_file_encoding || "utf-8",
-                        escape: json.data.cv_csv_escape || '"',
-                        delimiter:
-                            json.data.cv_csv_delimiter ||
-                            this.params.cvCsvDelimiter,
-                        quote: Object.prototype.hasOwnProperty.call(
-                            json.data,
-                            "cv_csv_quote",
-                        )
-                            ? json.data.cv_csv_quote
-                            : '"',
-                        objectMode: true,
-                        ignoreEmpty: json.data.cv_csv_ignore_empty || false,
-                    },
-                );
-                const queues = [];
-                let numPack = -1;
-                extractCsv.on("error", (err) => reject(err));
-                extractCsv.on("end", () =>
-                    Promise.all(queues)
-                        .then(() => resolve(result))
-                        .catch((e) => reject(e)),
-                );
-                extractCsv.on("pack", (pack) => {
-                    extractCsv.pause();
-                    queues.push(
-                        this.readSheet(
-                            gateContext,
-                            newJson,
-                            pack,
-                            query,
-                            1,
-                            (numPack += 1),
-                        ).then((res) => {
-                            result = [...result, ...res];
-                            extractCsv.resume();
-                            return res;
-                        }),
-                    );
-                });
-            });
+            return this.parseCsv(gateContext, newJson, file, query);
         }
         if (
             file.originalFilename.toLowerCase().endsWith(".xlsx") ||
             file.headers["content-type"] ===
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         ) {
-            return new Promise((resolve, reject) => {
-                let result = [];
-                const extractorXlsx = new ExtractorXlsx(
-                    file.path,
-                    this.params.cnRowSize,
-                );
-                const queues = [];
-                let numPack = -1;
-                extractorXlsx.on("error", (err) => reject(err));
-                extractorXlsx.on("end", () =>
-                    Promise.all(queues)
-                        .then(() => resolve(result))
-                        .catch((e) => reject(e)),
-                );
-                extractorXlsx.on("pack", (pack, id) => {
-                    extractorXlsx.pause();
-                    queues.push(
-                        this.readSheet(
-                            gateContext,
-                            newJson,
-                            pack,
-                            query,
-                            id,
-                            (numPack += 1),
-                        ).then((res) => {
-                            result = [...result, ...res];
-                            extractorXlsx.resume();
-                            return res;
-                        }),
-                    );
-                });
-                extractorXlsx.process();
-            });
+            return this.parseXlsx(gateContext, newJson, file, query);
         }
         if (
             file.originalFilename.toLowerCase().endsWith(".dbf") ||
@@ -294,44 +217,146 @@ export default class ExtractorFileToJson extends NullPlugin {
             file.headers["content-type"] === "application/dbf" ||
             file.headers["content-type"] === "application/x-dbf"
         ) {
-            return new Promise((resolve, reject) => {
-                let result = [];
-                const queues = [];
-                let numPack = -1;
-                const extractorDbf = new ExtractorDbf(
-                    file.path,
-                    this.params.cnRowSize,
-                    json.data.cv_file_encoding || "utf-8",
-                );
-                extractorDbf.on("error", (err) => reject(err));
-                extractorDbf.on("end", () =>
-                    Promise.all(queues)
-                        .then(() => resolve(result))
-                        .catch((e) => reject(e)),
-                );
-                extractorDbf.on("pack", (pack) => {
-                    extractorDbf.pause();
-                    queues.push(
-                        this.readSheet(
-                            gateContext,
-                            newJson,
-                            pack,
-                            query,
-                            1,
-                            (numPack += 1),
-                        ).then((res) => {
-                            result = [...result, ...res];
-                            extractorDbf.resume();
-                            return res;
-                        }),
-                    );
-                });
-            });
+            return this.parseDbf(gateContext, newJson, file, query);
         }
         throw new ErrorException(
             -1,
             `Неизвестный формат файла ${file.originalFilename} mime ${file.headers["content-type"]}`,
         );
+    }
+    private parseCsv(
+        gateContext: IContext,
+        json: IJson,
+        file: IFile,
+        query: IGateQuery,
+    ) {
+        return new Promise((resolve, reject) => {
+            let result = [];
+            const extractCsv = new ExtractorCsv(
+                file.path,
+                this.params.cnRowSize,
+                {
+                    encoding: json.data.cv_file_encoding || "utf-8",
+                    escape: json.data.cv_csv_escape || '"',
+                    delimiter:
+                        json.data.cv_csv_delimiter ||
+                        this.params.cvCsvDelimiter,
+                    quote: Object.prototype.hasOwnProperty.call(
+                        json.data,
+                        "cv_csv_quote",
+                    )
+                        ? json.data.cv_csv_quote
+                        : '"',
+                    objectMode: true,
+                    ignoreEmpty: json.data.cv_csv_ignore_empty || false,
+                },
+            );
+            const queues = [];
+            let numPack = -1;
+            extractCsv.on("error", (err) => reject(err));
+            extractCsv.on("end", () =>
+                Promise.all(queues)
+                    .then(() => resolve(result))
+                    .catch((e) => reject(e)),
+            );
+            extractCsv.on("pack", (pack) => {
+                extractCsv.pause();
+                queues.push(
+                    this.readSheet(
+                        gateContext,
+                        json,
+                        pack,
+                        query,
+                        1,
+                        (numPack += 1),
+                    ).then((res) => {
+                        result = [...result, ...res];
+                        extractCsv.resume();
+                        return res;
+                    }),
+                );
+            });
+        });
+    }
+    private parseXlsx(
+        gateContext: IContext,
+        json: IJson,
+        file: IFile,
+        query: IGateQuery,
+    ) {
+        return new Promise((resolve, reject) => {
+            let result = [];
+            const extractorXlsx = new ExtractorXlsx(
+                file.path,
+                this.params.cnRowSize,
+            );
+            const queues = [];
+            let numPack = -1;
+            extractorXlsx.on("error", (err) => reject(err));
+            extractorXlsx.on("end", () =>
+                Promise.all(queues)
+                    .then(() => resolve(result))
+                    .catch((e) => reject(e)),
+            );
+            extractorXlsx.on("pack", (pack, id) => {
+                extractorXlsx.pause();
+                queues.push(
+                    this.readSheet(
+                        gateContext,
+                        json,
+                        pack,
+                        query,
+                        id,
+                        (numPack += 1),
+                    ).then((res) => {
+                        result = [...result, ...res];
+                        extractorXlsx.resume();
+                        return res;
+                    }),
+                );
+            });
+            extractorXlsx.process();
+        });
+    }
+    private parseDbf(
+        gateContext: IContext,
+        json: IJson,
+        file: IFile,
+        query: IGateQuery,
+    ) {
+        return new Promise((resolve, reject) => {
+            let result = [];
+            const queues = [];
+            let numPack = -1;
+            const extractorDbf = new ExtractorDbf(
+                file.path,
+                this.params.cnRowSize,
+                json.data.cv_file_encoding || "utf-8",
+            );
+            extractorDbf.on("error", (err) => reject(err));
+            extractorDbf.on("end", () =>
+                Promise.all(queues)
+                    .then(() => resolve(result))
+                    .catch((e) => reject(e)),
+            );
+            extractorDbf.on("pack", (pack) => {
+                extractorDbf.pause();
+                queues.push(
+                    this.readSheet(
+                        gateContext,
+                        json,
+                        pack,
+                        query,
+                        1,
+                        (numPack += 1),
+                    ).then((res) => {
+                        result = [...result, ...res];
+                        extractorDbf.resume();
+                        return res;
+                    }),
+                );
+            });
+        });
     }
     private saveFile = (
         path: string,
