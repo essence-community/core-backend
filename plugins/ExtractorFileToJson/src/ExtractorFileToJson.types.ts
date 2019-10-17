@@ -37,3 +37,13 @@ export interface IPluginParams extends ICCTParams {
     cvDir: string;
     cvDirColumn: string;
 }
+
+export interface IJson {
+    service: {
+        cv_action: string;
+    };
+    data: {
+        cv_file_guid?: string;
+        [key: string]: any;
+    };
+}

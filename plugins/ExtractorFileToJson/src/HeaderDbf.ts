@@ -1,6 +1,6 @@
 import { isEmpty } from "@ungate/plugininf/lib/util/Util";
 import * as fs from "fs";
-import { getColumnName } from "./ExtractorCsv";
+import { getColumnName } from "./Utils";
 
 export interface IField {
     name: string;

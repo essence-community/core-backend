@@ -3,6 +3,7 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import { IRufusLogger } from "rufus";
+import { Readable } from "stream";
 import * as uuidv4 from "uuidv4";
 import { IFile, IPluginParams } from "./ExtractorFileToJson.types";
 export class S3Storage {
@@ -51,10 +52,12 @@ export class S3Storage {
      */
     public saveFile(
         key: string,
-        buffer: any,
+        buffer: Buffer | Readable,
         content: string,
-        Metadata?: AWS.S3.Metadata,
-        size: number = Buffer.byteLength(buffer),
+        Metadata: Record<string, string> = {},
+        size: number = (buffer as Readable).pipe
+            ? Buffer.byteLength(buffer as Buffer)
+            : undefined,
     ): Promise<void> {
         return new Promise((resolve, reject) => {
             this.clients.putObject(

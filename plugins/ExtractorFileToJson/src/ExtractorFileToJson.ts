@@ -12,11 +12,17 @@ import { ReadStreamToArray } from "@ungate/plugininf/lib/stream/Util";
 import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
 import * as fs from "fs";
 import { forEach, isObject } from "lodash";
+import { Readable } from "stream";
 import * as uuidv4 from "uuidv4";
 import { DirStorage } from "./DirStorage";
 import { ExtractorCsv } from "./ExtractorCsv";
 import { ExtractorDbf } from "./ExtractorDbf";
-import { IFile, IFiles, IPluginParams } from "./ExtractorFileToJson.types";
+import {
+    IFile,
+    IFiles,
+    IJson,
+    IPluginParams,
+} from "./ExtractorFileToJson.types";
 import { ExtractorXlsx } from "./ExtractorXlsx";
 import { S3Storage } from "./S3Storage";
 
@@ -63,31 +69,21 @@ export default class ExtractorFileToJson extends NullPlugin {
             },
         };
     }
+    public params: IPluginParams;
     constructor(name: string, params: ICCTParams) {
         super(name, params);
-        this.params = initParams(
-            ExtractorFileToJson.getParamsInfo(),
-            params,
-        ) as IPluginParams;
+        this.params = initParams(ExtractorFileToJson.getParamsInfo(), params);
         if (isEmpty(this.params.cvTypeStorage)) {
-            this.saveFile = () => Promise.resolve();
-            this.deletePath = () => Promise.resolve();
             return;
         }
         if (this.params.cvTypeStorage === "dir") {
-            const storage = new DirStorage(
-                this.params as IPluginParams,
-                this.logger,
-            );
+            const storage = new DirStorage(this.params, this.logger);
             this.saveFile = storage.saveFile.bind(this);
             this.deletePath = storage.deletePath.bind(this);
             this.getFile = storage.getFile.bind(this);
             return;
         }
-        const s3storage = new S3Storage(
-            this.params as IPluginParams,
-            this.logger,
-        );
+        const s3storage = new S3Storage(this.params, this.logger);
         this.saveFile = s3storage.saveFile.bind(this);
         this.deletePath = s3storage.deletePath.bind(this);
         this.getFile = s3storage.getFile.bind(this);
@@ -116,7 +112,7 @@ export default class ExtractorFileToJson extends NullPlugin {
                 );
             }
             const rows = [];
-            const json = JSON.parse(query.inParams.json);
+            const json = JSON.parse(query.inParams.json) as IJson;
             forEach(gateContext.request.body as IFiles, (val) => {
                 if (val && val.length) {
                     val.forEach((value) => {
@@ -175,7 +171,7 @@ export default class ExtractorFileToJson extends NullPlugin {
      */
     public async extract(
         gateContext: IContext,
-        json: any,
+        json: IJson,
         file: IFile,
         query: IGateQuery,
         isSave: boolean = true,
@@ -192,7 +188,7 @@ export default class ExtractorFileToJson extends NullPlugin {
                 file.size,
             );
         }
-        const newJson = JSON.stringify({
+        const newJson = {
             ...json,
             data: {
                 ...json.data,
@@ -200,7 +196,7 @@ export default class ExtractorFileToJson extends NullPlugin {
                 cv_file_mime: file.headers["content-type"],
                 cv_file_name: file.originalFilename,
             },
-        });
+        } as IJson;
         if (
             file.originalFilename.toLowerCase().endsWith(".csv") ||
             file.headers["content-type"] === "text/csv"
@@ -339,7 +335,7 @@ export default class ExtractorFileToJson extends NullPlugin {
     }
     private saveFile = (
         path: string,
-        buffer: any,
+        buffer: Buffer | Readable,
         content: string,
         metaData?: Record<string, string>,
         size?: number,
@@ -359,7 +355,7 @@ export default class ExtractorFileToJson extends NullPlugin {
      */
     private readSheet(
         gateContext: IContext,
-        json: any,
+        json: IJson,
         pack: any[],
         query: IGateQuery,
         index: number = 1,

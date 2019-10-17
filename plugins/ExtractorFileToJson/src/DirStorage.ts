@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as os from "os";
 import * as Path from "path";
 import { IRufusLogger } from "rufus";
+import { Readable } from "stream";
 import * as uuidv4 from "uuidv4";
 import { IFile, IPluginParams } from "./ExtractorFileToJson.types";
 export class DirStorage {
@@ -22,10 +23,12 @@ export class DirStorage {
      */
     public saveFile(
         key: string,
-        buffer: any,
+        buffer: Buffer | Readable,
         content: string,
         metaData: Record<string, string> = {},
-        size: number = Buffer.byteLength(buffer),
+        size: number = (buffer as Readable).pipe
+            ? Buffer.byteLength(buffer as Buffer)
+            : undefined,
     ): Promise<void> {
         const prePath = key.startsWith("/") ? key : `/${key}`;
         return new Promise((resolve, reject) => {
@@ -43,14 +46,14 @@ export class DirStorage {
                     ContentType: content,
                 }),
             );
-            if (buffer.pipe) {
+            if ((buffer as Readable).pipe) {
                 const ws = fs.createWriteStream(
                     `${this.params.cvPath}${prePath}`,
                 );
                 ws.on("error", (err) => reject(err));
-                buffer.on("error", (err) => reject(err));
-                buffer.on("end", () => resolve());
-                buffer.pipe(ws);
+                (buffer as Readable).on("error", (err) => reject(err));
+                (buffer as Readable).on("end", () => resolve());
+                (buffer as Readable).pipe(ws);
                 return;
             }
             fs.writeFile(`${this.params.cvPath}${prePath}`, buffer, (err) => {

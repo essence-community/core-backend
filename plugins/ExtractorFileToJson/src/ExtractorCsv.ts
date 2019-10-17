@@ -1,10 +1,10 @@
-import { isEmpty } from "@ungate/plugininf/lib/util/Util";
 import { EventEmitter } from "events";
 import * as Сsv from "fast-csv";
 import { CsvParserStream } from "fast-csv/build/src/parser";
 import * as fs from "fs";
 import { isString } from "lodash";
 import { Readable } from "stream";
+import { getColumnName } from "./Utils";
 
 export interface ICsvOptions {
     // Ensure that data events have an object emitted rather than the stringified version set to false to have a stringified buffer.
@@ -28,33 +28,6 @@ export interface ICsvOptions {
     ltrim?: boolean;
     encoding: string;
 }
-
-export const getColumnNumber = (columnName) => {
-    let i = columnName.search(/\d/);
-    let colNum = 0;
-    columnName = +columnName.replace(/\D/g, (letter) => {
-        colNum += (parseInt(letter, 36) - 9) * Math.pow(26, --i);
-        return "";
-    });
-
-    return colNum;
-};
-
-export const getColumnName = (columnNumber: string | number) => {
-    if (isEmpty(columnNumber)) {
-        return "";
-    }
-
-    let columnName = "";
-    let dividend = parseInt(columnNumber as string, 10);
-    let modulo = 0;
-    while (dividend > 0) {
-        modulo = (dividend - 1) % 26;
-        columnName = String.fromCharCode(65 + modulo).toString() + columnName;
-        dividend = Math.floor((dividend - modulo) / 26);
-    }
-    return columnName;
-};
 
 export class ExtractorCsv extends EventEmitter {
     private csv: CsvParserStream;
