@@ -563,6 +563,7 @@ gulp.task("libs", () => {
     });
     return Promise.all(rows);
 });
+
 gulp.task("cert", () => {
     return new Promise((resolve, reject) => {
         copyDir(
@@ -575,6 +576,21 @@ gulp.task("cert", () => {
         );
     });
 });
+
+gulp.task('copy', () => {
+    return new Promise((resolve, reject) => {
+        fs.writeFileSync(
+            path.join(homeDir, "bin", "package.json"),
+            JSON.stringify(packageJson, null, 4),
+        );
+        fs.writeFileSync(
+            path.join(homeDir, "bin", "server", "package.json"),
+            JSON.stringify(serverJson, null, 4),
+        );
+        resolve()
+    }); 
+})
+
 gulp.task(
     "all",
     gulp.series(
@@ -590,14 +606,7 @@ gulp.task(
             "cert",
         ),
         async () => {
-            fs.writeFileSync(
-                path.join(homeDir, "bin", "package.json"),
-                JSON.stringify(packageJson, null, 4),
-            );
-            fs.writeFileSync(
-                path.join(homeDir, "bin", "server", "package.json"),
-                JSON.stringify(serverJson, null, 4),
-            );
+            gulp.parallel('copy')
         },
     ),
 );
