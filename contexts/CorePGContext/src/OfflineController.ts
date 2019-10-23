@@ -312,87 +312,100 @@ export default class OfflineController implements ICoreController {
         isSave: boolean = false,
     ) {
         return this.dataSource
-                .executeStmt(this.queryFindSql, null, { ck_query: name })
-                .then((res) => new Promise((resolve, reject) => {
-                    const data = [];
-                    res.stream.on("error", (err) =>
-                        reject(new Error(err.message)),
-                    );
-                    res.stream.on("data", (row) => {
-                        data.push({
-                            cc_query: row.cc_query,
-                            ck_id: row.ck_id.toLowerCase(),
-                            ck_provider: row.ck_provider,
-                            cn_action: parseInt(row.cn_action, 10),
-                            cr_access: row.cr_access,
-                            cr_type: row.cr_type,
+            .executeStmt(this.queryFindSql, null, { ck_query: name })
+            .then(
+                (res) =>
+                    new Promise((resolve, reject) => {
+                        const data = [];
+                        res.stream.on("error", (err) =>
+                            reject(new Error(err.message)),
+                        );
+                        res.stream.on("data", (row) => {
+                            data.push({
+                                cc_query: row.cc_query,
+                                ck_id: row.ck_id.toLowerCase(),
+                                ck_provider: row.ck_provider,
+                                cn_action: parseInt(row.cn_action, 10),
+                                cr_access: row.cr_access,
+                                cr_type: row.cr_type,
+                            });
                         });
-                    });
-                    res.stream.on("end", async () => {
-                        if (data.length) {
-                            if (isSave) {
-                                this.tempTable.dbQuery
-                                    .insert(data)
-                                    .then(noop, noop);
-                            }
-                            const [doc] = data;
-                            if (doc.cr_access === "po_session") {
-                                const access = await this.tempTable.dbQueryAction.findOne(
-                                    {
-                                        $and: [
-                                            { ck_page_object: pageObject },
-                                            { cn_action: { $in: caActions } },
-                                        ],
-                                    },
-                                    true,
-                                );
+                        res.stream.on("end", async () => {
+                            if (data.length) {
+                                if (isSave) {
+                                    this.tempTable.dbQuery
+                                        .insert(data)
+                                        .then(noop, noop);
+                                }
+                                const [doc] = data;
+                                if (doc.cr_access === "po_session") {
+                                    const access = await this.tempTable.dbQueryAction.findOne(
+                                        {
+                                            $and: [
+                                                { ck_page_object: pageObject },
+                                                {
+                                                    cn_action: {
+                                                        $in: caActions,
+                                                    },
+                                                },
+                                            ],
+                                        },
+                                        true,
+                                    );
+                                    if (
+                                        isEmpty(access) &&
+                                        !this.params.disableCheckAccess
+                                    ) {
+                                        return reject(
+                                            CoreContext.accessDenied(),
+                                        );
+                                    }
+                                }
                                 if (
-                                    isEmpty(access) &&
-                                    !this.params.disableCheckAccess
+                                    doc.cn_action &&
+                                    !caActions.includes(
+                                        parseInt(doc.cn_action, 10),
+                                    )
                                 ) {
                                     return reject(CoreContext.accessDenied());
                                 }
+                                return resolve({
+                                    defaultActionName: CoreContext.decodeType(
+                                        doc,
+                                    ),
+                                    providerName: doc.ck_provider,
+                                    query: {
+                                        extraOutParams: [
+                                            {
+                                                cv_name: "result",
+                                                outType: "DEFAULT",
+                                            },
+                                            {
+                                                cv_name: "cur_result",
+                                                outType: "CURSOR",
+                                            },
+                                            ...(doc.cr_type === "report"
+                                                ? [
+                                                      {
+                                                          cv_name:
+                                                              "EXTRACT_META_DATA",
+                                                          outType: "DEFAULT",
+                                                      },
+                                                  ]
+                                                : []),
+                                        ],
+                                        needSession: doc.cr_access !== "free",
+                                        queryData: doc,
+                                        queryStr: doc.cc_query,
+                                    },
+                                });
                             }
-                            if (
-                                doc.cn_action &&
-                                !caActions.includes(parseInt(doc.cn_action, 10))
-                            ) {
-                                return reject(CoreContext.accessDenied());
-                            }
-                            return resolve({
-                                defaultActionName: CoreContext.decodeType(doc),
-                                providerName: doc.ck_provider,
-                                query: {
-                                    extraOutParams: [
-                                        {
-                                            cv_name: "result",
-                                            outType: "DEFAULT",
-                                        },
-                                        {
-                                            cv_name: "cur_result",
-                                            outType: "CURSOR",
-                                        },
-                                        ...(doc.cr_type === "report"
-                                            ? [
-                                                  {
-                                                      cv_name:
-                                                          "EXTRACT_META_DATA",
-                                                      outType: "DEFAULT",
-                                                  },
-                                              ]
-                                            : []),
-                                    ],
-                                    needSession: doc.cr_access !== "free",
-                                    queryData: doc,
-                                    queryStr: doc.cc_query,
-                                },
-                            });
-                        }
-                        return reject(
-                            new ErrorException(ErrorGate.NOTFOUND_QUERY),
-                        );
-                    });
-                }));
+                            return reject(
+                                new ErrorException(ErrorGate.NOTFOUND_QUERY),
+                            );
+                        });
+                    }),
+            );
     }
 
     public onlineFindPages(
@@ -403,82 +416,85 @@ export default class OfflineController implements ICoreController {
     ) {
         const self = this;
         return this.dataSource
-                .executeStmt(this.pageFindSql, null, {
-                    ck_page: ckPage,
-                })
-                .then((res) => new Promise((resolve, reject) => {
-                    const data = {};
-                    res.stream.on("error", (err) =>
-                        reject(new Error(err.message)),
-                    );
-                    res.stream.on("data", (row) => {
-                        try {
-                            if (data[row.ck_page]) {
-                                data[row.ck_page].json.push(
-                                    isObject(row.json)
-                                        ? row.json
-                                        : JSON.parse(
-                                            row.json,
-                                            self.replaceNull,
-                                        ),
-                                );
-                            } else {
-                                data[row.ck_page] = {
-                                    ck_id: row.ck_page,
-                                    cn_action: parseInt(row.cn_action, 10),
-                                    cv_name: row.cv_name,
-                                    json: [
+            .executeStmt(this.pageFindSql, null, {
+                ck_page: ckPage,
+            })
+            .then(
+                (res) =>
+                    new Promise((resolve, reject) => {
+                        const data = {};
+                        res.stream.on("error", (err) =>
+                            reject(new Error(err.message)),
+                        );
+                        res.stream.on("data", (row) => {
+                            try {
+                                if (data[row.ck_page]) {
+                                    data[row.ck_page].json.push(
                                         isObject(row.json)
                                             ? row.json
                                             : JSON.parse(
-                                                row.json,
-                                                self.replaceNull,
-                                            ),
-                                    ],
-                                };
-                            }
-                        } catch (e) {
-                            logger.error(
-                                `Error parse: ${row.json} ${e.message}`,
-                                e,
-                            );
-                        }
-                    });
-                    res.stream.on("end", () => {
-                        const page = data[ckPage];
-                        if (!page) {
-                            if (
-                                gateContext.queryName ===
-                                this.params.pageObjectsQueryName
-                            ) {
-                                return reject(
-                                    new BreakException({
-                                        data: ResultStream([]),
-                                        type: "success",
-                                    }),
+                                                  row.json,
+                                                  self.replaceNull,
+                                              ),
+                                    );
+                                } else {
+                                    data[row.ck_page] = {
+                                        ck_id: row.ck_page,
+                                        cn_action: parseInt(row.cn_action, 10),
+                                        cv_name: row.cv_name,
+                                        json: [
+                                            isObject(row.json)
+                                                ? row.json
+                                                : JSON.parse(
+                                                      row.json,
+                                                      self.replaceNull,
+                                                  ),
+                                        ],
+                                    };
+                                }
+                            } catch (e) {
+                                logger.error(
+                                    `Error parse: ${row.json} ${e.message}`,
+                                    e,
                                 );
                             }
-                            return reject(CoreContext.accessDenied());
-                        }
-                        if (isSave) {
-                            this.tempTable.dbPage
-                                .insert(Object.values(data))
-                                .then(noop, noop);
-                        }
-                        if (
-                            page.cn_action &&
-                            !caActions.includes(page.cn_action)
-                        ) {
-                            return reject(CoreContext.accessDenied());
-                        }
-                        return reject(
-                            new BreakException({
-                                data: ResultStream(page.json),
-                                type: "success",
-                            }),
-                        );
-                    });
-                }));
+                        });
+                        res.stream.on("end", () => {
+                            const page = data[ckPage];
+                            if (!page) {
+                                if (
+                                    gateContext.queryName ===
+                                    this.params.pageObjectsQueryName
+                                ) {
+                                    return reject(
+                                        new BreakException({
+                                            data: ResultStream([]),
+                                            type: "success",
+                                        }),
+                                    );
+                                }
+                                return reject(CoreContext.accessDenied());
+                            }
+                            if (isSave) {
+                                this.tempTable.dbPage
+                                    .insert(Object.values(data))
+                                    .then(noop, noop);
+                            }
+                            if (
+                                page.cn_action &&
+                                !caActions.includes(page.cn_action)
+                            ) {
+                                return reject(CoreContext.accessDenied());
+                            }
+                            return reject(
+                                new BreakException({
+                                    data: ResultStream(page.json),
+                                    type: "success",
+                                }),
+                            );
+                        });
+                    }),
+            );
     }
 
     /**
@@ -676,26 +692,29 @@ export default class OfflineController implements ICoreController {
     }
     private loadSysSetting() {
         return this.dataSource
-                .executeStmt(
-                    this.sysSettings,
-                    null,
-                    {},
-                    {},
-                    {
-                        resultSet: true,
-                    },
-                )
-                .then((res) => new Promise((resolve, reject) => {
-                    const data = [];
-                    res.stream.on("data", (row) => {
-                        data.push(row);
-                    });
-                    res.stream.on("end", () => {
-                        this.tempTable.dbSysSettings
-                            .insert(data)
-                            .then(() => resolve(), (err) => reject(err));
-                    });
-                }));
+            .executeStmt(
+                this.sysSettings,
+                null,
+                {},
+                {},
+                {
+                    resultSet: true,
+                },
+            )
+            .then(
+                (res) =>
+                    new Promise((resolve, reject) => {
+                        const data = [];
+                        res.stream.on("data", (row) => {
+                            data.push(row);
+                        });
+                        res.stream.on("end", () => {
+                            this.tempTable.dbSysSettings
+                                .insert(data)
+                                .then(() => resolve(), (err) => reject(err));
+                        });
+                    }),
+            );
     }
     /*
      * Поиск сообщения
@@ -715,17 +734,18 @@ export default class OfflineController implements ICoreController {
     private loadPages() {
         const self = this;
         return this.dataSource
-                .executeStmt(
-                    this.pageSql,
-                    null,
-                    {},
-                    {},
-                    {
-                        resultSet: true,
-                    },
-                )
-                .then(
-                    (res) => new Promise((resolve, reject) => {
+            .executeStmt(
+                this.pageSql,
+                null,
+                {},
+                {},
+                {
+                    resultSet: true,
+                },
+            )
+            .then(
+                (res) =>
+                    new Promise((resolve, reject) => {
                         const data = {};
                         res.stream.on("error", (err) =>
                             reject(new Error(err.message)),
@@ -768,8 +788,8 @@ export default class OfflineController implements ICoreController {
                                 .insert(Object.values(data))
                                 .then(() => resolve(), (err) => reject(err));
                         });
-                    }
-                ));
+                    }),
+            );
     }
 
     /**
@@ -777,17 +797,18 @@ export default class OfflineController implements ICoreController {
      */
     private loadMessage() {
         return this.dataSource
-                .executeStmt(
-                    this.messageSql,
-                    null,
-                    {},
-                    {},
-                    {
-                        resultSet: true,
-                    },
-                )
-                .then(
-                    (res) => new Promise((resolve, reject) => {
+            .executeStmt(
+                this.messageSql,
+                null,
+                {},
+                {},
+                {
+                    resultSet: true,
+                },
+            )
+            .then(
+                (res) =>
+                    new Promise((resolve, reject) => {
                         const data = [];
                         res.stream.on("error", (err) =>
                             reject(new Error(err.message)),
@@ -812,7 +833,7 @@ export default class OfflineController implements ICoreController {
                                 .then(() => resolve(), (err) => reject(err));
                         });
                     }),
-                );
+            );
     }
 
     /**
@@ -820,17 +841,18 @@ export default class OfflineController implements ICoreController {
      */
     private loadQuery() {
         return this.dataSource
-                .executeStmt(
-                    this.querySql,
-                    null,
-                    {},
-                    {},
-                    {
-                        resultSet: true,
-                    },
-                )
-                .then(
-                    (res) => new Promise((resolve, reject) => {
+            .executeStmt(
+                this.querySql,
+                null,
+                {},
+                {},
+                {
+                    resultSet: true,
+                },
+            )
+            .then(
+                (res) =>
+                    new Promise((resolve, reject) => {
                         const data = [];
                         res.stream.on("error", (err) =>
                             reject(new Error(err.message)),
@@ -849,8 +871,8 @@ export default class OfflineController implements ICoreController {
                                 .insert(data)
                                 .then(() => resolve(), (err) => reject(err));
                         });
-                    })
-                );
+                    }),
+            );
     }
 
     /**
@@ -858,17 +880,18 @@ export default class OfflineController implements ICoreController {
      */
     private loadQueryAction() {
         return this.dataSource
-                .executeStmt(
-                    this.queryActionSql,
-                    null,
-                    {},
-                    {},
-                    {
-                        resultSet: true,
-                    },
-                )
-                .then(
-                    (res) => new Promise((resolve, reject) => {
+            .executeStmt(
+                this.queryActionSql,
+                null,
+                {},
+                {},
+                {
+                    resultSet: true,
+                },
+            )
+            .then(
+                (res) =>
+                    new Promise((resolve, reject) => {
                         const data = [];
                         res.stream.on("error", (err) =>
                             reject(new Error(err.message)),
@@ -886,7 +909,7 @@ export default class OfflineController implements ICoreController {
                                 .then(() => resolve(), (err) => reject(err));
                         });
                     }),
-                );
+            );
     }
 
     /**
@@ -894,17 +917,18 @@ export default class OfflineController implements ICoreController {
      */
     private loadModify() {
         return this.dataSource
-                .executeStmt(
-                    this.modifySql,
-                    null,
-                    {},
-                    {},
-                    {
-                        resultSet: true,
-                    },
-                )
-                .then(
-                    (res) => new Promise((resolve, reject) => {
+            .executeStmt(
+                this.modifySql,
+                null,
+                {},
+                {},
+                {
+                    resultSet: true,
+                },
+            )
+            .then(
+                (res) =>
+                    new Promise((resolve, reject) => {
                         const data = [];
                         res.stream.on("error", (err) =>
                             reject(new Error(err.message)),
@@ -921,8 +945,8 @@ export default class OfflineController implements ICoreController {
                                 .insert(data)
                                 .then(() => resolve(), (err) => reject(err));
                         });
-                    })
-                );
+                    }),
+            );
     }
 
     /**
@@ -930,30 +954,33 @@ export default class OfflineController implements ICoreController {
      */
     private loadModifyAction() {
         return this.dataSource
-                .executeStmt(
-                    this.modifyActionSql,
-                    null,
-                    {},
-                    {},
-                    {
-                        resultSet: true,
-                    },
-                )
-                .then((res) => new Promise((resolve, reject) => {
-                    const data = [];
-                    res.stream.on("data", (row) => {
-                        data.push({
-                            ck_id: `${row.ck_id}_${row.cn_action}`,
-                            ck_page_object: row.ck_id.toLowerCase(),
-                            cn_action: parseInt(row.cn_action, 10),
+            .executeStmt(
+                this.modifyActionSql,
+                null,
+                {},
+                {},
+                {
+                    resultSet: true,
+                },
+            )
+            .then(
+                (res) =>
+                    new Promise((resolve, reject) => {
+                        const data = [];
+                        res.stream.on("data", (row) => {
+                            data.push({
+                                ck_id: `${row.ck_id}_${row.cn_action}`,
+                                ck_page_object: row.ck_id.toLowerCase(),
+                                cn_action: parseInt(row.cn_action, 10),
+                            });
                         });
-                    });
-                    res.stream.on("end", () => {
-                        this.tempTable.dbModifyAction
-                            .insert(data)
-                            .then(() => resolve(), (err) => reject(err));
-                    });
-                }));
+                        res.stream.on("end", () => {
+                            this.tempTable.dbModifyAction
+                                .insert(data)
+                                .then(() => resolve(), (err) => reject(err));
+                        });
+                    }),
+            );
     }
 
     /**

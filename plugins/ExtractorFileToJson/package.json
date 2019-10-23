@@ -2,7 +2,7 @@
     "name": "@ungate-plugin/extract-file-to-json",
     "version": "1.0.0",
     "description": "Плагин преобразования табличных файлов в json",
-    "author": "Ivan Artemov (artemov_i@tii.ru)",
+    "author": "Ivan Artemov (honyrik@gmail.com)",
     "license": "ISC",
     "dependencies": {
         "@ungate/plugininf": "^1.0.0",

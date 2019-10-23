@@ -3,7 +3,7 @@
     "version": "1.0.0",
     "description": "Fork nedb-multi",
     "main": "index.js",
-    "author": "Ivan Artemov (artemov_i@tii.ru)",
+    "author": "Ivan Artemov (honyrik@gmail.com)",
     "license": "ISC",
     "dependencies": {
         "@iarna/toml": "^2.2.1",

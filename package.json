@@ -25,7 +25,7 @@
             "pre-commit": "yarn pre-commit"
         }
     },
-    "author": "Ivan Artemov (artemov_i@tii.ru)",
+    "author": "Ivan Artemov (honyrik@gmail.com)",
     "license": "ISC",
     "workspaces": [
         "server",
