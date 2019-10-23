@@ -22,7 +22,8 @@ begin
                                     'cv_description', o.cv_description,
                                     'ck_master', po.ck_master,
                                     'ck_page', po.ck_page,
-                                    'ck_parent', po.ck_parent
+                                    'ck_parent', po.ck_parent,
+                                    'cn_order', po.cn_order
       ) ||
       case when t_master_list.cl_is_master::int = 1 then '{"cl_is_master": 1}'::jsonb
            else '{}'::jsonb
@@ -68,18 +69,18 @@ begin
                    jsonb_agg(res.jdata::jsonb) as val
               from
               (select ca.ck_attr,
-                      po.ck_id
-                 from s_mt.t_page_object po
-                 join s_mt.t_object o on po.ck_object = o.ck_id
-                 join s_mt.t_class c on c.ck_id = o.ck_class
-                 join s_mt.t_class_hierarchy ch on ch.ck_class_child = c.ck_id
+                      attr_po.ck_id
+                 from s_mt.t_page_object attr_po
+                 join s_mt.t_object attr_o on attr_po.ck_object = attr_o.ck_id
+                 join s_mt.t_class attr_c on attr_c.ck_id = attr_o.ck_class
+                 join s_mt.t_class_hierarchy ch on ch.ck_class_child = attr_c.ck_id
                  join s_mt.t_object o2 on ch.ck_class_parent = o2.ck_class
                  join s_mt.t_page_object h on o2.ck_id = h.ck_object
                  join s_mt.t_class_attr ca on ca.ck_id = ch.ck_class_attr
-                where po.ck_parent = pk_start
+                where attr_po.ck_parent = pk_start
                   and h.ck_id = pk_start
                 order by ca.ck_attr,
-                      coalesce(po.cn_order, o.cn_order)) tp
+                      coalesce(attr_po.cn_order, attr_o.cn_order)) tp
               left join f_get_object(tp.ck_id) as res(jdata) on 1 = 1
              group by tp.ck_attr
              order by tp.ck_attr
