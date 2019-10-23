@@ -313,10 +313,9 @@ export default class OfflineController implements ICoreController {
         caActions,
         isSave: boolean = false,
     ) {
-        return new Promise((resolve, reject) => {
-            this.dataSource
+        return this.dataSource
                 .executeStmt(this.queryFindSql, null, { ck_query: name })
-                .then((res) => {
+                .then((res) => new Promise((resolve, reject) => {
                     const data = [];
                     res.stream.on("error", (err) =>
                         reject(new Error(err.message)),
@@ -395,8 +394,7 @@ export default class OfflineController implements ICoreController {
                             new ErrorException(ErrorGate.NOTFOUND_QUERY),
                         );
                     });
-                });
-        });
+                }));
     }
 
     public onlineFindPages(
@@ -406,12 +404,11 @@ export default class OfflineController implements ICoreController {
         isSave: boolean = false,
     ) {
         const self = this;
-        return new Promise((resolve, reject) => {
-            this.dataSource
+        return this.dataSource
                 .executeStmt(this.pageFindSql, null, {
                     ck_page: ckPage,
                 })
-                .then((res) => {
+                .then((res) => new Promise((resolve, reject) => {
                     const data = {};
                     res.stream.on("error", (err) =>
                         reject(new Error(err.message)),
@@ -473,8 +470,7 @@ export default class OfflineController implements ICoreController {
                             }),
                         );
                     });
-                });
-        });
+                }));
     }
 
     /**
@@ -687,8 +683,7 @@ export default class OfflineController implements ICoreController {
      */
     private loadPages() {
         const self = this;
-        return new Promise((resolve, reject) => {
-            this.dataSource
+        return this.dataSource
                 .executeStmt(
                     this.pageSql,
                     null,
@@ -699,7 +694,7 @@ export default class OfflineController implements ICoreController {
                     },
                 )
                 .then(
-                    (res) => {
+                    (res) => new Promise((resolve, reject) => {
                         const data = {};
                         res.stream.on("error", (err) =>
                             reject(new Error(err.message)),
@@ -736,17 +731,14 @@ export default class OfflineController implements ICoreController {
                                 .then(() => resolve(), (err) => reject(err));
                         });
                     },
-                    (err) => reject(err),
-                );
-        });
+                ));
     }
 
     /**
      * Кэширование все запросов
      */
     private loadMessage() {
-        return new Promise((resolve, reject) => {
-            this.dataSource
+        return this.dataSource
                 .executeStmt(
                     this.messageSql,
                     null,
@@ -757,7 +749,7 @@ export default class OfflineController implements ICoreController {
                     },
                 )
                 .then(
-                    (res) => {
+                    (res) => new Promise((resolve, reject) => {
                         const data = [];
                         res.stream.on("error", (err) =>
                             reject(new Error(err.message)),
@@ -781,18 +773,14 @@ export default class OfflineController implements ICoreController {
                                 .insert(data)
                                 .then(() => resolve(), (err) => reject(err));
                         });
-                    },
-                    (err) => reject(err),
-                );
-        });
+                    }));
     }
 
     /**
      * Кэширование все запросов
      */
     private loadQuery() {
-        return new Promise((resolve, reject) => {
-            this.dataSource
+        return this.dataSource
                 .executeStmt(
                     this.querySql,
                     null,
@@ -803,7 +791,7 @@ export default class OfflineController implements ICoreController {
                     },
                 )
                 .then(
-                    (res) => {
+                    (res) => new Promise((resolve, reject) => {
                         const data = [];
                         res.stream.on("error", (err) =>
                             reject(new Error(err.message)),
@@ -827,17 +815,14 @@ export default class OfflineController implements ICoreController {
                             );
                         });
                     },
-                    (err) => reject(err),
-                );
-        });
+                ));
     }
 
     /**
      * Кэширование все доступов к запросам
      */
     private loadQueryAction() {
-        return new Promise((resolve, reject) => {
-            this.dataSource
+        return this.dataSource
                 .executeStmt(
                     this.queryActionSql,
                     null,
@@ -848,7 +833,7 @@ export default class OfflineController implements ICoreController {
                     },
                 )
                 .then(
-                    (res) => {
+                    (res) => new Promise((resolve, reject) => {
                         const data = [];
                         res.stream.on("error", (err) =>
                             reject(new Error(err.message)),
@@ -866,17 +851,14 @@ export default class OfflineController implements ICoreController {
                                 .then(() => resolve(), (err) => reject(err));
                         });
                     },
-                    (err) => reject(err),
-                );
-        });
+                ));
     }
 
     /**
      * Кэширование все методов модификации
      */
     private loadModify() {
-        return new Promise((resolve, reject) => {
-            this.dataSource
+        return this.dataSource
                 .executeStmt(
                     this.modifySql,
                     null,
@@ -887,7 +869,7 @@ export default class OfflineController implements ICoreController {
                     },
                 )
                 .then(
-                    (res) => {
+                    (res) => new Promise((resolve, reject) => {
                         const data = [];
                         res.stream.on("error", (err) =>
                             reject(new Error(err.message)),
@@ -905,17 +887,14 @@ export default class OfflineController implements ICoreController {
                                 .then(() => resolve(), (err) => reject(err));
                         });
                     },
-                    (err) => reject(err),
-                );
-        });
+                ));
     }
 
     /**
      * Кэширование все доступов методов модификации
      */
     private loadModifyAction() {
-        return new Promise((resolve, reject) => {
-            this.dataSource
+        return this.dataSource
                 .executeStmt(
                     this.modifyActionSql,
                     null,
@@ -925,7 +904,7 @@ export default class OfflineController implements ICoreController {
                         resultSet: true,
                     },
                 )
-                .then((res) => {
+                .then((res) => new Promise((resolve, reject) => {
                     const data = [];
                     res.stream.on("data", (row) => {
                         data.push({
@@ -939,13 +918,11 @@ export default class OfflineController implements ICoreController {
                             .insert(data)
                             .then(() => resolve(), (err) => reject(err));
                     });
-                });
-        });
+                }));
     }
 
     private loadSysSetting() {
-        return new Promise(async (resolve, reject) => {
-            this.dataSource
+        return this.dataSource
                 .executeStmt(
                     this.sysSettings,
                     null,
@@ -955,7 +932,7 @@ export default class OfflineController implements ICoreController {
                         resultSet: true,
                     },
                 )
-                .then((res) => {
+                .then((res) => new Promise((resolve, reject) => {
                     const data = [];
                     res.stream.on("data", (row) => {
                         data.push(row);
@@ -965,8 +942,7 @@ export default class OfflineController implements ICoreController {
                             .insert(data)
                             .then(() => resolve(), (err) => reject(err));
                     });
-                });
-        });
+                }));
     }
 
     /**

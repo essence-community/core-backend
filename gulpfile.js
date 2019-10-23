@@ -85,39 +85,6 @@ gulp.task("plugins", () => {
                 );
                 rows.push(
                     new Promise((resolve, reject) => {
-                        const pluginJson = JSON.parse(
-                            fs.readFileSync(
-                                path.join(pluginsDir, file, "package.json"),
-                            ),
-                        );
-                        if (pluginJson.dependencies) {
-                            const isError = false;
-                            Object.keys(pluginJson.dependencies).every(
-                                (key) => {
-                                    if (
-                                        Object.prototype.hasOwnProperty.call(
-                                            serverJson.dependencies,
-                                            key,
-                                        ) &&
-                                        serverJson.dependencies[key] !==
-                                            pluginJson.dependencies[key]
-                                    ) {
-                                        reject(
-                                            new Error(
-                                                `Версия пакета ${key} плагина ${pluginJson.dependencies[key]} не равна сервера ${serverJson.dependencies[key]}`,
-                                            ),
-                                        );
-                                        return false;
-                                    }
-                                    serverJson.dependencies[key] =
-                                        pluginJson.dependencies[key];
-                                    return true;
-                                },
-                            );
-                            if (isError) {
-                                return;
-                            }
-                        }
                         gulp.src(
                             path.join(pluginsDir, file, "src", "**", "*.ts"),
                         )
@@ -165,39 +132,6 @@ gulp.task("contexts", () => {
                 );
                 rows.push(
                     new Promise((resolve, reject) => {
-                        const pluginJson = JSON.parse(
-                            fs.readFileSync(
-                                path.join(pluginsDir, file, "package.json"),
-                            ),
-                        );
-                        if (pluginJson.dependencies) {
-                            const isError = false;
-                            Object.keys(pluginJson.dependencies).every(
-                                (key) => {
-                                    if (
-                                        Object.prototype.hasOwnProperty.call(
-                                            serverJson.dependencies,
-                                            key,
-                                        ) &&
-                                        serverJson.dependencies[key] !==
-                                            pluginJson.dependencies[key]
-                                    ) {
-                                        reject(
-                                            new Error(
-                                                `Версия пакета ${key} плагина ${pluginJson.dependencies[key]} не равна сервера ${serverJson.dependencies[key]}`,
-                                            ),
-                                        );
-                                        return false;
-                                    }
-                                    serverJson.dependencies[key] =
-                                        pluginJson.dependencies[key];
-                                    return true;
-                                },
-                            );
-                            if (isError) {
-                                return;
-                            }
-                        }
                         gulp.src(
                             path.join(pluginsDir, file, "src", "**", "*.ts"),
                         )
@@ -245,39 +179,6 @@ gulp.task("events", () => {
                 );
                 rows.push(
                     new Promise((resolve, reject) => {
-                        const pluginJson = JSON.parse(
-                            fs.readFileSync(
-                                path.join(pluginsDir, file, "package.json"),
-                            ),
-                        );
-                        if (pluginJson.dependencies) {
-                            const isError = false;
-                            Object.keys(pluginJson.dependencies).every(
-                                (key) => {
-                                    if (
-                                        Object.prototype.hasOwnProperty.call(
-                                            serverJson.dependencies,
-                                            key,
-                                        ) &&
-                                        serverJson.dependencies[key] !==
-                                            pluginJson.dependencies[key]
-                                    ) {
-                                        reject(
-                                            new Error(
-                                                `Версия пакета ${key} плагина ${pluginJson.dependencies[key]} не равна сервера ${serverJson.dependencies[key]}`,
-                                            ),
-                                        );
-                                        return false;
-                                    }
-                                    serverJson.dependencies[key] =
-                                        pluginJson.dependencies[key];
-                                    return true;
-                                },
-                            );
-                            if (isError) {
-                                return;
-                            }
-                        }
                         gulp.src(
                             path.join(pluginsDir, file, "src", "**", "*.ts"),
                         )
@@ -325,39 +226,6 @@ gulp.task("schedulers", () => {
                 );
                 rows.push(
                     new Promise((resolve, reject) => {
-                        const pluginJson = JSON.parse(
-                            fs.readFileSync(
-                                path.join(pluginsDir, file, "package.json"),
-                            ),
-                        );
-                        if (pluginJson.dependencies) {
-                            const isError = false;
-                            Object.keys(pluginJson.dependencies).every(
-                                (key) => {
-                                    if (
-                                        Object.prototype.hasOwnProperty.call(
-                                            serverJson.dependencies,
-                                            key,
-                                        ) &&
-                                        serverJson.dependencies[key] !==
-                                            pluginJson.dependencies[key]
-                                    ) {
-                                        reject(
-                                            new Error(
-                                                `Версия пакета ${key} плагина ${pluginJson.dependencies[key]} не равна сервера ${serverJson.dependencies[key]}`,
-                                            ),
-                                        );
-                                        return false;
-                                    }
-                                    serverJson.dependencies[key] =
-                                        pluginJson.dependencies[key];
-                                    return true;
-                                },
-                            );
-                            if (isError) {
-                                return;
-                            }
-                        }
                         gulp.src(
                             path.join(pluginsDir, file, "src", "**", "*.ts"),
                         )
@@ -405,39 +273,6 @@ gulp.task("providers", () => {
                 );
                 rows.push(
                     new Promise((resolve, reject) => {
-                        const pluginJson = JSON.parse(
-                            fs.readFileSync(
-                                path.join(pluginsDir, file, "package.json"),
-                            ),
-                        );
-                        if (pluginJson.dependencies) {
-                            const isError = false;
-                            Object.keys(pluginJson.dependencies).every(
-                                (key) => {
-                                    if (
-                                        Object.prototype.hasOwnProperty.call(
-                                            serverJson.dependencies,
-                                            key,
-                                        ) &&
-                                        serverJson.dependencies[key] !==
-                                            pluginJson.dependencies[key]
-                                    ) {
-                                        reject(
-                                            new Error(
-                                                `Версия пакета ${key} плагина ${pluginJson.dependencies[key]} не равна сервера ${serverJson.dependencies[key]}`,
-                                            ),
-                                        );
-                                        return false;
-                                    }
-                                    serverJson.dependencies[key] =
-                                        pluginJson.dependencies[key];
-                                    return true;
-                                },
-                            );
-                            if (isError) {
-                                return;
-                            }
-                        }
                         gulp.src(
                             path.join(pluginsDir, file, "src", "**", "*.ts"),
                         )
@@ -577,8 +412,274 @@ gulp.task("cert", () => {
     });
 });
 
-gulp.task('copy', () => {
-    return new Promise((resolve, reject) => {
+gulp.task("packageJson", () => {
+    const rows = [];
+    const pluginsDataDir = path.join(homeDir, "plugins");
+    fs.readdirSync(pluginsDataDir)
+        .filter((file) =>
+            dataPlugins && dataPlugins.length
+                ? dataPlugins.includes(file.toUpperCase())
+                : true,
+        )
+        .forEach((file) => {
+            if (
+                fs.existsSync(
+                    path.join(pluginsDataDir, file, "tsconfig.json"),
+                ) &&
+                fs.existsSync(path.join(pluginsDataDir, file, "package.json"))
+            ) {
+                rows.push(
+                    new Promise((resolve, reject) => {
+                        const pluginJson = JSON.parse(
+                            fs.readFileSync(
+                                path.join(pluginsDataDir, file, "package.json"),
+                            ),
+                        );
+                        if (pluginJson.dependencies) {
+                            const isError = false;
+                            Object.keys(pluginJson.dependencies).every(
+                                (key) => {
+                                    if (
+                                        Object.prototype.hasOwnProperty.call(
+                                            serverJson.dependencies,
+                                            key,
+                                        ) &&
+                                        serverJson.dependencies[key] !==
+                                            pluginJson.dependencies[key]
+                                    ) {
+                                        reject(
+                                            new Error(
+                                                `Версия пакета ${key} плагина ${pluginJson.dependencies[key]} не равна сервера ${serverJson.dependencies[key]}`,
+                                            ),
+                                        );
+                                        return false;
+                                    }
+                                    serverJson.dependencies[key] =
+                                        pluginJson.dependencies[key];
+                                    return true;
+                                },
+                            );
+                            if (isError) {
+                                return;
+                            }
+                        }
+                        resolve();
+                    }),
+                );
+            }
+        });
+    const contextsDir = path.join(homeDir, "contexts");
+    fs.readdirSync(contextsDir)
+        .filter((file) =>
+            contextPlugins && contextPlugins.length
+                ? contextPlugins.includes(file.toUpperCase())
+                : true,
+        )
+        .forEach((file) => {
+            if (
+                fs.existsSync(path.join(contextsDir, file, "tsconfig.json")) &&
+                fs.existsSync(path.join(contextsDir, file, "package.json"))
+            ) {
+                rows.push(
+                    new Promise((resolve, reject) => {
+                        const pluginJson = JSON.parse(
+                            fs.readFileSync(
+                                path.join(contextsDir, file, "package.json"),
+                            ),
+                        );
+                        if (pluginJson.dependencies) {
+                            const isError = false;
+                            Object.keys(pluginJson.dependencies).every(
+                                (key) => {
+                                    if (
+                                        Object.prototype.hasOwnProperty.call(
+                                            serverJson.dependencies,
+                                            key,
+                                        ) &&
+                                        serverJson.dependencies[key] !==
+                                            pluginJson.dependencies[key]
+                                    ) {
+                                        reject(
+                                            new Error(
+                                                `Версия пакета ${key} плагина ${pluginJson.dependencies[key]} не равна сервера ${serverJson.dependencies[key]}`,
+                                            ),
+                                        );
+                                        return false;
+                                    }
+                                    serverJson.dependencies[key] =
+                                        pluginJson.dependencies[key];
+                                    return true;
+                                },
+                            );
+                            if (isError) {
+                                return;
+                            }
+                        }
+                        resolve();
+                    }),
+                );
+            }
+        });
+    const eventsDir = path.join(homeDir, "events");
+    fs.readdirSync(eventsDir)
+        .filter((file) =>
+            eventPlugins && eventPlugins.length
+                ? eventPlugins.includes(file.toUpperCase())
+                : true,
+        )
+        .forEach((file) => {
+            if (
+                fs.existsSync(path.join(eventsDir, file, "tsconfig.json")) &&
+                fs.existsSync(path.join(eventsDir, file, "package.json"))
+            ) {
+                rows.push(
+                    new Promise((resolve, reject) => {
+                        const pluginJson = JSON.parse(
+                            fs.readFileSync(
+                                path.join(eventsDir, file, "package.json"),
+                            ),
+                        );
+                        if (pluginJson.dependencies) {
+                            const isError = false;
+                            Object.keys(pluginJson.dependencies).every(
+                                (key) => {
+                                    if (
+                                        Object.prototype.hasOwnProperty.call(
+                                            serverJson.dependencies,
+                                            key,
+                                        ) &&
+                                        serverJson.dependencies[key] !==
+                                            pluginJson.dependencies[key]
+                                    ) {
+                                        reject(
+                                            new Error(
+                                                `Версия пакета ${key} плагина ${pluginJson.dependencies[key]} не равна сервера ${serverJson.dependencies[key]}`,
+                                            ),
+                                        );
+                                        return false;
+                                    }
+                                    serverJson.dependencies[key] =
+                                        pluginJson.dependencies[key];
+                                    return true;
+                                },
+                            );
+                            if (isError) {
+                                return;
+                            }
+                        }
+                        resolve();
+                    }),
+                );
+            }
+        });
+    const schedulersDir = path.join(homeDir, "schedulers");
+    fs.readdirSync(schedulersDir)
+        .filter((file) =>
+            schedulerPlugins && schedulerPlugins.length
+                ? schedulerPlugins.includes(file.toUpperCase())
+                : true,
+        )
+        .forEach((file) => {
+            if (
+                fs.existsSync(
+                    path.join(schedulersDir, file, "tsconfig.json"),
+                ) &&
+                fs.existsSync(path.join(schedulersDir, file, "package.json"))
+            ) {
+                rows.push(
+                    new Promise((resolve, reject) => {
+                        const pluginJson = JSON.parse(
+                            fs.readFileSync(
+                                path.join(schedulersDir, file, "package.json"),
+                            ),
+                        );
+                        if (pluginJson.dependencies) {
+                            const isError = false;
+                            Object.keys(pluginJson.dependencies).every(
+                                (key) => {
+                                    if (
+                                        Object.prototype.hasOwnProperty.call(
+                                            serverJson.dependencies,
+                                            key,
+                                        ) &&
+                                        serverJson.dependencies[key] !==
+                                            pluginJson.dependencies[key]
+                                    ) {
+                                        reject(
+                                            new Error(
+                                                `Версия пакета ${key} плагина ${pluginJson.dependencies[key]} не равна сервера ${serverJson.dependencies[key]}`,
+                                            ),
+                                        );
+                                        return false;
+                                    }
+                                    serverJson.dependencies[key] =
+                                        pluginJson.dependencies[key];
+                                    return true;
+                                },
+                            );
+                            if (isError) {
+                                return;
+                            }
+                        }
+                        resolve();
+                    }),
+                );
+            }
+        });
+    const providersDir = path.join(homeDir, "providers");
+    fs.readdirSync(providersDir)
+        .filter((file) =>
+            providerPlugins && providerPlugins.length
+                ? providerPlugins.includes(file.toUpperCase())
+                : true,
+        )
+        .forEach((file) => {
+            if (
+                fs.existsSync(path.join(providersDir, file, "tsconfig.json")) &&
+                fs.existsSync(path.join(providersDir, file, "package.json"))
+            ) {
+                rows.push(
+                    new Promise((resolve, reject) => {
+                        const pluginJson = JSON.parse(
+                            fs.readFileSync(
+                                path.join(providersDir, file, "package.json"),
+                            ),
+                        );
+                        if (pluginJson.dependencies) {
+                            const isError = false;
+                            Object.keys(pluginJson.dependencies).every(
+                                (key) => {
+                                    if (
+                                        Object.prototype.hasOwnProperty.call(
+                                            serverJson.dependencies,
+                                            key,
+                                        ) &&
+                                        serverJson.dependencies[key] !==
+                                            pluginJson.dependencies[key]
+                                    ) {
+                                        reject(
+                                            new Error(
+                                                `Версия пакета ${key} плагина ${pluginJson.dependencies[key]} не равна сервера ${serverJson.dependencies[key]}`,
+                                            ),
+                                        );
+                                        return false;
+                                    }
+                                    serverJson.dependencies[key] =
+                                        pluginJson.dependencies[key];
+                                    return true;
+                                },
+                            );
+                            if (isError) {
+                                return;
+                            }
+                        }
+                        resolve();
+                    }),
+                );
+            }
+        });
+
+    return Promise.all(rows).then(() => {
         fs.writeFileSync(
             path.join(homeDir, "bin", "package.json"),
             JSON.stringify(packageJson, null, 4),
@@ -587,14 +688,13 @@ gulp.task('copy', () => {
             path.join(homeDir, "bin", "server", "package.json"),
             JSON.stringify(serverJson, null, 4),
         );
-        resolve()
-    }); 
-})
+    });
+});
 
 gulp.task(
     "all",
     gulp.series(
-        gulp.parallel(
+        gulp.series(
             "server",
             "providers",
             "schedulers",
@@ -605,8 +705,6 @@ gulp.task(
             "plugininf",
             "cert",
         ),
-        async () => {
-            gulp.parallel('copy')
-        },
+        "packageJson",
     ),
 );
