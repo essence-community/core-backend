@@ -183,3 +183,7 @@ INSERT INTO s_mt.t_sys_setting (ck_id,cv_value,ck_user,ct_change,cv_description)
 --changeset kutsenko:CORE-1267-v2 dbms:postgresql
 INSERT INTO s_mt.t_sys_setting (ck_id,cv_value,ck_user,ct_change,cv_description)
 	VALUES ('project_applications_page','22D2F53FE7E24680917B85D9A95237BD','-11','2019-10-15 13:10:31.709','ИД страниицы-приложений');
+
+--changeset artemov_i:CORE-438 dbms:postgresql
+INSERT INTO s_mt.t_sys_setting (ck_id,cv_value,ck_user,ct_change,cv_description)
+	VALUES ('g_sys_theme','light','-11','2019-10-15 13:10:31.709','Тема по умолчанию');
