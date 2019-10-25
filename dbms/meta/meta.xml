@@ -11,4 +11,5 @@
    <include file="./meta/Page_302.sql" />
    <include file="./meta/Page_12127721.sql" />
    <include file="./meta/Page_1875130240361.sql" />
+   <include file="./meta/Page_2.sql" />
 </databaseChangeLog>  
