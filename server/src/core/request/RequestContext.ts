@@ -145,7 +145,10 @@ export default class RequestContext implements IContext {
     }
     public set connection(conn: Connection) {
         if (conn) {
-            this._response.on("finish", async () => {
+            const commitAndRelease = async () => {
+                this._response.removeListener("pipe", commitAndRelease);
+                this._response.removeListener("finish", commitAndRelease);
+                this._response.removeListener("close", commitAndRelease);
                 try {
                     await conn.commit();
                     await conn.release();
@@ -153,7 +156,10 @@ export default class RequestContext implements IContext {
                     conn.rollbackAndRelease().then(noop, noop);
                     this.error(e);
                 }
-            });
+            };
+            this._response.once("finish", commitAndRelease);
+            this._response.once("pipe", commitAndRelease);
+            this._response.once("close", commitAndRelease);
         }
         this._connection = conn;
     }

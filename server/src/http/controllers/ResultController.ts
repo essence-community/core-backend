@@ -9,8 +9,8 @@ import { isEmpty } from "@ungate/plugininf/lib/util/Util";
 import * as accepts from "accepts";
 import * as js2xmlparser from "js2xmlparser";
 import * as JSONStream from "JSONStream";
-import { isArray, isBoolean, isDate, isNumber, isObject, noop } from "lodash";
-import moment = require("moment");
+import { isArray, isBoolean, isDate, isNumber, isObject } from "lodash";
+import * as moment from "moment";
 import * as through from "through";
 import Constants from "../../core/Constants";
 import RequestContext from "../../core/request/RequestContext";
@@ -94,7 +94,7 @@ class ResultController {
         let total = 0;
         let first = true;
         const self = this;
-        const ResulTransform = through(
+        const ResultTransform = through(
             function(data) {
                 let xml = js2xmlparser.parse(
                     "data",
@@ -161,7 +161,7 @@ class ResultController {
             "Content-Type": Constants.XML_CONTENT_TYPE,
         });
         safeResponsePipe(
-            safePipe(result.data, ResulTransform),
+            safePipe(result.data, ResultTransform),
             gateContext.response,
         );
     }
