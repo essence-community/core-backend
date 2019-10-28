@@ -1,4 +1,4 @@
-import { EventEmitter } from 'events';
+import { EventEmitter } from "events";
 import IObjectParam from "../IObjectParam";
 import { IResultProvider } from "../IResult";
 import IOptions from "./IOptions";

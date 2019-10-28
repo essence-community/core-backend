@@ -157,7 +157,6 @@ export default class RequestContext implements IContext {
             this._response.once("finish", commitAndRelease);
             this._response.once("pipe", commitAndRelease);
             this._response.once("close", commitAndRelease);
-            
         }
         this._connection = conn;
     }
