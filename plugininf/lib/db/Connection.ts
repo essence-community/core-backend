@@ -65,6 +65,7 @@ class Connection extends EventEmitter {
             await this.DataSource.onRelease(this.connection);
         } finally {
             this.isExecute = false;
+            this.emit("finish");
             this.isReleased = true;
         }
         return;
@@ -83,6 +84,7 @@ class Connection extends EventEmitter {
             await this.DataSource.onClose(this.connection);
         } finally {
             this.isExecute = false;
+            this.emit("finish");
             this.isReleased = true;
         }
         return;
@@ -101,6 +103,7 @@ class Connection extends EventEmitter {
             await this.DataSource.onCommit(this.connection);
         } finally {
             this.isExecute = false;
+            this.emit("finish");
         }
         return;
     }
@@ -118,6 +121,7 @@ class Connection extends EventEmitter {
             await this.DataSource.onRollBack(this.connection);
         } finally {
             this.isExecute = false;
+            this.emit("finish");
         }
         return;
     }
