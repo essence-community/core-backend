@@ -146,6 +146,9 @@ export default class RequestContext implements IContext {
     public set connection(conn: Connection) {
         if (conn) {
             const commitAndRelease = async () => {
+                this._response.removeListener("pipe", commitAndRelease);
+                this._response.removeListener("finish", commitAndRelease);
+                this._response.removeListener("close", commitAndRelease);
                 try {
                     await conn.commit();
                     await conn.release();
