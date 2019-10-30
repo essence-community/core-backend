@@ -3,7 +3,7 @@ const ts = require("gulp-typescript");
 const fs = require("fs");
 const path = require("path");
 const copyDir = require("copy-dir");
-const repoGit = require("simple-git")();
+const { exec } = require('child_process');
 const homeDir = __dirname;
 const packageJson = JSON.parse(fs.readFileSync("./package.json"));
 const serverJson = JSON.parse(fs.readFileSync("./server/package.json"));
@@ -44,20 +44,11 @@ const eventPlugins = process.env.EVENT_PLUGINS
 const schedulerPlugins = process.env.SCHEDULERS_PLUGINS
     ? list(process.env.SCHEDULERS_PLUGINS)
     : null;
-repoGit.branch([], (err, brunch) => {
-    if (err) {
-        console.log(err);
-        return;
-    }
-    repoGit.log(["-n 1"], (err, logs) => {
-        if (err) {
-            console.log(err);
-            return;
-        }
-        packageJson.nodemonConfig.env.GATE_VERSION = `${
-            packageJson.version
-        } (${logs.latest.hash.substr(0, 9)} от ${logs.latest.date})`;
-    });
+
+exec('git log -n 1 --pretty="format:%h от %ai"', (err, stdout) => {
+    packageJson.nodemonConfig.env.GATE_VERSION = `${
+        packageJson.version
+    } (${stdout})`;
 });
 
 const isDev = process.env.NODE_ENV === "development";
