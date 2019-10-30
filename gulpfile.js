@@ -3,7 +3,7 @@ const ts = require("gulp-typescript");
 const fs = require("fs");
 const path = require("path");
 const copyDir = require("copy-dir");
-const { exec } = require('child_process');
+const { exec } = require("child_process");
 const homeDir = __dirname;
 const packageJson = JSON.parse(fs.readFileSync("./package.json"));
 const serverJson = JSON.parse(fs.readFileSync("./server/package.json"));
@@ -46,9 +46,7 @@ const schedulerPlugins = process.env.SCHEDULERS_PLUGINS
     : null;
 
 exec('git log -n 1 --pretty="format:%h от %ai"', (err, stdout) => {
-    packageJson.nodemonConfig.env.GATE_VERSION = `${
-        packageJson.version
-    } (${stdout})`;
+    packageJson.nodemonConfig.env.GATE_VERSION = `${packageJson.version} (${stdout})`;
 });
 
 const isDev = process.env.NODE_ENV === "development";
