@@ -11,3 +11,7 @@ INSERT INTO s_mt.t_message (ck_id,cr_type,cv_text,ck_user,ct_change)
 VALUES (202,'warning','{0} используется в {1}','-11','2019-08-15 09:30:00.000');
 INSERT INTO s_mt.t_message (ck_id,cr_type,cv_text,ck_user,ct_change)
 VALUES (203,'error','Уже существует пользователь с таким Логином','-11','2019-08-15 09:30:00.000');
+
+--changeset artemov_i:CORE-399 dbms:postgresql
+INSERT INTO s_mt.t_message (ck_id,cr_type,cv_text,ck_user,ct_change)
+VALUES (204,'error','Удаление невозможно, т.к. существуют связанные записи','4fd05ca9-3a9e-4d66-82df-886dfa082113','2019-10-30 10:30:00.000');
