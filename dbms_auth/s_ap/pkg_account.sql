@@ -344,6 +344,7 @@ declare
   gv_error sessvarstr;
  
   vot_action record;
+  vot_rc record;
 begin
   -- инициализация/получение переменных пакета
   i = sessvarstr_declare('pkg', 'i', 'I');
@@ -353,8 +354,10 @@ begin
 
   -- код функции
   if pv_action = d::varchar then
-    
-    delete from s_at.t_role_action where ck_action = pot_action.ck_id;
+    for vot_rc in (select 1 from s_at.t_role_action where ck_action = pot_action.ck_id) loop
+      perform pkg.p_set_error(204);
+      return;
+    end loop;
     delete from s_at.t_action where ck_id = pot_action.ck_id;
     return;
   end if;
@@ -476,9 +479,11 @@ begin
 
   -- код функции
   if pv_action = d::varchar then
-    
+    for vot_role in (select 1 from s_at.t_account_role where ck_role = pot_role.ck_id) loop
+      perform pkg.p_set_error(204);
+      return;
+    end loop;
     delete from s_at.t_role_action where ck_role = pot_role.ck_id;
-    delete from s_at.t_account_role where ck_role = pot_role.ck_id;
     delete from s_at.t_role where ck_id = pot_role.ck_id;
     return;
   end if;
