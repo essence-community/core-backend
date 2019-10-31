@@ -408,6 +408,8 @@ declare
   u sessvarstr;
   d sessvarstr;
   gv_error sessvarstr;
+
+  vot_d_info record;
 begin
   -- инициализация/получение переменных пакета
   i = sessvarstr_declare('pkg', 'i', 'I');
@@ -435,6 +437,10 @@ begin
     return;
   end if;
   if pv_action = i::varchar then
+   for vot_d_info in (select 1 from s_at.t_d_info where ck_id = pot_d_info.ck_id) loop
+      perform pkg.p_set_error(201, 'Наименование');
+      return;
+   end loop;
    insert into s_at.t_d_info values (pot_d_info.*);
    return;
   end if;
