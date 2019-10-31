@@ -187,3 +187,13 @@ INSERT INTO s_mt.t_sys_setting (ck_id,cv_value,ck_user,ct_change,cv_description)
 --changeset artemov_i:CORE-438 dbms:postgresql
 INSERT INTO s_mt.t_sys_setting (ck_id,cv_value,ck_user,ct_change,cv_description)
 	VALUES ('g_sys_theme','light','-11','2019-10-15 13:10:31.709','Тема по умолчанию');
+
+--changeset kutsenko:CORE-1304 dbms:postgresql
+UPDATE s_mt.t_object_attr SET cv_value = '##first##'  where ck_class_attr in (select ck_id from s_mt.t_class_attr where ck_attr = 'defaultvalue') AND cv_value = 'first';
+UPDATE s_mt.t_page_object_attr SET cv_value = '##first##' where ck_class_attr in (select ck_id from s_mt.t_class_attr where ck_attr = 'defaultvalue') AND cv_value = 'first';
+
+UPDATE s_mt.t_object_attr SET cv_value = '##alwaysfirst##' where ck_class_attr in (select ck_id from s_mt.t_class_attr where ck_attr = 'defaultvalue') AND cv_value = 'alwaysfirst';
+UPDATE s_mt.t_page_object_attr SET cv_value = '##alwaysfirst##' where ck_class_attr in (select ck_id from s_mt.t_class_attr where ck_attr = 'defaultvalue') AND cv_value = 'alwaysfirst';
+
+UPDATE s_mt.t_object_attr SET cv_value = 'new:' where ck_class_attr in (select ck_id from s_mt.t_class_attr where ck_attr = 'allownew') AND nullif(trim(cv_value), '') is not null;
+UPDATE s_mt.t_page_object_attr SET cv_value = 'new:' where ck_class_attr in (select ck_id from s_mt.t_class_attr where ck_attr = 'allownew') AND nullif(trim(cv_value), '') is not null;
