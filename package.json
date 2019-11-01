@@ -10,7 +10,7 @@
     "scripts": {
         "prettier": "prettier --write \"{,!(node_modules|dist|build|bin|libs|coverage)/**/}*.{js,jsx,ts,tsx,json}\"",
         "build": "gulp all",
-        "pre-commit": "yarn prettier && yarn tslint:fix:server && yarn tslint:fix:plugininf && yarn build",
+        "pre-commit": "yarn prettier && yarn tslint:server && yarn tslint:plugininf && yarn build",
         "tslint:server": "tslint --project server/tsconfig.json",
         "tslint:fix:server": "tslint --project server/tsconfig.json --fix",
         "tslint:plugininf": "tslint --project plugininf/tsconfig.json",
