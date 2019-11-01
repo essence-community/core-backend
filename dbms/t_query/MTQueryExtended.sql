@@ -86,7 +86,7 @@ from (
 				coalesce(to_pdu.cv_value, to_du.cv_value) as cv_defaultvaluequery,
 				o.cv_name,
 				1 as lvl,
-				(o.cv_name || '')::varchar as cv_path
+				(o.cv_name || '''')::varchar as cv_path
 			from
 				s_mt.t_page_object po
 			join s_mt.t_object o on
