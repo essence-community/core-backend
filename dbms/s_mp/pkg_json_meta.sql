@@ -179,7 +179,7 @@ begin
   vk_main = (pc_json->'service'->>'ck_main');
 
   if nullif(trim(vot_class_attr.cv_value), '') is not null 
-    and substr(vot_class_attr.cv_value, 0, 4) = 'new:'
+    and substr(vot_class_attr.cv_value, 0, 5) = 'new:'
     and length(vot_class_attr.cv_value) > 4 then 
     vot_class_attr.cv_value := substr(vot_class_attr.cv_value, 5);
   end if;
@@ -388,7 +388,7 @@ begin
   vk_main = (pc_json->'service'->>'ck_main');
   
   if nullif(trim(vot_object_attr.cv_value), '') is not null 
-    and substr(vot_object_attr.cv_value, 0, 4) = 'new:'
+    and substr(vot_object_attr.cv_value, 0, 5) = 'new:'
     and length(vot_object_attr.cv_value) > 4 then 
     vot_object_attr.cv_value := substr(vot_object_attr.cv_value, 5);
   end if;
@@ -547,7 +547,7 @@ begin
   perform gl_warning == (pc_json->'service'->>'cl_warning')::bigint;
 
   if nullif(trim(vot_page_object_attr.cv_value), '') is not null 
-    and substr(vot_page_object_attr.cv_value, 0, 4) = 'new:'
+    and substr(vot_page_object_attr.cv_value, 0, 5) = 'new:'
     and length(vot_page_object_attr.cv_value) > 4 then 
     vot_page_object_attr.cv_value := substr(vot_page_object_attr.cv_value, 5);
   end if;
