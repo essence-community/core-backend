@@ -202,3 +202,38 @@ UPDATE s_mt.t_page_object_attr SET cv_value = 'new:' where ck_class_attr in (sel
 INSERT INTO s_mt.t_attr SELECT 'visibleinwindow' ck_id, cv_description, ck_attr_type, ck_user, ct_change from s_mt.t_attr where ck_id = 'visibileinwindow';
 UPDATE s_mt.t_class_attr SET ck_attr = 'visibleinwindow' where ck_attr = 'visibileinwindow';
 DELETE FROM s_mt.t_attr where ck_id = 'visibileinwindow';
+
+--changeset artemov_i:CORE-429 dbms:postgresql
+CREATE TABLE s_mt.t_d_lang (
+	ck_id varchar(10) NOT NULL,
+	cv_name varchar(100) NOT NULL,
+	cl_default smallint NOT NULL DEFAULT 0,
+	CONSTRAINT cin_p_d_lang PRIMARY KEY (ck_id)
+);
+COMMENT ON TABLE s_mt.t_d_lang IS 'Список языков';
+
+-- Column comments
+
+COMMENT ON COLUMN s_mt.t_d_lang.ck_id IS 'Идентификатор';
+COMMENT ON COLUMN s_mt.t_d_lang.cv_name IS 'Наименование';
+COMMENT ON COLUMN s_mt.t_d_lang.cl_default IS 'Признак основного язык';
+
+CREATE TABLE s_mt.t_localization (
+	ck_id varchar(32) NOT NULL,
+	ck_d_lang varchar(10) NOT NULL,
+	сr_namespace varchar(50) NOT NULL,
+	cv_value text NOT NULL,
+	CONSTRAINT cin_u_localization_1 UNIQUE (ck_id,ck_d_lang),
+	CONSTRAINT cin_c_localization_2 CHECK (сr_namespace in ('meta','message')),
+	CONSTRAINT cin_f_localization_3 FOREIGN KEY (ck_d_lang) REFERENCES s_mt.t_d_lang(ck_id) ON DELETE RESTRICT ON UPDATE RESTRICT
+);
+COMMENT ON TABLE s_mt.t_localization IS 'Таблица локализации';
+
+-- Column comments
+
+COMMENT ON COLUMN s_mt.t_localization.ck_id IS 'Идентификатор';
+COMMENT ON COLUMN s_mt.t_localization.ck_d_lang IS 'Код языка';
+COMMENT ON COLUMN s_mt.t_localization.сr_namespace IS 'Место использования';
+COMMENT ON COLUMN s_mt.t_localization.cv_value IS 'Перевод';
+
+insert into s_mt.t_d_lang (ck_id, cv_name, cl_default) VALUES ('ru_RU', 'Русский (Россия)', 1);
