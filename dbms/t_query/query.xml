@@ -100,4 +100,5 @@
     <include file="./t_query/ATGetPage.sql" />
     <include file="./t_query/GetMetamodelPage.sql" />
     <include file="./t_query/MTCopyObject.sql" />
+    <include file="./t_query/MTGetLocale.sql" />
 </databaseChangeLog>
