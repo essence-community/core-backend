@@ -1,6 +1,6 @@
 --liquibase formatted sql
 --changeset artemov_i:MTGetLocale dbms:postgresql runOnChange:true splitStatements:false stripComments:false
-INSERT INTO s_mt.t_query (ck_id, cc_query, ck_provider, ck_user, ct_change, cr_type, cr_access, cn_action, cv_description) VALUES ('GetMsgList', '--MTGetLocale
+INSERT INTO s_mt.t_query (ck_id, cc_query, ck_provider, ck_user, ct_change, cr_type, cr_access, cn_action, cv_description) VALUES ('MTGetLocale', '--MTGetLocale
 select
   l.ck_id,
   l.сr_namespace,
