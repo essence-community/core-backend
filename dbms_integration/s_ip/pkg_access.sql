@@ -3,10 +3,10 @@
 DROP SCHEMA IF EXISTS pkg_access cascade;
 
 CREATE SCHEMA pkg_access
-    AUTHORIZATION s_ap;
+    AUTHORIZATION s_ip;
 
 
-ALTER SCHEMA pkg_access OWNER TO s_ap;
+ALTER SCHEMA pkg_access OWNER TO s_ip;
 
 CREATE FUNCTION pkg_access.p_check_access(pn_user character varying, pk_main character varying DEFAULT NULL::character varying) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
@@ -17,4 +17,4 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_access.p_check_access(pn_user character varying, pk_main character varying) OWNER TO s_ap;
+ALTER FUNCTION pkg_access.p_check_access(pn_user character varying, pk_main character varying) OWNER TO s_mp;

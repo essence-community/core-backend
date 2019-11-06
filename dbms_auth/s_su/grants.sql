@@ -1,5 +1,5 @@
 --liquibase formatted sql
---changeset artemov_i:grants dbms:postgresql runAlways:true splitStatements:false stripComments:false
+--changeset artemov_i:grants dbms:postgresql runAlways:true runOnChange:true splitStatements:false stripComments:false
 --гранты на использование
 
 GRANT USAGE ON SCHEMA pkg_json_user TO s_ac;
