@@ -124,55 +124,55 @@ export default class CoreOracleIntegration extends NullProvider {
             }
             return conn
                 .executeStmt(
-                    "with recursive ot_interface as (\n" + 
-                    "select\n" + 
-                    "    i.ck_id,\n" + 
-                    "    i.ck_d_interface,\n" + 
-                    "    i.ck_d_provider,\n" + 
-                    "    i.cc_request,\n" + 
-                    "    i.cc_response,\n" + 
-                    "    i.cn_action,\n" + 
-                    "    i.cv_url_request,\n" + 
-                    "    i.cv_url_response,\n" + 
-                    "    i.cv_description,\n" + 
-                    "    1 as lvl,\n" + 
-                    "    i.ck_parent\n" + 
-                    "from\n" + 
-                    "    s_it.t_interface i\n" + 
-                    "where\n" + 
-                    "    lower(i.ck_id) = lower(:ck_query)\n" + 
-                    "union all\n" + 
-                    "select\n" + 
-                    "    i.ck_id,\n" + 
-                    "    i.ck_d_interface,\n" + 
-                    "    i.ck_d_provider,\n" + 
-                    "    i.cc_request,\n" + 
-                    "    i.cc_response,\n" + 
-                    "    i.cn_action,\n" + 
-                    "    i.cv_url_request,\n" + 
-                    "    i.cv_url_response,\n" + 
-                    "    i.cv_description,\n" + 
-                    "    oi.lvl + 1 as lvl,\n" + 
-                    "    i.ck_parent\n" + 
-                    "from\n" + 
-                    "    s_it.t_interface i\n" + 
-                    "join ot_interface oi on\n" + 
-                    "    oi.ck_id = i.ck_parent )\n" + 
-                    "select\n" + 
-                    "    ck_id,\n" + 
-                    "    ck_d_interface,\n" + 
-                    "    ck_d_provider,\n" + 
-                    "    cc_request,\n" + 
-                    "    cc_response,\n" + 
-                    "    cn_action,\n" + 
-                    "    cv_url_request,\n" + 
-                    "    cv_url_response,\n" + 
-                    "    cv_description,\n" + 
-                    "    ck_parent\n" + 
-                    "from\n" + 
-                    "    ot_interface\n" + 
-                    "order by\n" + 
-                    "    lvl desc\n",
+                    "with recursive ot_interface as (\n" +
+                        "select\n" +
+                        "    i.ck_id,\n" +
+                        "    i.ck_d_interface,\n" +
+                        "    i.ck_d_provider,\n" +
+                        "    i.cc_request,\n" +
+                        "    i.cc_response,\n" +
+                        "    i.cn_action,\n" +
+                        "    i.cv_url_request,\n" +
+                        "    i.cv_url_response,\n" +
+                        "    i.cv_description,\n" +
+                        "    1 as lvl,\n" +
+                        "    i.ck_parent\n" +
+                        "from\n" +
+                        "    s_it.t_interface i\n" +
+                        "where\n" +
+                        "    lower(i.ck_id) = lower(:ck_query)\n" +
+                        "union all\n" +
+                        "select\n" +
+                        "    i.ck_id,\n" +
+                        "    i.ck_d_interface,\n" +
+                        "    i.ck_d_provider,\n" +
+                        "    i.cc_request,\n" +
+                        "    i.cc_response,\n" +
+                        "    i.cn_action,\n" +
+                        "    i.cv_url_request,\n" +
+                        "    i.cv_url_response,\n" +
+                        "    i.cv_description,\n" +
+                        "    oi.lvl + 1 as lvl,\n" +
+                        "    i.ck_parent\n" +
+                        "from\n" +
+                        "    s_it.t_interface i\n" +
+                        "join ot_interface oi on\n" +
+                        "    oi.ck_id = i.ck_parent )\n" +
+                        "select\n" +
+                        "    ck_id,\n" +
+                        "    ck_d_interface,\n" +
+                        "    ck_d_provider,\n" +
+                        "    cc_request,\n" +
+                        "    cc_response,\n" +
+                        "    cn_action,\n" +
+                        "    cv_url_request,\n" +
+                        "    cv_url_response,\n" +
+                        "    cv_description,\n" +
+                        "    ck_parent\n" +
+                        "from\n" +
+                        "    ot_interface\n" +
+                        "order by\n" +
+                        "    lvl desc\n",
                     {
                         ck_query: context.queryName,
                     },
