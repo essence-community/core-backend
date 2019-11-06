@@ -30,7 +30,7 @@ interface IIntegrationParams extends IPostgresDBConfig, IParamsProvider {
     timeout?: number;
 }
 
-export default class CoreOracleIntegration extends NullProvider {
+export default class CoreIntegration extends NullProvider {
     public static getParamsInfo(): IParamsInfo {
         return {
             ...PostgresDB.getParamsInfo(),
@@ -51,7 +51,7 @@ export default class CoreOracleIntegration extends NullProvider {
         super(name, params);
         this.params = {
             ...this.params,
-            ...initParams(CoreOracleIntegration.getParamsInfo(), params),
+            ...initParams(CoreIntegration.getParamsInfo(), params),
         };
         this.dataSource = new PostgresDB(`${this.name}_provider`, {
             connectString: this.params.connectString,

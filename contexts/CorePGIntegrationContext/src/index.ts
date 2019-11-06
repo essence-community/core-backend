@@ -1,3 +1,3 @@
-import CoreOracleIntegration from "./CoreIntegration";
+import CoreIntegration from "./CoreIntegration";
 
-export = CoreOracleIntegration;
+export = CoreIntegration;

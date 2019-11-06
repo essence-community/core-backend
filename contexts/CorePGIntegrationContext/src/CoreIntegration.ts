@@ -15,7 +15,7 @@ const querySql = "select q.* from t_interface q";
 const queryFindSql =
     "select q.* from t_interface q where lower(q.ck_id) = lower(:ck_query)";
 
-export default class CoreOracleIntegration extends NullContext {
+export default class CoreIntegration extends NullContext {
     public static getParamsInfo(): IParamsInfo {
         return {
             ...NullContext.getParamsInfo(),
@@ -32,7 +32,7 @@ export default class CoreOracleIntegration extends NullContext {
     private caller: any;
     constructor(name: string, params: ICCTParams) {
         super(name, params);
-        this.params = initParams(CoreOracleIntegration.getParamsInfo(), params);
+        this.params = initParams(CoreIntegration.getParamsInfo(), params);
         if (this.params.disableCache) {
             this.caller = this.onlineInitContext;
         } else {
