@@ -9,6 +9,15 @@ import { IResultProvider } from "./IResult";
 import Logger from "./Logger";
 import { initParams, isEmpty } from "./util/Util";
 
+export interface IParamsProvider extends Record<string, any> {
+    defaultNeedSession: boolean;
+    defaultType?: number;
+    defaultUseMacros: boolean;
+    needSession?: boolean;
+    type?: number;
+    useMacros?: boolean;
+}
+
 export default abstract class NullProvider implements IProvider {
     public static getParamsInfo(): IParamsInfo {
         return {
@@ -42,7 +51,7 @@ export default abstract class NullProvider implements IProvider {
         };
     }
     public name: string;
-    public params: ICCTParams;
+    public params: IParamsProvider;
     public log: IRufusLogger;
     constructor(name: string, params: ICCTParams) {
         this.name = name;
