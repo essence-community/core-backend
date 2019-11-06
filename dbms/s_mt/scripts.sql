@@ -237,3 +237,8 @@ COMMENT ON COLUMN s_mt.t_localization.сr_namespace IS 'Место исполь�
 COMMENT ON COLUMN s_mt.t_localization.cv_value IS 'Перевод';
 
 insert into s_mt.t_d_lang (ck_id, cv_name, cl_default) VALUES ('ru_RU', 'Русский (Россия)', 1);
+
+--changeset kutsenko:CORE-1278 dbms:postgresql
+INSERT INTO s_mt.t_attr SELECT 'splitter' ck_id, cv_description, ck_attr_type, ck_user, ct_change from s_mt.t_attr where ck_id = 'spliter';
+UPDATE s_mt.t_class_attr SET ck_attr = 'splitter' where ck_attr = 'spliter';
+DELETE FROM s_mt.t_attr where ck_id = 'spliter';
