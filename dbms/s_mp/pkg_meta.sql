@@ -1772,6 +1772,7 @@ begin
                  t.cv_variable
           from t_variable
           cross join unnest(pkg_util.f_get_global_from_string(t_variable.cv_value, ck_attr)) as t(cv_variable)
+          where ck_attr in ('disabledrules', 'hiddenrules', 'getglobaltostore', 'getglobal', 'readonlyrules', 'setglobal', 'columnsfilter')
         )v
         left join s_mt.t_page_variable pv on pv.ck_page = v.ck_page
          and pv.cv_name = v.cv_variable
