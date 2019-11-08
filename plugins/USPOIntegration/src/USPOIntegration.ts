@@ -480,19 +480,19 @@ export default class USPOIntegration extends NullPlugin {
                 gateContext.debug(`Request params: ${JSON.stringify(params)}`);
             }
             request(params, (err, res, body) => {
-                if (gateContext.isDebugEnabled()) {
-                    gateContext.debug(
-                        `Response headers: ${JSON.stringify(
-                            res.headers,
-                        )}\nResponse Code: ${res.statusCode}\nbody:\n${body}`,
-                    );
-                }
                 if (err) {
                     gateContext.error(err);
                     return reject(
                         new Error(
                             `Ошибка вызова ${urlPrint.hostname}\nError: ${err.message}`,
                         ),
+                    );
+                }
+                if (gateContext.isDebugEnabled()) {
+                    gateContext.debug(
+                        `Response headers: ${JSON.stringify(
+                            res.headers,
+                        )}\nResponse Code: ${res.statusCode}\nbody:\n${body}`,
                     );
                 }
                 if (res.statusCode > 400) {
