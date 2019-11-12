@@ -271,3 +271,6 @@ INSERT INTO s_mt.t_message (ck_id,cr_type,cv_text,ck_user,ct_change)
 VALUES (75,'warning','Будут удалены все переводы данного языка','4fd05ca9-3a9e-4d66-82df-886dfa082113','2019-11-12 10:47:00.000');
 INSERT INTO s_mt.t_message (ck_id,cr_type,cv_text,ck_user,ct_change)
 VALUES (76,'warning','Будут удалены все переводы данного слова/фразы','4fd05ca9-3a9e-4d66-82df-886dfa082113','2019-11-12 10:47:00.000');
+
+--changeset artemov_i:fix-notification dbms:postgresql
+ALTER TABLE s_mt.t_notification ALTER COLUMN ck_user TYPE varchar(100) USING ck_user::varchar;
