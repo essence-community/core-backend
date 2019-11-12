@@ -37,7 +37,7 @@ begin
   -- Проверим и сохраним данные
   vot_notification := pkg_notification.p_modify_notification(vv_action, vot_notification);
   -- Логируем данные
-  perform pkg_log.p_save(coalesce(pv_user, "-11"),
+  perform pkg_log.p_save(coalesce(pv_user, '-11'),
                          pv_session,
                          pc_json,
                          'pkg_json_notification.f_modify_notification',
