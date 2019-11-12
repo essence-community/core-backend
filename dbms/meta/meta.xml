@@ -12,4 +12,5 @@
    <include file="./meta/Page_12127721.sql" />
    <include file="./meta/Page_1875130240361.sql" />
    <include file="./meta/Page_2.sql" />
+   <include file="./meta/Page_BC4B5C748874439E9CED6E8F76933B84.sql" />
 </databaseChangeLog>  
