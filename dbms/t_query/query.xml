@@ -101,4 +101,8 @@
     <include file="./t_query/GetMetamodelPage.sql" />
     <include file="./t_query/MTCopyObject.sql" />
     <include file="./t_query/MTGetLocale.sql" />
+    <include file="./t_query/MTGetLang.sql" />
+    <include file="./t_query/MTGetDefaultLocalization.sql" />
+    <include file="./t_query/MTGetLocalization.sql" />
+    <include file="./t_query/MTGetLocalNameSpace.sql" />
 </databaseChangeLog>

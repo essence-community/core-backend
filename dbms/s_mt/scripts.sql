@@ -242,3 +242,32 @@ insert into s_mt.t_d_lang (ck_id, cv_name, cl_default) VALUES ('ru_RU', 'Рус�
 INSERT INTO s_mt.t_attr SELECT 'splitter' ck_id, cv_description, ck_attr_type, ck_user, ct_change from s_mt.t_attr where ck_id = 'spliter';
 UPDATE s_mt.t_class_attr SET ck_attr = 'splitter' where ck_attr = 'spliter';
 DELETE FROM s_mt.t_attr where ck_id = 'spliter';
+
+--changeset artemov_i:CORE-429_2 dbms:postgresql
+ALTER TABLE s_mt.t_d_lang ADD ck_user varchar(100) NULL;
+COMMENT ON COLUMN s_mt.t_d_lang.ck_user IS 'Аудит идентификатор пользователя';
+ALTER TABLE s_mt.t_d_lang ADD ct_change timestamptz NULL;
+COMMENT ON COLUMN s_mt.t_d_lang.ct_change IS 'Аудит время модификации';
+ALTER TABLE s_mt.t_localization ADD ck_user varchar(100) NOT NULL;
+COMMENT ON COLUMN s_mt.t_localization.ck_user IS 'Аудит идентификатор пользователя';
+ALTER TABLE s_mt.t_localization ADD ct_change timestamptz NOT NULL;
+COMMENT ON COLUMN s_mt.t_localization.ct_change IS 'Аудит время модификации';
+UPDATE s_mt.t_d_lang
+	set ck_user = '4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change = CURRENT_TIMESTAMP;
+UPDATE s_mt.t_localization
+	set ck_user = '4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change = CURRENT_TIMESTAMP;
+ALTER TABLE s_mt.t_d_lang ALTER COLUMN ck_user SET NOT NULL;
+ALTER TABLE s_mt.t_d_lang ALTER COLUMN ct_change SET NOT NULL;
+ALTER TABLE s_mt.t_localization ALTER COLUMN ck_user SET NOT NULL;
+ALTER TABLE s_mt.t_localization ALTER COLUMN ct_change SET NOT NULL;
+
+--changeset artemov_i:CORE-429_3 dbms:postgresql
+ALTER TABLE s_mt.t_localization RENAME сr_namespace TO cr_namespace;
+
+--changeset artemov_i:CORE-431 dbms:postgresql
+INSERT INTO s_mt.t_message (ck_id,cr_type,cv_text,ck_user,ct_change)
+VALUES (74,'error','Запрещено удалять, язык по умолчанию','4fd05ca9-3a9e-4d66-82df-886dfa082113','2019-11-12 10:47:00.000');
+INSERT INTO s_mt.t_message (ck_id,cr_type,cv_text,ck_user,ct_change)
+VALUES (75,'warning','Будут удалены все переводы данного языка','4fd05ca9-3a9e-4d66-82df-886dfa082113','2019-11-12 10:47:00.000');
+INSERT INTO s_mt.t_message (ck_id,cr_type,cv_text,ck_user,ct_change)
+VALUES (76,'warning','Будут удалены все переводы данного слова/фразы','4fd05ca9-3a9e-4d66-82df-886dfa082113','2019-11-12 10:47:00.000');

@@ -18,6 +18,8 @@ GRANT USAGE ON SCHEMA pkg_json_util TO s_mc;
 
 GRANT USAGE ON SCHEMA pkg_json_report TO s_mc;
 
+GRANT USAGE ON SCHEMA pkg_json_localization TO s_mc;
+
 GRANT USAGE ON SCHEMA s_mt TO s_mc;
 
 GRANT USAGE ON SCHEMA public TO s_mc;
@@ -85,6 +87,12 @@ GRANT EXECUTE ON FUNCTION pkg_json_util.f_string_to_rows(pv_string character var
 GRANT EXECUTE ON FUNCTION pkg_json_util.f_check_string_is_percentage(pv_string character varying) TO s_mc;
 
 GRANT EXECUTE ON FUNCTION pkg_json_report.f_modify_dynamic_report(pv_user character varying, pv_session character varying, pc_json jsonb) TO s_mc;
+
+GRANT EXECUTE ON FUNCTION pkg_json_localization.f_modify_default_localization(pv_user character varying, pk_session character varying, pc_json jsonb) TO s_mc;
+
+GRANT EXECUTE ON FUNCTION pkg_json_localization.f_modify_lang(pv_user character varying, pk_session character varying, pc_json jsonb) TO s_mc;
+
+GRANT EXECUTE ON FUNCTION pkg_json_localization.f_modify_localization(pv_user character varying, pk_session character varying, pc_json jsonb) TO s_mc;
 
 GRANT EXECUTE ON FUNCTION public.sessvarf_declare(p_pcg_name character varying, p_var_name character varying, p_init_value double precision) TO s_mc;
 
@@ -267,3 +275,11 @@ GRANT SELECT ON TABLE s_mt.t_dynamic_report TO s_mc;
 GRANT SELECT, UPDATE, INSERT, DELETE ON TABLE s_mt.t_module_class TO s_mp;
 
 GRANT SELECT ON TABLE s_mt.t_module_class TO s_mc;
+
+GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE s_mt.t_d_lang TO s_mp;
+
+GRANT SELECT ON TABLE s_mt.t_d_lang TO s_mc;
+
+GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE s_mt.t_localization TO s_mp;
+
+GRANT SELECT ON TABLE s_mt.t_localization TO s_mc;
