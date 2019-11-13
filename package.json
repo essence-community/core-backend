@@ -15,6 +15,7 @@
         "tslint:fix:server": "tslint --project server/tsconfig.json --fix",
         "tslint:plugininf": "tslint --project plugininf/tsconfig.json",
         "tslint:fix:plugininf": "tslint --project plugininf/tsconfig.json --fix",
+        "ltslint:fix:context": "ls contexts | while read line; do tslint --project contexts/$line/tsconfig.json --fix; done",
         "ltslint:fix:plugins": "ls plugins | while read line; do tslint --project plugins/$line/tsconfig.json --fix; done",
         "ltslint:fix:providers": "ls providers | while read line; do tslint --project providers/$line/tsconfig.json --fix; done",
         "ltslint:fix:events": "ls events | while read line; do tslint --project events/$line/tsconfig.json --fix; done",

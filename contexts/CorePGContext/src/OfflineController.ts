@@ -42,12 +42,26 @@ export default class OfflineController implements ICoreController {
         "select s.ck_id, s.cv_value, s.cv_description from s_mt.t_sys_setting s";
 
     private pageSql =
-        "select po.ck_page, pa.cn_action, p.cv_name, pkg_json.f_get_object(po.ck_id) as json\n" +
-        "from t_page_object po\n" +
-        "join t_page p on p.ck_id = po.ck_page\n" +
-        "left join t_page_action pa on pa.ck_page = p.ck_id\n" +
-        "where ((pa.cr_type is not null and pa.cr_type = 'view') or pa.cr_type is null) and po.ck_parent is null\n" +
-        "order by po.ck_page, po.cn_order";
+        "select\n" +
+        "    p.ck_id as ck_page,\n" +
+        "    p.cv_url,\n" +
+        "    pa.cn_action,\n" +
+        "    p.cv_name,\n" +
+        "    pkg_json.f_get_object(po.ck_id) as json\n" +
+        "from\n" +
+        "    s_mt.t_page p\n" +
+        "left join s_mt.t_page_object po on\n" +
+        "    p.ck_id = po.ck_page\n" +
+        "join s_mt.t_page_action pa on\n" +
+        "    pa.ck_page = p.ck_id\n" +
+        "where\n" +
+        "    ((pa.cr_type is not null\n" +
+        "    and pa.cr_type = 'view')\n" +
+        "    or pa.cr_type is null)\n" +
+        "    and po.ck_parent is null\n" +
+        "order by\n" +
+        "    po.ck_page,\n" +
+        "    po.cn_order\n";
     private querySql =
         "select q.ck_id, q.ck_provider, q.cc_query, q.cr_type, q.cr_access, q.cn_action\n" +
         "from t_query q";
@@ -84,11 +98,12 @@ export default class OfflineController implements ICoreController {
         "  from t_message m\n" +
         " order by m.ck_id asc";
     private pageFindSql =
-        "select po.ck_page, p.cv_name, pa.cn_action, pkg_json.f_get_object(po.ck_id) as json\n" +
-        "   from t_page_object po\n" +
-        "   join t_page p on p.ck_id = po.ck_page\n" +
-        "   left join t_page_action pa on pa.ck_page = p.ck_id\n" +
-        "  where ((pa.cr_type is not null and pa.cr_type = 'view') or pa.cr_type is null) and po.ck_parent is null and po.ck_page = :ck_page\n" +
+        "select p.ck_id as ck_page, p.cv_url, p.cv_name, pa.cn_action, pkg_json.f_get_object(po.ck_id) as json\n" +
+        "   from t_page p\n" +
+        "   left join t_page_object po on p.ck_id = po.ck_page\n" +
+        "   join t_page_action pa on pa.ck_page = p.ck_id\n" +
+        "  where ((pa.cr_type is not null and pa.cr_type = 'view') or pa.cr_type is null) \n" +
+        "   and po.ck_parent is null and (p.ck_id = :ck_page or p.cv_url = :ck_page) \n" +
         "   order by po.ck_page, po.cn_order";
     private queryFindSql =
         "select q.ck_id, q.ck_provider, q.cc_query, q.cr_type, q.cr_access, q.cn_action\n" +
@@ -213,289 +228,6 @@ export default class OfflineController implements ICoreController {
                 ),
             );
     }
-    public async findPages(
-        gateContext: IContext,
-        ckPage: string,
-        caActions: any[],
-    ): Promise<any> {
-        const doc = await this.tempTable.dbPage.findOne(
-            {
-                ck_id: ckPage,
-            },
-            true,
-        );
-        if (doc) {
-            if (doc.cn_action && !caActions.includes(doc.cn_action)) {
-                return Promise.reject(CoreContext.accessDenied());
-            }
-            return Promise.reject(
-                new BreakException({
-                    data: ResultStream(doc.json),
-                    type: "success",
-                }),
-            );
-        }
-        return this.onlineFindPages(gateContext, ckPage, caActions, true);
-    }
-    public async findQuery(gateContext: IContext, name: string): Promise<any> {
-        const caActions =
-            (gateContext.session && gateContext.session.data.ca_actions) || [];
-        const pageObject = (gateContext.params.page_object || "").toLowerCase();
-        return this.tempTable.dbQuery
-            .findOne(
-                {
-                    ck_id: name,
-                },
-                true,
-            )
-            .then(async (doc) => {
-                if (doc) {
-                    if (doc.cr_access === "po_session") {
-                        const access = await this.tempTable.dbQueryAction.findOne(
-                            {
-                                $and: [
-                                    { ck_page_object: pageObject },
-                                    { cn_action: { $in: caActions } },
-                                ],
-                            },
-                            true,
-                        );
-                        if (
-                            isEmpty(access) &&
-                            !this.params.disableCheckAccess
-                        ) {
-                            throw CoreContext.accessDenied();
-                        }
-                    }
-                    if (
-                        doc.cn_action &&
-                        !caActions.includes(parseInt(doc.cn_action, 10))
-                    ) {
-                        throw CoreContext.accessDenied();
-                    }
-                    return {
-                        defaultActionName: CoreContext.decodeType(doc),
-                        providerName: doc.ck_provider,
-                        query: {
-                            extraOutParams: [
-                                {
-                                    cv_name: "result",
-                                    outType: "DEFAULT",
-                                },
-                                {
-                                    cv_name: "cur_result",
-                                    outType: "CURSOR",
-                                },
-                                ...(doc.cr_type === "report"
-                                    ? [
-                                          {
-                                              cv_name: "EXTRACT_META_DATA",
-                                              outType: "DEFAULT",
-                                          },
-                                      ]
-                                    : []),
-                            ],
-                            needSession: doc.cr_access !== "free",
-                            queryData: doc,
-                            queryStr: doc.cc_query,
-                        },
-                    };
-                }
-                return this.onlineFindQuery(name, pageObject, caActions, true);
-            });
-    }
-
-    public onlineFindQuery(
-        name: string,
-        pageObject: any,
-        caActions,
-        isSave: boolean = false,
-    ) {
-        return this.dataSource
-            .executeStmt(this.queryFindSql, null, { ck_query: name })
-            .then(
-                (res) =>
-                    new Promise((resolve, reject) => {
-                        const data = [];
-                        res.stream.on("error", (err) =>
-                            reject(new Error(err.message)),
-                        );
-                        res.stream.on("data", (row) => {
-                            data.push({
-                                cc_query: row.cc_query,
-                                ck_id: row.ck_id.toLowerCase(),
-                                ck_provider: row.ck_provider,
-                                cn_action: parseInt(row.cn_action, 10),
-                                cr_access: row.cr_access,
-                                cr_type: row.cr_type,
-                            });
-                        });
-                        res.stream.on("end", async () => {
-                            if (data.length) {
-                                if (isSave) {
-                                    this.tempTable.dbQuery
-                                        .insert(data)
-                                        .then(noop, noop);
-                                }
-                                const [doc] = data;
-                                if (doc.cr_access === "po_session") {
-                                    const access = await this.tempTable.dbQueryAction.findOne(
-                                        {
-                                            $and: [
-                                                { ck_page_object: pageObject },
-                                                {
-                                                    cn_action: {
-                                                        $in: caActions,
-                                                    },
-                                                },
-                                            ],
-                                        },
-                                        true,
-                                    );
-                                    if (
-                                        isEmpty(access) &&
-                                        !this.params.disableCheckAccess
-                                    ) {
-                                        return reject(
-                                            CoreContext.accessDenied(),
-                                        );
-                                    }
-                                }
-                                if (
-                                    doc.cn_action &&
-                                    !caActions.includes(
-                                        parseInt(doc.cn_action, 10),
-                                    )
-                                ) {
-                                    return reject(CoreContext.accessDenied());
-                                }
-                                return resolve({
-                                    defaultActionName: CoreContext.decodeType(
-                                        doc,
-                                    ),
-                                    providerName: doc.ck_provider,
-                                    query: {
-                                        extraOutParams: [
-                                            {
-                                                cv_name: "result",
-                                                outType: "DEFAULT",
-                                            },
-                                            {
-                                                cv_name: "cur_result",
-                                                outType: "CURSOR",
-                                            },
-                                            ...(doc.cr_type === "report"
-                                                ? [
-                                                      {
-                                                          cv_name:
-                                                              "EXTRACT_META_DATA",
-                                                          outType: "DEFAULT",
-                                                      },
-                                                  ]
-                                                : []),
-                                        ],
-                                        needSession: doc.cr_access !== "free",
-                                        queryData: doc,
-                                        queryStr: doc.cc_query,
-                                    },
-                                });
-                            }
-                            return reject(
-                                new ErrorException(ErrorGate.NOTFOUND_QUERY),
-                            );
-                        });
-                    }),
-            );
-    }
-
-    public onlineFindPages(
-        gateContext: IContext,
-        ckPage: string,
-        caActions: any,
-        isSave: boolean = false,
-    ) {
-        const self = this;
-        return this.dataSource
-            .executeStmt(this.pageFindSql, null, {
-                ck_page: ckPage,
-            })
-            .then(
-                (res) =>
-                    new Promise((resolve, reject) => {
-                        const data = {};
-                        res.stream.on("error", (err) =>
-                            reject(new Error(err.message)),
-                        );
-                        res.stream.on("data", (row) => {
-                            try {
-                                if (data[row.ck_page]) {
-                                    data[row.ck_page].json.push(
-                                        isObject(row.json)
-                                            ? row.json
-                                            : JSON.parse(
-                                                  row.json,
-                                                  self.replaceNull,
-                                              ),
-                                    );
-                                } else {
-                                    data[row.ck_page] = {
-                                        ck_id: row.ck_page,
-                                        cn_action: parseInt(row.cn_action, 10),
-                                        cv_name: row.cv_name,
-                                        json: [
-                                            isObject(row.json)
-                                                ? row.json
-                                                : JSON.parse(
-                                                      row.json,
-                                                      self.replaceNull,
-                                                  ),
-                                        ],
-                                    };
-                                }
-                            } catch (e) {
-                                logger.error(
-                                    `Error parse: ${row.json} ${e.message}`,
-                                    e,
-                                );
-                            }
-                        });
-                        res.stream.on("end", () => {
-                            const page = data[ckPage];
-                            if (!page) {
-                                if (
-                                    gateContext.queryName ===
-                                    this.params.pageObjectsQueryName
-                                ) {
-                                    return reject(
-                                        new BreakException({
-                                            data: ResultStream([]),
-                                            type: "success",
-                                        }),
-                                    );
-                                }
-                                return reject(CoreContext.accessDenied());
-                            }
-                            if (isSave) {
-                                this.tempTable.dbPage
-                                    .insert(Object.values(data))
-                                    .then(noop, noop);
-                            }
-                            if (
-                                page.cn_action &&
-                                !caActions.includes(page.cn_action)
-                            ) {
-                                return reject(CoreContext.accessDenied());
-                            }
-                            return reject(
-                                new BreakException({
-                                    data: ResultStream(page.json),
-                                    type: "success",
-                                }),
-                            );
-                        });
-                    }),
-            );
-    }
 
     /**
      * Поиск метода модификации и формирование запроса к бд
@@ -576,6 +308,297 @@ export default class OfflineController implements ICoreController {
                 );
             });
         });
+    }
+    public async findPages(
+        gateContext: IContext,
+        ckPage: string,
+        caActions: any[],
+    ): Promise<any> {
+        const doc = await this.tempTable.dbPage.findOne(
+            {
+                $or: [
+                    {
+                        ck_id: ckPage,
+                    },
+                    {
+                        cv_url: ckPage,
+                    },
+                ],
+            },
+            true,
+        );
+        if (doc) {
+            if (isEmpty(doc.cn_action) || !caActions.includes(doc.cn_action)) {
+                return Promise.reject(CoreContext.accessDenied());
+            }
+            return Promise.reject(
+                new BreakException({
+                    data: ResultStream(doc.json),
+                    type: "success",
+                }),
+            );
+        }
+        return this.onlineFindPages(gateContext, ckPage, caActions, true);
+    }
+    public onlineFindPages(
+        gateContext: IContext,
+        ckPage: string,
+        caActions: any,
+        isSave: boolean = false,
+    ) {
+        const self = this;
+        return this.dataSource
+            .executeStmt(this.pageFindSql, null, {
+                ck_page: ckPage,
+            })
+            .then(
+                (res) =>
+                    new Promise((resolve, reject) => {
+                        const data = {};
+                        res.stream.on("error", (err) =>
+                            reject(new Error(err.message)),
+                        );
+                        res.stream.on("data", (row) => {
+                            try {
+                                if (data[row.ck_page]) {
+                                    data[row.ck_page].json.push(
+                                        isObject(row.json)
+                                            ? row.json
+                                            : JSON.parse(
+                                                  row.json,
+                                                  self.replaceNull,
+                                              ),
+                                    );
+                                } else {
+                                    data[row.ck_page] = {
+                                        ck_id: row.ck_page,
+                                        cn_action:
+                                            row.cn_action &&
+                                            parseInt(row.cn_action, 10),
+                                        cv_name: row.cv_name,
+                                        cv_url: row.cv_url,
+                                        json: row.json
+                                            ? [
+                                                  isObject(row.json)
+                                                      ? row.json
+                                                      : JSON.parse(
+                                                            row.json,
+                                                            self.replaceNull,
+                                                        ),
+                                              ]
+                                            : [],
+                                    };
+                                }
+                            } catch (e) {
+                                logger.error(
+                                    `Error parse: ${row.json} ${e.message}`,
+                                    e,
+                                );
+                            }
+                        });
+                        res.stream.on("end", () => {
+                            const page = data[ckPage];
+                            if (!page) {
+                                if (
+                                    gateContext.queryName ===
+                                    this.params.pageObjectsQueryName
+                                ) {
+                                    return reject(
+                                        new BreakException({
+                                            data: ResultStream([]),
+                                            type: "success",
+                                        }),
+                                    );
+                                }
+                                return reject(CoreContext.accessDenied());
+                            }
+                            if (isSave) {
+                                this.tempTable.dbPage
+                                    .insert(Object.values(data))
+                                    .then(noop, noop);
+                            }
+                            if (
+                                isEmpty(page.cn_action) ||
+                                !caActions.includes(page.cn_action)
+                            ) {
+                                return reject(CoreContext.accessDenied());
+                            }
+                            return reject(
+                                new BreakException({
+                                    data: ResultStream(page.json),
+                                    type: "success",
+                                }),
+                            );
+                        });
+                    }),
+            );
+    }
+    public async findQuery(gateContext: IContext, name: string): Promise<any> {
+        const caActions =
+            (gateContext.session && gateContext.session.data.ca_actions) || [];
+        const pageObject = (gateContext.params.page_object || "").toLowerCase();
+        return this.tempTable.dbQuery
+            .findOne(
+                {
+                    ck_id: name,
+                },
+                true,
+            )
+            .then(async (doc) => {
+                if (doc) {
+                    if (doc.cr_access === "po_session") {
+                        const access = await this.tempTable.dbQueryAction.findOne(
+                            {
+                                $and: [
+                                    { ck_page_object: pageObject },
+                                    { cn_action: { $in: caActions } },
+                                ],
+                            },
+                            true,
+                        );
+                        if (
+                            isEmpty(access) &&
+                            !this.params.disableCheckAccess
+                        ) {
+                            throw CoreContext.accessDenied();
+                        }
+                    }
+                    if (doc.cn_action && !caActions.includes(doc.cn_action)) {
+                        throw CoreContext.accessDenied();
+                    }
+                    return {
+                        defaultActionName: CoreContext.decodeType(doc),
+                        providerName: doc.ck_provider,
+                        query: {
+                            extraOutParams: [
+                                {
+                                    cv_name: "result",
+                                    outType: "DEFAULT",
+                                },
+                                {
+                                    cv_name: "cur_result",
+                                    outType: "CURSOR",
+                                },
+                                ...(doc.cr_type === "report"
+                                    ? [
+                                          {
+                                              cv_name: "EXTRACT_META_DATA",
+                                              outType: "DEFAULT",
+                                          },
+                                      ]
+                                    : []),
+                            ],
+                            needSession: doc.cr_access !== "free",
+                            queryData: doc,
+                            queryStr: doc.cc_query,
+                        },
+                    };
+                }
+                return this.onlineFindQuery(name, pageObject, caActions, true);
+            });
+    }
+
+    public onlineFindQuery(
+        name: string,
+        pageObject: any,
+        caActions,
+        isSave: boolean = false,
+    ) {
+        return this.dataSource
+            .executeStmt(this.queryFindSql, null, { ck_query: name })
+            .then(
+                (res) =>
+                    new Promise((resolve, reject) => {
+                        const data = [];
+                        res.stream.on("error", (err) =>
+                            reject(new Error(err.message)),
+                        );
+                        res.stream.on("data", (row) => {
+                            data.push({
+                                cc_query: row.cc_query,
+                                ck_id: row.ck_id.toLowerCase(),
+                                ck_provider: row.ck_provider,
+                                cn_action:
+                                    row.cn_action &&
+                                    parseInt(row.cn_action, 10),
+                                cr_access: row.cr_access,
+                                cr_type: row.cr_type,
+                            });
+                        });
+                        res.stream.on("end", async () => {
+                            if (data.length) {
+                                if (isSave) {
+                                    this.tempTable.dbQuery
+                                        .insert(data)
+                                        .then(noop, noop);
+                                }
+                                const [doc] = data;
+                                if (doc.cr_access === "po_session") {
+                                    const access = await this.tempTable.dbQueryAction.findOne(
+                                        {
+                                            $and: [
+                                                { ck_page_object: pageObject },
+                                                {
+                                                    cn_action: {
+                                                        $in: caActions,
+                                                    },
+                                                },
+                                            ],
+                                        },
+                                        true,
+                                    );
+                                    if (
+                                        isEmpty(access) &&
+                                        !this.params.disableCheckAccess
+                                    ) {
+                                        return reject(
+                                            CoreContext.accessDenied(),
+                                        );
+                                    }
+                                }
+                                if (
+                                    doc.cn_action &&
+                                    !caActions.includes(doc.cn_action)
+                                ) {
+                                    return reject(CoreContext.accessDenied());
+                                }
+                                return resolve({
+                                    defaultActionName: CoreContext.decodeType(
+                                        doc,
+                                    ),
+                                    providerName: doc.ck_provider,
+                                    query: {
+                                        extraOutParams: [
+                                            {
+                                                cv_name: "result",
+                                                outType: "DEFAULT",
+                                            },
+                                            {
+                                                cv_name: "cur_result",
+                                                outType: "CURSOR",
+                                            },
+                                            ...(doc.cr_type === "report"
+                                                ? [
+                                                      {
+                                                          cv_name:
+                                                              "EXTRACT_META_DATA",
+                                                          outType: "DEFAULT",
+                                                      },
+                                                  ]
+                                                : []),
+                                        ],
+                                        needSession: doc.cr_access !== "free",
+                                        queryData: doc,
+                                        queryStr: doc.cc_query,
+                                    },
+                                });
+                            }
+                            return reject(
+                                new ErrorException(ErrorGate.NOTFOUND_QUERY),
+                            );
+                        });
+                    }),
+            );
     }
 
     public async init(reload?: boolean): Promise<any> {
@@ -764,16 +787,21 @@ export default class OfflineController implements ICoreController {
                                 } else {
                                     data[row.ck_page] = {
                                         ck_id: row.ck_page,
-                                        cn_action: parseInt(row.cn_action, 10),
+                                        cn_action:
+                                            row.cn_action &&
+                                            parseInt(row.cn_action, 10),
                                         cv_name: row.cv_name,
-                                        json: [
-                                            isObject(row.json)
-                                                ? row.json
-                                                : JSON.parse(
-                                                      row.json,
-                                                      self.replaceNull,
-                                                  ),
-                                        ],
+                                        cv_url: row.cv_url,
+                                        json: row.json
+                                            ? [
+                                                  isObject(row.json)
+                                                      ? row.json
+                                                      : JSON.parse(
+                                                            row.json,
+                                                            self.replaceNull,
+                                                        ),
+                                              ]
+                                            : [],
                                     };
                                 }
                             } catch (e) {
@@ -862,6 +890,9 @@ export default class OfflineController implements ICoreController {
                                 cc_query: row.cc_query,
                                 ck_id: row.ck_id.toLowerCase(),
                                 ck_provider: row.ck_provider,
+                                cn_action:
+                                    row.cn_action &&
+                                    parseInt(row.cn_action, 10),
                                 cr_access: row.cr_access,
                                 cr_type: row.cr_type,
                             });
@@ -900,7 +931,9 @@ export default class OfflineController implements ICoreController {
                             data.push({
                                 ck_id: `${row.ck_id}:${row.cn_action}`,
                                 ck_page_object: row.ck_id.toLowerCase(),
-                                cn_action: parseInt(row.cn_action, 10),
+                                cn_action:
+                                    row.cn_action &&
+                                    parseInt(row.cn_action, 10),
                             });
                         });
                         res.stream.on("end", () => {
@@ -971,7 +1004,9 @@ export default class OfflineController implements ICoreController {
                             data.push({
                                 ck_id: `${row.ck_id}_${row.cn_action}`,
                                 ck_page_object: row.ck_id.toLowerCase(),
-                                cn_action: parseInt(row.cn_action, 10),
+                                cn_action:
+                                    row.cn_action &&
+                                    parseInt(row.cn_action, 10),
                             });
                         });
                         res.stream.on("end", () => {

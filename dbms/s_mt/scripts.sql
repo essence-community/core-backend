@@ -274,3 +274,7 @@ VALUES (76,'warning','Будут удалены все переводы данн
 
 --changeset artemov_i:fix-notification dbms:postgresql
 ALTER TABLE s_mt.t_notification ALTER COLUMN ck_user TYPE varchar(100) USING ck_user::varchar;
+
+--changeset artemov_i:CORE-401 dbms:postgresql
+CREATE UNIQUE INDEX cin_i_page_2 ON s_mt.t_page (cv_url);
+--rollback DROP INDEX s_mt.cin_i_page_2;
