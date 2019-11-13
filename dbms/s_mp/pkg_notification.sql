@@ -30,7 +30,13 @@ begin
     delete from s_mt.t_notification where ck_id = pot_notification.ck_id;
   else
     if pv_action = i::varchar then
-      pot_notification.ck_id := sys_guid(); 
+      pot_notification.ck_id := sys_guid();
+      if pot_notification.cd_st is null then
+        pot_notification.cd_st := CURRENT_TIMESTAMP;
+      end if;
+      if pot_notification.cd_en is null then
+        pot_notification.cd_en := CURRENT_TIMESTAMP + interval '1' day;
+      end if;
       insert into s_mt.t_notification values (pot_notification.*);
     elsif pv_action = u::varchar then
       /* обновить возможно только cl_sent */

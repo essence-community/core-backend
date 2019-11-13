@@ -278,3 +278,7 @@ ALTER TABLE s_mt.t_notification ALTER COLUMN ck_user TYPE varchar(100) USING ck_
 --changeset artemov_i:CORE-401 dbms:postgresql
 CREATE UNIQUE INDEX cin_i_page_2 ON s_mt.t_page (cv_url);
 --rollback DROP INDEX s_mt.cin_i_page_2;
+
+--changeset artemov_i:CORE-363 dbms:postgresql
+ALTER TABLE s_mt.t_notification DROP COLUMN cv_param;
+--rollback ALTER TABLE s_mt.t_notification ADD cv_param varchar(4000) NULL;

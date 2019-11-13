@@ -27,7 +27,6 @@ begin
   vot_notification.ck_user = nullif(trim(pc_json->'data'->>'ck_user'), '');
   vot_notification.cv_message = nullif(trim(pc_json->'data'->>'cv_message'), '');
   vot_notification.cl_sent = nullif(trim(pc_json->'data'->>'cl_sent'), '')::smallint;
-  vot_notification.cv_param = nullif(trim(pc_json->'data'->>'cv_param'), '');
   vv_action = nullif(trim(pc_json#>>'{service,cv_action}'), '');
   -- Заблокируем запись
   perform pkg_json_notification.p_lock_notification(vot_notification.ck_id);
