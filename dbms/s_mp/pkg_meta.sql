@@ -2003,7 +2003,8 @@ begin
       insert into s_mt.t_page_variable values (pot_page_variable.*);
     elsif pv_action = u::varchar and nullif(gv_error::varchar, '') is null then
       update s_mt.t_page_variable set
-        (ck_id, ck_page, cv_name, cv_description, ck_user, ct_change) = row(pot_page_variable.*)
+        (ck_page, cv_name, cv_value, cv_description, ck_user, ct_change) = 
+        (pot_page_variable.ck_page, pot_page_variable.cv_name, pot_page_variable.cv_value, pot_page_variable.cv_description, pot_page_variable.ck_user, pot_page_variable.ct_change)
       where ck_id = pot_page_variable.ck_id;
 
       if not found then

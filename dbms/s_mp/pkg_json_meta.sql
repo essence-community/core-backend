@@ -590,6 +590,7 @@ begin
   vot_page_variable.ck_id = nullif(trim(pc_json->'data'->>'ck_id'), '');
   vot_page_variable.ck_page = nullif(trim(pc_json->'service'->>'ck_main'), '');
   vot_page_variable.cv_name = nullif(trim(pc_json->'data'->>'cv_name'), '');
+  vot_page_variable.cv_value = nullif(pc_json#>>'{data,cv_value}', '');
   vot_page_variable.cv_description = nullif(trim(pc_json->'data'->>'cv_description'), '');
   vot_page_variable.ck_user = pv_user;
   vot_page_variable.ct_change = CURRENT_TIMESTAMP;

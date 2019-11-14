@@ -121,8 +121,14 @@ export default class OnlineController implements ICoreController {
         gateContext: IContext,
         ckPage: string,
         caActions: any[],
+        version: "1" | "2" | "3",
     ): Promise<any> {
-        return this.controller.onlineFindPages(gateContext, ckPage, caActions);
+        return this.controller.onlineFindPages(
+            gateContext,
+            ckPage,
+            caActions,
+            version,
+        );
     }
     public findQuery(
         gateContext: IContext,

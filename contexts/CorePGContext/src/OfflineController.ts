@@ -40,7 +40,10 @@ export default class OfflineController implements ICoreController {
 
     private sysSettings =
         "select s.ck_id, s.cv_value, s.cv_description from s_mt.t_sys_setting s";
-
+    private pageVariableSql =
+        "select pv.ck_page, pv.cv_value, pv.cv_name from s_mt.t_page_variable pv";
+    private pageVariableFindSql =
+        "select pv.ck_page, pv.cv_value, pv.cv_name from s_mt.t_page_variable pv where pv.ck_page = :ckPage";
     private pageSql =
         "select\n" +
         "    p.ck_id as ck_page,\n" +
@@ -313,6 +316,7 @@ export default class OfflineController implements ICoreController {
         gateContext: IContext,
         ckPage: string,
         caActions: any[],
+        version: "1" | "2" | "3",
     ): Promise<any> {
         const doc = await this.tempTable.dbPage.findOne(
             {
@@ -338,12 +342,19 @@ export default class OfflineController implements ICoreController {
                 }),
             );
         }
-        return this.onlineFindPages(gateContext, ckPage, caActions, true);
+        return this.onlineFindPages(
+            gateContext,
+            ckPage,
+            caActions,
+            version,
+            true,
+        );
     }
     public onlineFindPages(
         gateContext: IContext,
         ckPage: string,
         caActions: any,
+        version: "1" | "2" | "3",
         isSave: boolean = false,
     ) {
         const self = this;
@@ -399,10 +410,7 @@ export default class OfflineController implements ICoreController {
                         res.stream.on("end", () => {
                             const page = data[ckPage];
                             if (!page) {
-                                if (
-                                    gateContext.queryName ===
-                                    this.params.pageObjectsQueryName
-                                ) {
+                                if (version === "2") {
                                     return reject(
                                         new BreakException({
                                             data: ResultStream([]),
@@ -412,23 +420,44 @@ export default class OfflineController implements ICoreController {
                                 }
                                 return reject(CoreContext.accessDenied());
                             }
-                            if (isSave) {
-                                this.tempTable.dbPage
-                                    .insert(Object.values(data))
-                                    .then(noop, noop);
-                            }
-                            if (
-                                isEmpty(page.cn_action) ||
-                                !caActions.includes(page.cn_action)
-                            ) {
-                                return reject(CoreContext.accessDenied());
-                            }
-                            return reject(
-                                new BreakException({
-                                    data: ResultStream(page.json),
-                                    type: "success",
-                                }),
-                            );
+                            this.loadPageVariable(ckPage)
+                                .then((globalValues) => {
+                                    page.global_values = globalValues[ckPage];
+                                    if (isSave) {
+                                        this.tempTable.dbPage
+                                            .insert(Object.values(data))
+                                            .then(noop, noop);
+                                    }
+                                    if (
+                                        isEmpty(page.cn_action) ||
+                                        !caActions.includes(page.cn_action)
+                                    ) {
+                                        return reject(
+                                            CoreContext.accessDenied(),
+                                        );
+                                    }
+                                    if (version === "3") {
+                                        return reject(
+                                            new BreakException({
+                                                data: ResultStream([
+                                                    {
+                                                        children: page.json,
+                                                        global_value:
+                                                            page.global_values,
+                                                    },
+                                                ]),
+                                                type: "success",
+                                            }),
+                                        );
+                                    }
+                                    return reject(
+                                        new BreakException({
+                                            data: ResultStream(page.json),
+                                            type: "success",
+                                        }),
+                                    );
+                                })
+                                .catch((err) => reject(err));
                         });
                     }),
             );
@@ -812,9 +841,60 @@ export default class OfflineController implements ICoreController {
                             }
                         });
                         res.stream.on("end", () => {
-                            this.tempTable.dbPage
-                                .insert(Object.values(data))
-                                .then(() => resolve(), (err) => reject(err));
+                            this.loadPageVariable().then((value) => {
+                                Object.entries(value).forEach((arr) => {
+                                    const val = data[arr[0]];
+                                    if (val) {
+                                        val.global_values = arr[1];
+                                    }
+                                });
+                                return this.tempTable.dbPage
+                                    .insert(Object.values(data))
+                                    .then(
+                                        () => resolve(),
+                                        (err) => reject(err),
+                                    );
+                            });
+                        });
+                    }),
+            );
+    }
+
+    /**
+     * Кэширование всех переменных страниц
+     */
+    private loadPageVariable(ckPage?: string): Promise<Record<string, any>> {
+        const self = this;
+        return this.dataSource
+            .executeStmt(
+                ckPage ? this.pageVariableFindSql : this.pageVariableSql,
+                null,
+                {
+                    ckPage,
+                },
+                {},
+                {
+                    resultSet: true,
+                },
+            )
+            .then(
+                (res) =>
+                    new Promise((resolve, reject) => {
+                        const data = {};
+                        res.stream.on("error", (err) =>
+                            reject(new Error(err.message)),
+                        );
+                        res.stream.on("data", (row) => {
+                            if (data[row.ck_page]) {
+                                data[row.ck_page][row.cv_name] = row.cv_value;
+                            } else {
+                                data[row.ck_page] = {
+                                    [row.cv_name]: row.cv_value,
+                                };
+                            }
+                        });
+                        res.stream.on("end", () => {
+                            resolve(data);
                         });
                     }),
             );
