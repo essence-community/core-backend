@@ -278,3 +278,7 @@ ALTER TABLE s_mt.t_notification ALTER COLUMN ck_user TYPE varchar(100) USING ck_
 --changeset artemov_i:CORE-401 dbms:postgresql
 CREATE UNIQUE INDEX cin_i_page_2 ON s_mt.t_page (cv_url);
 --rollback DROP INDEX s_mt.cin_i_page_2;
+
+--changeset artemov_i:CORE-427 dbms:postgresql
+ALTER TABLE s_mt.t_page_variable ADD cv_value varchar(200) NULL;
+COMMENT ON COLUMN s_mt.t_page_variable.cv_value IS 'Значени при инициализации';
