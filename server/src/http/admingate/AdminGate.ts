@@ -42,8 +42,8 @@ export = class AdminGate extends NullProvider {
         if (context.queryName === "modify") {
             result = await this.adminModify.checkModify(context, query);
         }
-        if (this.adminAction[context.queryName]) {
-            result = await this.adminAction[context.queryName].call(
+        if (this.adminAction.handlers[context.queryName]) {
+            result = await this.adminAction.handlers[context.queryName].call(
                 this.adminAction,
                 context,
                 query,
@@ -61,8 +61,8 @@ export = class AdminGate extends NullProvider {
         if (context.queryName === "modify") {
             result = await this.adminModify.checkModify(context, query);
         }
-        if (this.adminAction[context.queryName]) {
-            result = await this.adminAction[context.queryName].call(
+        if (this.adminAction.handlers[context.queryName]) {
+            result = await this.adminAction.handlers[context.queryName].call(
                 this.adminAction,
                 context,
                 query,
@@ -76,7 +76,7 @@ export = class AdminGate extends NullProvider {
         const res = await super.initContext(context, query);
         if (
             context.queryName !== "modify" &&
-            isEmpty(this.adminAction[context.queryName])
+            isEmpty(this.adminAction.handlers[context.queryName])
         ) {
             throw new ErrorException(ErrorGate.NOTFOUND_QUERY);
         }

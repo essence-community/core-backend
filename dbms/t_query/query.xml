@@ -25,6 +25,9 @@
     <include file="./t_query/MTProvider.sql" />
     <include file="./t_query/GTReloadConfigClass.sql" />
     <include file="./t_query/GTGetSchedulers.sql" />
+    <include file="./t_query/GTGetEvent.sql" />
+    <include file="./t_query/GTGetEventSetting.sql" />
+    <include file="./t_query/GTGetEventClass.sql" />
     <include file="./t_query/GTReloadPluginsClass.sql" />
     <include file="./t_query/GTResetScheduler.sql" />
     <include file="./t_query/MTGetTopObject.sql" />
