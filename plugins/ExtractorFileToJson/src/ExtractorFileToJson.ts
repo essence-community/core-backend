@@ -48,7 +48,7 @@ export default class ExtractorFileToJson extends NullPlugin {
                 type: "string",
             },
             cvS3SecretKey: {
-                name: "Id key S3 Storage",
+                name: "Secret key S3 Storage",
                 type: "password",
             },
             cnRowSize: {

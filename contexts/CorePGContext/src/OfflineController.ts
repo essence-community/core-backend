@@ -43,7 +43,7 @@ export default class OfflineController implements ICoreController {
     private pageVariableSql =
         "select pv.ck_page, pv.cv_value, pv.cv_name from s_mt.t_page_variable pv";
     private pageVariableFindSql =
-        "select pv.ck_page, pv.cv_value, pv.cv_name from s_mt.t_page_variable pv where pv.ck_page = :ckPage";
+        "select pv.ck_page, pv.cv_value, pv.cv_name from s_mt.t_page p join s_mt.t_page_variable pv on pv.ck_page = p.ck_id where p.ck_id = :ck_page or p.cv_url = :cv_url";
     private pageSql =
         "select\n" +
         "    p.ck_id as ck_page,\n" +
@@ -106,7 +106,7 @@ export default class OfflineController implements ICoreController {
         "   left join t_page_object po on p.ck_id = po.ck_page\n" +
         "   join t_page_action pa on pa.ck_page = p.ck_id\n" +
         "  where ((pa.cr_type is not null and pa.cr_type = 'view') or pa.cr_type is null) \n" +
-        "   and po.ck_parent is null and (p.ck_id = :ck_page or p.cv_url = :ck_page) \n" +
+        "   and po.ck_parent is null and (p.ck_id = :ck_page or p.cv_url = :cv_url) \n" +
         "   order by po.ck_page, po.cn_order";
     private queryFindSql =
         "select q.ck_id, q.ck_provider, q.cc_query, q.cr_type, q.cr_access, q.cn_action\n" +
@@ -361,6 +361,7 @@ export default class OfflineController implements ICoreController {
         return this.dataSource
             .executeStmt(this.pageFindSql, null, {
                 ck_page: ckPage,
+                cv_url: ckPage,
             })
             .then(
                 (res) =>
@@ -408,7 +409,16 @@ export default class OfflineController implements ICoreController {
                             }
                         });
                         res.stream.on("end", () => {
-                            const page = data[ckPage];
+                            let page = null;
+                            Object.entries(data).some((arr) => {
+                                if (
+                                    arr[0] === ckPage ||
+                                    arr[1]["cv_url"] === ckPage
+                                ) {
+                                    page = arr[1];
+                                    return true;
+                                }
+                            });
                             if (!page) {
                                 if (version === "2") {
                                     return reject(
@@ -864,13 +874,13 @@ export default class OfflineController implements ICoreController {
      * Кэширование всех переменных страниц
      */
     private loadPageVariable(ckPage?: string): Promise<Record<string, any>> {
-        const self = this;
         return this.dataSource
             .executeStmt(
                 ckPage ? this.pageVariableFindSql : this.pageVariableSql,
                 null,
                 {
-                    ckPage,
+                    ck_page: ckPage,
+                    cv_url: ckPage,
                 },
                 {},
                 {
