@@ -159,7 +159,7 @@ begin
     end if;
     if pv_action = i::varchar then
       if pot_localization.ck_id is null then
-        pot_localization.ck_id := sys_guid();
+        pot_localization.ck_id := lower(sys_guid());
       end if;
       insert into s_mt.t_localization values (pot_localization.*);
     elsif pv_action = u::varchar then
