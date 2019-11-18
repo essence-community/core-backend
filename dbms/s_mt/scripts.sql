@@ -566,3 +566,147 @@ INSERT INTO s_mt.t_localization (ck_id,ck_d_lang,cr_namespace,cv_value,ck_user,c
 	VALUES ('900d174d0a994374a01b0005756521bc','ru_RU','meta','Описание','4fd05ca9-3a9e-4d66-82df-886dfa082113','2019-11-15 21:57:48.828');
 INSERT INTO s_mt.t_localization (ck_id,ck_d_lang,cr_namespace,cv_value,ck_user,ct_change)
 	VALUES ('67aefce5785a4326920bef69acb5a403','ru_RU','meta','Код ошибки','4fd05ca9-3a9e-4d66-82df-886dfa082113','2019-11-15 21:58:18.748');
+
+--changeset kutsenko:CORE-1395 dbms:postgresql
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('2ff612aa52314ddea65a5d303c867eb8', 'ru_RU', 'meta', 'Оповещение', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 15:08:32.643929+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('bcdc7e54547e405c9873b3ebea4f84c4', 'ru_RU', 'meta', 'Ошибка подключения к серверу оповещения, превышен лимит попыток переподключения', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 15:47:05.060527+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('4b4ef9aed688462799f24efe8413da9f', 'ru_RU', 'meta', 'Ошибка подключения к серверу оповещения', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 15:47:41.170901+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('cad7307902954c1b92b626e42da53aa3', 'ru_RU', 'meta', 'Блокировка', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 16:13:03.879902+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('4fdb2cdb2e5047048da10f9dbe83188d', 'ru_RU', 'meta', 'Отладка', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 16:14:36.568268+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('cecc548fc7444813a3d00eb7bb067a3f', 'ru_RU', 'meta', 'Ошибка загрузки', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 16:14:57.84827+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('d22b1f7a48b9402e9c0c17b508c5a906', 'ru_RU', 'meta', 'Снятие блокировки', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 16:16:03.154231+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('179cc83540e94b87a8d8aff919552f22', 'ru_RU', 'meta', 'Загружено', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 16:16:19.190664+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('e6f8166771e04b849855254c5d926ff6', 'ru_RU', 'meta', 'Предупреждение', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 16:16:30.887141+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('06dfd0c3b97b45e5abc146a14c0fab37', 'ru_RU', 'meta', 'Превышено время ожидания', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 16:19:36.964909+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('44e3485c6b0c47dc8a0792c90af62962', 'ru_RU', 'meta', 'Неизвестное количество страниц', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 16:20:39.070788+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('23cd49d589b74476acaa0b347b207d00', 'ru_RU', 'meta', 'Сервер авторизации временно недоступен', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 18:33:04.514535+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('1d5ca35298f346cab823812e2b57e15a', 'ru_RU', 'meta', 'Не удалось получить доступ к сервису', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 18:33:28.208186+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('5bf781f61f9c44b8b23c76aec75e5d10', 'ru_RU', 'meta', 'Сессия недействительна', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 18:33:48.410325+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('b5a60b8ff5cd419ebe487a68215f4490', 'ru_RU', 'meta', 'Неверные имя пользователя или пароль', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 18:34:17.042857+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('63538aa4bcd748349defdf7510fc9c10', 'ru_RU', 'meta', 'Ошибка в распознавании данных', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 18:36:22.72253+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('993c801f7f8b4284b3b1a0f624496ac8', 'ru_RU', 'meta', 'Ошбика при выполнении parse:', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 18:37:25.387894+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('4b067f4b55154c46b0a8d6b34d4d9bfb', 'ru_RU', 'meta', 'Ошибка парсинга', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 18:38:42.336101+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('b621b9209813416dba9d5c12ccc93fdf', 'ru_RU', 'meta', 'Ошибка запуска', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 18:39:04.785026+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('27a9d844da20453195f59f75185d7c99', 'ru_RU', 'meta', 'Ошибка при сохранении данных:', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 18:46:46.782377+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('7ef1547ac7084e178bf1447361e3ccc3', 'ru_RU', 'meta', 'Существует неудаленная store, нужно удалять ненужные сторы!.', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 18:53:53.804151+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('0d43efb6fc3546bbba80c8ac24ab3031', 'ru_RU', 'meta', 'Не могу загрузить данны. Не задан ck_query для конфига:', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 18:55:47.935536+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('4fdb3577f24440ceb8c717adf68bac48', 'ru_RU', 'meta', 'Сервис временно недоступен - {{query}}. Попробуйте выполнить операцию позднее.', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 19:02:05.663535+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('515a199e09914e3287afd9c95938f3a7', 'ru_RU', 'meta', 'Ошибка обращения к сервису {{query}}', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 19:03:23.210717+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('2d209550310a4fae90389134a5b12353', 'ru_RU', 'meta', 'Не получилось распознать ошибку. Возможно, возникла проблема с сетевым подключением', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 19:04:49.004726+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('83490c56debb4a399f05518608e3bace', 'ru_RU', 'meta', 'Не определана reloadStoreAction для {{name}}', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 20:19:57.593537+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('5c3108d6508a4141bdca1e52881e196d', 'ru_RU', 'meta', 'Не определана clearStoreAction для {{name}}', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 20:20:38.578497+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('3dd42493c346447897d017af3668d998', 'ru_RU', 'meta', '{{currentpage}} из {{pages}}', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 20:26:34.262861+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('5327513a9d344e2184cca94cde783a52', 'ru_RU', 'meta', 'Превышено время ожидаения формы.', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 20:45:30.979623+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('8fe6e023ee11462db952d62d6b8b265e', 'ru_RU', 'meta', 'Ошибка получения оповещения {{message}}', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 20:57:34.954955+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('f9c3bf3691864f4d87a46a9ba367a855', 'ru_RU', 'meta', 'Данные изменены вне формы:', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 20:58:02.791504+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('d4055d1153af44a4ba5eb73ac9bc437e', 'ru_RU', 'meta', 'Поле может работать некорректно без column, автогенерируемое значение: {{key}}', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 21:02:18.234109+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('d56944511bd243b1a0914ccdea58ce0d', 'ru_RU', 'meta', 'Поле не может быть построено: {{key}}', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 21:03:33.747219+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('47b7b12c1d9c413da54a08331191aded', 'ru_RU', 'meta', 'Ошибка:', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 21:04:22.568202+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('cfac299d53f8466d9745ddfa53e09958', 'ru_RU', 'meta', 'Информация:', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 21:05:13.926542+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('40dd53ff1c214bfab79ecd40612de8f5', 'ru_RU', 'meta', 'Необходимо заполнить orderproperty для дальнейшей работы таблицы', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 21:06:22.489723+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('c3513e8150484b31a4ad4227f9664e7f', 'ru_RU', 'meta', 'Поле может работать некорректно без ck_page_object, автогенерируемое значение: {{name}}', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 21:09:22.945713+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('b6c8c1519907418caad7f647068d1fb2', 'ru_RU', 'meta', 'Описание: {{description}}', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 21:13:22.043651+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('4cf741cfcf18478ab4ed3c3c79255a39', 'ru_RU', 'meta', 'Код ошибки: {{code}}', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 21:14:02.601628+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('344bbb5fb4a84d89b93c448a5c29e1d7', 'ru_RU', 'meta', 'Ожидание загрузки привышено {{timeout}}ms, проверьте циклиность использования глобальных переменных для сервиса {{query}}', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 21:20:47.81942+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('58715205c88c4d60aac6bfe2c3bfa516', 'ru_RU', 'meta', 'Запрос ''reloadStoreAction'' запрещен в TableFieldModel', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 21:25:15.155544+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('8004527cce454f8f83c7d739460f5822', 'ru_RU', 'meta', 'Ок', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 21:26:21.711238+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('6cf398ee03df42529323bd4ff9f584d5', 'ru_RU', 'meta', 'О программе', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 21:32:57.46811+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('d016a5a3d0964cd69fd15c6e283db77e', 'ru_RU', 'meta', 'Имя пользователя', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 21:56:27.291091+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('26686005b3584a12aeb9ca9e96e54753', 'ru_RU', 'meta', 'Версия {{BRANCH_NAME}} ({{COMMIT_ID}} от {{BRANCH_DATE_TIME}})', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 21:50:11.846311+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('8aebd9c71dda43fc8583d96f1d4d0d01', 'ru_RU', 'meta', 'Загрузка...', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 21:51:02.336924+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('8d380b7c5e6d4fcfb9d608d69464fe2a', 'ru_RU', 'meta', 'Пароль', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 21:56:53.421009+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('664bdebac78e47079bb685732899c5f6', 'ru_RU', 'meta', 'Войти', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 21:57:21.327377+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('a54bed8bf1574dc185aaf1f74aa85148', 'ru_RU', 'meta', 'Главная страница', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 21:58:04.655767+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('1764da1153734ec8b4fc4cf48cc78c88', 'ru_RU', 'meta', 'Страница не обнаружена или заполнена неверно!', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 22:05:03.595948+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('e7f66e6d5b5340909ea4ded06f5a034f', 'ru_RU', 'meta', 'Не найдена информация о фильтрации!', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 22:05:25.533006+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('b35d5fa33cb14a1db46c4f684dc14037', 'ru_RU', 'meta', 'Вы пытаетесь перейти на страницу c такими параметрами:', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 22:05:48.286738+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('6f93ca102d5f488aa3082e0344486e9e', 'ru_RU', 'meta', 'Страница: {{page}}', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 22:06:31.618177+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('dda349a2de0049408168eb5d148442df', 'ru_RU', 'meta', 'Фильтр: {{filter}}', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 22:07:03.811901+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('86d945313cbd41beb5f5068c2696bcec', 'ru_RU', 'meta', 'Параметры заданы не верно', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 22:07:40.772072+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('6512d68884cd4848ba6129655dec51d4', 'ru_RU', 'meta', 'Статус авторизации: {{status}}', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 22:08:11.139732+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('0d9c5a0b816947a781f02baad2c2ce22', 'ru_RU', 'meta', 'авторизирован', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 22:10:06.876637+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('e8281a11d60542c684f76ffab31216aa', 'ru_RU', 'meta', 'не авторизирован', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 22:10:23.636256+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('fad9bcdb1bf54640ab58d1781546c72c', 'ru_RU', 'meta', 'Продолжить', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 22:10:57.400211+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('82eafeb106eb41aaa205152471b1b7b6', 'ru_RU', 'meta', 'Войти', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 22:11:13.581695+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('9c97fa4879f144a7b571c4905fa020cc', 'ru_RU', 'meta', 'Настройки системы', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 22:12:34.889618+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('d39cbeb8128e4f68b201b25291889dd2', 'ru_RU', 'meta', 'Задержка Tooltip перед показом (delayTooltipShow)', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 22:12:50.604175+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('a43c94932e3a48c9867ac7b39bb22e60', 'ru_RU', 'meta', 'Отступ Tooltip по диагонали (offsetTooltip)', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 22:13:11.519113+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('a376942ff8af4ec58eeb18ea5a05e772', 'ru_RU', 'meta', 'Задержка Tooltip при движении (debounceTooltipTime)', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 22:13:27.118233+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('9a381df0ef4948ebaacb05852324d036', 'ru_RU', 'meta', 'Включить режим объединения ячеек таблиц в wysiwyg (wysiwygCombineFields)', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 22:13:55.376282+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('c038518f0652435ba9914848f8693454', 'ru_RU', 'meta', 'Включить режим отображения отладочного окна при передаче параметров извне (redirectDebugWindow)', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 22:14:18.030375+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('0852f8c548c741d39521833cd739a9f4', 'ru_RU', 'meta', 'Включить эксперементальный режим (experimentalUI)', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 22:14:34.791854+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('ad56476c04ff4d6091d5e87f5d823a9b', 'ru_RU', 'meta', 'Список модулей (modules)', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 22:14:58.589949+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('ef1415ca80804e149ceb5356efb2df97', 'ru_RU', 'meta', 'Сохранить', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 22:15:12.867199+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('8c0119ba23c74e158c5d50c83884fcb5', 'ru_RU', 'meta', 'Выход', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 22:23:30.398244+03');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('4ae012ef02dd4cf4a7eafb422d1db827', 'ru_RU', 'meta', 'Язык', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 22:25:53.736532+03');
