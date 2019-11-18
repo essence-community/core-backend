@@ -291,11 +291,9 @@ ALTER TABLE s_mt.t_notification DROP COLUMN cv_param;
 INSERT INTO s_mt.t_sys_setting (ck_id,cv_value,ck_user,ct_change,cv_description)
 	VALUES ('g_sys_lang','ru_RU','-11','2019-10-15 13:10:31.709','Язык по умолчанию');
 
---changeset artemov_i:CORE-494 dbms:postgresql splitStatements:false stripComments:false
+--changeset artemov_i:CORE-494-localization dbms:postgresql splitStatements:false stripComments:false
 INSERT INTO s_mt.t_localization (ck_id,ck_d_lang,cr_namespace,cv_value,ck_user,ct_change)
 	VALUES ('dacf7ab025c344cb81b700cfcc50e403','ru_RU','meta','Да','4fd05ca9-3a9e-4d66-82df-886dfa082113','2019-11-12 19:00:24.442');
-INSERT INTO s_mt.t_localization (ck_id,ck_d_lang,cr_namespace,cv_value,ck_user,ct_change)
-	VALUES ('dacf7ab025c344cb81b700cfcc50e403','en_US','meta','##Need to translate##','4fd05ca9-3a9e-4d66-82df-886dfa082113','2019-11-12 19:02:06.693');
 INSERT INTO s_mt.t_localization (ck_id,ck_d_lang,cr_namespace,cv_value,ck_user,ct_change)
 	VALUES ('f0e9877df106481eb257c2c04f8eb039','ru_RU','meta','Нет','4fd05ca9-3a9e-4d66-82df-886dfa082113','2019-11-14 21:22:10.312');
 INSERT INTO s_mt.t_localization (ck_id,ck_d_lang,cr_namespace,cv_value,ck_user,ct_change)
