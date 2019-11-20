@@ -709,3 +709,6 @@ INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_us
 	VALUES ('8c0119ba23c74e158c5d50c83884fcb5', 'ru_RU', 'meta', 'Выход', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 22:23:30.398244+03');
 INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
 	VALUES ('4ae012ef02dd4cf4a7eafb422d1db827', 'ru_RU', 'meta', 'Язык', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-18 22:25:53.736532+03');
+
+--changeset romanyuk_a:CORE-556 dbms:postgresql
+COMMENT ON COLUMN s_mt.t_page_variable.cv_value IS 'Значение при инициализации';
