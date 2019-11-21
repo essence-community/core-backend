@@ -1,5 +1,5 @@
 --liquibase formatted sql
---changeset artemov_i:MTObjectAttribute.sql dbms:postgresql runOnChange:true splitStatements:false stripComments:false
+--changeset dudin_m:MTObjectAttribute.sql dbms:postgresql runOnChange:true splitStatements:false stripComments:false
 INSERT INTO s_mt.t_query (ck_id, cc_query, ck_provider, ck_user, ct_change, cr_type, cr_access, cn_action, cv_description) VALUES ('MTObjectAttribute', '/*MTObjectAttribute*/
 
 select 
@@ -68,6 +68,9 @@ from (
 
    and a.ck_attr_type not in (''system'',''placement'',''behavior'')
 
+  /* Фильтр по типу атрибута */  
+
+  /*##filter.ck_attr_type*/and lower(a.ck_attr_type) = lower((cast(:json as jsonb)->''filter''->>''ck_attr_type'')::varchar) or lower((cast(:json as jsonb)->''filter''->>''ck_attr_type'')::varchar) = ''all''/*filter.ck_attr_type##*/
  ) t
 
 where ( &FILTER )
