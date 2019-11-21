@@ -717,7 +717,7 @@ COMMENT ON COLUMN s_mt.t_page_variable.cv_value IS 'Значение при ин
 ALTER TABLE s_mt.t_attr_type ADD cv_name varchar(100);
 COMMENT ON COLUMN s_mt.t_attr_type.cv_name IS 'Наименование';
 COMMENT ON COLUMN s_mt.t_attr_type.cv_description IS 'Описание';
-INSERT INTO s_mt.t_attr_type (ck_id, cv_description, cn_user, ct_change, cv_name) 
+INSERT INTO s_mt.t_attr_type (ck_id, cv_description, ck_user, ct_change, cv_name) 
         VALUES ('view', 'атрибут, влияющий на визуализацию', '-11', '2019-11-19 10:07:44.714+03', 'Отображение');
 UPDATE s_mt.t_attr_type SET cv_name ='Основной' WHERE ck_id = 'basic';
 UPDATE s_mt.t_attr_type SET cv_name ='Поведение' WHERE ck_id = 'behavior';
