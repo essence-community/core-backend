@@ -32,8 +32,8 @@ where ca.ck_class = (cast(:json as jsonb)->''master''->>''ck_id'')::varchar
 
   /*##filter.ck_id*/and ca.ck_id = (cast(:json as jsonb)->''filter''->>''ck_id'')::varchar/*filter.ck_id##*/
 
-  /*##filter.ck_attr_type*/and lower(a.ck_attr_type) = lower((cast(:json as jsonb)->''filter''->>''ck_attr_type'')::varchar) or lower((cast(:json as jsonb)->''filter''->>''ck_attr_type'')::varchar) = ''all'' /*filter.ck_attr_type##*/
+  /*##filter.ck_attr_type*/and (lower(a.ck_attr_type) = lower((cast(:json as jsonb)->''filter''->>''ck_attr_type'')::varchar) or lower((cast(:json as jsonb)->''filter''->>''ck_attr_type'')::varchar) = ''all'')/*filter.ck_attr_type##*/
 
-order by &SORT, ca.ck_attr asc  ', 'meta', '20783', '2019-05-24 15:17:55.661504+03', 'select', 'po_session', NULL, 'Необходимо актуализировать')
+order by &SORT, ca.ck_attr asc', 'meta', '20783', '2019-05-24 15:17:55.661504+03', 'select', 'po_session', NULL, 'Необходимо актуализировать')
 on conflict (ck_id) do update set cc_query = excluded.cc_query, ck_provider = excluded.ck_provider, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cr_type = excluded.cr_type, cr_access = excluded.cr_access;
 
