@@ -110,4 +110,5 @@
     <include file="./t_query/MTGetLocalNameSpace.sql" />
     <include file="./t_query/MTObjectAttrType.sql" />
     <include file="./t_query/MTPageObjectAttrType.sql" />
+    <include file="./t_query/MTClassAttrType.sql" />
 </databaseChangeLog>
