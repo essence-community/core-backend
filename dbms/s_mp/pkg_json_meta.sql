@@ -306,19 +306,22 @@ ALTER FUNCTION pkg_json_meta.f_modify_module(pv_user character varying, pk_sessi
 
 CREATE FUNCTION pkg_json_meta.f_modify_object(pv_user character varying, pk_session character varying, pc_json jsonb) RETURNS character varying
     LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'pkg_json_meta', 'public'
+    SET search_path TO 's_mt', 'pkg_json_meta', 'public'
     AS $$
 declare
   -- переменные пакета
   gv_error sessvarstr;
+  i sessvarstr;
 
   -- переменные функции
   vot_object s_mt.t_object;
+  vot_localization s_mt.t_localization;
   vv_action  varchar(1);
   vk_main    varchar(32);
 begin
   -- инициализация/получение переменных пакета
   gv_error = sessvarstr_declare('pkg', 'gv_error', '');
+  i = sessvarstr_declare('pkg', 'i', 'I');
 
   -- код функции
   --обнулим глобальные переменные с перечнем ошибок/предупреждений/информационных сообщений
@@ -343,6 +346,22 @@ begin
   perform pkg_access.p_check_access(pv_user, vk_main);
   if nullif(gv_error::varchar, '') is not null then
     return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}'; --ошибка прав доступа.
+  end if;
+  --проверка на добавление нового отображаемого имени
+  if nullif(trim(vot_object.cv_displayed), '') is not null 
+    and substr(vot_object.cv_displayed, 0, 5) = 'new:'
+    and length(vot_object.cv_displayed) > 4 then
+
+    select ck_id
+      into vot_localization.ck_d_lang
+      from t_d_lang where cl_default = 1;
+    vot_localization.cr_namespace = 'meta';
+    vot_localization.cv_value = substr(vot_object.cv_displayed, 5);
+    vot_localization.ck_user = pv_user;
+    vot_localization.ct_change = CURRENT_TIMESTAMP;
+
+    vot_localization := pkg_localization.p_modify_localization(i::varchar, vot_localization);
+    vot_object.cv_displayed := coalesce(vot_localization.ck_id, '');
   end if;
   --блочим основную таблицу
   perform pkg_json_meta.p_lock_object(vk_main);
