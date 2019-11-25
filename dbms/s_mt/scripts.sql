@@ -725,4 +725,7 @@ UPDATE s_mt.t_attr_type SET cv_name ='Расположение' WHERE ck_id = 'p
 UPDATE s_mt.t_attr_type SET cv_name ='Системный' WHERE ck_id = 'system';
 ALTER TABLE s_mt.t_attr_type ALTER COLUMN cv_name SET NOT NULL;
 
+--changeset dudin_m:CORE-1394 dbms:postgresql 
+INSERT INTO s_mt.t_message(ck_id, cr_type, cv_text, ck_user, ct_change)
+VALUES(205, 'error', 'Объект может быть добавлен только на Страницу', '-11', '2019-11-25 19:00:00.000');
 
