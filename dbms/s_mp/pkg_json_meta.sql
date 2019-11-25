@@ -361,6 +361,11 @@ begin
     vot_localization.ct_change = CURRENT_TIMESTAMP;
 
     vot_localization := pkg_localization.p_modify_localization(i::varchar, vot_localization);
+
+    if nullif(gv_error::varchar, '') is not null then
+      return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}'; --ошибка прав доступа.
+    end if;
+
     vot_object.cv_displayed := coalesce(vot_localization.ck_id, '');
   end if;
   --блочим основную таблицу
