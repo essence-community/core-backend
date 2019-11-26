@@ -1503,6 +1503,7 @@ declare
   vv_texterror varchar(4000);
   vcur_hierarchy record;
   vcur_object record;
+  vcur_page record;
 begin
   -- инициализация/получение переменных пакета
   i = sessvarstr_declare('pkg', 'i', 'I');
@@ -1597,18 +1598,29 @@ begin
         perform pkg.p_set_error(14);
     end;
   else
-      for vcur_object in (
+    for vcur_object in (
         select 1
         from s_mt.t_page_object o
         where ((pot_page_object.ck_parent is not null and o.ck_parent = pot_page_object.ck_parent)
          or (pot_page_object.ck_parent is null and o.ck_parent is null))
          and o.ck_page = pot_page_object.ck_page
          and o.cn_order = pot_page_object.cn_order
-         and ((pot_page_object.ck_id is not null and o.ck_id != pot_page_object.ck_id) or pot_page_object.ck_id is null) 
-      ) loop
+         and ((pot_page_object.ck_id is not null and o.ck_id != pot_page_object.ck_id) or pot_page_object.ck_id is null))
+    loop
         perform  pkg.p_set_error(34);
         return;
-      end loop;
+    end loop;
+
+    if pot_page_object.ck_page is null then 
+      perform  pkg.p_set_error(42);
+      return;    
+    end if;
+   
+    for vcur_page in (select 1 from s_mt.t_page p where p.ck_id = pot_page_object.ck_page and p.cr_type != 2) loop
+      perform  pkg.p_set_error(205);
+      return;
+    end loop;
+
     if pv_action = i::varchar then
      if nullif(pot_page_object.ck_parent, '') is not null then
       /*Проверим иерархию классов*/
