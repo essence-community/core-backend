@@ -1615,7 +1615,7 @@ begin
       return;    
     end if;
    
-    for vcur_page in (select 1 from s_mt.t_page p where p.ck_id = pot_page_object.ck_page and p.cr_type != 2) loop
+    for vcur_page in (select p.ck_id from s_mt.t_page p where p.ck_id = pot_page_object.ck_page and p.cr_type != 2) loop
       perform  pkg.p_set_error(205);
       return;
     end loop;
