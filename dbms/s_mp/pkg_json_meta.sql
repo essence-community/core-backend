@@ -436,7 +436,7 @@ begin
   vot_object_attr.ck_user = pv_user;
   vot_object_attr.ct_change = CURRENT_TIMESTAMP;
   vv_action = (pc_json->'service'->>'cv_action');
-  vv_attr = (pc_json->'service'->>'ck_attr');
+  vv_attr = (pc_json->'data'->>'ck_attr');
   vk_main = (pc_json->'service'->>'ck_main');
   
   if nullif(trim(vot_object_attr.cv_value), '') is not null 
@@ -613,7 +613,7 @@ ALTER FUNCTION pkg_json_meta.f_modify_page_object(pv_user character varying, pk_
 
 CREATE FUNCTION pkg_json_meta.f_modify_page_object_attr(pv_user character varying, pk_session character varying, pc_json jsonb) RETURNS character varying
     LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'pkg_json_meta', 'public'
+    SET search_path TO 's_mt', 'pkg_json_meta', 'public'
     AS $$
 declare
   -- переменные пакета
@@ -644,7 +644,7 @@ begin
   vot_page_object_attr.ck_user = pv_user;
   vot_page_object_attr.ct_change = CURRENT_TIMESTAMP;
   vv_action = (pc_json->'service'->>'cv_action');
-  vv_attr = (pc_json->'service'->>'ck_attr');
+  vv_attr = (pc_json->'data'->>'ck_attr');
   vk_main = (pc_json->'service'->>'ck_main');
   perform gl_warning == (pc_json->'service'->>'cl_warning')::bigint;
 
