@@ -1503,6 +1503,7 @@ declare
   vv_texterror varchar(4000);
   vcur_hierarchy record;
   vcur_object record;
+  vcur_page record;
 begin
   -- инициализация/получение переменных пакета
   i = sessvarstr_declare('pkg', 'i', 'I');
