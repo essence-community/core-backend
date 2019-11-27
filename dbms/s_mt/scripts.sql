@@ -729,3 +729,8 @@ ALTER TABLE s_mt.t_attr_type ALTER COLUMN cv_name SET NOT NULL;
 INSERT INTO s_mt.t_message(ck_id, cr_type, cv_text, ck_user, ct_change)
 VALUES(205, 'error', 'Объект может быть добавлен только на Страницу', '-11', '2019-11-25 19:00:00.000');
 
+--changeset kutsenko:CORE-1397 dbms:postgresql
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('37023be03a484bd5928791eebcd47f51', 'ru_RU', 'meta', 'Отображаемое имя', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-25T10:25:13.736Z');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('3a0b8d771a0d497e8aa1c44255fa6e83', 'ru_RU', 'meta', 'Наименование', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-25T14:01:03.544Z');
