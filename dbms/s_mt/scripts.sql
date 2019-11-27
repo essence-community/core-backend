@@ -734,3 +734,8 @@ INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_us
 	VALUES ('37023be03a484bd5928791eebcd47f51', 'ru_RU', 'meta', 'Отображаемое имя', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-25T10:25:13.736Z');
 INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
 	VALUES ('3a0b8d771a0d497e8aa1c44255fa6e83', 'ru_RU', 'meta', 'Наименование', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-25T14:01:03.544Z');
+
+--changeset kutsenko:CORE-1397-v2 dbms:postgresql
+CREATE TRIGGER notify_localization_event
+AFTER INSERT OR UPDATE OR DELETE ON s_mt.t_localization
+  FOR EACH ROW EXECUTE PROCEDURE notify_event();
