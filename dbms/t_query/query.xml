@@ -111,4 +111,5 @@
     <include file="./t_query/MTObjectAttrType.sql" />
     <include file="./t_query/MTPageObjectAttrType.sql" />
     <include file="./t_query/MTClassAttrType.sql" />
+	<include file="./t_query/MTAttrClassList.sql" />
 </databaseChangeLog>
