@@ -739,3 +739,13 @@ INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_us
 CREATE TRIGGER notify_localization_event
 AFTER INSERT OR UPDATE OR DELETE ON s_mt.t_localization
   FOR EACH ROW EXECUTE PROCEDURE notify_event();
+
+--changeset romanyuk_a:CORE-572-v2 dbms:postgresql
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('89ad8abd91d54514b23520186b551190', 'ru_RU', 'meta', 'В каких классах используется', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-29 13:39:38');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('80c7b0a9f8714587b77391263cffb324', 'ru_RU', 'meta', 'Описание класса', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-29 13:39:38');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('3989aec5860044ec80f41db907599238', 'ru_RU', 'meta', 'Наименование класса', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-29 13:39:38');
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('b6c1344216e64cfb8f3253e8f13f8cca', 'ru_RU', 'meta', 'Классы', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-29 13:39:38');
