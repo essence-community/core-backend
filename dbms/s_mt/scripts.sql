@@ -749,3 +749,7 @@ INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_us
 	VALUES ('3989aec5860044ec80f41db907599238', 'ru_RU', 'meta', 'Наименование класса', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-29 13:39:38');
 INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
 	VALUES ('b6c1344216e64cfb8f3253e8f13f8cca', 'ru_RU', 'meta', 'Классы', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-29 13:39:38');
+	
+--changeset romanyuk_a:CORE-593 dbms:postgresql
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('6d12c16cd7fa46579477a107a53f0790', 'ru_RU', 'meta', 'Создать', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-04 13:39:38');
