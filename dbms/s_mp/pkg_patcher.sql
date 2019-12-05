@@ -60,6 +60,8 @@ AS $function$
 declare
   -- переменные пакета
   gv_error sessvarstr;
+
+  rec record;
 begin
   gv_error = sessvarstr_declare('pkg', 'gv_error', '');
   perform pkg.p_reset_response();
@@ -81,7 +83,7 @@ begin
   if found then
     return;
   end if;
-  --begin
+  begin
     insert into s_mt.t_object
       (ck_id,
        ck_class,
@@ -109,39 +111,22 @@ begin
        pk_user,
        pt_change) on conflict
       (ck_id) do update set ck_class = excluded.ck_class, ck_parent = excluded.ck_parent, cv_name = excluded.cv_name, cn_order = excluded.cn_order, ck_query = excluded.ck_query, cv_description = excluded.cv_description, cv_displayed = excluded.cv_displayed, cv_modify = excluded.cv_modify, ck_provider = excluded.ck_provider, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
-  /*exception
+  exception
     when others then
-      perform pkg.p_set_error(1000, SQLERRM);
-      perform pkg_log.p_save('-11',
-                             null::varchar,
-                             jsonb_build_object('ck_id',
-                                                pk_id,
-                                                'ck_class',
-                                                pk_class,
-                                                'ck_parent',
-                                                pk_parent,
-                                                'cv_name',
-                                                pv_name,
-                                                'cn_order',
-                                                pn_order,
-                                                'ck_query',
-                                                pk_query,
-                                                'cv_description',
-                                                pv_description,
-                                                'cv_displayed',
-                                                pv_displayed,
-                                                'cv_modify',
-                                                pv_modify,
-                                                'ck_provider',
-                                                pk_provider,
-                                                'ck_user',
-                                                pk_user,
-                                                'ct_change',
-                                                pt_change),
-                             't_object',
-                             pk_id,
-                             'u');
-  end;*/
+      RAISE NOTICE 'SQLSTATE: %', SQLSTATE;
+      if SQLSTATE = '23505' then
+        if nullif(pk_parent, '') is not null and pn_order is not null then
+          for rec in (
+              select ck_id from s_mt.t_object where ck_parent = pk_parent and cn_order = pn_order and ck_id <> pk_id
+            ) loop
+              raise exception 'The updated ("%") object has the same cn_order as the ("%") object. To continue you should change the cn_order or remove the old object and restart update.', pk_id, rec.ck_id;
+          end loop;
+        end if;
+        raise;
+      else
+       raise;
+      end if;
+  end;
 END;
 $function$
 ;
