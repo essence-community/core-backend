@@ -344,6 +344,7 @@ declare
   gv_error sessvarstr;
  
   vot_action record;
+  vot_rc record;
 begin
   -- инициализация/получение переменных пакета
   i = sessvarstr_declare('pkg', 'i', 'I');
@@ -353,8 +354,10 @@ begin
 
   -- код функции
   if pv_action = d::varchar then
-    
-    delete from s_at.t_role_action where ck_action = pot_action.ck_id;
+    for vot_rc in (select 1 from s_at.t_role_action where ck_action = pot_action.ck_id) loop
+      perform pkg.p_set_error(204);
+      return;
+    end loop;
     delete from s_at.t_action where ck_id = pot_action.ck_id;
     return;
   end if;
@@ -405,6 +408,8 @@ declare
   u sessvarstr;
   d sessvarstr;
   gv_error sessvarstr;
+
+  vot_d_info record;
 begin
   -- инициализация/получение переменных пакета
   i = sessvarstr_declare('pkg', 'i', 'I');
@@ -432,6 +437,10 @@ begin
     return;
   end if;
   if pv_action = i::varchar then
+   for vot_d_info in (select 1 from s_at.t_d_info where ck_id = pot_d_info.ck_id) loop
+      perform pkg.p_set_error(201, 'Наименование');
+      return;
+   end loop;
    insert into s_at.t_d_info values (pot_d_info.*);
    return;
   end if;
@@ -476,9 +485,11 @@ begin
 
   -- код функции
   if pv_action = d::varchar then
-    
+    for vot_role in (select 1 from s_at.t_account_role where ck_role = pot_role.ck_id) loop
+      perform pkg.p_set_error(204);
+      return;
+    end loop;
     delete from s_at.t_role_action where ck_role = pot_role.ck_id;
-    delete from s_at.t_account_role where ck_role = pot_role.ck_id;
     delete from s_at.t_role where ck_id = pot_role.ck_id;
     return;
   end if;

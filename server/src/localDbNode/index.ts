@@ -12,10 +12,17 @@ class BuilderLocalDbNode {
         const messagesHandler = nedb.HandlerNeDb.create(new Map());
         this.deleteFolderRecursive(Constants.NEDB_TEMP_DB);
         if (Constants.NEDB_MULTI_HOST) {
-            repSocket.bind(
-                Constants.NEDB_MULTI_PORT,
-                Constants.NEDB_MULTI_HOST,
-            );
+            if (
+                Constants.NEDB_MULTI_HOST.startsWith("unix:") ||
+                Constants.NEDB_MULTI_HOST.startsWith("tcp:")
+            ) {
+                repSocket.bind(Constants.NEDB_MULTI_HOST);
+            } else {
+                repSocket.bind(
+                    Constants.NEDB_MULTI_PORT,
+                    Constants.NEDB_MULTI_HOST,
+                );
+            }
         } else {
             repSocket.bind(Constants.NEDB_MULTI_PORT);
         }

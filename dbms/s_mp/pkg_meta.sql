@@ -472,7 +472,7 @@ begin
     if pot_class_attr.cl_required is null or pot_class_attr.cl_required not in (0, 1) then
       perform pkg.p_set_error(38);
     end if;
-    if pot_class_attr.ck_attr in ('width', 'columnwidth', 'contentwidth') and pot_class_attr.cv_value is not null and 
+    if pot_class_attr.ck_attr in ('width', 'columnwidth', 'contentwidth') and nullif(trim(pot_class_attr.cv_value), '') is not null and 
        pkg_util.f_check_string_is_percentage(pot_class_attr.cv_value) = 0 then
       perform pkg.p_set_error(55);
     end if;
@@ -587,9 +587,13 @@ declare
   vot_class_attr      s_mt.t_class_attr;
   vot_class           s_mt.t_class;
   vot_attr            s_mt.t_attr;
+  vv_id varchar(32);
   vcur record;
   vcur1 record;
+  vcur_class record;
   vc record;
+  vn_count bigint := 0;
+  va_module_class VARCHAR[] := ARRAY[]::VARCHAR[];
 
 begin
   -- инициализация/получение переменных пакета
@@ -599,20 +603,27 @@ begin
   gv_error = sessvarstr_declare('pkg', 'gv_error', '');
   -- код функции
   if pv_action = d::varchar then
+    -- если есть модули с данным именем еще то удаляем только его
+    for vcur in (select 1 from s_mt.t_module where ck_id != pot_module.ck_id and trim(lower(cv_name)) = trim(lower(pot_module.cv_name))) loop
+      delete from s_mt.t_module_class where ck_module = pot_module.ck_id; 
+      delete from s_mt.t_module where ck_id = pot_module.ck_id;
+      return;
+    end loop;
     -- Удаляем связанные данные по таблице иерархии
     for vcur in (select ch.ck_id,
                         ch.ck_class_parent,
                         ch.ck_class_child,
                         ch.ck_class_attr
                    from s_mt.t_module m
-                  inner join s_mt.t_class c on m.ck_class = c.ck_id
+                  inner join s_mt.t_module_class mc on mc.ck_module = m.ck_id
+                  inner join s_mt.t_class c on mc.ck_class = c.ck_id
                   inner join s_mt.t_class_hierarchy ch on c.ck_id in (ch.ck_class_child, ch.ck_class_parent)
                   where m.ck_id = pot_module.ck_id) loop
       vot_class_hierarchy.ck_id := vcur.ck_id;
       vot_class_hierarchy.ck_class_parent := vcur.ck_class_parent;
       vot_class_hierarchy.ck_class_child := vcur.ck_class_child;
       vot_class_hierarchy.ck_class_attr := vcur.ck_class_attr;
-      perform pkg_meta.p_modify_class_hierarchy(d::varchar, vot_class_hierarchy);
+      vot_class_hierarchy := pkg_meta.p_modify_class_hierarchy(d::varchar, vot_class_hierarchy);
     end loop;
 
     -- Выбираем атрибуты которые есть в этом классе и которых нет в других классах
@@ -623,7 +634,8 @@ begin
                        a.cv_description,
                        a.ck_attr_type
          from s_mt.t_module m
-        inner join s_mt.t_class c on m.ck_class = c.ck_id
+        inner join s_mt.t_module_class mc on mc.ck_module = m.ck_id
+        inner join s_mt.t_class c on mc.ck_class = c.ck_id
         inner join s_mt.t_class_attr ca on c.ck_id = ca.ck_class
         inner join s_mt.t_attr a on ca.ck_attr = a.ck_id
         where m.ck_id = pot_module.ck_id
@@ -639,7 +651,8 @@ begin
                         ca.cv_value,
                         ca.cl_required
                    from s_mt.t_module m
-                  inner join s_mt.t_class c on m.ck_class = c.ck_id
+                  inner join s_mt.t_module_class mc on mc.ck_module = m.ck_id
+                  inner join s_mt.t_class c on mc.ck_class = c.ck_id
                   inner join s_mt.t_class_attr ca on c.ck_id = ca.ck_class
                   where m.ck_id = pot_module.ck_id) loop
       vot_class_attr.ck_id := vcur.ck_id;
@@ -647,7 +660,7 @@ begin
       vot_class_attr.ck_attr := vcur.ck_attr;
       vot_class_attr.cv_value := vcur.cv_value;
       vot_class_attr.cl_required := vcur.cl_required;
-      perform pkg_meta.p_modify_class_attr(d::varchar, vot_class_attr);
+      vot_class_attr := pkg_meta.p_modify_class_attr(d::varchar, vot_class_attr);
     end loop;
    
     -- Удаляем атрибуты которые есть в этом классе и нет в других
@@ -658,7 +671,7 @@ begin
       vot_attr.ck_id := vc.ck_id;
       vot_attr.cv_description :=vc.cv_description;
       vot_attr.ck_attr_type := vc.ck_attr_type;
-      perform pkg_meta.p_modify_attr(d::varchar, vot_attr);
+      vot_attr := pkg_meta.p_modify_attr(d::varchar, vot_attr);
     end loop;
 
     -- Получаем связанный класс
@@ -668,22 +681,24 @@ begin
                      c.cl_final,
                      c.cl_dataset
                 from s_mt.t_module m
-               inner join s_mt.t_class c on m.ck_class = c.ck_id
+               inner join s_mt.t_module_class mc on mc.ck_module = m.ck_id
+               inner join s_mt.t_class c on mc.ck_class = c.ck_id
                where m.ck_id = pot_module.ck_id) loop
       vot_class.ck_id := vc.ck_id;
       vot_class.cv_name := vc.cv_name;
       vot_class.cv_description := vc.cv_description;
       vot_class.cl_final := vc.cl_final;
       vot_class.cl_dataset := vc.cl_dataset;
+      -- Удаляем связанный класс
+      if vot_class.ck_id is not null then
+        delete from s_mt.t_module_class where ck_class = vot_class.ck_id and ck_module = pot_module.ck_id; 
+        perform pkg_meta.p_modify_class(d::varchar, vot_class);
+      end if;
     end loop;
 
     if nullif(gv_error::varchar, '') is null then
       -- Удаление
-      delete from s_mt.t_module where ck_id = pot_module.ck_id;
-      -- Удаляем связанный класс
-      if vot_class.ck_id is not null then
-        perform pkg_meta.p_modify_class(d::varchar, vot_class);
-      end if;
+      delete from s_mt.t_module where ck_id = pot_module.ck_id;    
     end if;
   else
     if pot_module.cv_name is null then
@@ -700,36 +715,46 @@ begin
     
     if pv_action = i::varchar then
       pot_module.ck_id := sys_guid();
-    end if;
-    
-    -- Проверяем, что модуля нет в базе
-    if pv_action = i::varchar then
-      for vcur in (select 1 from s_mt.t_module m where trim(lower(m.cv_name)) = trim(lower(pot_module.cv_name))) loop
+      --если есть такой модуль раннее установленый то сохраняем id последнего
+      select t.ck_id
+      into vv_id
+      from (select m.ck_id,
+           row_number() over (order by(m.cv_version) desc ) as cn_rn
+        from s_mt.t_module m 
+        where trim(lower(m.cv_name)) = trim(lower(pot_module.cv_name))) as t
+        where t.cn_rn = 1;    
+      -- Проверяем, что модуля такого нет в базе
+      for vcur in (select 1 from s_mt.t_module
+                   where trim(lower(cv_name)) = trim(lower(pot_module.cv_name))
+                        and cv_version = pot_module.cv_version
+                        and cv_version_api = pot_module.cv_version_api) loop
         perform pkg.p_set_error(63);
       end loop;
     end if;
 
     -- Если выключаем доступность модуля, то проверяем, что он нигде не используется
     for vcur in (with w_module as
-                    (select distinct c.cv_name as cv_class, c.ck_id as ck_class
+                    (select c.cv_name as cv_class, c.ck_id as ck_class, m.cl_available
                       from s_mt.t_module m
-                     inner join s_mt.t_class c on m.ck_class = c.ck_id
+                     inner join s_mt.t_module_class mc on mc.ck_module = m.ck_id
+                     inner join s_mt.t_class c on mc.ck_class = c.ck_id
                      where m.ck_id = pot_module.ck_id
                        and m.cl_available = 1
                        and pot_module.cl_available = 0)
                    select '"' || string_agg(t.cv_class, '","' order by t.cv_class) || '"' as cv_class
-                     from (select m.cv_class
-                             from w_module m
-                            inner join s_mt.t_object o on m.ck_class = o.ck_class
+                     from (select wm.cv_class
+                             from w_module wm
+                            inner join s_mt.t_object o on wm.ck_class = o.ck_class
                            union
                            -- Проверяем дочернии классы, что там нет связанного класса который используется в объекте
                            select c.cv_name
-                            from w_module m
-                            inner join s_mt.t_class_hierarchy ch on m.ck_class = ch.ck_class_parent
+                            from w_module wm2
+                            inner join s_mt.t_class_hierarchy ch on wm2.ck_class = ch.ck_class_parent
                             inner join s_mt.t_class c on ch.ck_class_child = c.ck_id
                             inner join s_mt.t_object o on c.ck_id = o.ck_class
-                            inner join s_mt.t_module m on c.ck_id = m.ck_class
-                            where m.cl_available = 1) t) loop
+                            inner join s_mt.t_module_class mc on mc.ck_module = c.ck_id
+                            inner join s_mt.t_module m on m.ck_id = mc.ck_module
+                            where wm2.cl_available = 1) t) loop
       if vcur.cv_class != '""' then
         perform pkg.p_set_error(60, vcur.cv_class);
       end if;
@@ -738,9 +763,10 @@ begin
 
     -- Если включаем доступность модуля, то проверяем, что связанный классы верхнего уровня тоже активны
     for vcur in (with w_module as
-                    (select distinct c.cv_name as cv_class, c.ck_id as ck_class
+                    (select c.cv_name as cv_class, c.ck_id as ck_class, m.cl_available
                       from s_mt.t_module m
-                     inner join s_mt.t_class c on m.ck_class = c.ck_id
+                     inner join s_mt.t_module_class mc on mc.ck_module = m.ck_id
+                     inner join s_mt.t_class c on mc.ck_class = c.ck_id
                      where m.ck_id = pot_module.ck_id
                        and m.cl_available = 0
                        and pot_module.cl_available = 1)
@@ -748,13 +774,16 @@ begin
                      from (
                            -- Проверяем родительские классы, что там нет связанного класса модуль которого отключен
                            select c.cv_name as cv_class,
-                                  m.cl_available,
-                                  count(distinct m.cl_available) over() cn_available
-                             from w_module m
-                            inner join s_mt.t_class_hierarchy ch on m.ck_class = ch.ck_class_child
+                                  wm.cl_available,
+                                  count(m.cl_available) over() cn_available
+                             from w_module wm
+                            inner join s_mt.t_class_hierarchy ch on wm.ck_class = ch.ck_class_child
                             inner join s_mt.t_class c on ch.ck_class_parent = c.ck_id
-                            inner join s_mt.t_module m on c.ck_id = m.ck_class) t
-                    where (t.cn_available <> 1 and t.cl_available = 0 or cl_available = 0)) loop
+                            inner join s_mt.t_module_class mc on mc.ck_class = c.ck_id
+                            inner join s_mt.t_module m on m.ck_id = mc.ck_module
+                            where m.ck_id != pot_module.ck_id and trim(lower(m.cv_name)) != trim(lower(pot_module.cv_name))
+                            ) t
+                    where (t.cn_available <> 1 and t.cl_available = 0 or t.cl_available = 0)) loop
       if vcur.cv_class != '""' then
         perform pkg.p_set_error(61, vcur.cv_class);
       end if;
@@ -764,219 +793,240 @@ begin
     if nullif(gv_error::varchar, '') is not null then
       return;
     end if;
+    if pot_module.cl_available = 1 or vv_id is null then
+      --распаковываем манифест
+      for vcur_class in (select value as cj_class from jsonb_array_elements(pot_module.cc_manifest::jsonb)) loop
+          -- Добавляем/Изменяем класс модуля
+          for vcur in (select jt.cl_dataset,
+                              jt.cl_final,
+                              jt.cv_description,
+                              jt.cv_name,
+                              jt.cv_type,
+                              wmc.ck_class,
+                              wmc.ck_class_attr,
+                              case
+                                when wmc.ck_class is not null then
+                                'U'
+                                else
+                                'I'
+                              end as cv_action,
+                              case
+                                when wmc.ck_class_attr is not null then
+                                'U'
+                                else
+                                'I'
+                              end as cv_action_class_attr
+                        from (select (vcur_class.cj_class#>>'{class,cl_dataset}') as cl_dataset,
+                                      (vcur_class.cj_class#>>'{class,cl_final}') as cl_final,
+                                      (vcur_class.cj_class#>>'{class,cv_description}') as cv_description,
+                                      (vcur_class.cj_class#>>'{class,cv_name}') as cv_name,
+                                      (vcur_class.cj_class#>>'{class,cv_type}') as cv_type
+                                from dual) jt
+                        left join (select c.ck_id as ck_class, ca.ck_id as ck_class_attr, m.ck_id as ck_module, ca.cv_value from s_mt.t_module m
+                             join s_mt.t_module_class mc on m.ck_id = mc.ck_module
+                             join s_mt.t_class c on mc.ck_class = c.ck_id
+                             left join s_mt.t_class_attr ca on c.ck_id = ca.ck_class and ca.ck_attr = 'type') as wmc
+                          on ((pv_action = u::varchar and wmc.ck_module = pot_module.ck_id)
+                           or (pv_action = i::varchar and wmc.ck_module = vv_id)) and wmc.cv_value = jt.cv_type
+                        ) loop
+            vot_class.ck_id          := vcur.ck_class;
+            vot_class.cv_name        := vcur.cv_name;
+            vot_class.cl_final       := vcur.cl_final::smallint;
+            vot_class.cl_dataset     := vcur.cl_dataset::smallint;
+            vot_class.ck_user        := pot_module.ck_user;
+            vot_class.ct_change      := CURRENT_TIMESTAMP;
+            vot_class.cv_description := vcur.cv_description;
+          
+            vot_class := pkg_meta.p_modify_class(vcur.cv_action, vot_class);
+          
+            -- Добавляем базовый тип
+            vot_class_attr.ck_id       := vcur.ck_class_attr;
+            vot_class_attr.ck_class    := vot_class.ck_id;
+            vot_class_attr.ck_user     := vot_class.ck_user;
+            vot_class_attr.ct_change   := CURRENT_TIMESTAMP;
+            vot_class_attr.cl_required := 1;
+            vot_class_attr.ck_attr     := 'type';
+            vot_class_attr.cv_value    := vcur.cv_type;
+          
+            vot_class_attr := pkg_meta.p_modify_class_attr(vcur.cv_action_class_attr, vot_class_attr);
+          end loop;
+        
+          if nullif(gv_error::varchar, '') is not null then
+            return;
+          end if;
 
-    -- Добавляем/Изменяем класс модуля
-    for vcur in (select jt.cl_dataset,
-                        jt.cl_final,
-                        jt.cv_description,
-                        jt.cv_name,
-                        jt.cv_type,
-                        c.ck_id as ck_class,
-                        ca.ck_id as ck_class_attr,
-                        case
-                          when c.ck_id is not null then
-                           'U'
-                          else
-                           'I'
-                        end as cv_action,
-                        case
-                          when ca.ck_id is not null then
-                           'U'
-                          else
-                           'I'
-                        end as cv_action_class_attr
-                   from (select (pot_module.cc_manifest::json->'class'->>'cl_dataset') as cl_dataset,
-                                (pot_module.cc_manifest::json->'class'->>'cl_final') as cl_final,
-                                (pot_module.cc_manifest::json->'class'->>'cv_description') as cv_description,
-                                (pot_module.cc_manifest::json->'class'->>'cv_name') as cv_name,
-                                (pot_module.cc_manifest::json->'class'->>'cv_type') as cv_type
-                           from dual) jt     
-                   left join s_mt.t_module m on m.ck_id = pot_module.ck_id
-                   left join s_mt.t_class c on m.ck_class = c.ck_id
-                   left join s_mt.t_class_attr ca on c.ck_id = ca.ck_class and ca.ck_attr = 'type') loop
-      vot_class.ck_id          := vcur.ck_class;
-      vot_class.cv_name        := vcur.cv_name;
-      vot_class.cl_final       := vcur.cl_final::smallint;
-      vot_class.cl_dataset     := vcur.cl_dataset::smallint;
-      vot_class.ck_user        := pot_module.ck_user;
-      vot_class.ct_change      := CURRENT_TIMESTAMP;
-      vot_class.cv_description := vcur.cv_description;
-    
-      perform pkg_meta.p_modify_class(vcur.cv_action, vot_class);
-    
-      -- Добавляем базовый тип
-      vot_class_attr.ck_id       := vcur.ck_class_attr;
-      vot_class_attr.ck_class    := vot_class.ck_id;
-      vot_class_attr.ck_user     := vot_class.ck_user;
-      vot_class_attr.ct_change   := CURRENT_TIMESTAMP;
-      vot_class_attr.cl_required := 1;
-      vot_class_attr.ck_attr     := 'type';
-      vot_class_attr.cv_value    := vcur.cv_type;
-     
-      perform pkg_meta.p_modify_class_attr(vcur.cv_action, vot_class_attr);
-    end loop;
-  
-    if nullif(gv_error::varchar, '') is not null then
-      return;
-    end if;
+          -- Добавляем/Изменяем атрибуты
+          for vcur in (select coalesce(jt.ck_attr_type, atr.ck_attr_type) as ck_attr_type,
+                              coalesce(jt.cv_description, atr.cv_description) as cv_description,
+                              coalesce(jt.ck_id, atr.ck_id) as ck_id,
+                              case
+                                when jt.ck_id is not null and atr.ck_id is null then
+                                'I'
+                                when jt.ck_id is null then
+                                null
+                                else
+                                'U'
+                              end as cv_action
+                        from (select (t.dt->>'ck_attr') as ck_id, 
+                                      (t.dt->>'ck_attr_type') as ck_attr_type, 
+                                      (t.dt->>'cv_description') as cv_description 
+                                from jsonb_array_elements(vcur_class.cj_class->'attributes') as t(dt)) jt
+                        left join s_mt.t_attr atr on atr.ck_id = jt.ck_id) loop
+            vot_attr.ck_id          := vcur.ck_id;
+            vot_attr.ck_attr_type   := vcur.ck_attr_type;
+            vot_attr.cv_description := vcur.cv_description;
+            vot_attr.ck_user        := pot_module.ck_user;
+            vot_attr.ct_change      := CURRENT_TIMESTAMP;
+          
+            if vcur.cv_action is not null and nullif(gv_error::varchar, '') is null then
+              vot_attr := pkg_meta.p_modify_attr(vcur.cv_action, vot_attr);
+            end if;
+          end loop;
+        
+          if nullif(gv_error::varchar, '') is not null then
+            return;
+          end if;
 
-    -- Добавляем/Изменяем атрибуты
-    for vcur in (select coalesce(jt.ck_attr_type, a.ck_attr_type) as ck_attr_type,
-                        coalesce(jt.cv_description, a.cv_description) as cv_description,
-                        coalesce(jt.ck_id, a.ck_id) as ck_id,
-                        case
-                          when jt.ck_id is not null and atr.ck_id is null then
-                           'I'
-                          when jt.ck_id is null and a.ck_id is not null then
-                           'D'
-                          else
-                           'U'
-                        end as cv_action,
-                        a.cv_name
-                   from (select (t.dt->>'ck_attr') as ck_attr, 
-                                (t.dt->>'ck_attr_type') as ck_attr_type, 
-                                (t.dt->>'cv_description') as cv_description 
-                           from json_array_elements(pot_module.cc_manifest->'class_attributes') as t(dt)) jt
-                   full join (select distinct a.ck_id, a.ck_attr_type, a.cv_description, c.cv_name
-                               from s_mt.t_module m
-                              inner join s_mt.t_class c on m.ck_class = c.ck_id
-                              inner join s_mt.t_class_attr ca on c.ck_id = ca.ck_class
-                              inner join s_mt.t_attr a on ca.ck_attr = a.ck_id
-                              where m.ck_id = pot_module.ck_id
-                                and a.ck_id != 'type') a on jt.ck_id = a.ck_id
-                                                        and jt.ck_attr_type = a.ck_attr_type
-                   left join s_mt.t_attr atr on atr.ck_id = jt.ck_id) loop
-      vot_attr.ck_id          := vcur.ck_id;
-      vot_attr.ck_attr_type   := vcur.ck_attr_type;
-      vot_attr.cv_description := vcur.cv_description;
-      vot_attr.ck_user        := pot_module.ck_user;
-      vot_attr.ct_change      := CURRENT_TIMESTAMP;
-    
-      if vcur.cv_action = d::varchar then
-        for vcur1 in (select c.cv_name
-                        from s_mt.t_attr a
-                        join s_mt.t_class_attr ca on ca.ck_attr = a.ck_id
-                        join s_mt.t_class c on c.ck_id = ca.ck_class
-                       where a.ck_id = vcur.ck_id
-                         and c.cv_name <> vcur.cv_name) loop
-          perform pkg.p_set_error(65, vcur.ck_id, vcur1.cv_name);
-          exit;
-        end loop;
+          -- Добавляем атрибуты класса
+          for vcur in (select jt.*,
+                              ca.ck_id as ck_id,
+                              case
+                                when ca.ck_attr is null then
+                                'I'
+                                when jt.ck_attr_type is null then
+                                'D'
+                                else
+                                'U'
+                              end as cv_action
+                        from (select (t.dt->>'ck_attr') as ck_attr, 
+                                      (t.dt->>'cv_value') as cv_value, 
+                                      (t.dt->>'cl_required') as cl_required, 
+                                      (t.dt->>'ck_attr_type') as ck_attr_type, 
+                                      (t.dt->>'cv_description') as cv_description 
+                                from jsonb_array_elements(vcur_class.cj_class->'class_attributes') as t(dt)) jt
+                        full join (select ca.ck_id, ca.ck_attr
+                                    from s_mt.t_class c
+                                    inner join s_mt.t_class_attr ca on c.ck_id = ca.ck_class
+                                    where c.ck_id = vot_class.ck_id
+                                      and ca.ck_attr != 'type') ca on jt.ck_attr = ca.ck_attr
+                        where jt.ck_attr is not null
+                          or ca.ck_attr is not null) loop
+            vot_class_attr.ck_id       := vcur.ck_id;
+            vot_class_attr.ck_class    := vot_class.ck_id;
+            vot_class_attr.ck_user     := vot_class.ck_user;
+            vot_class_attr.ct_change   := CURRENT_TIMESTAMP;
+            vot_class_attr.cl_required := 1;
+            vot_class_attr.ck_attr     := vcur.ck_attr;
+            vot_class_attr.cv_value    := vcur.cv_value;
+          
+            vot_class_attr := pkg_meta.p_modify_class_attr(vcur.cv_action, vot_class_attr);
+          end loop;
+
+          --добавляем класс в массив
+          va_module_class := array_append(va_module_class, vot_class.ck_id);
+          
+          if nullif(gv_error::varchar, '') is not null then
+            return;
+          end if;
+      end loop;
+
+      for vcur_class in (select value as cj_class from jsonb_array_elements(pot_module.cc_manifest::jsonb)) loop
+          --Находим класс
+          select ck_id
+            into vot_class.ck_id
+          from s_mt.t_class c 
+          join unnest(va_module_class) as t(ck_class)
+            on c.ck_id = t.ck_class
+          where upper(c.cv_name) = upper(vcur_class.cj_class#>>'{class,cv_name}');
+          -- Выбираем данные для таблицы иерархии классов
+          -- Если данные уже есть проверяем может быть их необходимо удалить, если их нет в манифесте или вставить если их не в таблице иерархии
+          for vcur in (select ch.ck_id,
+                              coalesce(ch.ck_class_parent, ch1.ck_class_parent) as ck_class_parent,
+                              coalesce(ch.ck_class_child, ch1.ck_class_child) as ck_class_child,
+                              coalesce(ch.ck_class_attr, ch1.ck_class_attr) as ck_class_attr,
+                              case
+                                when ch.ck_class_parent is not null and ch.ck_class_child is not null and ch1.ck_class_parent is not null and ch1.ck_class_child is not null then
+                                'U'
+                                when ch1.ck_class_parent is null or ch1.ck_class_child is null then
+                                'D'
+                                else
+                                'I'
+                              end as cv_action
+                        from (
+                              -- Выбираем все связи класса, для того чтобы удалить лишние или проверять что такое связи ещё нет и добавить её
+                              select ch.ck_id, ch.ck_class_parent, ch.ck_class_child, ch.ck_class_attr
+                                from s_mt.t_class c
+                                inner join s_mt.t_class_hierarchy ch on c.ck_id in (ch.ck_class_parent, ch.ck_class_child)
+                                where c.ck_id = vot_class.ck_id) ch
+                        full join (
+                                  -- Собираем идентификаторы связок, которые будет проверять и добавлять при необходимости
+                                  select t.ck_class_parent, t.ck_class_child, ca.ck_id as ck_class_attr
+                                    from (
+                                            -- Выбираем из JSON связки, которые необходимо добавить
+                                            select ck_id as ck_class_parent, vot_class.ck_id as ck_class_child, jt.ck_attr
+                                              from (select coalesce(nullif(trim(t.dt->>'ck_id'), ''), cattr.ck_class) as ck_id, 
+                                                           (t.dt->>'ck_attr') as ck_attr
+                                                      from jsonb_array_elements(vcur_class.cj_class#>'{class_hierarchy,class_parent}') as t(dt)
+                                                      left join s_mt.t_class_attr cattr 
+                                                         on cattr.ck_attr = 'type' and cattr.cv_value = (t.dt->>'cv_type')) jt
+                                            union all
+                                            select vot_class.ck_id as ck_class_parent, ck_id as ck_class_child, jt.ck_attr
+                                              from (select coalesce(nullif(trim(t.dt->>'ck_id'), ''), cattr.ck_class) as ck_id, 
+                                                           (t.dt->>'ck_attr') as ck_attr
+                                                      from jsonb_array_elements(vcur_class.cj_class#>'{class_hierarchy,class_child}') as t(dt)
+                                                      left join s_mt.t_class_attr cattr 
+                                                         on cattr.ck_attr = 'type' and cattr.cv_value = (t.dt->>'cv_type')) jt) t
+                                    left join s_mt.t_class_attr ca on t.ck_class_parent = ca.ck_class
+                                                                  and t.ck_attr = ca.ck_attr) ch1 on ch.ck_class_parent =
+                                                                                                      ch1.ck_class_parent
+                                                                                                  and ch.ck_class_child =
+                                                                                                      ch1.ck_class_child
+                                                                                                  and ch.ck_class_attr =
+                                                                                                      ch1.ck_class_attr
+                        where ch1.ck_class_parent is null
+                          or ch.ck_class_parent is null) loop
+            vot_class_hierarchy.ck_id           := vcur.ck_id;
+            vot_class_hierarchy.ck_class_parent := vcur.ck_class_parent;
+            vot_class_hierarchy.ck_class_child  := vcur.ck_class_child;
+            vot_class_hierarchy.ck_class_attr   := vcur.ck_class_attr;
+            vot_class_hierarchy.ck_user         := vot_class.ck_user;
+            vot_class_hierarchy.ct_change       := vot_class.ct_change;
+            if (vot_class_hierarchy.ck_id is not null and vcur.cv_action = 'D') or 
+            (vot_class_hierarchy.ck_class_parent is not null and vot_class_hierarchy.ck_class_child is not null and vot_class_hierarchy.ck_class_attr is not null) then
+                vot_class_hierarchy := pkg_meta.p_modify_class_hierarchy(vcur.cv_action, vot_class_hierarchy);
+            end if;
+            
+          end loop;
+      end loop;
+      if nullif(gv_error::varchar, '') is not null then
+          return;
       end if;
-      if nullif(gv_error::varchar, '') is null then
-        perform pkg_meta.p_modify_attr(vcur.cv_action, vot_attr);
-      end if;
-    end loop;
-  
-    if nullif(gv_error::varchar, '') is not null then
-      return;
+    elsif pv_action = i::varchar then
+      select array_agg(ck_class) as va_module_class
+      into va_module_class
+      from s_mt.t_module_class where ck_module = vv_id;
     end if;
-
-    -- Добавляем атрибуты класса
-    for vcur in (select jt.*,
-                        ca.ck_id as ck_id,
-                        case
-                          when ca.ck_attr is null then
-                           'I'
-                          when jt.ck_attr_type is null then
-                           'D'
-                          else
-                           'U'
-                        end as cv_action
-                   from (select (t.dt->>'ck_attr') as ck_attr, 
-                                (t.dt->>'cv_value') as cv_value, 
-                                (t.dt->>'cl_required') as cl_required, 
-                                (t.dt->>'ck_attr_type') as ck_attr_type, 
-                                (t.dt->>'cv_description') as cv_description 
-                           from json_array_elements(pot_module.cc_manifest->'class_attributes') as t(dt)) jt
-                   full join (select ca.ck_id, ca.ck_attr
-                               from s_mt.t_module m
-                              inner join s_mt.t_class_attr ca on m.ck_class = ca.ck_class
-                              where m.ck_id = pot_module.ck_id
-                                and ca.ck_attr != 'type') ca on jt.ck_attr = ca.ck_attr
-                  where jt.ck_attr is not null
-                     or ca.ck_attr is not null) loop
-      vot_class_attr.ck_id       := vcur.ck_id;
-      vot_class_attr.ck_class    := vot_class.ck_id;
-      vot_class_attr.ck_user     := vot_class.ck_user;
-      vot_class_attr.ct_change   := CURRENT_TIMESTAMP;
-      vot_class_attr.cl_required := 1;
-      vot_class_attr.ck_attr     := vcur.ck_attr;
-      vot_class_attr.cv_value    := vcur.cv_value;
-    
-      perform pkg_meta.p_modify_class_attr(vcur.cv_action, vot_class_attr);
-    end loop;
-    
-    if nullif(gv_error::varchar, '') is not null then
-      return;
-    end if;
-
-    -- Выбираем данные для таблицы иерархии классов
-    -- Если данные уже есть проверяем может быть их необходимо удалить, если их нет в манифесте или вставить если их не в таблице иерархии
-    for vcur in (select ch.ck_id,
-                        coalesce(ch.ck_class_parent, ch1.ck_class_parent) as ck_class_parent,
-                        coalesce(ch.ck_class_child, ch1.ck_class_child) as ck_class_child,
-                        coalesce(ch.ck_class_attr, ch1.ck_class_attr) as ck_class_attr,
-                        case
-                          when ch1.ck_class_parent is null then
-                           'D'
-                          else
-                           'I'
-                        end as cv_action
-                   from (
-                         -- Выбираем все связи класса, для того чтобы удалить лишние или проверять что такое связи ещё нет и добавить её
-                         select ch.ck_id, ch.ck_class_parent, ch.ck_class_child, ch.ck_class_attr
-                           from s_mt.t_module m
-                          inner join s_mt.t_class_hierarchy ch on m.ck_class in (ch.ck_class_parent, ch.ck_class_child)
-                          where m.ck_id = pot_module.ck_id) ch
-                   full join (
-                             -- Собираем идентификаторы связок, которые будет проверять и добавлять при необходимости
-                             select t.ck_class_parent, t.ck_class_child, ca.ck_id as ck_class_attr
-                               from (
-                                      -- Выбираем из JSON связки, которые необходимо добавить
-                                      select ck_id as ck_class_parent, vot_class.ck_id as ck_class_child, jt.ck_attr
-                                        from (select (t.dt->>'ck_id') as ck_id, 
-                                                     (t.dt->>'ck_attr') as ck_attr
-                                                from json_array_elements(pot_module.cc_manifest->'class_hierarchy'->>'class_parent') as t(dt)) jt
-                                      union all
-                                      select vot_class.ck_id as ck_class_parent, ck_id as ck_class_child, jt.ck_attr
-                                        from (select (t.dt->>'ck_id') as ck_id, 
-                                                     (t.dt->>'ck_attr') as ck_attr
-                                                from json_array_elements(pot_module.cc_manifest->'class_hierarchy'->>'class_child') as t(dt)) jt) t
-                               left join s_mt.t_class_attr ca on t.ck_class_parent = ca.ck_class
-                                                             and t.ck_attr = ca.ck_attr) ch1 on ch.ck_class_parent =
-                                                                                                ch1.ck_class_parent
-                                                                                            and ch.ck_class_child =
-                                                                                                ch1.ck_class_child
-                                                                                            and ch.ck_class_attr =
-                                                                                                ch1.ck_class_attr
-                  where ch1.ck_class_parent is null
-                     or ch.ck_class_parent is null) loop
-      vot_class_hierarchy.ck_id           := vcur.ck_id;
-      vot_class_hierarchy.ck_class_parent := vcur.ck_class_parent;
-      vot_class_hierarchy.ck_class_child  := vcur.ck_class_child;
-      vot_class_hierarchy.ck_class_attr   := vcur.ck_class_attr;
-      vot_class_hierarchy.ck_user         := vot_class.ck_user;
-      vot_class_hierarchy.ct_change       := vot_class.ct_change;
-    
-      perform pkg_meta.p_modify_class_hierarchy(vcur.cv_action, vot_class_hierarchy);
-    end loop;
-   
-    if nullif(gv_error::varchar, '') is not null then
-      return;
-    end if;
-
     pot_module.ct_change := CURRENT_TIMESTAMP;
-    pot_module.ck_class  := vot_class.ck_id;
-   
+    -- толька одна версия может быть включена
+    if pot_module.cl_available = 1 then
+       update s_mt.t_module set 
+           cl_available = 0
+       where cv_name = pot_module.cv_name;
+    end if;
     if pv_action = i::varchar and nullif(gv_error::varchar, '') is null then
       -- Вставка
       insert into s_mt.t_module values (pot_module.*);
+      if va_module_class is not null then
+        insert into s_mt.t_module_class (ck_module, ck_class, ck_user, ct_change)
+        select pot_module.ck_id, t.ck_class, pot_module.ck_user, pot_module.ct_change from unnest(va_module_class) as t(ck_class)
+        on conflict on CONSTRAINT cin_u_module_class_1 do update set ck_user = excluded.ck_user, ct_change = excluded.ct_change;
+      end if;
     elsif pv_action = u::varchar and nullif(gv_error::varchar, '') is null then
       
       -- Изменение
       update s_mt.t_module set 
-       (ck_id, ck_class, cv_name, ck_user, ct_change, cv_version, cl_available, cc_manifest) = row(pot_module.*) 
+       (cv_name, ck_user, ct_change, cv_version, cl_available, cc_manifest, cc_config, cv_version_api) = 
+       (pot_module.cv_name, pot_module.ck_user, pot_module.ct_change, pot_module.cv_version, pot_module.cl_available, pot_module.cc_manifest, pot_module.cc_config, pot_module.cv_version_api) 
        where ck_id = pot_module.ck_id;
      
       if not found then
@@ -1098,7 +1148,9 @@ begin
     -- Проверяем, что модуль класса включен
     for vcur in (select m.cv_name
                    from s_mt.t_module m
-                  where m.ck_class = pot_object.ck_class
+                   join s_mt.t_module_class mc
+                   on m.ck_id = mc.ck_class
+                  where mc.ck_class = pot_object.ck_class
                     and m.cl_available = 0) loop
       perform pkg.p_set_error(62, vcur.cv_name);
       exit;
@@ -1199,7 +1251,7 @@ begin
                          from s_mt.t_class_attr ca
                         where ca.ck_attr in ('width', 'columnwidth', 'contentwidth')
                           and ca.ck_id = pot_object_attr.ck_class_attr
-                          and pot_object_attr.cv_value is not null
+                          and nullif(trim(pot_object_attr.cv_value), '') is not null
                           and pkg_util.f_check_string_is_percentage(pot_object_attr.cv_value) = 0) loop
       perform pkg.p_set_error(55);
     end loop;
@@ -1451,6 +1503,7 @@ declare
   vv_texterror varchar(4000);
   vcur_hierarchy record;
   vcur_object record;
+  vcur_page record;
 begin
   -- инициализация/получение переменных пакета
   i = sessvarstr_declare('pkg', 'i', 'I');
@@ -1545,18 +1598,29 @@ begin
         perform pkg.p_set_error(14);
     end;
   else
-      for vcur_object in (
+    for vcur_object in (
         select 1
         from s_mt.t_page_object o
-        where ((pot_page_object.ck_parent is not null and o.ck_parent = pot_page_object.ck_parent) or o.ck_parent is null)
+        where ((pot_page_object.ck_parent is not null and o.ck_parent = pot_page_object.ck_parent)
+         or (pot_page_object.ck_parent is null and o.ck_parent is null))
          and o.ck_page = pot_page_object.ck_page
          and o.cn_order = pot_page_object.cn_order
-         and ((o.ck_id != pot_page_object.ck_id and pv_action = u::varchar)
-              or (pot_page_object.ck_id is null and pv_action = i::varchar))
-      ) loop
+         and ((pot_page_object.ck_id is not null and o.ck_id != pot_page_object.ck_id) or pot_page_object.ck_id is null))
+    loop
         perform  pkg.p_set_error(34);
         return;
-      end loop;
+    end loop;
+
+    if pot_page_object.ck_page is null then 
+      perform  pkg.p_set_error(42);
+      return;    
+    end if;
+   
+    for vcur_page in (select 1 from s_mt.t_page p where p.ck_id = pot_page_object.ck_page and p.cr_type != 2) loop
+      perform  pkg.p_set_error(205);
+      return;
+    end loop;
+
     if pv_action = i::varchar then
      if nullif(pot_page_object.ck_parent, '') is not null then
       /*Проверим иерархию классов*/
@@ -1585,6 +1649,7 @@ begin
 
       if nullif(gv_error::varchar, '') is null then
         /*При вставке записи берем все дочерние элементы и вставляем в той же иерархии, что и в объекте.*/
+        pot_page_object.ck_id := sys_guid();
         insert into s_mt.t_page_object(ck_id, ck_parent, ck_master, ck_object, ck_page, cn_order, ck_user, ct_change)
         (
           select
@@ -1600,7 +1665,7 @@ begin
             with recursive
               t(ck_id, ck_parent, ck_object, ck_object_parent, cn_level, cn_order) as (
                 select
-                  cast(sys_guid() as varchar(32)),
+                  pot_page_object.ck_id,
                   pot_page_object.ck_parent,
                   a.ck_id,
                   a.ck_parent,
@@ -1719,6 +1784,7 @@ begin
                  t.cv_variable
           from t_variable
           cross join unnest(pkg_util.f_get_global_from_string(t_variable.cv_value, ck_attr)) as t(cv_variable)
+          where ck_attr in ('disabledrules', 'hiddenrules', 'getglobaltostore', 'getglobal', 'readonlyrules', 'setglobal', 'columnsfilter')
         )v
         left join s_mt.t_page_variable pv on pv.ck_page = v.ck_page
          and pv.cv_name = v.cv_variable
@@ -1832,7 +1898,7 @@ begin
                          from s_mt.t_class_attr ca
                         where ca.ck_attr in ('width', 'columnwidth', 'contentwidth')
                           and ca.ck_id = pot_page_object_attr.ck_class_attr
-                          and pot_page_object_attr.cv_value is not null
+                          and nullif(trim(pot_page_object_attr.cv_value), '') is not null
                           and pkg_util.f_check_string_is_percentage(pot_page_object_attr.cv_value) = 0) loop
      perform pkg.p_set_error(55);
     end loop;
@@ -1949,7 +2015,8 @@ begin
       insert into s_mt.t_page_variable values (pot_page_variable.*);
     elsif pv_action = u::varchar and nullif(gv_error::varchar, '') is null then
       update s_mt.t_page_variable set
-        (ck_id, ck_page, cv_name, cv_description, ck_user, ct_change) = row(pot_page_variable.*)
+        (ck_page, cv_name, cv_value, cv_description, ck_user, ct_change) = 
+        (pot_page_variable.ck_page, pot_page_variable.cv_name, pot_page_variable.cv_value, pot_page_variable.cv_description, pot_page_variable.ck_user, pot_page_variable.ct_change)
       where ck_id = pot_page_variable.ck_id;
 
       if not found then

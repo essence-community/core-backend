@@ -152,18 +152,21 @@ ALTER FUNCTION pkg_json_meta.f_modify_class(pv_user character varying, pk_sessio
 
 CREATE FUNCTION pkg_json_meta.f_modify_class_attr(pv_user character varying, pk_session character varying, pc_json jsonb) RETURNS character varying
     LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'pkg_json_meta', 'public'
+    SET search_path TO 's_mt', 'pkg_json_meta', 'public'
     AS $$
 declare
   -- переменные пакета
   gv_error sessvarstr;
+  i sessvarstr;
   -- переменные функции
   vot_class_attr s_mt.t_class_attr;
+  vot_localization s_mt.t_localization;
   vv_action      varchar(1);
   vk_main        varchar(32);
 begin
   -- инициализация/получение переменных пакета
   gv_error = sessvarstr_declare('pkg', 'gv_error', '');
+  i = sessvarstr_declare('pkg', 'i', 'I');
   -- код функции
   --обнулим глобальные переменные с перечнем ошибок/предупреждений/информационных сообщений
   perform pkg.p_reset_response();
@@ -177,6 +180,33 @@ begin
   vot_class_attr.ct_change = CURRENT_TIMESTAMP;
   vv_action = (pc_json->'service'->>'cv_action');
   vk_main = (pc_json->'service'->>'ck_main');
+
+  if nullif(trim(vot_class_attr.cv_value), '') is not null 
+    and substr(vot_class_attr.cv_value, 0, 5) = 'new:'
+    and length(vot_class_attr.cv_value) > 4 then 
+
+    --проверка на добавление значения в локализацию
+    if vot_class_attr.ck_attr in ('confirmquestion', 'info', 'tipmsg') then
+      select ck_id
+        into vot_localization.ck_d_lang
+        from t_d_lang where cl_default = 1;
+      vot_localization.cr_namespace = 'meta';
+      vot_localization.cv_value = substr(vot_class_attr.cv_value, 5);
+      vot_localization.ck_user = pv_user;
+      vot_localization.ct_change = CURRENT_TIMESTAMP;
+
+      vot_localization := pkg_localization.p_modify_localization(i::varchar, vot_localization);
+
+      if nullif(gv_error::varchar, '') is not null then
+        return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}'; --ошибка прав доступа.
+      end if;
+
+      vot_class_attr.cv_value := coalesce(vot_localization.ck_id, '');
+    else
+      vot_class_attr.cv_value := substr(vot_class_attr.cv_value, 5);
+    end if;
+  end if;
+
   --проверка прав доступа
   perform pkg_access.p_check_access(pv_user, vk_main);
   if nullif(gv_error::varchar, '') is not null then
@@ -263,13 +293,14 @@ begin
   perform pkg.p_reset_response();
   --JSON -> rowtype
   vot_module.ck_id = nullif(trim(pc_json->'data'->>'ck_id'), '');
-  vot_module.ck_class = nullif(trim(pc_json->'data'->>'ck_class'), '');
   vot_module.cv_name = nullif(trim(pc_json->'data'->>'cv_name'), '');
   vot_module.ck_user = pv_user;
   vot_module.ct_change = CURRENT_TIMESTAMP;
   vot_module.cv_version = nullif(trim(pc_json->'data'->>'cv_version'), '');
+  vot_module.cv_version_api = nullif(trim(pc_json->'data'->>'cv_version_api'), '');
   vot_module.cl_available = (pc_json->'data'->>'cl_available')::int2;
-  vot_module.cc_manifest = trim(pc_json->'data'->>'manifest')::jsonb;
+  vot_module.cc_manifest = trim(pc_json->'data'->>'cc_manifest')::json;
+  vot_module.cc_config = trim(pc_json->'data'->>'cc_config')::json;
   vv_action = (pc_json->'service'->>'cv_action');
   -- Проверим права доступа
   perform pkg_access.p_check_access(pv_user, vot_module.ck_id);
@@ -298,19 +329,22 @@ ALTER FUNCTION pkg_json_meta.f_modify_module(pv_user character varying, pk_sessi
 
 CREATE FUNCTION pkg_json_meta.f_modify_object(pv_user character varying, pk_session character varying, pc_json jsonb) RETURNS character varying
     LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'pkg_json_meta', 'public'
+    SET search_path TO 's_mt', 'pkg_json_meta', 'public'
     AS $$
 declare
   -- переменные пакета
   gv_error sessvarstr;
+  i sessvarstr;
 
   -- переменные функции
   vot_object s_mt.t_object;
+  vot_localization s_mt.t_localization;
   vv_action  varchar(1);
   vk_main    varchar(32);
 begin
   -- инициализация/получение переменных пакета
   gv_error = sessvarstr_declare('pkg', 'gv_error', '');
+  i = sessvarstr_declare('pkg', 'i', 'I');
 
   -- код функции
   --обнулим глобальные переменные с перечнем ошибок/предупреждений/информационных сообщений
@@ -336,6 +370,27 @@ begin
   if nullif(gv_error::varchar, '') is not null then
     return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}'; --ошибка прав доступа.
   end if;
+  --проверка на добавление нового отображаемого имени
+  if nullif(trim(vot_object.cv_displayed), '') is not null 
+    and substr(vot_object.cv_displayed, 0, 5) = 'new:'
+    and length(vot_object.cv_displayed) > 4 then
+
+    select ck_id
+      into vot_localization.ck_d_lang
+      from t_d_lang where cl_default = 1;
+    vot_localization.cr_namespace = 'meta';
+    vot_localization.cv_value = substr(vot_object.cv_displayed, 5);
+    vot_localization.ck_user = pv_user;
+    vot_localization.ct_change = CURRENT_TIMESTAMP;
+
+    vot_localization := pkg_localization.p_modify_localization(i::varchar, vot_localization);
+
+    if nullif(gv_error::varchar, '') is not null then
+      return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}'; --ошибка прав доступа.
+    end if;
+
+    vot_object.cv_displayed := coalesce(vot_localization.ck_id, '');
+  end if;
   --блочим основную таблицу
   perform pkg_json_meta.p_lock_object(vk_main);
   --проверяем и сохраняем данные
@@ -351,19 +406,23 @@ ALTER FUNCTION pkg_json_meta.f_modify_object(pv_user character varying, pk_sessi
 
 CREATE FUNCTION pkg_json_meta.f_modify_object_attr(pv_user character varying, pk_session character varying, pc_json jsonb) RETURNS character varying
     LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'pkg_json_meta', 'public'
+    SET search_path TO 's_mt', 'pkg_json_meta', 'public'
     AS $$
 declare
   -- переменные пакета
   gv_error sessvarstr;
+  i sessvarstr;
 
   -- переменные функции
   vot_object_attr s_mt.t_object_attr;
+  vot_localization s_mt.t_localization;
   vv_action       varchar(1);
+  vv_attr         varchar(255);
   vk_main         varchar(32);
 begin
   -- инициализация/получение переменных пакета
   gv_error = sessvarstr_declare('pkg', 'gv_error', '');
+  i = sessvarstr_declare('pkg', 'i', 'I');
 
   -- код функции
   --обнулим глобальные переменные с перечнем ошибок/предупреждений/информационных сообщений
@@ -377,8 +436,35 @@ begin
   vot_object_attr.ck_user = pv_user;
   vot_object_attr.ct_change = CURRENT_TIMESTAMP;
   vv_action = (pc_json->'service'->>'cv_action');
+  vv_attr = (pc_json->'data'->>'ck_attr');
   vk_main = (pc_json->'service'->>'ck_main');
+  
+  if nullif(trim(vot_object_attr.cv_value), '') is not null 
+    and substr(vot_object_attr.cv_value, 0, 5) = 'new:'
+    and length(vot_object_attr.cv_value) > 4 then
 
+    --проверка на добавление значения в локализацию
+    if vv_attr in ('confirmquestion', 'info', 'tipmsg') then
+      select ck_id
+        into vot_localization.ck_d_lang
+        from t_d_lang where cl_default = 1;
+      vot_localization.cr_namespace = 'meta';
+      vot_localization.cv_value = substr(vot_object_attr.cv_value, 5);
+      vot_localization.ck_user = pv_user;
+      vot_localization.ct_change = CURRENT_TIMESTAMP;
+
+      vot_localization := pkg_localization.p_modify_localization(i::varchar, vot_localization);
+
+      if nullif(gv_error::varchar, '') is not null then
+        return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}'; --ошибка прав доступа.
+      end if;
+
+      vot_object_attr.cv_value := coalesce(vot_localization.ck_id, '');
+    else
+      vot_object_attr.cv_value := substr(vot_object_attr.cv_value, 5);
+    end if;
+
+  end if;
   --проверка прав доступа
   perform pkg_access.p_check_access(pv_user, vk_main);
   if nullif(gv_error::varchar, '') is not null then
@@ -399,14 +485,16 @@ ALTER FUNCTION pkg_json_meta.f_modify_object_attr(pv_user character varying, pk_
 
 CREATE FUNCTION pkg_json_meta.f_modify_page(pv_user character varying, pk_session character varying, pc_json jsonb) RETURNS character varying
     LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'pkg_json_meta', 'public'
+    SET search_path TO 's_mt', 'pkg_json_meta', 'public'
     AS $$
 declare
   -- переменные пакета
   gv_error sessvarstr;
   gl_warning sessvari;
+  i sessvarstr;
   -- переменные функции
   vot_page  s_mt.t_page;
+  vot_localization s_mt.t_localization;
   vn_action_view s_mt.t_page_action.cn_action%type; /* Код действия просмотра из СУВК */
   vn_action_edit s_mt.t_page_action.cn_action%type; /* Код действия модификации из СУВК */
   vv_action varchar(1); /* pkg.i/u/d */
@@ -415,6 +503,7 @@ begin
   -- инициализация/получение переменных пакета
   gv_error = sessvarstr_declare('pkg', 'gv_error', '');
   gl_warning = sessvari_declare('pkg', 'gl_warning', 0);
+  i = sessvarstr_declare('pkg', 'i', 'I');
   -- код функции
   --обнулим глобальные переменные с перечнем ошибок/предупреждений/информационных сообщений
   perform pkg.p_reset_response();
@@ -440,6 +529,27 @@ begin
   perform pkg_access.p_check_access(pv_user, vk_main);
   if nullif(gv_error::varchar, '') is not null then
     return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}'; --ошибка прав доступа.
+  end if;
+  --проверка на добавление нового отображаемого имени
+  if nullif(trim(vot_page.cv_name), '') is not null 
+    and substr(vot_page.cv_name, 0, 5) = 'new:'
+    and length(vot_page.cv_name) > 4 then
+
+    select ck_id
+      into vot_localization.ck_d_lang
+      from t_d_lang where cl_default = 1;
+    vot_localization.cr_namespace = 'meta';
+    vot_localization.cv_value = substr(vot_page.cv_name, 5);
+    vot_localization.ck_user = pv_user;
+    vot_localization.ct_change = CURRENT_TIMESTAMP;
+
+    vot_localization := pkg_localization.p_modify_localization(i::varchar, vot_localization);
+
+    if nullif(gv_error::varchar, '') is not null then
+      return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}'; --ошибка прав доступа.
+    end if;
+
+    vot_page.cv_name := coalesce(vot_localization.ck_id, '');
   end if;
   --блочим основную таблицу
   perform pkg_json_meta.p_lock_page(vk_main);
@@ -503,21 +613,25 @@ ALTER FUNCTION pkg_json_meta.f_modify_page_object(pv_user character varying, pk_
 
 CREATE FUNCTION pkg_json_meta.f_modify_page_object_attr(pv_user character varying, pk_session character varying, pc_json jsonb) RETURNS character varying
     LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'pkg_json_meta', 'public'
+    SET search_path TO 's_mt', 'pkg_json_meta', 'public'
     AS $$
 declare
   -- переменные пакета
   gv_error sessvarstr;
   gl_warning sessvari;
+  i sessvarstr;
 
   -- переменные функции
   vot_page_object_attr s_mt.t_page_object_attr;
+  vot_localization s_mt.t_localization;
   vv_action            varchar(1);
   vk_main              varchar(32);
+  vv_attr              varchar(255);
 begin
   -- инициализация/получение переменных пакета
   gv_error = sessvarstr_declare('pkg', 'gv_error', '');
   gl_warning = sessvari_declare('pkg', 'gl_warning', 0);
+  i = sessvarstr_declare('pkg', 'i', 'I');
 
   -- код функции
   --обнулим глобальные переменные с перечнем ошибок/предупреждений/информационных сообщений
@@ -530,9 +644,34 @@ begin
   vot_page_object_attr.ck_user = pv_user;
   vot_page_object_attr.ct_change = CURRENT_TIMESTAMP;
   vv_action = (pc_json->'service'->>'cv_action');
+  vv_attr = (pc_json->'data'->>'ck_attr');
   vk_main = (pc_json->'service'->>'ck_main');
   perform gl_warning == (pc_json->'service'->>'cl_warning')::bigint;
 
+  if nullif(trim(vot_page_object_attr.cv_value), '') is not null 
+    and substr(vot_page_object_attr.cv_value, 0, 5) = 'new:'
+    and length(vot_page_object_attr.cv_value) > 4 then
+    --проверка на добавление значения в локализацию
+    if vv_attr in ('confirmquestion', 'info', 'tipmsg') then
+      select ck_id
+        into vot_localization.ck_d_lang
+        from t_d_lang where cl_default = 1;
+      vot_localization.cr_namespace = 'meta';
+      vot_localization.cv_value = substr(vot_page_object_attr.cv_value, 5);
+      vot_localization.ck_user = pv_user;
+      vot_localization.ct_change = CURRENT_TIMESTAMP;
+
+      vot_localization := pkg_localization.p_modify_localization(i::varchar, vot_localization);
+
+      if nullif(gv_error::varchar, '') is not null then
+        return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}'; --ошибка прав доступа.
+      end if;
+
+      vot_page_object_attr.cv_value := coalesce(vot_localization.ck_id, '');
+    else
+      vot_page_object_attr.cv_value := substr(vot_page_object_attr.cv_value, 5);
+    end if;
+  end if;
   --проверка прав доступа
   perform pkg_access.p_check_access(pv_user, vk_main);
   if nullif(gv_error::varchar, '') is not null then
@@ -572,6 +711,7 @@ begin
   vot_page_variable.ck_id = nullif(trim(pc_json->'data'->>'ck_id'), '');
   vot_page_variable.ck_page = nullif(trim(pc_json->'service'->>'ck_main'), '');
   vot_page_variable.cv_name = nullif(trim(pc_json->'data'->>'cv_name'), '');
+  vot_page_variable.cv_value = nullif(pc_json#>>'{data,cv_value}', '');
   vot_page_variable.cv_description = nullif(trim(pc_json->'data'->>'cv_description'), '');
   vot_page_variable.ck_user = pv_user;
   vot_page_variable.ct_change = CURRENT_TIMESTAMP;

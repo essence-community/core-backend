@@ -206,6 +206,14 @@ class ProcessController {
     }
 
     /**
+     * Отправка оповещения
+     * @param data
+     */
+    public async sendNotificationAll(data) {
+        NotificationController.sendNotificationAll(data.text);
+    }
+
+    /**
      * Обновление информации пользователя
      */
     public async updateUserInfo(data) {

@@ -17,4 +17,4 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_access.p_check_access(pn_user character varying, pk_main character varying) OWNER TO s_mp;
+ALTER FUNCTION pkg_access.p_check_access(pn_user character varying, pk_main character varying) OWNER TO s_ap;

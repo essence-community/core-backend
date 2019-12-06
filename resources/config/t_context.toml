@@ -2,29 +2,14 @@
 ck_id = "core"
 cv_path = "/api"
 cv_description = "Основные настройки метаинформации"
-ck_d_plugin = "CoreOracleContext"
+ck_d_plugin = "CorePGContext"
 
   [data.cct_params]
   debug = true
   disableCache = true
-  user = "s_mc"
-  password = "s_mc"
-  poolMin = 1
   poolMax = 100
-  connectString = "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=bfl-db)(PORT=1521))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=BFL)))"
-
-[[data]]
-ck_id = "integration"
-cv_path = "/integration"
-cv_description = "Основные настройки интеграции"
-ck_d_plugin = "CoreOracleIntegrationContext"
-
-  [data.cct_params]
-  user = "s_ic"
-  password = "s_ic"
-  poolMin = 1
-  poolMax = 100
-  connectString = "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=bfl-db)(PORT=1521))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=BFL)))"
+  maxPostSize = 10_000_000
+  connectString = "postgres://s_mc:s_mc@postgres:5432/core"
 [[data]]
 [data."$$indexCreated"]
 fieldName = "ck_id"

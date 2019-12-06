@@ -2,7 +2,7 @@
     "name": "@ungate-context/integrationcontext",
     "version": "1.0.0",
     "description": "Контекст интеграции",
-    "author": "Ivan Artemov (artemov_i@tii.ru)",
+    "author": "Ivan Artemov (honyrik@gmail.com)",
     "license": "ISC",
     "dependencies": {
         "@ungate/plugininf": "^1.0.0",

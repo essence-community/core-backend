@@ -15,6 +15,7 @@ export default interface ICoreController {
         gateContext: IContext,
         ckPage: string,
         caActions: any[],
+        version: "1" | "2" | "3",
     ): Promise<any>;
     findQuery(
         gateContext: IContext,

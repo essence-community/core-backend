@@ -25,6 +25,9 @@
     <include file="./t_query/MTProvider.sql" />
     <include file="./t_query/GTReloadConfigClass.sql" />
     <include file="./t_query/GTGetSchedulers.sql" />
+    <include file="./t_query/GTGetEvent.sql" />
+    <include file="./t_query/GTGetEventSetting.sql" />
+    <include file="./t_query/GTGetEventClass.sql" />
     <include file="./t_query/GTReloadPluginsClass.sql" />
     <include file="./t_query/GTResetScheduler.sql" />
     <include file="./t_query/MTGetTopObject.sql" />
@@ -89,6 +92,7 @@
     <include file="./t_query/GTGetSchedulerParam.sql" />
     <include file="./t_query/MTClassAttrList.sql" />
     <include file="./t_query/GetModuleList.sql" />
+    <include file="./t_query/GetModuleClassList.sql" />
     <include file="./t_query/MTPageObject.sql" />
     <include file="./t_query/MTIcon.sql" />
     <include file="./t_query/MTRefreshPageObject.sql" />
@@ -99,4 +103,13 @@
     <include file="./t_query/ATGetPage.sql" />
     <include file="./t_query/GetMetamodelPage.sql" />
     <include file="./t_query/MTCopyObject.sql" />
+    <include file="./t_query/MTGetLocale.sql" />
+    <include file="./t_query/MTGetLang.sql" />
+    <include file="./t_query/MTGetDefaultLocalization.sql" />
+    <include file="./t_query/MTGetLocalization.sql" />
+    <include file="./t_query/MTGetLocalNameSpace.sql" />
+    <include file="./t_query/MTObjectAttrType.sql" />
+    <include file="./t_query/MTPageObjectAttrType.sql" />
+    <include file="./t_query/MTClassAttrType.sql" />
+	<include file="./t_query/MTAttrClassList.sql" />
 </databaseChangeLog>

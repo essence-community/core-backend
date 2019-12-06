@@ -3,7 +3,7 @@
     "version": "2.0.0",
     "description": "Общие классы",
     "main": "index.js",
-    "author": "Ivan Artemov (artemov_i@tii.ru)",
+    "author": "Ivan Artemov (honyrik@gmail.com)",
     "license": "ISC",
     "dependencies": {
         "@ungate/nedb-multi": "^1.0.0",

@@ -7,7 +7,11 @@ const axon = require("axon"),
 module.exports = (port, host) => {
     const reqSocket = axon.socket("req");
     if (host) {
-        reqSocket.connect(port, host);
+        if (host.startsWith("unix:") || host.startsWith("tcp:")) {
+            reqSocket.connect(host);
+        } else {
+            reqSocket.connect(port, host);
+        }
     } else {
         reqSocket.connect(port);
     }

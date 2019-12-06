@@ -78,13 +78,7 @@ begin
 end;
 $$;
 
-
 ALTER FUNCTION pkg.p_form_response() OWNER TO s_ap;
-
---
--- TOC entry 498 (class 1255 OID 32852)
--- Name: p_reset_response(bigint); Type: FUNCTION; Schema: pkg; Owner: s_ap
---
 
 CREATE FUNCTION pkg.p_reset_response(pn_user bigint DEFAULT NULL::bigint) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
@@ -126,11 +120,6 @@ $$;
 
 ALTER FUNCTION pkg.p_reset_response(pn_user bigint) OWNER TO s_ap;
 
---
--- TOC entry 395 (class 1255 OID 32853)
--- Name: p_set_error(bigint, character varying, character varying, character varying, character varying, character varying); Type: FUNCTION; Schema: pkg; Owner: s_ap
---
-
 CREATE FUNCTION pkg.p_set_error(pk_id bigint, pv_macro_1 character varying DEFAULT NULL::character varying, pv_macro_2 character varying DEFAULT NULL::character varying, pv_macro_3 character varying DEFAULT NULL::character varying, pv_macro_4 character varying DEFAULT NULL::character varying, pv_macro_5 character varying DEFAULT NULL::character varying) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'pkg', 'public'
@@ -147,13 +136,7 @@ begin
 end;
 $$;
 
-
 ALTER FUNCTION pkg.p_set_error(pk_id bigint, pv_macro_1 character varying, pv_macro_2 character varying, pv_macro_3 character varying, pv_macro_4 character varying, pv_macro_5 character varying) OWNER TO s_ap;
-
---
--- TOC entry 394 (class 1255 OID 32854)
--- Name: p_set_info(bigint, character varying, character varying, character varying, character varying, character varying); Type: FUNCTION; Schema: pkg; Owner: s_ap
---
 
 CREATE FUNCTION pkg.p_set_info(pk_id bigint, pv_macro_1 character varying DEFAULT NULL::character varying, pv_macro_2 character varying DEFAULT NULL::character varying, pv_macro_3 character varying DEFAULT NULL::character varying, pv_macro_4 character varying DEFAULT NULL::character varying, pv_macro_5 character varying DEFAULT NULL::character varying) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
@@ -173,11 +156,6 @@ $$;
 
 
 ALTER FUNCTION pkg.p_set_info(pk_id bigint, pv_macro_1 character varying, pv_macro_2 character varying, pv_macro_3 character varying, pv_macro_4 character varying, pv_macro_5 character varying) OWNER TO s_ap;
-
---
--- TOC entry 500 (class 1255 OID 32855)
--- Name: p_set_msg_macro(bigint, character varying, character varying, character varying, character varying, character varying); Type: FUNCTION; Schema: pkg; Owner: s_ap
---
 
 CREATE FUNCTION pkg.p_set_msg_macro(pk_id bigint, pv_macro_1 character varying DEFAULT NULL::character varying, pv_macro_2 character varying DEFAULT NULL::character varying, pv_macro_3 character varying DEFAULT NULL::character varying, pv_macro_4 character varying DEFAULT NULL::character varying, pv_macro_5 character varying DEFAULT NULL::character varying) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
@@ -220,19 +198,7 @@ $$;
 
 ALTER FUNCTION pkg.p_set_msg_macro(pk_id bigint, pv_macro_1 character varying, pv_macro_2 character varying, pv_macro_3 character varying, pv_macro_4 character varying, pv_macro_5 character varying) OWNER TO s_ap;
 
---
--- TOC entry 4124 (class 0 OID 0)
--- Dependencies: 500
--- Name: FUNCTION p_set_msg_macro(pk_id bigint, pv_macro_1 character varying, pv_macro_2 character varying, pv_macro_3 character varying, pv_macro_4 character varying, pv_macro_5 character varying); Type: COMMENT; Schema: pkg; Owner: s_ap
---
-
 COMMENT ON FUNCTION pkg.p_set_msg_macro(pk_id bigint, pv_macro_1 character varying, pv_macro_2 character varying, pv_macro_3 character varying, pv_macro_4 character varying, pv_macro_5 character varying) IS 'Установка макросов для сообщений';
-
-
---
--- TOC entry 469 (class 1255 OID 32856)
--- Name: p_set_warning(bigint, character varying, character varying, character varying, character varying, character varying); Type: FUNCTION; Schema: pkg; Owner: s_ap
---
 
 CREATE FUNCTION pkg.p_set_warning(pk_id bigint, pv_macro_1 character varying DEFAULT NULL::character varying, pv_macro_2 character varying DEFAULT NULL::character varying, pv_macro_3 character varying DEFAULT NULL::character varying, pv_macro_4 character varying DEFAULT NULL::character varying, pv_macro_5 character varying DEFAULT NULL::character varying) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
@@ -253,11 +219,6 @@ $$;
 
 ALTER FUNCTION pkg.p_set_warning(pk_id bigint, pv_macro_1 character varying, pv_macro_2 character varying, pv_macro_3 character varying, pv_macro_4 character varying, pv_macro_5 character varying) OWNER TO s_ap;
 
---
--- TOC entry 396 (class 1255 OID 32857)
--- Name: sp_add(character varying); Type: FUNCTION; Schema: pkg; Owner: s_ap
---
-
 CREATE FUNCTION pkg.sp_add(spv_macro character varying) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'pkg', 'public'
@@ -276,90 +237,6 @@ $$;
 
 ALTER FUNCTION pkg.sp_add(spv_macro character varying) OWNER TO s_ap;
 
---
--- TOC entry 4127 (class 0 OID 0)
--- Dependencies: 396
--- Name: FUNCTION sp_add(spv_macro character varying); Type: COMMENT; Schema: pkg; Owner: s_ap
---
-
 COMMENT ON FUNCTION pkg.sp_add(spv_macro character varying) IS 'саб-метод для добавления записии в коллекцию варчаров';
 
-
---
--- TOC entry 4119 (class 0 OID 0)
--- Dependencies: 29
--- Name: SCHEMA pkg; Type: ACL; Schema: -; Owner: s_ap
---
-
-GRANT USAGE ON SCHEMA pkg TO s_mc;
-
-
---
--- TOC entry 4120 (class 0 OID 0)
--- Dependencies: 463
--- Name: FUNCTION p_form_response(); Type: ACL; Schema: pkg; Owner: s_ap
---
-
-GRANT ALL ON FUNCTION pkg.p_form_response() TO s_mc;
-
-
---
--- TOC entry 4121 (class 0 OID 0)
--- Dependencies: 498
--- Name: FUNCTION p_reset_response(pn_user bigint); Type: ACL; Schema: pkg; Owner: s_ap
---
-
-GRANT ALL ON FUNCTION pkg.p_reset_response(pn_user bigint) TO s_mc;
-
-
---
--- TOC entry 4122 (class 0 OID 0)
--- Dependencies: 395
--- Name: FUNCTION p_set_error(pk_id bigint, pv_macro_1 character varying, pv_macro_2 character varying, pv_macro_3 character varying, pv_macro_4 character varying, pv_macro_5 character varying); Type: ACL; Schema: pkg; Owner: s_ap
---
-
-GRANT ALL ON FUNCTION pkg.p_set_error(pk_id bigint, pv_macro_1 character varying, pv_macro_2 character varying, pv_macro_3 character varying, pv_macro_4 character varying, pv_macro_5 character varying) TO s_mc;
-
-
---
--- TOC entry 4123 (class 0 OID 0)
--- Dependencies: 394
--- Name: FUNCTION p_set_info(pk_id bigint, pv_macro_1 character varying, pv_macro_2 character varying, pv_macro_3 character varying, pv_macro_4 character varying, pv_macro_5 character varying); Type: ACL; Schema: pkg; Owner: s_ap
---
-
-GRANT ALL ON FUNCTION pkg.p_set_info(pk_id bigint, pv_macro_1 character varying, pv_macro_2 character varying, pv_macro_3 character varying, pv_macro_4 character varying, pv_macro_5 character varying) TO s_mc;
-
-
---
--- TOC entry 4125 (class 0 OID 0)
--- Dependencies: 500
--- Name: FUNCTION p_set_msg_macro(pk_id bigint, pv_macro_1 character varying, pv_macro_2 character varying, pv_macro_3 character varying, pv_macro_4 character varying, pv_macro_5 character varying); Type: ACL; Schema: pkg; Owner: s_ap
---
-
-GRANT ALL ON FUNCTION pkg.p_set_msg_macro(pk_id bigint, pv_macro_1 character varying, pv_macro_2 character varying, pv_macro_3 character varying, pv_macro_4 character varying, pv_macro_5 character varying) TO s_mc;
-
-
---
--- TOC entry 4126 (class 0 OID 0)
--- Dependencies: 469
--- Name: FUNCTION p_set_warning(pk_id bigint, pv_macro_1 character varying, pv_macro_2 character varying, pv_macro_3 character varying, pv_macro_4 character varying, pv_macro_5 character varying); Type: ACL; Schema: pkg; Owner: s_ap
---
-
-GRANT ALL ON FUNCTION pkg.p_set_warning(pk_id bigint, pv_macro_1 character varying, pv_macro_2 character varying, pv_macro_3 character varying, pv_macro_4 character varying, pv_macro_5 character varying) TO s_mc;
-
-
---
--- TOC entry 4128 (class 0 OID 0)
--- Dependencies: 396
--- Name: FUNCTION sp_add(spv_macro character varying); Type: ACL; Schema: pkg; Owner: s_ap
---
-
-GRANT ALL ON FUNCTION pkg.sp_add(spv_macro character varying) TO s_mc;
-
-
--- Completed on 2019-07-03 22:45:04 PST
-
---
--- PostgreSQL database dump complete
---
 

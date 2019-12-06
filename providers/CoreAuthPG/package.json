@@ -2,7 +2,7 @@
     "name": "@ungate-provider/core-auth-pg",
     "version": "1.0.0",
     "description": "Провайдер авторизации Core",
-    "author": "Ivan Artemov (artemov_i@tii.ru)",
+    "author": "Ivan Artemov (honyrik@gmail.com)",
     "license": "ISC",
     "dependencies": {
         "@ungate/plugininf": "^1.0.0",

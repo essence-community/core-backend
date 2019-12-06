@@ -17,7 +17,7 @@ import { ReadStreamToArray } from "@ungate/plugininf/lib/stream/Util";
 import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
 import * as ActiveDirectory from "activedirectory";
 import { X509 } from "jsrsasign";
-import { uniq } from "lodash";
+import { isObject, uniq } from "lodash";
 
 const Property = (global as IGlobalObject).property;
 const BASIC_PATTERN = "Basic";
@@ -72,7 +72,6 @@ export default class PKOAuth extends NullAuthProvider {
     public dataSource: PostgresDB;
 
     private dbUsers: ILocalDB;
-    private dbDepartments: ILocalDB;
     private ad: ActiveDirectory;
     private mapUserAttr: IObjectParam = {};
     private mapGroupActions: IObjectParam = {};
@@ -218,9 +217,6 @@ export default class PKOAuth extends NullAuthProvider {
         };
     }
     public async init(reload?: boolean): Promise<void> {
-        if (!this.dbDepartments) {
-            this.dbDepartments = await Property.getDepartments();
-        }
         if (!this.dbUsers) {
             this.dbUsers = await Property.getUsers();
         }
@@ -228,8 +224,30 @@ export default class PKOAuth extends NullAuthProvider {
         const users = {};
         return this.dataSource
             .executeStmt(
-                "select u.ck_id, u.cv_login, u.cv_name, u.cv_surname, u.cv_patronymic\n" +
-                    "  from t_user u",
+                "select json_object(array['ck_id',\n" +
+                    "                   'cv_login',\n" +
+                    "                   'cv_name',\n" +
+                    "                   'cv_surname',\n" +
+                    "                   'cv_patronymic',\n" +
+                    "                   'cv_email',\n" +
+                    "                   'cv_timezone']::varchar[] || coalesce(info.key::varchar[], array[]::varchar[]),\n" +
+                    "                   array[u.ck_id,\n" +
+                    "                   u.cv_login,\n" +
+                    "                   u.cv_name,\n" +
+                    "                   u.cv_surname,\n" +
+                    "                   u.cv_patronymic,\n" +
+                    "                   u.cv_email,\n" +
+                    "                   u.cv_timezone]::varchar[] || coalesce(info.value::varchar[], array[]::varchar[])) as json\n" +
+                    "  from s_at.t_account u\n" +
+                    "  left join (select a.ck_id,\n" +
+                    "               array_agg(a.ck_d_info) as key,\n" +
+                    "               array_agg(ainf.cv_value) as value\n" +
+                    "          from (select ac.ck_id, inf.ck_id as ck_d_info, inf.cr_type\n" +
+                    "                  from s_at.t_account ac, s_at.t_d_info inf) a\n" +
+                    "          left join s_at.t_account_info ainf\n" +
+                    "            on a.ck_d_info = ainf.ck_d_info and a.ck_id = ainf.ck_account\n" +
+                    "         group by a.ck_id) as info\n" +
+                    "    on u.ck_id = info.ck_id",
                 null,
                 null,
                 null,
@@ -242,18 +260,21 @@ export default class PKOAuth extends NullAuthProvider {
                     new Promise((resolve, reject) => {
                         resUser.stream.on("error", (err) => reject(err));
                         resUser.stream.on("data", (chunk) => {
-                            users[chunk.ck_id] = {
-                                ...chunk,
-                                ca_actions: [],
+                            const row = isObject(chunk.json)
+                                ? chunk.json
+                                : JSON.stringify(chunk.json);
+                            users[row.ck_id] = {
                                 cv_timezone: "+03:00",
+                                ...row,
+                                ca_actions: [],
                             };
                         });
                         resUser.stream.on("end", () => {
                             this.dataSource
                                 .executeStmt(
-                                    "select distinct ur.ck_user, dra.ck_d_action from t_user_role ur\n" +
-                                        "  join t_d_role dr on dr.ck_id = ur.ck_d_role\n" +
-                                        "  join t_d_role_action dra on dra.ck_d_role = dr.ck_id",
+                                    "select distinct ur.ck_account, dra.ck_action\n" +
+                                        "  from t_account_role ur\n" +
+                                        "  join t_role_action dra on ur.ck_role = dra.ck_role",
                                     null,
                                     null,
                                     null,
@@ -273,13 +294,15 @@ export default class PKOAuth extends NullAuthProvider {
                                                     "data",
                                                     (val) => {
                                                         if (
-                                                            users[val.ck_user]
+                                                            users[
+                                                                val.ck_account
+                                                            ]
                                                         ) {
                                                             users[
-                                                                val.ck_user
+                                                                val.ck_account
                                                             ].ca_actions.push(
                                                                 parseInt(
-                                                                    val.ck_d_action,
+                                                                    val.ck_action,
                                                                     10,
                                                                 ),
                                                             );
@@ -348,8 +371,22 @@ export default class PKOAuth extends NullAuthProvider {
                 reject(new ErrorException(ErrorGate.AUTH_DENIED));
                 return;
             }
+            if (isEmpty(user.userCertificate)) {
+                this.log.error(
+                    "User not valid certificate %j, userCertificate not pem",
+                    user,
+                );
+                reject(new ErrorException(ErrorGate.AUTH_DENIED));
+                return;
+            }
             const x509 = new X509();
-            x509.readCertPEM(user.userCertificate);
+            try {
+                x509.readCertPEM(user.userCertificate);
+            } catch (e) {
+                this.log.error("User not valid certificate %j", user, e);
+                reject(new ErrorException(ErrorGate.AUTH_DENIED));
+                return;
+            }
             if (
                 x509.getSerialNumberHex().toLocaleUpperCase() !==
                 (gateContext.request.headers[
@@ -357,9 +394,9 @@ export default class PKOAuth extends NullAuthProvider {
                 ] as string).toLocaleUpperCase()
             ) {
                 this.log.error(
-                    `Not valid certificate Serial-ad: ${x509
+                    `Not valid certificate Serial-In-AD: ${x509
                         .getSerialNumberHex()
-                        .toLocaleUpperCase()}, Serial-forwarded: ${(gateContext
+                        .toLocaleUpperCase()}, Serial-Forwarded: ${(gateContext
                         .request.headers[
                         "forwarded-ssl-client-m-serial"
                     ] as string).toLocaleUpperCase()}`,

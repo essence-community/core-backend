@@ -16,6 +16,7 @@
     <include file="./s_mp/pkg_notification.sql" />
     <include file="./s_mp/pkg_report.sql" />
     <include file="./s_mp/pkg_meta.sql" />
+    <include file="./s_mp/pkg_localization.sql" />
     <include file="./s_mp/pkg_json_meta.sql" />
     <include file="./s_mp/pkg_json_notification.sql" />
     <include file="./s_mp/pkg_json_scenario.sql" />
@@ -24,4 +25,5 @@
     <include file="./s_mp/pkg_json_report.sql" />
     <include file="./s_mp/pkg_json_semaphore.sql" />
     <include file="./s_mp/pkg_json.sql" />
+    <include file="./s_mp/pkg_json_localization.sql" /> 
 </databaseChangeLog>

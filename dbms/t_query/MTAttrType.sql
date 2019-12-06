@@ -5,6 +5,8 @@ INSERT INTO s_mt.t_query (ck_id, cc_query, ck_provider, ck_user, ct_change, cr_t
 select 
 
   att.ck_id,
+  
+  att.cv_name,
 
   att.cv_description,
 

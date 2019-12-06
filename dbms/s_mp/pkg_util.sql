@@ -34,15 +34,24 @@ CREATE FUNCTION pkg_util.f_get_global_from_string(pv_string character varying DE
     SET search_path TO 'public'
     AS $$declare
   res ct_varchar;
+declare
+   vv_pattern VARCHAR := '(?!\w|\").([g][A-z_0-9]+)|^([g][A-z_0-9]+)';
 begin
   res := '{}'::ct_varchar;
   if pv_string is not null then
+    if pv_attr = 'setglobal' then
+      -- ищем глобальные переменные в правой части равенства или в начале строки
+      vv_pattern := '\=([g][A-z_0-9]+)|^([g][A-z_0-9]+)$';
+    elsif pv_attr = 'columnsfilter' then
+      -- ищем все глобальные переменные, за исключением правой части равенства
+      vv_pattern := '(?!\w|\"|\=).([g][A-z_0-9]+)|^([g][A-z_0-9]+)';
+    end if;
     begin
       select array_agg(coalesce(t.res[1], t.res[2])) as global
         into strict res
         from (select 1 as lvl,
                      regexp_matches(pv_string,
-                                    '(?!\w|").([g][A-z_0-9]+)|^([g][A-z_0-9]+)',
+                                    vv_pattern,
                                     'gi') as res) as t;
     exception
     	when others then

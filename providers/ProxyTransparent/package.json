@@ -2,7 +2,7 @@
     "name": "@ungate-provider/proxy-transparent",
     "version": "1.0.0",
     "description": "Прокси провайдер",
-    "author": "Ivan Artemov (artemov_i@tii.ru)",
+    "author": "Ivan Artemov (honyrik@gmail.com)",
     "license": "ISC",
     "dependencies": {
         "@ungate/plugininf": "^1.0.0",

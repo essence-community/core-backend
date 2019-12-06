@@ -45,249 +45,333 @@ export default class AdminAction {
         this.dbQuerys = await Property.getQuery();
         this.dbServers = await Property.getServers();
     }
-    public gtresetdefaultconfig = (gateContext: IContext) =>
-        gateContext.gateContextPlugin.init(true).then(() =>
-            Promise.resolve([
-                {
-                    ck_id: undefined,
-                    cv_error: null,
-                },
-            ]),
-        );
-    public gtrestartgate = (gateContext) =>
-        resetAction(gateContext, "ck_id", "restartCluster", "master", "ck_id");
-    public gtrestartfullgate = (gateContext) =>
-        resetAction(gateContext, "ck_id", "restartAll", "master", "ck_id");
-    public gtgetusers = (gateContext: IContext) =>
-        this.dbUsers.find().then((docs) =>
-            Promise.resolve(
-                docs
-                    .map((val) => ({
-                        ...val,
-                        ...Object.entries(val.data).reduce(
-                            (obj, arr) => ({
-                                ...obj,
-                                [`data.${arr[0]}`]: arr[1],
-                            }),
-                            {},
+    /* tslint:disable:object-literal-sort-keys */
+    public get handlers() {
+        return {
+            gtresetdefaultconfig: (gateContext: IContext) =>
+                gateContext.gateContextPlugin.init(true).then(() =>
+                    Promise.resolve([
+                        {
+                            ck_id: undefined,
+                            cv_error: null,
+                        },
+                    ]),
+                ),
+            gtrestartgate: (gateContext) =>
+                resetAction(
+                    gateContext,
+                    "ck_id",
+                    "restartCluster",
+                    "master",
+                    "ck_id",
+                ),
+            gtrestartfullgate: (gateContext) =>
+                resetAction(
+                    gateContext,
+                    "ck_id",
+                    "restartAll",
+                    "master",
+                    "ck_id",
+                ),
+            gtgetusers: (gateContext: IContext) =>
+                this.dbUsers.find().then((docs) =>
+                    Promise.resolve(
+                        docs
+                            .map((val) => ({
+                                ...val,
+                                ...Object.entries(val.data).reduce(
+                                    (obj, arr) => ({
+                                        ...obj,
+                                        [`data.${arr[0]}`]: arr[1],
+                                    }),
+                                    {},
+                                ),
+                                cv_actions:
+                                    val.data && val.data.ca_actions
+                                        ? val.data.ca_actions.join(", ")
+                                        : "",
+                                cv_departments:
+                                    val.data && val.data.ca_department
+                                        ? val.data.ca_department.join(", ")
+                                        : "",
+                            }))
+                            .sort(sortFilesData(gateContext))
+                            .filter(filterFilesData(gateContext)),
+                    ),
+                ),
+            gtgetsessions: (gateContext: IContext) =>
+                this.dbSessions.find().then((docs) =>
+                    Promise.resolve(
+                        docs
+                            .map((val) => ({
+                                ...val,
+                                data: undefined,
+                                ...Object.entries(val.data).reduce(
+                                    (obj, arr) => ({
+                                        ...obj,
+                                        [`data.${arr[0]}`]: arr[1],
+                                    }),
+                                    {},
+                                ),
+                            }))
+                            .sort(sortFilesData(gateContext))
+                            .filter(filterFilesData(gateContext)),
+                    ),
+                ),
+            gtgetservers: (gateContext: IContext) =>
+                this.dbServers
+                    .find()
+                    .then((docs) =>
+                        Promise.resolve(
+                            docs
+                                .sort(sortFilesData(gateContext))
+                                .filter(filterFilesData(gateContext)),
                         ),
-                        cv_actions:
-                            val.data && val.data.ca_actions
-                                ? val.data.ca_actions.join(", ")
-                                : "",
-                        cv_departments:
-                            val.data && val.data.ca_department
-                                ? val.data.ca_department.join(", ")
-                                : "",
-                    }))
-                    .sort(sortFilesData(gateContext))
-                    .filter(filterFilesData(gateContext)),
-            ),
-        );
-    public gtgetsessions = (gateContext: IContext) =>
-        this.dbSessions.find().then((docs) =>
-            Promise.resolve(
-                docs
-                    .map((val) => ({
-                        ...val,
-                        data: undefined,
-                        ...Object.entries(val.data).reduce(
-                            (obj, arr) => ({
-                                ...obj,
-                                [`data.${arr[0]}`]: arr[1],
-                            }),
-                            {},
-                        ),
-                    }))
-                    .sort(sortFilesData(gateContext))
-                    .filter(filterFilesData(gateContext)),
-            ),
-        );
-    public gtgetservers = (gateContext: IContext) =>
-        this.dbServers
-            .find()
-            .then((docs) =>
+                    ),
+            gtgetconfproviders: (gateContext: IContext) =>
+                this.dbProviders.find().then((docs) =>
+                    Promise.resolve(
+                        docs
+                            .map((val) => ({
+                                ...val,
+                                cv_params: this.ParamsToString(
+                                    PluginManager.getGateProviderClass,
+                                    val.ck_d_plugin,
+                                    val.cct_params,
+                                ),
+                                cct_params: undefined,
+                                ck_d_plugin: val.ck_d_plugin.toLowerCase(),
+                            }))
+                            .sort(sortFilesData(gateContext))
+                            .filter(filterFilesData(gateContext)),
+                    ),
+                ),
+            gtgetevent: (gateContext: IContext) =>
+                this.dbEvents.find().then((docs) =>
+                    Promise.resolve(
+                        docs
+                            .map((val) => ({
+                                ...val,
+                                cv_params: this.ParamsToString(
+                                    PluginManager.getGateProviderClass,
+                                    val.ck_d_plugin,
+                                    val.cct_params,
+                                ),
+                                cct_params: undefined,
+                                ck_d_plugin: val.ck_d_plugin.toLowerCase(),
+                            }))
+                            .sort(sortFilesData(gateContext))
+                            .filter(filterFilesData(gateContext)),
+                    ),
+                ),
+            gtgetconfigs: (gateContext: IContext) =>
+                this.dbContexts.find().then((docs) =>
+                    Promise.resolve(
+                        docs
+                            .map((val) => ({
+                                ...val,
+                                cv_params: this.ParamsToString(
+                                    PluginManager.getGateContextClass,
+                                    val.ck_d_plugin,
+                                    val.cct_params,
+                                ),
+                                cct_params: undefined,
+                                ck_d_plugin: val.ck_d_plugin.toLowerCase(),
+                            }))
+                            .sort(sortFilesData(gateContext))
+                            .filter(filterFilesData(gateContext)),
+                    ),
+                ),
+            gtgetconfplugins: (gateContext: IContext) =>
+                this.dbPlugins.find().then((docs) =>
+                    Promise.resolve(
+                        docs
+                            .map((val) => ({
+                                ...val,
+                                cv_params: this.ParamsToString(
+                                    PluginManager.getGatePluginsClass,
+                                    val.ck_d_plugin,
+                                    val.cct_params,
+                                ),
+                                cct_params: undefined,
+                                ck_d_plugin: val.ck_d_plugin.toLowerCase(),
+                            }))
+                            .sort(sortFilesData(gateContext))
+                            .filter(filterFilesData(gateContext)),
+                    ),
+                ),
+            gtgetconfquery: (gateContext: IContext) =>
+                this.dbQuerys.find().then((docs) =>
+                    Promise.resolve(
+                        docs
+                            .map((val) => ({
+                                ...val,
+                            }))
+                            .sort(sortFilesData(gateContext))
+                            .filter(filterFilesData(gateContext)),
+                    ),
+                ),
+            gtgetschedulers: (gateContext: IContext) =>
+                this.dbSchedulers.find().then((docs) =>
+                    Promise.resolve(
+                        docs
+                            .map((val) => ({
+                                ...val,
+                                cv_params: this.ParamsToString(
+                                    PluginManager.getGateSchedulerClass,
+                                    val.ck_d_plugin,
+                                    val.cct_params,
+                                ),
+                                cct_params: undefined,
+                                ck_d_plugin: val.ck_d_plugin.toLowerCase(),
+                            }))
+                            .sort(sortFilesData(gateContext))
+                            .filter(filterFilesData(gateContext)),
+                    ),
+                ),
+            gtgetpluginsclass: (gateContext: IContext) =>
                 Promise.resolve(
-                    docs
+                    PluginManager.getGateAllPluginsClass()
+                        .map((val) => ({ ck_id: val }))
                         .sort(sortFilesData(gateContext))
                         .filter(filterFilesData(gateContext)),
                 ),
-            );
-    public gtgetconfproviders = (gateContext: IContext) =>
-        this.dbProviders.find().then((docs) =>
-            Promise.resolve(
-                docs
-                    .map((val) => ({
-                        ...val,
-                        cct_params: this.ParamsToString(
-                            PluginManager.getGateProviderClass,
-                            val.ck_d_plugin,
-                            val.cct_params,
-                        ),
-                        ck_d_plugin: val.ck_d_plugin.toLowerCase(),
-                    }))
-                    .sort(sortFilesData(gateContext))
-                    .filter(filterFilesData(gateContext)),
-            ),
-        );
-    public gtgetconfigs = (gateContext: IContext) =>
-        this.dbContexts.find().then((docs) =>
-            Promise.resolve(
-                docs
-                    .map((val) => ({
-                        ...val,
-                        cct_params: this.ParamsToString(
-                            PluginManager.getGateContextClass,
-                            val.ck_d_plugin,
-                            val.cct_params,
-                        ),
-                        ck_d_plugin: val.ck_d_plugin.toLowerCase(),
-                    }))
-                    .sort(sortFilesData(gateContext))
-                    .filter(filterFilesData(gateContext)),
-            ),
-        );
-    public gtgetconfplugins = (gateContext: IContext) =>
-        this.dbPlugins.find().then((docs) =>
-            Promise.resolve(
-                docs
-                    .map((val) => ({
-                        ...val,
-                        cct_params: this.ParamsToString(
-                            PluginManager.getGatePluginsClass,
-                            val.ck_d_plugin,
-                            val.cct_params,
-                        ),
-                        ck_d_plugin: val.ck_d_plugin.toLowerCase(),
-                    }))
-                    .sort(sortFilesData(gateContext))
-                    .filter(filterFilesData(gateContext)),
-            ),
-        );
-    public gtgetconfquery = (gateContext: IContext) =>
-        this.dbQuerys.find().then((docs) =>
-            Promise.resolve(
-                docs
-                    .map((val) => ({
-                        ...val,
-                    }))
-                    .sort(sortFilesData(gateContext))
-                    .filter(filterFilesData(gateContext)),
-            ),
-        );
-    public gtgetschedulers = (gateContext: IContext) =>
-        this.dbSchedulers.find().then((docs) =>
-            Promise.resolve(
-                docs
-                    .map((val) => ({
-                        ...val,
-                        cct_params: this.ParamsToString(
-                            PluginManager.getGateSchedulerClass,
-                            val.ck_d_plugin,
-                            val.cct_params,
-                        ),
-                        ck_d_plugin: val.ck_d_plugin.toLowerCase(),
-                    }))
-                    .sort(sortFilesData(gateContext))
-                    .filter(filterFilesData(gateContext)),
-            ),
-        );
-    public gtgetpluginsclass = (gateContext: IContext) =>
-        Promise.resolve(
-            PluginManager.getGateAllPluginsClass()
-                .map((val) => ({ ck_id: val }))
-                .sort(sortFilesData(gateContext))
-                .filter(filterFilesData(gateContext)),
-        );
-    public gtgetprovidersclass = (gateContext: IContext) =>
-        Promise.resolve(
-            PluginManager.getGateAllProvidersClass()
-                .map((val) => ({ ck_id: val }))
-                .sort(sortFilesData(gateContext))
-                .filter(filterFilesData(gateContext)),
-        );
-    public gtgetconfigclass = (gateContext: IContext) =>
-        Promise.resolve(
-            PluginManager.getGateAllContextClass()
-                .map((val) => ({ ck_id: val }))
-                .sort(sortFilesData(gateContext))
-                .filter(filterFilesData(gateContext)),
-        );
-    public gtgetschedulerclass = (gateContext: IContext) =>
-        Promise.resolve(
-            PluginManager.getGateAllSchedulersClass()
-                .map((val) => ({ ck_id: val }))
-                .sort(sortFilesData(gateContext))
-                .filter(filterFilesData(gateContext)),
-        );
-    public gtreloadpluginsclass = (gateContext: IContext) =>
-        resetAction(gateContext, "ck_id", "resetPluginClass", "cluster");
-    public gtreloadprovidersclass = (gateContext: IContext) =>
-        resetAction(gateContext, "ck_id", "resetProviderClass", "cluster");
-    public gtreloadconfigclass = (gateContext: IContext) =>
-        resetAction(gateContext, "ck_id", "resetContextClass", "cluster");
-    public gtresetprovider = (gateContext: IContext) =>
-        resetAction(gateContext, "ck_id", "reloadProvider", "cluster");
-    public gtresetallprovider = (gateContext: IContext) =>
-        resetAction(gateContext, "ck_id", "reloadAllProvider", "cluster");
-    public gtresetconfig = (gateContext: IContext) =>
-        resetAction(gateContext, "ck_id", "reloadContext", "cluster");
-    public gtresetallconfig = (gateContext: IContext) =>
-        resetAction(gateContext, "ck_id", "reloadAllContext", "cluster");
-    public gtresetscheduler = (gateContext: IContext) =>
-        resetAction(gateContext, "ck_id", "reloadScheduler", "schedulerNode");
-    public gtresetallscheduler = (gateContext: IContext) =>
-        resetAction(
-            gateContext,
-            "ck_id",
-            "reloadAllScheduler",
-            "schedulerNode",
-        );
-    public gtgetriakbuckets = (...arg) =>
-        this.riakAction.gtgetriakbuckets.apply(this.riakAction, arg);
-    public gtgetriakfiles = (gateContext: IContext) =>
-        this.riakAction.loadRiakFiles(gateContext);
-    public gtgetriakfileinfo = (gateContext: IContext) =>
-        this.riakAction.loadRiakFileInfo(gateContext);
-    public gtdownloadriakfile = (gateContext: IContext) =>
-        this.riakAction.downloadRiakFile(gateContext);
-    public gtgetprovidersetting = (gateContext: IContext) =>
-        this.loadSetting(
-            gateContext,
-            "ck_id",
-            PluginManager.getGateProviderClass,
-            this.dbProviders,
-        );
-    public gtgetcontextsetting = (gateContext: IContext) =>
-        this.loadSetting(
-            gateContext,
-            "ck_id",
-            PluginManager.getGateContextClass,
-            this.dbContexts,
-        );
-    public gtgetpluginsetting = (gateContext: IContext) =>
-        this.loadSetting(
-            gateContext,
-            "ck_id",
-            PluginManager.getGatePluginsClass,
-            this.dbPlugins,
-        );
-    public gtgetschedulersetting = (gateContext: IContext) =>
-        this.loadSetting(
-            gateContext,
-            "ck_id",
-            PluginManager.getGateSchedulerClass,
-            this.dbSchedulers,
-        );
-    public gtgetboolean = () =>
-        Promise.resolve([
-            {
-                ck_id: true,
-            },
-            {
-                ck_id: false,
-            },
-        ]);
+            gtgetprovidersclass: (gateContext: IContext) =>
+                Promise.resolve(
+                    PluginManager.getGateAllProvidersClass()
+                        .map((val) => ({ ck_id: val }))
+                        .sort(sortFilesData(gateContext))
+                        .filter(filterFilesData(gateContext)),
+                ),
+            gtgetconfigclass: (gateContext: IContext) =>
+                Promise.resolve(
+                    PluginManager.getGateAllContextClass()
+                        .map((val) => ({ ck_id: val }))
+                        .sort(sortFilesData(gateContext))
+                        .filter(filterFilesData(gateContext)),
+                ),
+            gtgetschedulerclass: (gateContext: IContext) =>
+                Promise.resolve(
+                    PluginManager.getGateAllSchedulersClass()
+                        .map((val) => ({ ck_id: val }))
+                        .sort(sortFilesData(gateContext))
+                        .filter(filterFilesData(gateContext)),
+                ),
+            gtgeteventclass: (gateContext: IContext) =>
+                Promise.resolve(
+                    PluginManager.getGateAllEventsClass()
+                        .map((val) => ({ ck_id: val }))
+                        .sort(sortFilesData(gateContext))
+                        .filter(filterFilesData(gateContext)),
+                ),
+            gtreloadpluginsclass: (gateContext: IContext) =>
+                resetAction(
+                    gateContext,
+                    "ck_id",
+                    "resetPluginClass",
+                    "cluster",
+                ),
+            gtreloadprovidersclass: (gateContext: IContext) =>
+                resetAction(
+                    gateContext,
+                    "ck_id",
+                    "resetProviderClass",
+                    "cluster",
+                ),
+            gtreloadconfigclass: (gateContext: IContext) =>
+                resetAction(
+                    gateContext,
+                    "ck_id",
+                    "resetContextClass",
+                    "cluster",
+                ),
+            gtresetprovider: (gateContext: IContext) =>
+                resetAction(gateContext, "ck_id", "reloadProvider", "cluster"),
+            gtresetallprovider: (gateContext: IContext) =>
+                resetAction(
+                    gateContext,
+                    "ck_id",
+                    "reloadAllProvider",
+                    "cluster",
+                ),
+            gtresetconfig: (gateContext: IContext) =>
+                resetAction(gateContext, "ck_id", "reloadContext", "cluster"),
+            gtresetallconfig: (gateContext: IContext) =>
+                resetAction(
+                    gateContext,
+                    "ck_id",
+                    "reloadAllContext",
+                    "cluster",
+                ),
+            gtresetscheduler: (gateContext: IContext) =>
+                resetAction(
+                    gateContext,
+                    "ck_id",
+                    "reloadScheduler",
+                    "schedulerNode",
+                ),
+            gtresetallscheduler: (gateContext: IContext) =>
+                resetAction(
+                    gateContext,
+                    "ck_id",
+                    "reloadAllScheduler",
+                    "schedulerNode",
+                ),
+            gtgetriakbuckets: (...arg) =>
+                this.riakAction.gtgetriakbuckets.apply(this.riakAction, arg),
+            gtgetriakfiles: (gateContext: IContext) =>
+                this.riakAction.loadRiakFiles(gateContext),
+            gtgetriakfileinfo: (gateContext: IContext) =>
+                this.riakAction.loadRiakFileInfo(gateContext),
+            gtdownloadriakfile: (gateContext: IContext) =>
+                this.riakAction.downloadRiakFile(gateContext),
+            gtgetprovidersetting: (gateContext: IContext) =>
+                this.loadSetting(
+                    gateContext,
+                    "ck_id",
+                    PluginManager.getGateProviderClass,
+                    this.dbProviders,
+                ),
+            gtgetcontextsetting: (gateContext: IContext) =>
+                this.loadSetting(
+                    gateContext,
+                    "ck_id",
+                    PluginManager.getGateContextClass,
+                    this.dbContexts,
+                ),
+            gtgetpluginsetting: (gateContext: IContext) =>
+                this.loadSetting(
+                    gateContext,
+                    "ck_id",
+                    PluginManager.getGatePluginsClass,
+                    this.dbPlugins,
+                ),
+            gtgetschedulersetting: (gateContext: IContext) =>
+                this.loadSetting(
+                    gateContext,
+                    "ck_id",
+                    PluginManager.getGateSchedulerClass,
+                    this.dbSchedulers,
+                ),
+            gtgeteventsetting: (gateContext: IContext) =>
+                this.loadSetting(
+                    gateContext,
+                    "ck_id",
+                    PluginManager.getGateEventsClass,
+                    this.dbEvents,
+                ),
+            gtgetboolean: () =>
+                Promise.resolve([
+                    {
+                        ck_id: true,
+                    },
+                    {
+                        ck_id: false,
+                    },
+                ]),
+        };
+    }
+
     public ParamsToString(method: any, ckDPlugin: string, cctParams = {}) {
         const PClass = method(ckDPlugin.toLowerCase());
         let params = {};

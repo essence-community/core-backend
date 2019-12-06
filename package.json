@@ -10,18 +10,23 @@
     "scripts": {
         "prettier": "prettier --write \"{,!(node_modules|dist|build|bin|libs|coverage)/**/}*.{js,jsx,ts,tsx,json}\"",
         "build": "gulp all",
-        "pre-commit": "yarn prettier && yarn tslint:fix:server && yarn tslint:fix:plugininf && yarn build",
+        "pre-commit": "yarn prettier && yarn tslint:server && yarn tslint:plugininf && yarn build",
         "tslint:server": "tslint --project server/tsconfig.json",
         "tslint:fix:server": "tslint --project server/tsconfig.json --fix",
         "tslint:plugininf": "tslint --project plugininf/tsconfig.json",
-        "tslint:fix:plugininf": "tslint --project plugininf/tsconfig.json --fix"
+        "tslint:fix:plugininf": "tslint --project plugininf/tsconfig.json --fix",
+        "ltslint:fix:context": "ls contexts | while read line; do tslint --project contexts/$line/tsconfig.json --fix; done",
+        "ltslint:fix:plugins": "ls plugins | while read line; do tslint --project plugins/$line/tsconfig.json --fix; done",
+        "ltslint:fix:providers": "ls providers | while read line; do tslint --project providers/$line/tsconfig.json --fix; done",
+        "ltslint:fix:events": "ls events | while read line; do tslint --project events/$line/tsconfig.json --fix; done",
+        "ltslint:fix:schedulers": "ls schedulers | while read line; do tslint --project schedulers/$line/tsconfig.json --fix; done"
     },
     "husky": {
         "hooks": {
             "pre-commit": "yarn pre-commit"
         }
     },
-    "author": "Ivan Artemov (artemov_i@tii.ru)",
+    "author": "Ivan Artemov (honyrik@gmail.com)",
     "license": "ISC",
     "workspaces": [
         "server",
@@ -53,7 +58,6 @@
         "gulp-typescript": "^5.0.0",
         "husky": "^1.3.1",
         "prettier": "^1.16.4",
-        "simple-git": "^1.107.0",
         "ts-jest": "^23.10.4",
         "ts-node": "^7.0.1",
         "tslint": "^5.12.1",

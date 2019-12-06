@@ -1,5 +1,5 @@
 --liquibase formatted sql
---changeset artemov_i:MTObjectAttribute.sql dbms:postgresql runOnChange:true splitStatements:false stripComments:false
+--changeset dudin_m:MTObjectAttribute.sql dbms:postgresql runOnChange:true splitStatements:false stripComments:false
 INSERT INTO s_mt.t_query (ck_id, cc_query, ck_provider, ck_user, ct_change, cr_type, cr_access, cn_action, cv_description) VALUES ('MTObjectAttribute', '/*MTObjectAttribute*/
 
 select 
@@ -68,12 +68,13 @@ from (
 
    and a.ck_attr_type not in (''system'',''placement'',''behavior'')
 
+  /* Фильтр по типу атрибута */  
+
+  /*##filter.ck_attr_type*/and (lower(a.ck_attr_type) = lower((cast(:json as jsonb)->''filter''->>''ck_attr_type'')::varchar) or lower((cast(:json as jsonb)->''filter''->>''ck_attr_type'')::varchar) = ''all'')/*filter.ck_attr_type##*/
  ) t
 
 where ( &FILTER )
 
-order by &SORT, t.ck_attr
-
-  ', 'meta', '20783', '2019-05-22 14:42:06.975994+03', 'select', 'po_session', NULL, 'Необходимо актуализировать')
+order by &SORT, t.ck_attr', 'meta', '20783', '2019-05-22 14:42:06.975994+03', 'select', 'po_session', NULL, 'Необходимо актуализировать')
 on conflict (ck_id) do update set cc_query = excluded.cc_query, ck_provider = excluded.ck_provider, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cr_type = excluded.cr_type, cr_access = excluded.cr_access;
 

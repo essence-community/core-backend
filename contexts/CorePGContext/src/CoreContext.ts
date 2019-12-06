@@ -8,6 +8,7 @@ import IContext from "@ungate/plugininf/lib/IContext";
 import { IContextPluginResult } from "@ungate/plugininf/lib/IContextPlugin";
 import IGlobalObject from "@ungate/plugininf/lib/IGlobalObject";
 import IResult from "@ungate/plugininf/lib/IResult";
+import ISession from "@ungate/plugininf/lib/ISession";
 import Logger from "@ungate/plugininf/lib/Logger";
 import NullContext from "@ungate/plugininf/lib/NullContext";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
@@ -16,7 +17,6 @@ import { isObject } from "lodash";
 import ICoreController from "./ICoreController";
 import OfflineController from "./OfflineController";
 import OnlineController from "./OnlineController";
-import ISession from "@ungate/plugininf/lib/ISession";
 const logger = Logger.getLogger("CoreContext");
 const Mask = (global as IGlobalObject).maskgate;
 const createTempTable = (global as IGlobalObject).createTempTable;
@@ -30,7 +30,9 @@ export interface ICoreParams extends ICCTParams {
     metaResetQuery: string;
     modifyQueryName: string;
     pageMetaQueryName: string;
+    pageMetaQueryNameNew: string;
     pageObjectsQueryName: string;
+    versionApi: Record<string, "1" | "2" | "3">;
 }
 
 export default class CoreContext extends NullContext {
@@ -78,6 +80,12 @@ export default class CoreContext extends NullContext {
                     "Наименование запроса на возращение сформированой страницы",
                 type: "string",
             },
+            pageMetaQueryNameNew: {
+                defaultValue: "GetMetamodelPage2.0",
+                name:
+                    "Наименование запроса на возращение сформированой страницы 2.0",
+                type: "string",
+            },
             pageObjectsQueryName: {
                 defaultValue: "MTGetPageObjects",
                 name: "Наименование запроса на возращение объектов страницы",
@@ -123,11 +131,10 @@ export default class CoreContext extends NullContext {
                 return "sql";
         }
     }
+    public params: ICoreParams;
     private controller: ICoreController;
     private dataSource: PostgresDB;
     private dbUsers: ILocalDB;
-    private dbDepartments: ILocalDB;
-
     constructor(name: string, params: ICCTParams) {
         super(name, params);
         this.params = {
@@ -142,11 +149,16 @@ export default class CoreContext extends NullContext {
         });
         this.params.modifyQueryName = this.params.modifyQueryName.toLowerCase();
         this.params.pageMetaQueryName = this.params.pageMetaQueryName.toLowerCase();
+        this.params.pageMetaQueryNameNew = this.params.pageMetaQueryNameNew.toLowerCase();
         this.params.defaultDepartmentQueryName = this.params.defaultDepartmentQueryName.toLowerCase();
         this.params.metaResetQuery = this.params.metaResetQuery.toLowerCase();
         this.params.pageObjectsQueryName = this.params.pageObjectsQueryName.toLowerCase();
-        this.params.pageObjectsQueryName = this.params.pageObjectsQueryName.toLowerCase();
         this.params.getSysSettings = this.params.getSysSettings.toLowerCase();
+        this.params.versionApi = {
+            [this.params.pageMetaQueryName]: "1",
+            [this.params.pageObjectsQueryName]: "2",
+            [this.params.pageMetaQueryNameNew]: "3",
+        };
         if (this.params.disableCache) {
             this.controller = new OnlineController(name, this.dataSource, this
                 .params as ICoreParams);
@@ -159,7 +171,6 @@ export default class CoreContext extends NullContext {
 
     public async init(reload?: boolean): Promise<void> {
         this.dbUsers = await createTempTable("tt_users");
-        this.dbDepartments = await createTempTable("tt_departments");
         return this.controller.init(reload);
     }
     public initContext(gateContext: IContext): Promise<IContextPluginResult> {
@@ -173,7 +184,9 @@ export default class CoreContext extends NullContext {
                 return this.controller.getSetting(gateContext);
             case this.params.modifyQueryName:
                 return this.controller.findModify(gateContext);
-            case this.params.pageMetaQueryName: {
+            case this.params.pageMetaQueryNameNew:
+            case this.params.pageObjectsQueryName:
+            case this.params.pageMetaQueryName:
                 if (!gateContext.session) {
                     return Promise.reject(
                         new ErrorException(ErrorGate.REQUIRED_AUTH),
@@ -182,29 +195,15 @@ export default class CoreContext extends NullContext {
                 if (!gateContext.params.json) {
                     return Promise.reject(CoreContext.accessDenied());
                 }
-                const json = JSON.parse(gateContext.params.json);
+                const version = this.params.versionApi[name];
+                const json = JSON.parse(gateContext.params.json || "{}");
                 const caActions = gateContext.session.data.ca_actions || [];
-                if (!json.filter || !json.filter.ck_page) {
+                if (version !== "2" && (!json.filter || !json.filter.ck_page)) {
                     return Promise.reject(CoreContext.accessDenied());
-                }
-                return this.controller.findPages(
-                    gateContext,
-                    json.filter.ck_page,
-                    caActions,
-                );
-            }
-            case this.params.pageObjectsQueryName: {
-                if (!gateContext.session) {
-                    return Promise.reject(
-                        new ErrorException(ErrorGate.REQUIRED_AUTH),
-                    );
-                }
-                if (!gateContext.params.json) {
-                    return Promise.reject(CoreContext.accessDenied());
-                }
-                const json = JSON.parse(gateContext.params.json);
-                const caActions = gateContext.session.data.ca_actions || [];
-                if (!json.filter || !json.filter.ck_parent) {
+                } else if (
+                    version === "2" &&
+                    (!json.filter || !json.filter.ck_parent)
+                ) {
                     return Promise.reject(
                         new BreakException({
                             data: ResultStream([]),
@@ -214,10 +213,12 @@ export default class CoreContext extends NullContext {
                 }
                 return this.controller.findPages(
                     gateContext,
-                    json.filter.ck_parent,
+                    version === "2"
+                        ? json.filter.ck_parent
+                        : json.filter.ck_page,
                     caActions,
+                    version,
                 );
-            }
             case this.params.defaultDepartmentQueryName:
                 return this.modifyDefaultDepartment(gateContext);
             case this.params.metaResetQuery: {

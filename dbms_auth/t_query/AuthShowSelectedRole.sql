@@ -13,12 +13,21 @@ select
   a.ck_id as ck_role,
 	a.cv_name,
 	a.cv_description,
+  ragg.cv_action,
 	ra.ck_user,
 	ra.ct_change
 from t_role a
 left join t_account_role ra
  on a.ck_id = ra.ck_role and ra.ck_account =
        trim(:json::json#>>''{master,ck_id}'')::uuid
+left join (select
+    tra.ck_role,
+    string_agg(tra.ck_action::varchar, '', '') as cv_action
+  from
+    s_at.t_role_action as tra
+  group by
+    tra.ck_role) as ragg
+on ragg.ck_role = ra.ck_role
  where ra.ck_account is not null
  ) t
   where &FILTER
