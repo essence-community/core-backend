@@ -13,7 +13,7 @@ import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
 import * as fs from "fs";
 import { forEach, isObject } from "lodash";
 import { Readable } from "stream";
-import * as uuidv4 from "uuidv4";
+import { uuid as uuidv4 } from "uuidv4";
 import { DirStorage } from "./DirStorage";
 import { ExtractorCsv } from "./ExtractorCsv";
 import { ExtractorDbf } from "./ExtractorDbf";

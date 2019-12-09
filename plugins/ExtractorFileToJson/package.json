@@ -6,11 +6,11 @@
     "license": "ISC",
     "dependencies": {
         "@ungate/plugininf": "^1.0.0",
-        "aws-sdk": "^2.404.0",
+        "aws-sdk": "^2.585.0",
         "fast-csv": "^3.4.0",
-        "lodash": "^4.17.11",
+        "lodash": "^4.17.15",
         "mime": "^2.4.4",
-        "uuidv4": "^2.0.0",
+        "uuidv4": "^6.0.0",
         "xlsx-stream-reader": "^1.1.0"
     },
     "devDependencies": {
