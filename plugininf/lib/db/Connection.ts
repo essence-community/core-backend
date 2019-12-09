@@ -127,13 +127,25 @@ class Connection extends EventEmitter {
     }
     public rollbackAndRelease(): Promise<void> {
         return this.rollback()
-            .then(() => this.release(), () => this.release())
-            .then(() => Promise.resolve(), () => Promise.resolve());
+            .then(
+                () => this.release(),
+                () => this.release(),
+            )
+            .then(
+                () => Promise.resolve(),
+                () => Promise.resolve(),
+            );
     }
     public rollbackAndClose(): Promise<void> {
         return this.rollback()
-            .then(() => this.close(), () => this.close())
-            .then(() => Promise.resolve(), () => Promise.resolve());
+            .then(
+                () => this.close(),
+                () => this.close(),
+            )
+            .then(
+                () => Promise.resolve(),
+                () => Promise.resolve(),
+            );
     }
 }
 

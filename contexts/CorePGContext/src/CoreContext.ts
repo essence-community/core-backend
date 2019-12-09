@@ -160,11 +160,17 @@ export default class CoreContext extends NullContext {
             [this.params.pageMetaQueryNameNew]: "3",
         };
         if (this.params.disableCache) {
-            this.controller = new OnlineController(name, this.dataSource, this
-                .params as ICoreParams);
+            this.controller = new OnlineController(
+                name,
+                this.dataSource,
+                this.params as ICoreParams,
+            );
         } else {
-            this.controller = new OfflineController(name, this.dataSource, this
-                .params as ICoreParams);
+            this.controller = new OfflineController(
+                name,
+                this.dataSource,
+                this.params as ICoreParams,
+            );
         }
         Mask.on("beforechange", this.beforeMask, this);
     }

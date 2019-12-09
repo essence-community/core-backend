@@ -8,7 +8,7 @@ import { dateBetween } from "@ungate/plugininf/lib/util/Util";
 import * as crypto from "crypto";
 import { isArray } from "lodash";
 import * as moment from "moment";
-import * as uuidv4 from "uuidv4";
+import { uuid as uuidv4 } from "uuidv4";
 import Constants from "../Constants";
 import Property from "../property/Property";
 

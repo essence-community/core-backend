@@ -3,7 +3,7 @@ import * as os from "os";
 import * as path from "path";
 import { IRufusLogger } from "rufus";
 import { Readable } from "stream";
-import * as uuidv4 from "uuidv4";
+import { uuid as uuidv4 } from "uuidv4";
 import { IFile, IPluginParams } from "./ExtractorFileToJson.types";
 export class DirStorage {
     private params: IPluginParams;

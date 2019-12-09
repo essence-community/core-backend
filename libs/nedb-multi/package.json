@@ -6,11 +6,11 @@
     "author": "Ivan Artemov (honyrik@gmail.com)",
     "license": "ISC",
     "dependencies": {
-        "@iarna/toml": "^2.2.1",
+        "@iarna/toml": "^2.2.3",
         "axon": "^2.0.3",
         "errio": "^1.2.2",
         "js-yaml": "^3.13.1",
-        "lodash": "^4.17.11",
+        "lodash": "^4.17.15",
         "msgpack-lite": "^0.1.26",
         "nedb": "^1.8.0",
         "nedb-multi": "^1.2.2"

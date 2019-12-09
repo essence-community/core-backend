@@ -97,7 +97,7 @@ export default class OracleDB {
     public connectionConfig: IOracleDBConfig;
     public partRows: number;
     public oracledb: any;
-    public pool?: oracledb.IConnectionPool;
+    public pool?: oracledb.Pool;
     private log: IRufusLogger;
     constructor(name: string, params: IOracleDBConfig) {
         if (!isObject(params) || Object.keys(params).length === 0) {
@@ -169,7 +169,7 @@ export default class OracleDB {
      * @param name
      * @returns {Promise}
      */
-    public getPool(name: string): Promise<oracledb.IConnectionPool> {
+    public getPool(name: string): Promise<oracledb.Pool> {
         return new Promise((resolve, reject) => {
             try {
                 const pool = this.oracledb.getPool(name);
@@ -349,7 +349,7 @@ export default class OracleDB {
      * @param params
      * @returns {Promise}
      */
-    public openEvents(params?: IOracleDBConfig): oracledb.IConnection {
+    public openEvents(params?: IOracleDBConfig): oracledb.Connection {
         return this.oracledb
             .getConnection({
                 connectString: this.connectionConfig.connectString,
@@ -374,9 +374,9 @@ export default class OracleDB {
      */
     public onClose(
         conn?:
-            | oracledb.IConnection
-            | oracledb.IResultSet
-            | oracledb.IConnectionPool,
+            | oracledb.Connection
+            | oracledb.ResultSet<Record<string, any>>
+            | oracledb.Pool,
     ): any {
         if (conn) {
             return conn.close();
@@ -389,7 +389,7 @@ export default class OracleDB {
      * @param conn
      * @returns {Promise.<void>}
      */
-    public async onBreak(conn?: oracledb.IConnection): Promise<any> {
+    public async onBreak(conn?: oracledb.Connection): Promise<any> {
         if (conn) {
             return conn.break();
         }
@@ -401,7 +401,7 @@ export default class OracleDB {
      * @param conn
      * @returns {Promise}
      */
-    public async onRelease(conn?: oracledb.IConnection): Promise<any> {
+    public async onRelease(conn?: oracledb.Connection): Promise<any> {
         if (conn) {
             return conn.release();
         }
@@ -413,7 +413,7 @@ export default class OracleDB {
      * @param conn
      * @returns {Promise.<*|{value, enumerable, writable}>}
      */
-    public async onCommit(conn?: oracledb.IConnection): Promise<any> {
+    public async onCommit(conn?: oracledb.Connection): Promise<any> {
         if (conn) {
             return conn.commit();
         }
@@ -425,7 +425,7 @@ export default class OracleDB {
      * @param conn
      * @returns {Promise.<*|{value, enumerable, writable}>}
      */
-    public async onRollBack(conn?: oracledb.IConnection): Promise<any> {
+    public async onRollBack(conn?: oracledb.Connection): Promise<any> {
         if (conn) {
             return conn.rollback();
         }
@@ -444,7 +444,7 @@ export default class OracleDB {
      */
     public executeStmt(
         sql: string,
-        conn?: oracledb.IConnection,
+        conn?: oracledb.Connection,
         inParam?: IObjectParam,
         outParam?: IObjectParam,
         options?: IOptions,
@@ -516,7 +516,7 @@ export default class OracleDB {
         sql: string,
         params: IParams,
         options: IOptions,
-        inConnection?: oracledb.IConnection,
+        inConnection?: oracledb.Connection,
     ): Promise<IResultProvider> {
         let estimateTimerId = null;
         const conn = inConnection
@@ -606,19 +606,26 @@ export default class OracleDB {
                     forEach<any>(res.outBinds, (value) => {
                         if (
                             isObject(value) &&
-                            (value as oracledb.IResultSet).toQueryStream
+                            (value as oracledb.ResultSet<Record<string, any>>)
+                                .toQueryStream
                         ) {
                             isNotCursor = false;
                             result = {
                                 metaData: this.extractMetaData(
-                                    (value as oracledb.IResultSet).metaData,
+                                    (value as oracledb.ResultSet<
+                                        Record<string, any>
+                                    >).metaData,
                                 ),
-                                stream: (value as oracledb.IResultSet).toQueryStream(),
+                                stream: (value as oracledb.ResultSet<
+                                    Record<string, any>
+                                >).toQueryStream(),
                             };
                             result.stream = safePipe(
                                 result.stream,
                                 this.DatasetSerializer(
-                                    (value as oracledb.IResultSet).metaData,
+                                    (value as oracledb.ResultSet<
+                                        Record<string, any>
+                                    >).metaData,
                                 ),
                             );
                         }
@@ -687,7 +694,7 @@ export default class OracleDB {
      * @param metaData - Данные ответа
      * @constructor
      */
-    public DatasetSerializer(metaData: oracledb.IMetaData[]): Transform {
+    public DatasetSerializer(metaData: oracledb.Metadata[]): Transform {
         const column = {};
         if (metaData && metaData.length) {
             let i = 0;
@@ -750,7 +757,7 @@ export default class OracleDB {
         return trans;
     }
 
-    private extractMetaData(metaData: oracledb.IMetaData[] = []) {
+    private extractMetaData(metaData: oracledb.Metadata[] = []) {
         return metaData.map((data) => {
             let datatype = "text";
             switch (data.dbType) {

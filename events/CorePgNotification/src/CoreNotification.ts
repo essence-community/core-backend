@@ -162,7 +162,10 @@ export default class CoreNotification extends NullEvent {
                         return conn.rollback();
                     },
                 )
-                .then(() => conn.release(), () => conn.release())
+                .then(
+                    () => conn.release(),
+                    () => conn.release(),
+                )
                 .then(noop)
                 .catch((err) => logger.error(err)),
         );

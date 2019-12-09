@@ -13,7 +13,7 @@ import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
 import * as AWS from "aws-sdk";
 import * as fs from "fs";
 import { forEach, isObject } from "lodash";
-import * as uuidv4 from "uuidv4";
+import { uuid as uuidv4 } from "uuidv4";
 
 interface File {
     /**

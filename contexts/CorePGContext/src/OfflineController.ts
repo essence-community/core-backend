@@ -771,9 +771,10 @@ export default class OfflineController implements ICoreController {
                             data.push(row);
                         });
                         res.stream.on("end", () => {
-                            this.tempTable.dbSysSettings
-                                .insert(data)
-                                .then(() => resolve(), (err) => reject(err));
+                            this.tempTable.dbSysSettings.insert(data).then(
+                                () => resolve(),
+                                (err) => reject(err),
+                            );
                         });
                     }),
             );
@@ -946,9 +947,10 @@ export default class OfflineController implements ICoreController {
                             }
                         });
                         res.stream.on("end", () => {
-                            this.tempTable.dbMessage
-                                .insert(data)
-                                .then(() => resolve(), (err) => reject(err));
+                            this.tempTable.dbMessage.insert(data).then(
+                                () => resolve(),
+                                (err) => reject(err),
+                            );
                         });
                     }),
             );
@@ -988,9 +990,10 @@ export default class OfflineController implements ICoreController {
                             });
                         });
                         res.stream.on("end", () => {
-                            this.tempTable.dbQuery
-                                .insert(data)
-                                .then(() => resolve(), (err) => reject(err));
+                            this.tempTable.dbQuery.insert(data).then(
+                                () => resolve(),
+                                (err) => reject(err),
+                            );
                         });
                     }),
             );
@@ -1027,9 +1030,10 @@ export default class OfflineController implements ICoreController {
                             });
                         });
                         res.stream.on("end", () => {
-                            this.tempTable.dbQueryAction
-                                .insert(data)
-                                .then(() => resolve(), (err) => reject(err));
+                            this.tempTable.dbQueryAction.insert(data).then(
+                                () => resolve(),
+                                (err) => reject(err),
+                            );
                         });
                     }),
             );
@@ -1064,9 +1068,10 @@ export default class OfflineController implements ICoreController {
                             });
                         });
                         res.stream.on("end", () => {
-                            this.tempTable.dbModify
-                                .insert(data)
-                                .then(() => resolve(), (err) => reject(err));
+                            this.tempTable.dbModify.insert(data).then(
+                                () => resolve(),
+                                (err) => reject(err),
+                            );
                         });
                     }),
             );
@@ -1100,9 +1105,10 @@ export default class OfflineController implements ICoreController {
                             });
                         });
                         res.stream.on("end", () => {
-                            this.tempTable.dbModifyAction
-                                .insert(data)
-                                .then(() => resolve(), (err) => reject(err));
+                            this.tempTable.dbModifyAction.insert(data).then(
+                                () => resolve(),
+                                (err) => reject(err),
+                            );
                         });
                     }),
             );
