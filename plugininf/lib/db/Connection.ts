@@ -59,6 +59,7 @@ class Connection extends EventEmitter {
             this.once("finish", () => {
                 this.release();
             });
+            return;
         }
         try {
             this.isExecute = true;
@@ -78,6 +79,7 @@ class Connection extends EventEmitter {
             this.once("finish", () => {
                 this.close();
             });
+            return;
         }
         try {
             this.isExecute = true;
@@ -97,6 +99,7 @@ class Connection extends EventEmitter {
             this.once("finish", () => {
                 this.commit();
             });
+            return;
         }
         this.isExecute = true;
         try {
@@ -115,6 +118,7 @@ class Connection extends EventEmitter {
             this.once("finish", () => {
                 this.rollback();
             });
+            return;
         }
         this.isExecute = true;
         try {
