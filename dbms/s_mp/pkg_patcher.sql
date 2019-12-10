@@ -173,7 +173,7 @@ $function$
 
 COMMENT ON FUNCTION pkg_patcher.p_merge_object_attr(varchar,varchar,varchar,varchar,varchar,timestamptz) IS 'Обновление атрибутов объекта';
 
-CREATE OR REPLACE FUNCTION pkg_patcher.p_check_localization()
+CREATE OR REPLACE FUNCTION pkg_patcher.p_update_localization()
  RETURNS void
  LANGUAGE plpgsql
  SECURITY DEFINER
@@ -326,4 +326,4 @@ end;
 $function$
 ;
 
-COMMENT ON FUNCTION pkg_patcher.p_check_localization() IS 'Перевод атрибутов и параметров в локализыцию';
+COMMENT ON FUNCTION pkg_patcher.p_update_localization() IS 'Перевод атрибутов и параметров в локализыцию';
