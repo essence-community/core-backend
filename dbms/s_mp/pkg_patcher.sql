@@ -327,3 +327,186 @@ $function$
 ;
 
 COMMENT ON FUNCTION pkg_patcher.p_update_localization() IS 'Перевод атрибутов и параметров в локализыцию';
+
+CREATE OR REPLACE FUNCTION pkg_patcher.p_remove_page(pk_page character varying)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'pkg', 'pkg_patcher', 's_mt'
+AS $function$
+declare
+  -- переменные пакета
+  ot_page record;
+
+  ot_page_object record;
+
+  rec record;
+
+  vv_clean VARCHAR := 'false';
+begin
+  SELECT cv_value
+    into vv_clean
+  from s_mt.t_sys_setting
+    where ck_id = 'clearing_object_during_update';
+
+  for ot_page in (
+    with recursive page as (
+      select
+        ck_id,
+        1 as lvl
+      from
+        s_mt.t_page
+      where
+        ck_id = pk_page
+      union all
+      select
+        p.ck_id,
+        rp.lvl + 1 as lvl
+      from
+        s_mt.t_page p
+      join page rp on
+        p.ck_parent = rp.ck_id )
+    select ck_id from page order by lvl desc
+  ) loop
+
+    -- Removing t_page_object
+    for ot_page_object in (
+        with recursive page_object as (
+          select
+            ck_id,
+            ck_object,
+            1 as lvl
+          from
+            s_mt.t_page_object
+          where
+            ck_page = ot_page.ck_id and ck_parent is null
+          union all
+          select
+            p.ck_id,
+            p.ck_object,
+            rp.lvl + 1 as lvl
+          from
+            s_mt.t_page_object p
+          join page_object rp on
+            p.ck_parent = rp.ck_id )
+        select ck_id, ck_object from page_object order by lvl desc
+    ) loop
+      update s_mt.t_page_object set ck_master = null where ck_master = ot_page_object.ck_id;
+      delete from s_mt.t_page_object_attr where ck_page_object = ot_page_object.ck_id;
+      delete from s_mt.t_page_object where ck_id = ot_page_object.ck_id;
+
+      if vv_clean = 'true' THEN
+        -- check use object
+        for rec in (
+          select
+              1
+          from
+              dual
+           where
+              not exists (
+                select
+                  ck_id
+                from
+                  s_mt.t_page_object
+                where
+                  ck_object in (with recursive ot_object as (
+                  select
+                    ck_id,
+                    1 as lvl
+                  from
+                    s_mt.t_object
+                  where
+                    ck_id = ot_page_object.ck_object
+                union all
+                  select
+                    o.ck_id,
+                    ro.lvl + 1 as lvl
+                  from
+                    s_mt.t_object o
+                  join ot_object ro on
+                    o.ck_parent = ro.ck_id )
+                  select
+                    ck_id
+                  from
+                    ot_object
+                  order by
+                    lvl asc) 
+              )
+        ) loop
+          delete from s_mt.t_object_attr where ck_object in (
+            with recursive ot_object as (
+                select
+                  ck_id,
+                  1 as lvl
+                from
+                  s_mt.t_object
+                where
+                  ck_id = ot_page_object.ck_object
+              union all
+                select
+                  o.ck_id,
+                  ro.lvl + 1 as lvl
+                from
+                  s_mt.t_object o
+                join ot_object ro on
+                  o.ck_parent = ro.ck_id )
+            select
+              ck_id
+            from
+              ot_object
+             order by
+                lvl desc
+          );
+          delete from s_mt.t_object where ck_id in (
+            with recursive ot_object as (
+                select
+                  ck_id,
+                  1 as lvl
+                from
+                  s_mt.t_object
+                where
+                  ck_id = ot_page_object.ck_object
+              union all
+                select
+                  o.ck_id,
+                  ro.lvl + 1 as lvl
+                from
+                  s_mt.t_object o
+                join ot_object ro on
+                  o.ck_parent = ro.ck_id )
+            select
+              ck_id
+            from
+              ot_object
+            order by
+              lvl desc
+          );
+        end loop;
+      end if;
+    end loop;
+
+    -- Clearing page action 
+    delete
+    from
+      s_mt.t_page_action ap
+    where ap.ck_page = ot_page.ck_id;
+
+    -- Clearing page variable
+
+    delete
+    from
+      s_mt.t_page_variable ap
+    where ap.ck_page = ot_page.ck_id;
+
+    -- Removing page
+
+    delete 
+    from 
+      s_mt.t_page
+    where ck_id = ot_page.ck_id;
+  end loop;
+END;
+$function$
+;
+
+COMMENT ON FUNCTION pkg_patcher.p_remove_page(varchar) IS 'Удаляем страницу/модуль/каталог и все привязки';

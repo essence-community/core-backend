@@ -1064,3 +1064,7 @@ WHERE ck_id=900;
 UPDATE s_mt.t_message
 SET cr_type='error', cv_text='76b447331a2246ae9a5f3fac765a444e', ck_user='-11', ct_change='2018-02-23 23:08:10.188'
 WHERE ck_id=1000;
+
+--changeset artemov_i:CORE-597 dbms:postgresql
+INSERT INTO s_mt.t_sys_setting (ck_id,cv_value,ck_user,ct_change,cv_description)
+	VALUES ('clearing_object_during_update','false','4fd05ca9-3a9e-4d66-82df-886dfa082113','2019-12-15 07:54:25.000','Очищаем неиспользуемые объекты при обновление страницы');
