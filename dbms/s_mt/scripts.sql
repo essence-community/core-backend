@@ -753,3 +753,314 @@ INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_us
 --changeset romanyuk_a:CORE-593 dbms:postgresql
 INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
 	VALUES ('6d12c16cd7fa46579477a107a53f0790', 'ru_RU', 'meta', 'Создать', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-04 13:39:38');
+
+--changeset artemov_i:CORE-601_message dbms:postgresql
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='c08baa5d99974f9d9555ae44e41b18cd', ck_user='-11', ct_change='2018-02-23 23:08:10.188'
+WHERE ck_id=-6;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='b8ba48c4780e45afbdcda3c5ba9917dc', ck_user='-11', ct_change='2018-02-23 23:08:10.188'
+WHERE ck_id=-5;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='3c9eb848e69c4958bbbfa0b74b777c69', ck_user='-11', ct_change='2018-02-23 23:08:10.188'
+WHERE ck_id=-4;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='23b215e437af4f3c90b68f1e921d0cf4', ck_user='-11', ct_change='2018-02-23 23:08:10.188'
+WHERE ck_id=-3;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='43bb21440083403caf6ed4c1800036c7', ck_user='-11', ct_change='2018-02-23 23:08:10.188'
+WHERE ck_id=-2;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='32f4d1c5f308404ab8911d6a5302d99e', ck_user='-11', ct_change='2018-02-23 23:08:10.188'
+WHERE ck_id=-1;
+UPDATE s_mt.t_message
+SET cr_type='info', cv_text='3f4f82fafa954eb6a259c7fc09aa2d39', ck_user='-11', ct_change='2018-02-23 23:08:10.188'
+WHERE ck_id=0;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='d6e519c7fd4045d8826bbe3f6854f3b4', ck_user='-11', ct_change='2018-02-23 23:08:10.188'
+WHERE ck_id=1;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='190ab8dfb5e44944841344bff486047c', ck_user='-11', ct_change='2018-02-23 23:08:10.188'
+WHERE ck_id=2;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='c81341a504004e1db56ab2a5e314ad70', ck_user='-11', ct_change='2018-02-23 23:08:10.188'
+WHERE ck_id=3;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='354facd8187b49319cc609279f90015d', ck_user='-11', ct_change='2018-02-23 23:08:10.188'
+WHERE ck_id=4;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='3ef425b2db2f46b4a2dd243aff188222', ck_user='-11', ct_change='2018-02-23 23:08:10.188'
+WHERE ck_id=6;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='529c8cdc8fd44e2f8f53701d95b5ab15', ck_user='-11', ct_change='2018-12-09 04:30:56.463'
+WHERE ck_id=7;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='1d69c258b7674891af9604f0d83732db', ck_user='-11', ct_change='2018-02-23 23:08:10.188'
+WHERE ck_id=8;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='ae188172015640c69cb2c312526bb923', ck_user='-11', ct_change='2018-02-23 23:08:10.188'
+WHERE ck_id=9;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='76f77a8491474e2b9e96f6f434132c0d', ck_user='-11', ct_change='2018-02-23 23:08:10.188'
+WHERE ck_id=10;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='b0d82321533345b5a6a44ce6e82712ae', ck_user='-11', ct_change='2018-02-23 23:08:10.188'
+WHERE ck_id=11;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='84ba870984f049cf8d6021a16e98ea36', ck_user='-11', ct_change='2019-01-05 01:19:37.501'
+WHERE ck_id=12;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='b6ce7ce1fd4e4f4ca2c6ada3eb7c6737', ck_user='-11', ct_change='2018-02-23 23:08:10.188'
+WHERE ck_id=13;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='95f50f78fcfe4422a1e8af47b87ecad4', ck_user='-11', ct_change='2018-02-23 23:08:10.188'
+WHERE ck_id=14;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='c0ddf1fa7e2a4c799c846780fdc11159', ck_user='-11', ct_change='2018-10-19 01:13:57.903'
+WHERE ck_id=17;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='151062e2b14b49aebb8fa203db9061fe', ck_user='-11', ct_change='2018-02-23 23:08:10.188'
+WHERE ck_id=18;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='5e210b678a4945babef580ea78400f53', ck_user='-11', ct_change='2018-02-23 23:08:10.188'
+WHERE ck_id=19;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='1968a9c78d8848fa93e92cd19ab14ef8', ck_user='-11', ct_change='2018-02-23 23:08:10.188'
+WHERE ck_id=20;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='87edefcd4df14c86a368e26a73ca8dad', ck_user='-11', ct_change='2018-10-18 23:59:03.580'
+WHERE ck_id=21;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='883e46a1bd8a4636bc15ba9d0f004a90', ck_user='-11', ct_change='2018-10-18 23:51:56.611'
+WHERE ck_id=22;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='21a475c5c1054347a58afc786a14ce8c', ck_user='-11', ct_change='2018-02-23 23:08:10.188'
+WHERE ck_id=23;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='f9139ac6cf8046d59660b7a598340916', ck_user='-11', ct_change='2018-08-02 02:56:52.662'
+WHERE ck_id=24;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='3f9ddd349835436fb1fe2b98ae5fc127', ck_user='-11', ct_change='2018-02-23 23:08:10.188'
+WHERE ck_id=25;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='142170e59c8a477fbd4f39d54364e54f', ck_user='-11', ct_change='2018-02-23 23:08:10.188'
+WHERE ck_id=26;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='595055183ebc45148dd1e7d7e09bb883', ck_user='-11', ct_change='2018-02-23 23:08:10.188'
+WHERE ck_id=27;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='0223b7f839764bd0a660131707b548ab', ck_user='-11', ct_change='2018-08-02 02:56:52.669'
+WHERE ck_id=28;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='67ef5328bbf548c79cc1f526bd633bce', ck_user='-11', ct_change='2018-10-18 23:51:56.615'
+WHERE ck_id=29;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='c316c0fd1ffd42038b4e70dec7a042bf', ck_user='-11', ct_change='2018-02-23 23:08:10.188'
+WHERE ck_id=30;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='c1ce26a3b65c4d11ae5d24f5dc20adca', ck_user='-11', ct_change='2018-08-02 02:57:25.839'
+WHERE ck_id=31;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='853b9d5413844c18aee8cabd42803d21', ck_user='-11', ct_change='2018-02-23 23:08:10.188'
+WHERE ck_id=32;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='1149038ef9a44ddfaa201071635da78e', ck_user='-11', ct_change='2018-02-23 23:08:10.188'
+WHERE ck_id=33;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='67469690fdda43988f81371596a9e986', ck_user='-11', ct_change='2018-02-23 23:08:10.188'
+WHERE ck_id=34;
+UPDATE s_mt.t_message
+SET cr_type='warning', cv_text='b68af8a442914c9483f7625168f4af62', ck_user='-11', ct_change='2018-02-23 23:08:10.188'
+WHERE ck_id=35;
+UPDATE s_mt.t_message
+SET cr_type='warning', cv_text='e7430e7601744c9f9bf3bbca045136e7', ck_user='-11', ct_change='2018-02-23 23:08:10.188'
+WHERE ck_id=36;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='f7fe671ea1464d3f816745afa5a1d705', ck_user='10020788', ct_change='2018-03-18 10:03:27.525'
+WHERE ck_id=37;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='7051393e9a1b4b578aa9f56c5e896c6f', ck_user='10020788', ct_change='2018-03-18 10:03:27.560'
+WHERE ck_id=38;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='74343541b06c4271892782d9530783f0', ck_user='10020788', ct_change='2018-05-13 00:13:39.225'
+WHERE ck_id=40;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='be7f19ac263b415e8a39c1c5c13ee875', ck_user='10020788', ct_change='2018-07-23 00:47:03.317'
+WHERE ck_id=42;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='654a5824080043aa83f08c0ebf4877d3', ck_user='10020788', ct_change='2018-07-23 00:54:44.567'
+WHERE ck_id=43;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='d70cf4b900eb4bdab1c96a2fa3814b37', ck_user='10020788', ct_change='2018-10-19 01:23:22.302'
+WHERE ck_id=44;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='bfb1e7f940ea47ab9cd7dbb14f8d9233', ck_user='10020788', ct_change='2018-09-15 03:38:34.055'
+WHERE ck_id=45;
+UPDATE s_mt.t_message
+SET cr_type='warning', cv_text='e1466a521dec4ec6b2caeaa09fe7daee', ck_user='10020788', ct_change='2018-08-23 23:37:07.210'
+WHERE ck_id=46;
+UPDATE s_mt.t_message
+SET cr_type='info', cv_text='77ea166c17a34527980b1a81eab83c9d', ck_user='10020788', ct_change='2018-08-17 03:55:33.534'
+WHERE ck_id=47;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='866666a811db4f9bb48ef5699643d0cd', ck_user='10020788', ct_change='2018-10-19 01:23:22.307'
+WHERE ck_id=48;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='8b783d08dffd45bfaab14b03b811b0bc', ck_user='10020788', ct_change='2018-08-21 03:22:56.537'
+WHERE ck_id=49;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='b3df6be1a47846ee934a39b0b14b88cb', ck_user='10020788', ct_change='2018-08-21 23:17:55.494'
+WHERE ck_id=50;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='37b938509c654b729dd22166ed22e927', ck_user='10020788', ct_change='2018-08-21 23:17:55.503'
+WHERE ck_id=51;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='898fadef7d9949568709fea96787da97', ck_user='10020788', ct_change='2018-09-10 02:08:59.860'
+WHERE ck_id=52;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='d3e02cacc3d64a118e038ce683e69790', ck_user='10020788', ct_change='2018-11-04 06:14:55.146'
+WHERE ck_id=53;
+UPDATE s_mt.t_message
+SET cr_type='warning', cv_text='0c744aab8307446e820d9470ef895d08', ck_user='10020788', ct_change='2019-01-07 02:11:18.047'
+WHERE ck_id=54;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='280f02920fb746aeb9451fb1f2e04e7a', ck_user='10020788', ct_change='2018-12-04 04:40:35.327'
+WHERE ck_id=55;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='8b5af8e2372c49f0be86cab184ee85b6', ck_user='10020788', ct_change='2019-02-08 03:25:27.309'
+WHERE ck_id=56;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='97d67066d8fc4d30b12b2fc94c180510', ck_user='10020978', ct_change='2019-03-19 08:01:08.097'
+WHERE ck_id=57;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='df58d09768744598bd4e9f9ec2d40c58', ck_user='10020978', ct_change='2019-03-19 08:01:25.987'
+WHERE ck_id=58;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='3f210f2e7c064adea44f21027dfc42e0', ck_user='10020978', ct_change='2019-03-19 08:01:53.392'
+WHERE ck_id=59;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='f381bf9194524207a87af7dfd4b14078', ck_user='10020978', ct_change='2019-03-20 01:02:32.503'
+WHERE ck_id=60;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='696dbf4b6c69438dbdefe731e9276d86', ck_user='10020978', ct_change='2019-03-20 01:29:00.125'
+WHERE ck_id=61;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='aadfb629a260451c9bdd9ab451de8a96', ck_user='10020978', ct_change='2019-03-20 02:13:03.289'
+WHERE ck_id=62;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='776f32915eae408ca861964d7d5903bf', ck_user='10020978', ct_change='2019-03-20 05:39:32.697'
+WHERE ck_id=63;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='d453afb2e82e475e82fd5110225e307b', ck_user='40025111', ct_change='2019-03-21 23:41:33.726'
+WHERE ck_id=64;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='a6abbe90206640d3b0e82db2e19a5177', ck_user='40025111', ct_change='2019-04-18 06:50:53.653'
+WHERE ck_id=65;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='b79f7ce074e84d59b45e4c418540434e', ck_user='20783', ct_change='2019-04-30 00:29:14.246'
+WHERE ck_id=66;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='10cf09577f7f4bbaae0bd6cedd45ad3f', ck_user='-11', ct_change='2019-04-30 00:27:00.000'
+WHERE ck_id=67;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='64c12b57785c497f87f397aaa8e0e5fc', ck_user='-11', ct_change='2019-04-29 17:47:00.000'
+WHERE ck_id=68;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='5903e7eac6044bc6be2925e6cc777dce', ck_user='-11', ct_change='2019-07-23 18:47:00.000'
+WHERE ck_id=69;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='f47217bb17604a60b8c5acfac79df10b', ck_user='-11', ct_change='2019-07-23 18:47:00.000'
+WHERE ck_id=70;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='115ad21ba9f54926a983c4d7a03c7121', ck_user='-11', ct_change='2019-07-23 18:47:00.000'
+WHERE ck_id=71;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='a0071384a57c40aba7de66f14f334dc5', ck_user='-11', ct_change='2019-07-23 18:47:00.000'
+WHERE ck_id=72;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='ec071d0460a6414dbbb9fe5d93f59042', ck_user='-11', ct_change='2019-07-23 18:47:00.000'
+WHERE ck_id=73;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='46735625b41c48559fae404724eb408a', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-12 10:47:00.000'
+WHERE ck_id=74;
+UPDATE s_mt.t_message
+SET cr_type='warning', cv_text='7985a9e97dba46ff935b6e26e611d1b4', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-12 10:47:00.000'
+WHERE ck_id=75;
+UPDATE s_mt.t_message
+SET cr_type='warning', cv_text='0fdb11bafaa14f01845d7ef724cdb928', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-12 10:47:00.000'
+WHERE ck_id=76;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='071292b46e5242808623843f6c067c9b', ck_user='-11', ct_change='2019-08-14 00:20:00.000'
+WHERE ck_id=200;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='9b6c7947e2924a9aa37253af064cca0e', ck_user='-11', ct_change='2019-08-15 17:30:00.000'
+WHERE ck_id=201;
+UPDATE s_mt.t_message
+SET cr_type='warning', cv_text='0d46cf1cc1b24ab2bbf9960eb433bb1a', ck_user='-11', ct_change='2019-08-15 17:30:00.000'
+WHERE ck_id=202;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='026254893e4b4a2a978e5dcb8bd6535c', ck_user='-11', ct_change='2019-08-15 17:30:00.000'
+WHERE ck_id=203;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='7b289d82628542a4ba3c7cc2a63547fb', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-10-30 10:30:00.000'
+WHERE ck_id=204;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='ae5f1eb355a7481db96a4e772bd55dd6', ck_user='-11', ct_change='2019-11-26 03:00:00.000'
+WHERE ck_id=205;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='4d5eb5f5ffe745b58362160c84a1ea4b', ck_user='-11', ct_change='2018-02-23 23:08:10.188'
+WHERE ck_id=500;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='b202c2f390e84fc48651c5c86f8ebf6e', ck_user='-11', ct_change='2018-02-23 23:08:10.188'
+WHERE ck_id=501;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='005adc04bd454377961a6676f53c4da2', ck_user='-11', ct_change='2018-02-23 23:08:10.188'
+WHERE ck_id=502;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='a1a1c30ea80d4b9b887e622fc5cb0a50', ck_user='-11', ct_change='2018-02-23 23:08:10.188'
+WHERE ck_id=503;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='c30703e742994f96887166f1468e976a', ck_user='-11', ct_change='2018-02-23 23:08:10.188'
+WHERE ck_id=504;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='391d75337735425aae28cb89ad31b70f', ck_user='-11', ct_change='2018-02-23 23:08:10.188'
+WHERE ck_id=505;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='aed842ffadfe4169969aa820bfef3e60', ck_user='-11', ct_change='2018-02-23 23:08:10.188'
+WHERE ck_id=506;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='80ab25c37f674b1b82e8149110240e5c', ck_user='-11', ct_change='2018-02-23 23:08:10.188'
+WHERE ck_id=507;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='3fc338b797cb45f089253c79afe12e6a', ck_user='-11', ct_change='2018-02-23 23:08:10.188'
+WHERE ck_id=508;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='a32399aec87a4cf48045e2e54b40b043', ck_user='-11', ct_change='2018-02-23 23:08:10.188'
+WHERE ck_id=509;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='9977f31e35d545568f4a9db308ebe2fd', ck_user='-11', ct_change='2018-02-23 23:08:10.188'
+WHERE ck_id=510;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='3f87a0d370bb46cca97d6463fb04d2af', ck_user='-11', ct_change='2018-02-23 23:08:10.188'
+WHERE ck_id=511;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='480f4ea3e2724bd7a632eb7ca96d955f', ck_user='-11', ct_change='2018-02-23 23:08:10.188'
+WHERE ck_id=512;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='08f467bb1b79428d9b7bec42e8f19d84', ck_user='-11', ct_change='2018-02-23 23:08:10.188'
+WHERE ck_id=513;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='6a65748c7e27479d8e441f8c779945db', ck_user='10020788', ct_change='2018-04-10 05:13:59.519'
+WHERE ck_id=514;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='a8cfc099eb694385842c05f7d705cd0d', ck_user='10020788', ct_change='2018-11-30 04:50:36.806'
+WHERE ck_id=517;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='153fb312b52346909836c50bebfcc0b3', ck_user='10020788', ct_change='2018-09-10 00:08:10.994'
+WHERE ck_id=518;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='da83ebf916bc4f539fc93161c239a40c', ck_user='10020788', ct_change='2019-01-23 22:10:00.358'
+WHERE ck_id=900;
+UPDATE s_mt.t_message
+SET cr_type='error', cv_text='76b447331a2246ae9a5f3fac765a444e', ck_user='-11', ct_change='2018-02-23 23:08:10.188'
+WHERE ck_id=1000;
