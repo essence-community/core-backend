@@ -58,18 +58,16 @@ class MainController {
                 PluginManager.getGateAuthProviders() as NullAuthProvider[],
             );
             if (session) {
-                requestContext.setSession(session);  
+                requestContext.setSession(session);
             }
             if (requestContext.queryName === Constants.QUERY_LOGOUT) {
                 if (session) {
                     await GateSession.logoutSession(session.session);
                 }
                 return ResultController.responseCheck(requestContext, {
-                    data: ResultStream(
-                        [],
-                    ),
+                    data: ResultStream([]),
                     type: "success",
-                });  
+                });
             }
             // 3: Проверка на запрос получения данных о сессии если прошла то предаем сессию в ответе
             if (requestContext.queryName === Constants.QUERY_GETSESSIONDATA) {

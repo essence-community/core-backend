@@ -149,14 +149,17 @@ class GateSession {
 
     /**
      * Устаревание сессии
-     * @param sessionId 
+     * @param sessionId
      */
     public logoutSession(sessionId: string) {
-        return this.dbSession.update({
-            ck_id: sessionId,
-        }, {
-            $set: { cd_expire: new Date() },
-        });
+        return this.dbSession.update(
+            {
+                ck_id: sessionId,
+            },
+            {
+                $set: { cd_expire: new Date() },
+            },
+        );
     }
 
     /**
