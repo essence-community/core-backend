@@ -148,6 +148,21 @@ class GateSession {
     }
 
     /**
+     * Устаревание сессии
+     * @param sessionId
+     */
+    public logoutSession(sessionId: string) {
+        return this.dbSession.update(
+            {
+                ck_id: sessionId,
+            },
+            {
+                $set: { cd_expire: new Date() },
+            },
+        );
+    }
+
+    /**
      * Поиск сессий
      * @param sessionId {Array | string} Строка или массив сессий
      * @param isExpired {boolean} Только истекшии
