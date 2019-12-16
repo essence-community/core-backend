@@ -194,7 +194,7 @@ begin
                            left join s_mt.t_localization l2
                              on m.cv_text = l2.cv_value and l2.cr_namespace = 'message'
                            where l.ck_id is null and nullif(m.cv_text, '') is not null
-                           group by o.ck_id, m.cv_text
+                           group by m.ck_id, m.cv_text
                           ) loop
     if vot_rec.ck_local is null or cardinality(vot_rec.ck_local) = 0 then
       pot_localization.cr_namespace = 'message';
@@ -218,7 +218,7 @@ begin
                     left join s_mt.t_localization l2
                     on attr.cv_value = l2.cv_value and l2.cr_namespace = 'meta'
                     where l.ck_id is null and nullif(attr.cv_value, '') is not null
-                    group by o.ck_id, attr.cv_value
+                    group by attr.ck_id, attr.cv_value
                     ) loop
     if vot_rec.ck_local is null or cardinality(vot_rec.ck_local) = 0 then
       pot_localization.cr_namespace = 'meta';
@@ -242,7 +242,7 @@ begin
                     left join s_mt.t_localization l2
                     on attr.cv_value = l2.cv_value and l2.cr_namespace = 'meta'
                     where l.ck_id is null and nullif(attr.cv_value, '') is not null
-                    group by o.ck_id, attr.cv_value
+                    group by attr.ck_id, attr.cv_value
                     ) loop
     if vot_rec.ck_local is null or cardinality(vot_rec.ck_local) = 0 then
       pot_localization.cr_namespace = 'meta';
@@ -266,7 +266,7 @@ begin
                     left join s_mt.t_localization l2
                     on attr.cv_value = l2.cv_value and l2.cr_namespace = 'meta'
                     where l.ck_id is null and nullif(attr.cv_value, '') is not null
-                    group by o.ck_id, attr.cv_value
+                    group by attr.ck_id, attr.cv_value
                     ) loop
     if vot_rec.ck_local is null or cardinality(vot_rec.ck_local) = 0 then
       pot_localization.cr_namespace = 'meta';
@@ -314,7 +314,7 @@ begin
                     left join s_mt.t_localization l2
                     on p.cv_name = l2.cv_value and l2.cr_namespace = 'meta'
                     where l.ck_id is null and nullif(p.cv_name, '') is not null
-                    group by o.ck_id, p.cv_name
+                    group by p.ck_id, p.cv_name
                     ) loop
     if vot_rec.ck_local is null or cardinality(vot_rec.ck_local) = 0 then
       pot_localization.cr_namespace = 'meta';
