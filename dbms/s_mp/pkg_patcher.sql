@@ -187,15 +187,16 @@ begin
     into pot_localization.ck_d_lang
   from t_d_lang where cl_default = 1;
   -- Локализация t_message
-  for vot_rec in (select m.ck_id, m.cv_text, l2.ck_id as ck_local
+  for vot_rec in (select m.ck_id, m.cv_text, array_agg(l2.ck_id) as ck_local
                            from s_mt.t_message m
                            full outer join s_mt.t_localization l
                              on m.cv_text = l.ck_id
                            left join s_mt.t_localization l2
                              on m.cv_text = l2.cv_value and l2.cr_namespace = 'message'
                            where l.ck_id is null and nullif(m.cv_text, '') is not null
+                           group by m.ck_id, m.cv_text
                           ) loop
-    if vot_rec.ck_local is null then
+    if vot_rec.ck_local is null or cardinality(vot_rec.ck_local) = 0 then
       pot_localization.cr_namespace = 'message';
       pot_localization.cv_value = vot_rec.cv_text;
       pot_localization.ck_user = '-11';
@@ -203,24 +204,23 @@ begin
       pot_localization.ck_id = null;
       pot_localization := pkg_localization.p_modify_localization('I', pot_localization);
     else 
-      pot_localization.ck_id := vot_rec.ck_local;
+      pot_localization.ck_id := vot_rec.ck_local[1];
     end if;
     UPDATE s_mt.t_message
     set cv_text = pot_localization.ck_id
     where ck_id = vot_rec.ck_id;
   end loop;
-  select ck_id
-    into pot_localization.ck_d_lang
-  from t_d_lang where cl_default = 1;
   -- Локализация object attr
-  for vot_rec in (select attr.ck_id, attr.cv_value, l2.ck_id as ck_local
+  for vot_rec in (select attr.ck_id, attr.cv_value, array_agg(l2.ck_id) as ck_local
                     from (select ck_id, cv_value from s_mt.t_object_attr where ck_class_attr in (select att.ck_id from s_mt.t_class_attr att where att.ck_attr in ('confirmquestion', 'info', 'tipmsg'))) as attr
                     full outer join s_mt.t_localization l
                     on attr.cv_value = l.ck_id
                     left join s_mt.t_localization l2
                     on attr.cv_value = l2.cv_value and l2.cr_namespace = 'meta'
-                    where l.ck_id is null and nullif(attr.cv_value, '') is not null) loop
-    if vot_rec.ck_local is null then
+                    where l.ck_id is null and nullif(attr.cv_value, '') is not null
+                    group by attr.ck_id, attr.cv_value
+                    ) loop
+    if vot_rec.ck_local is null or cardinality(vot_rec.ck_local) = 0 then
       pot_localization.cr_namespace = 'meta';
       pot_localization.cv_value = vot_rec.cv_value;
       pot_localization.ck_user = '-11';
@@ -228,21 +228,23 @@ begin
       pot_localization.ck_id = null;
       pot_localization := pkg_localization.p_modify_localization('I', pot_localization);
     else 
-      pot_localization.ck_id := vot_rec.ck_local;
+      pot_localization.ck_id := vot_rec.ck_local[1];
     end if;
     UPDATE s_mt.t_object_attr
     set cv_value = pot_localization.ck_id
     where ck_id = vot_rec.ck_id;
   end loop;
   -- Локализация page object attr
-  for vot_rec in (select attr.ck_id, attr.cv_value, l2.ck_id as ck_local
+  for vot_rec in (select attr.ck_id, attr.cv_value, array_agg(l2.ck_id) as ck_local
                     from (select ck_id, cv_value from s_mt.t_page_object_attr where ck_class_attr in (select att.ck_id from s_mt.t_class_attr att where att.ck_attr in ('confirmquestion', 'info', 'tipmsg'))) as attr
                     full outer join s_mt.t_localization l
                     on attr.cv_value = l.ck_id
                     left join s_mt.t_localization l2
                     on attr.cv_value = l2.cv_value and l2.cr_namespace = 'meta'
-                    where l.ck_id is null and nullif(attr.cv_value, '') is not null) loop
-    if vot_rec.ck_local is null then
+                    where l.ck_id is null and nullif(attr.cv_value, '') is not null
+                    group by attr.ck_id, attr.cv_value
+                    ) loop
+    if vot_rec.ck_local is null or cardinality(vot_rec.ck_local) = 0 then
       pot_localization.cr_namespace = 'meta';
       pot_localization.cv_value = vot_rec.cv_value;
       pot_localization.ck_user = '-11';
@@ -250,21 +252,23 @@ begin
       pot_localization.ck_id = null;
       pot_localization := pkg_localization.p_modify_localization('I', pot_localization);
     else 
-      pot_localization.ck_id := vot_rec.ck_local;
+      pot_localization.ck_id := vot_rec.ck_local[1];
     end if;
     UPDATE s_mt.t_page_object_attr
     set cv_value = pot_localization.ck_id
     where ck_id = vot_rec.ck_id;
   end loop;
   -- Локализация class attr
-  for vot_rec in (select attr.ck_id, attr.cv_value, l2.ck_id as ck_local
+  for vot_rec in (select attr.ck_id, attr.cv_value, array_agg(l2.ck_id) as ck_local
                     from (select att.ck_id, att.cv_value from s_mt.t_class_attr att where att.ck_attr in ('confirmquestion', 'info', 'tipmsg')) as attr
                     full outer join s_mt.t_localization l
                     on attr.cv_value = l.ck_id
                     left join s_mt.t_localization l2
                     on attr.cv_value = l2.cv_value and l2.cr_namespace = 'meta'
-                    where l.ck_id is null and nullif(attr.cv_value, '') is not null) loop
-    if vot_rec.ck_local is null then
+                    where l.ck_id is null and nullif(attr.cv_value, '') is not null
+                    group by attr.ck_id, attr.cv_value
+                    ) loop
+    if vot_rec.ck_local is null or cardinality(vot_rec.ck_local) = 0 then
       pot_localization.cr_namespace = 'meta';
       pot_localization.cv_value = vot_rec.cv_value;
       pot_localization.ck_user = '-11';
@@ -272,21 +276,23 @@ begin
       pot_localization.ck_id = null;
       pot_localization := pkg_localization.p_modify_localization('I', pot_localization);
     else 
-      pot_localization.ck_id := vot_rec.ck_local;
+      pot_localization.ck_id := vot_rec.ck_local[1];
     end if;
     UPDATE s_mt.t_class_attr
     set cv_value = pot_localization.ck_id
     where ck_id = vot_rec.ck_id;
   end loop;
    -- Локализация cv_displayed
-  for vot_rec in (select o.ck_id, o.cv_displayed, l2.ck_id as ck_local
+  for vot_rec in (select o.ck_id, o.cv_displayed, array_agg(l2.ck_id) as ck_local
                     from s_mt.t_object o
                     full outer join s_mt.t_localization l
                     on o.cv_displayed = l.ck_id
                     left join s_mt.t_localization l2
                     on o.cv_displayed = l2.cv_value and l2.cr_namespace = 'meta'
-                    where l.ck_id is null and nullif(o.cv_displayed, '') is not null) loop
-    if vot_rec.ck_local is null then
+                    where l.ck_id is null and nullif(o.cv_displayed, '') is not null
+                    group by o.ck_id, o.cv_displayed
+                    ) loop
+    if vot_rec.ck_local is null or cardinality(vot_rec.ck_local) = 0 then
       pot_localization.cr_namespace = 'meta';
       pot_localization.cv_value = vot_rec.cv_displayed;
       pot_localization.ck_user = '-11';
@@ -294,21 +300,23 @@ begin
       pot_localization.ck_id = null;
       pot_localization := pkg_localization.p_modify_localization('I', pot_localization);
     else 
-      pot_localization.ck_id := vot_rec.ck_local;
+      pot_localization.ck_id := vot_rec.ck_local[1];
     end if;
     UPDATE s_mt.t_object
     set cv_displayed = pot_localization.ck_id
     where ck_id = vot_rec.ck_id;
   end loop;
   -- Локализация page cv_name
-  for vot_rec in (select p.ck_id, p.cv_name, l2.ck_id as ck_local
+  for vot_rec in (select p.ck_id, p.cv_name, array_agg(l2.ck_id) as ck_local
                     from s_mt.t_page p
                     full outer join s_mt.t_localization l
                     on p.cv_name = l.ck_id
                     left join s_mt.t_localization l2
                     on p.cv_name = l2.cv_value and l2.cr_namespace = 'meta'
-                    where l.ck_id is null and nullif(p.cv_name, '') is not null) loop
-    if vot_rec.ck_local is null then
+                    where l.ck_id is null and nullif(p.cv_name, '') is not null
+                    group by p.ck_id, p.cv_name
+                    ) loop
+    if vot_rec.ck_local is null or cardinality(vot_rec.ck_local) = 0 then
       pot_localization.cr_namespace = 'meta';
       pot_localization.cv_value = vot_rec.cv_name;
       pot_localization.ck_user = '-11';
@@ -316,7 +324,7 @@ begin
       pot_localization.ck_id = null;
       pot_localization := pkg_localization.p_modify_localization('I', pot_localization);
     else 
-      pot_localization.ck_id := vot_rec.ck_local;
+      pot_localization.ck_id := vot_rec.ck_local[1];
     end if;
     UPDATE s_mt.t_page
     set cv_name = pot_localization.ck_id
