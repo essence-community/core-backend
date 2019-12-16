@@ -134,14 +134,15 @@ export default class AdminModify {
         }
         switch (json.service.cv_action.toLowerCase()) {
             case "i": {
-                return localDb.insert(json.data).then(() =>
-                    Promise.resolve([
+                return localDb.insert(json.data).then(async () => {
+                    await (localDb as any).compactDatafile();
+                    return [
                         {
                             ck_id: json.data.ck_id,
                             cv_error: null,
                         },
-                    ]),
-                );
+                    ];
+                });
             }
             case "u": {
                 const ckId = json.data.ck_id;
@@ -160,28 +161,30 @@ export default class AdminModify {
                             $set: json.data,
                         },
                     )
-                    .then(() =>
-                        Promise.resolve([
+                    .then(async () => {
+                        await (localDb as any).compactDatafile();
+                        return [
                             {
                                 ck_id: ckId,
                                 cv_error: null,
                             },
-                        ]),
-                    );
+                        ];
+                    });
             }
             case "d": {
                 return localDb
                     .remove({
                         ck_id: json.data.ck_id,
                     })
-                    .then(() =>
-                        Promise.resolve([
+                    .then(async () => {
+                        await (localDb as any).compactDatafile();
+                        return [
                             {
-                                ck_id: null,
+                                ck_id: json.data.ck_id,
                                 cv_error: null,
                             },
-                        ]),
-                    );
+                        ];
+                    });
             }
             default:
                 return Promise.reject(

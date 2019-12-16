@@ -56,6 +56,7 @@ function loadProperty(name, isTemp: boolean = false): Promise<ILocalDB> {
                     err.message = `Ошибка инициализации ${name}\n${err.message}`;
                     return reject(err);
                 }
+                db.persistence.setAutocompactionInterval(5000);
                 const localDb = new NeDBImpl(name, db, isTemp);
                 if (isTemp) {
                     TempTable.set(name, localDb);
