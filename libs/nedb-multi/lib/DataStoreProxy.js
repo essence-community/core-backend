@@ -1,6 +1,6 @@
 const method = require("./Method");
 const constants = require("nedb-multi/lib/constants");
-const PersistenceProxy = require("nedb-multi/lib/persistenceProxy");
+const PersistenceProxy = require("./PersistenceProxy");
 
 exports.create = function create(socket) {
     class DataStoreProxy {

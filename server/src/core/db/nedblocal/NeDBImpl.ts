@@ -161,4 +161,11 @@ export class NeDBImpl implements ILocalDB {
             });
         });
     }
+
+    public compactDatafile() {
+        return new Promise((resolve) => {
+            this.db.persistence.compactDatafile();
+            return resolve();
+        });
+    }
 }
