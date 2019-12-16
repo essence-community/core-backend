@@ -153,7 +153,7 @@ export default class AdminAction {
                             .map((val) => ({
                                 ...val,
                                 cv_params: this.ParamsToString(
-                                    PluginManager.getGateProviderClass,
+                                    PluginManager.getGateEventsClass,
                                     val.ck_d_plugin,
                                     val.cct_params,
                                 ),
