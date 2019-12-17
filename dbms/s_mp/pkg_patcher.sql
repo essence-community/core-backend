@@ -518,3 +518,78 @@ $function$
 ;
 
 COMMENT ON FUNCTION pkg_patcher.p_remove_page(varchar) IS 'Удаляем страницу/модуль/каталог и все привязки';
+
+CREATE OR REPLACE FUNCTION pkg_patcher.p_delete_dup_localization()
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'pkg_patcher', 's_mt', 'public'
+AS $function$
+declare
+  vot_loc record;
+  vv_id varchar;
+  pot_localization s_mt.t_localization;
+begin
+  for vot_loc in (select
+                    cv_value,
+                    ck_d_lang
+                  from
+                    s_mt.t_localization tl
+                  join s_mt.t_d_lang tdl on
+                    tl.ck_d_lang = tdl.ck_id
+                  where
+                    tdl.cl_default = 1 and tl.cr_namespace = 'meta'
+                  group by
+                    cv_value,
+                    ck_d_lang
+                  having
+                    count(*)>1
+                    ) loop
+    -- First create uniq
+    select 
+      t.ck_id
+    into strict vv_id
+      from (
+        select 
+          ck_id,
+          row_number() over (order by(ct_change) desc) as cn_rn
+        from s_mt.t_localization
+        where cv_value = vot_loc.cv_value and ck_d_lang = vot_loc.ck_d_lang and cr_namespace = 'meta'
+      ) t
+    where t.cn_rn = 1;
+    
+    for pot_localization in (
+      select * from s_mt.t_localization
+        where cv_value = vot_loc.cv_value and ck_d_lang = vot_loc.ck_d_lang and cr_namespace = 'meta' and ck_id <> vv_id
+    ) loop
+      -- page object attr
+      UPDATE s_mt.t_page_object_attr
+        set cv_value = vv_id
+      where cv_value = pot_localization.ck_id;
+      -- object attr
+      UPDATE s_mt.t_object_attr
+        set cv_value = vv_id
+      where cv_value = pot_localization.ck_id;
+      -- class attr
+      UPDATE s_mt.t_class_attr
+        set cv_value = vv_id
+      where cv_value = pot_localization.ck_id;
+      -- cv_displayed
+      UPDATE s_mt.t_object
+        set cv_displayed = vv_id
+      where cv_displayed = pot_localization.ck_id;
+      -- page cv_name
+      UPDATE s_mt.t_page
+        set cv_name = vv_id
+      where cv_name = pot_localization.ck_id;
+      -- Remove dup
+      delete 
+        from s_mt.t_localization 
+      where ck_id = pot_localization.ck_id;
+    end loop;
+  end loop;
+end;
+$function$
+;
+
+COMMENT ON FUNCTION pkg_patcher.p_delete_dup_localization() IS 'Очищаем от дублей';
