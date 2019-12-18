@@ -552,7 +552,7 @@ begin
       from (
         select 
           ck_id,
-          row_number() over (order by(ct_change) desc) as cn_rn
+          row_number() over (order by(ct_change) asc) as cn_rn
         from s_mt.t_localization
         where cv_value = vot_loc.cv_value and ck_d_lang = vot_loc.ck_d_lang and cr_namespace = 'meta'
       ) t
