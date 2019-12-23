@@ -1068,3 +1068,7 @@ WHERE ck_id=1000;
 --changeset artemov_i:CORE-597 dbms:postgresql
 INSERT INTO s_mt.t_sys_setting (ck_id,cv_value,ck_user,ct_change,cv_description)
 	VALUES ('clearing_object_during_update','false','4fd05ca9-3a9e-4d66-82df-886dfa082113','2019-12-15 07:54:25.000','Очищаем неиспользуемые объекты при обновление страницы');
+
+--changeset kutsenko:CORE-1468 dbms:postgresql
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
+	VALUES ('a240c31303c74c5490623d7781964c11', 'ru_RU', 'meta', 'Минимальная длина этого поля :maxsize', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-23 17:25:53.736532+03');
