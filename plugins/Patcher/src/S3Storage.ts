@@ -10,8 +10,7 @@ export class S3Storage {
     private clients: AWS.S3;
     private params: IPluginParams;
     private logger: IRufusLogger;
-    private UPLOAD_DIR: string =
-        process.env.GATE_UPLOAD_DIR || os.tmpdir();
+    private UPLOAD_DIR: string = process.env.GATE_UPLOAD_DIR || os.tmpdir();
     constructor(params: IPluginParams, logger: IRufusLogger) {
         const credentials = new AWS.Credentials({
             accessKeyId: this.params.cvS3KeyId,
