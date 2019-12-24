@@ -73,9 +73,9 @@ export class Patcher extends NullPlugin {
             params.cvTypeStorage === "dir"
                 ? new DirStorage(this.params, this.logger)
                 : new S3Storage(this.params, this.logger);
-        this.saveFile = storage.saveFile.bind(this);
-        this.deletePath = storage.deletePath.bind(this);
-        this.getFile = storage.getFile.bind(this);
+        this.saveFile = storage.saveFile.bind(storage);
+        this.deletePath = storage.deletePath.bind(storage);
+        this.getFile = storage.getFile.bind(storage);
     }
     /**
      * Загрузка файла в хранилище в режиме upload

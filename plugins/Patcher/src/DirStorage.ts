@@ -9,7 +9,7 @@ export class DirStorage {
     private params: IPluginParams;
     private logger: IRufusLogger;
     private UPLOAD_DIR: string =
-        process.env.GATE_UPLOAD_DIR || os.tmpdir() || "/tmp";
+        process.env.GATE_UPLOAD_DIR || os.tmpdir();
     constructor(params: IPluginParams, logger: IRufusLogger) {
         this.params = params;
         this.logger = logger;
