@@ -10,6 +10,8 @@
   <include file="./s_ap/pkg_access.sql" />
   <include file="./s_ap/pkg_user.sql" />
 <include file="./s_ap/pkg_account.sql" />
+<include file="./s_ap/pkg_patcher.sql" />
 <include file="./s_ap/pkg_json_account.sql" />
 <include file="./s_ap/pkg_json_user.sql" />
+<include file="./s_ap/pkg_json_patcher.sql" />
 </databaseChangeLog>

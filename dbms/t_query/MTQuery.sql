@@ -12,6 +12,8 @@ select
 
   q.cr_access,
 
+  q.cv_description,
+
   /* Поля аудита */
 
   q.ck_user,

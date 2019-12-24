@@ -10,4 +10,6 @@
   <include file="./s_ip/pkg_access.sql" />
   <include file="./s_ip/pkg_user.sql" />
   <include file="./s_ip/pkg_json_user.sql" />
+  <include file="./s_ip/pkg_patcher.sql" />
+  <include file="./s_ip/pkg_json_patcher.sql" />
 </databaseChangeLog>

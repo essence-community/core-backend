@@ -111,5 +111,10 @@
     <include file="./t_query/MTObjectAttrType.sql" />
     <include file="./t_query/MTPageObjectAttrType.sql" />
     <include file="./t_query/MTClassAttrType.sql" />
-	<include file="./t_query/MTAttrClassList.sql" />
+	  <include file="./t_query/MTAttrClassList.sql" />
+    <include file="./t_query/MTGetPatch.sql" />
+    <include file="./t_query/MTGetPatchPage.sql" />
+    <include file="./t_query/MTGetPatchQuery.sql" />
+    <include file="./t_query/MTGetPatchMessage.sql" />
+    <include file="./t_query/MTGetPatchLang.sql" />
 </databaseChangeLog>

@@ -8,4 +8,8 @@
 	 <include file="./meta/Page_6230F0855D6648C9A0CDBE62ED1B1811.sql" />
 	 <include file="./meta/Page_D9ED58074C5F4972A5CEEED5B35FFCC7.sql" />
 	 <include file="./meta/Page_5941183F81F741928470BFA1A1682A5B.sql" />
+   <include file="./meta/Page_5868BCACDD034DFF9DC9B0C3170CB720.sql" />
+   <include file="./meta/Page_8F285F5F5D6742E7BC795751DBB9E55B.sql" />
+   <include file="./meta/Page_D9ED58074C5F4972A5CEEED5B35FFCC7.sql" />
+   <include file="./meta/Page_F010FF49A7FD4F63A5E0B070B9AD2536.sql" />
 </databaseChangeLog>  

@@ -16,7 +16,7 @@ declare
   vv_error varchar(10000);
 begin
   vv_error = sessvarstr_declare('pkg', 'gv_error', '')::varchar;
-  insert into s_at.t_log
+  insert into s_it.t_log
     (ck_id, cv_session, cc_json, cv_table, cv_id, cv_action, cv_error, ck_user, ct_change)
   values
     (nextval('seq_log'::regclass), pv_session, pc_json, pv_table, pv_id, pv_action, vv_error, pv_user, CURRENT_TIMESTAMP);

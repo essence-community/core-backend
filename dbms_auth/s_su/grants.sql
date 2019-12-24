@@ -6,6 +6,8 @@ GRANT USAGE ON SCHEMA pkg_json_user TO s_ac;
 
 GRANT USAGE ON SCHEMA pkg_json_account TO s_ac;
 
+GRANT USAGE ON SCHEMA pkg_json_patcher TO s_ac;
+
 GRANT USAGE ON SCHEMA s_at TO s_ac;
 
 GRANT USAGE ON SCHEMA public TO s_ap;
@@ -43,6 +45,8 @@ GRANT EXECUTE ON FUNCTION pkg_json_account.f_modify_role(pv_user character varyi
 GRANT EXECUTE ON FUNCTION pkg_json_account.f_modify_role_account(pv_user character varying, pv_session character varying, pc_json jsonb) TO s_ac;
 
 GRANT EXECUTE ON FUNCTION pkg_json_account.f_modify_role_action(pv_user character varying, pv_session character varying, pc_json jsonb) TO s_ac;
+
+GRANT EXECUTE ON FUNCTION pkg_json_patcher.f_modify_patch(pv_user character varying, pk_session character varying, pc_json jsonb) TO s_ac;
 
 GRANT ALL ON SEQUENCE public.seq_log TO s_ap;
 
@@ -87,3 +91,7 @@ GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE s_at.t_role TO s_ap;
 GRANT SELECT ON TABLE s_at.t_role_action TO s_ac;
 
 GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE s_at.t_role_action TO s_ap;
+
+GRANT SELECT ON TABLE s_at.t_create_patch TO s_ac;
+
+GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE s_at.t_create_patch TO s_ap;
