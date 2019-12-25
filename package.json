@@ -1,11 +1,11 @@
 {
     "name": "ungate",
-    "version": "2.0.0",
+    "version": "2.0.1",
     "description": "Шлюз",
     "private": true,
     "engines": {
-        "yarn": ">=1.7.0",
-        "node": ">=9.0.0"
+        "yarn": ">=1.13.0",
+        "node": ">=12.0.0"
     },
     "scripts": {
         "prettier": "prettier --write \"{,!(node_modules|dist|build|bin|libs|coverage)/**/}*.{js,jsx,ts,tsx,json}\"",

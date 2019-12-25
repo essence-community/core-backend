@@ -8,7 +8,7 @@ import { dateBetween } from "@ungate/plugininf/lib/util/Util";
 import * as crypto from "crypto";
 import { isArray } from "lodash";
 import * as moment from "moment";
-import * as uuidv4 from "uuidv4";
+import { uuid as uuidv4 } from "uuidv4";
 import Constants from "../Constants";
 import Property from "../property/Property";
 
@@ -145,6 +145,21 @@ class GateSession {
                 });
         }
         return Promise.resolve(null);
+    }
+
+    /**
+     * Устаревание сессии
+     * @param sessionId
+     */
+    public logoutSession(sessionId: string) {
+        return this.dbSession.update(
+            {
+                ck_id: sessionId,
+            },
+            {
+                $set: { cd_expire: new Date() },
+            },
+        );
     }
 
     /**

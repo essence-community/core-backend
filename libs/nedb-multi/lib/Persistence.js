@@ -160,9 +160,12 @@ class Persistence {
             if (this.persMethod === "toml") {
                 toPersist += TOML.stringify({
                     data: this.db.getAllData().map((obj) => {
-                        obj.ck_id = obj._id;
-                        delete obj._id;
-                        return obj;
+                        const newObject = {
+                            ...obj,
+                            ck_id: obj._id || obj.ck_id,
+                        };
+                        delete newObject._id;
+                        return newObject;
                     }),
                 });
             } else if (this.persMethod === "yaml") {

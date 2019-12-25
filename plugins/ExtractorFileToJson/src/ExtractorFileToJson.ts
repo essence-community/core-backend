@@ -13,7 +13,7 @@ import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
 import * as fs from "fs";
 import { forEach, isObject } from "lodash";
 import { Readable } from "stream";
-import * as uuidv4 from "uuidv4";
+import { uuid as uuidv4 } from "uuidv4";
 import { DirStorage } from "./DirStorage";
 import { ExtractorCsv } from "./ExtractorCsv";
 import { ExtractorDbf } from "./ExtractorDbf";
@@ -78,15 +78,15 @@ export default class ExtractorFileToJson extends NullPlugin {
         }
         if (this.params.cvTypeStorage === "dir") {
             const storage = new DirStorage(this.params, this.logger);
-            this.saveFile = storage.saveFile.bind(this);
-            this.deletePath = storage.deletePath.bind(this);
-            this.getFile = storage.getFile.bind(this);
+            this.saveFile = storage.saveFile.bind(storage);
+            this.deletePath = storage.deletePath.bind(storage);
+            this.getFile = storage.getFile.bind(storage);
             return;
         }
         const s3storage = new S3Storage(this.params, this.logger);
-        this.saveFile = s3storage.saveFile.bind(this);
-        this.deletePath = s3storage.deletePath.bind(this);
-        this.getFile = s3storage.getFile.bind(this);
+        this.saveFile = s3storage.saveFile.bind(s3storage);
+        this.deletePath = s3storage.deletePath.bind(s3storage);
+        this.getFile = s3storage.getFile.bind(s3storage);
     }
 
     public async beforeQueryExecutePerform(

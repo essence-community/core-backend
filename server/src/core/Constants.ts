@@ -148,6 +148,8 @@ class Constants {
     public HASH_SALT: string = "";
     /** Наименование запроса получения сессии */
     public QUERY_GETSESSIONDATA: string = "getsessiondata";
+    /** Сервис выхода */
+    public QUERY_LOGOUT = "logout";
 
     constructor() {
         this.RESERVED_PARAMS = [

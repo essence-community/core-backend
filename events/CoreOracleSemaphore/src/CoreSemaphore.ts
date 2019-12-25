@@ -50,12 +50,10 @@ export default class CoreSemaphore extends NullEvent {
         if (this.eventConnect) {
             const conn = this.eventConnect;
             this.eventConnect = null;
-            await conn
-                .unsubscribe(`core_semaphore_${this.name}`)
-                .then(
-                    () => this.dataSource.onClose(conn),
-                    () => this.dataSource.onClose(conn),
-                );
+            await conn.unsubscribe(`core_semaphore_${this.name}`).then(
+                () => this.dataSource.onClose(conn),
+                () => this.dataSource.onClose(conn),
+            );
         }
         if (this.dataSource.pool) {
             await this.dataSource.resetPool();

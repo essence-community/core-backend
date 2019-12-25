@@ -91,7 +91,34 @@ gulp.task("plugins", () => {
                                     ),
                                 ),
                             )
-                            .on("end", () => resolve())
+                            .on("end", () => {
+                                if (
+                                    fs.existsSync(
+                                        path.join(pluginsDir, file, "assets"),
+                                    )
+                                ) {
+                                    copyDir(
+                                        path.join(pluginsDir, file, "assets"),
+                                        path.join(
+                                            homeDir,
+                                            "bin",
+                                            "server",
+                                            "plugins",
+                                            "datas",
+                                            file,
+                                            "assets",
+                                        ),
+                                        (err) => {
+                                            if (err) {
+                                                return reject(err);
+                                            }
+                                            resolve();
+                                        },
+                                    );
+                                    return;
+                                }
+                                resolve();
+                            })
                             .on("error", (err) => reject(err));
                     }),
                 );
@@ -138,7 +165,34 @@ gulp.task("contexts", () => {
                                     ),
                                 ),
                             )
-                            .on("end", () => resolve())
+                            .on("end", () => {
+                                if (
+                                    fs.existsSync(
+                                        path.join(pluginsDir, file, "assets"),
+                                    )
+                                ) {
+                                    copyDir(
+                                        path.join(pluginsDir, file, "assets"),
+                                        path.join(
+                                            homeDir,
+                                            "bin",
+                                            "server",
+                                            "plugins",
+                                            "contexts",
+                                            file,
+                                            "assets",
+                                        ),
+                                        (err) => {
+                                            if (err) {
+                                                return reject(err);
+                                            }
+                                            resolve();
+                                        },
+                                    );
+                                    return;
+                                }
+                                resolve();
+                            })
                             .on("error", (err) => reject(err));
                     }),
                 );
@@ -185,7 +239,34 @@ gulp.task("events", () => {
                                     ),
                                 ),
                             )
-                            .on("end", () => resolve())
+                            .on("end", () => {
+                                if (
+                                    fs.existsSync(
+                                        path.join(pluginsDir, file, "assets"),
+                                    )
+                                ) {
+                                    copyDir(
+                                        path.join(pluginsDir, file, "assets"),
+                                        path.join(
+                                            homeDir,
+                                            "bin",
+                                            "server",
+                                            "plugins",
+                                            "events",
+                                            file,
+                                            "assets",
+                                        ),
+                                        (err) => {
+                                            if (err) {
+                                                return reject(err);
+                                            }
+                                            resolve();
+                                        },
+                                    );
+                                    return;
+                                }
+                                resolve();
+                            })
                             .on("error", (err) => reject(err));
                     }),
                 );
@@ -232,7 +313,34 @@ gulp.task("schedulers", () => {
                                     ),
                                 ),
                             )
-                            .on("end", () => resolve())
+                            .on("end", () => {
+                                if (
+                                    fs.existsSync(
+                                        path.join(pluginsDir, file, "assets"),
+                                    )
+                                ) {
+                                    copyDir(
+                                        path.join(pluginsDir, file, "assets"),
+                                        path.join(
+                                            homeDir,
+                                            "bin",
+                                            "server",
+                                            "plugins",
+                                            "schedulers",
+                                            file,
+                                            "assets",
+                                        ),
+                                        (err) => {
+                                            if (err) {
+                                                return reject(err);
+                                            }
+                                            resolve();
+                                        },
+                                    );
+                                    return;
+                                }
+                                resolve();
+                            })
                             .on("error", (err) => reject(err));
                     }),
                 );
@@ -279,7 +387,34 @@ gulp.task("providers", () => {
                                     ),
                                 ),
                             )
-                            .on("end", () => resolve())
+                            .on("end", () => {
+                                if (
+                                    fs.existsSync(
+                                        path.join(pluginsDir, file, "assets"),
+                                    )
+                                ) {
+                                    copyDir(
+                                        path.join(pluginsDir, file, "assets"),
+                                        path.join(
+                                            homeDir,
+                                            "bin",
+                                            "server",
+                                            "plugins",
+                                            "providers",
+                                            file,
+                                            "assets",
+                                        ),
+                                        (err) => {
+                                            if (err) {
+                                                return reject(err);
+                                            }
+                                            resolve();
+                                        },
+                                    );
+                                    return;
+                                }
+                                resolve();
+                            })
                             .on("error", (err) => reject(err));
                     }),
                 );
@@ -306,7 +441,22 @@ gulp.task("server", () => {
                 gulp.src(path.join(serverDir, "src", "**", "*.ts"))
                     .pipe(tsProject())
                     .pipe(gulp.dest(path.join(homeDir, "bin", "server")))
-                    .on("end", () => resolve())
+                    .on("end", () => {
+                        if (fs.existsSync(path.join(serverDir, "assets"))) {
+                            copyDir(
+                                path.join(serverDir, "assets"),
+                                path.join(homeDir, "bin", "server", "assets"),
+                                (err) => {
+                                    if (err) {
+                                        return reject(err);
+                                    }
+                                    resolve();
+                                },
+                            );
+                            return;
+                        }
+                        resolve();
+                    })
                     .on("error", (err) => reject(err));
             }),
         );

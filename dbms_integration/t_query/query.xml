@@ -5,4 +5,8 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+         <include file="./t_query/scripts.sql" />
+         <include file="./t_query/ITGetInterface.sql" />
+         <include file="./t_query/ITGetPatch.sql" />
+         <include file="./t_query/ITGetPatchInterface.sql" />
 </databaseChangeLog>

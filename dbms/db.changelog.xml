@@ -12,4 +12,5 @@
   <include file="./t_query/query.xml" />
   <include file="./s_su/grants.sql" />
   <include file="./meta/meta.xml" />
+  <include file="./meta/scripts.sql" />
 </databaseChangeLog>

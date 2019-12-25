@@ -113,12 +113,10 @@ export default class CoreOracleIntegration extends NullContext {
                         });
                     });
                     res.stream.on("end", () => {
-                        this.dbQuery
-                            .insert(data)
-                            .then(
-                                () => resolve(),
-                                (err) => reject(new Error(err.message)),
-                            );
+                        this.dbQuery.insert(data).then(
+                            () => resolve(),
+                            (err) => reject(new Error(err.message)),
+                        );
                     });
                 });
             });

@@ -9,7 +9,7 @@ import {
     sortFilesData,
 } from "@ungate/plugininf/lib/util/Util";
 import { isObject } from "lodash";
-import uuidv4 = require("uuidv4");
+import { uuid as uuidv4 } from "uuidv4";
 import PluginManager from "../../core/pluginmanager/PluginManager";
 import Property from "../../core/property/Property";
 import resetAction from "./ResetAction";
@@ -153,7 +153,7 @@ export default class AdminAction {
                             .map((val) => ({
                                 ...val,
                                 cv_params: this.ParamsToString(
-                                    PluginManager.getGateProviderClass,
+                                    PluginManager.getGateEventsClass,
                                     val.ck_d_plugin,
                                     val.cct_params,
                                 ),

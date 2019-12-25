@@ -25,5 +25,6 @@
     <include file="./s_mp/pkg_json_report.sql" />
     <include file="./s_mp/pkg_json_semaphore.sql" />
     <include file="./s_mp/pkg_json.sql" />
-    <include file="./s_mp/pkg_json_localization.sql" /> 
+    <include file="./s_mp/pkg_json_localization.sql" />
+    <include file="./s_mp/pkg_json_patcher.sql" />
 </databaseChangeLog>

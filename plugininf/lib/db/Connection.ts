@@ -40,7 +40,7 @@ class Connection extends EventEmitter {
             );
         } finally {
             if (result) {
-                result.stream.on("end", () => {
+                result.stream.once("end", () => {
                     this.isExecute = false;
                     this.emit("finish");
                 });
@@ -59,6 +59,7 @@ class Connection extends EventEmitter {
             this.once("finish", () => {
                 this.release();
             });
+            return;
         }
         try {
             this.isExecute = true;
@@ -78,6 +79,7 @@ class Connection extends EventEmitter {
             this.once("finish", () => {
                 this.close();
             });
+            return;
         }
         try {
             this.isExecute = true;
@@ -97,6 +99,7 @@ class Connection extends EventEmitter {
             this.once("finish", () => {
                 this.commit();
             });
+            return;
         }
         this.isExecute = true;
         try {
@@ -115,6 +118,7 @@ class Connection extends EventEmitter {
             this.once("finish", () => {
                 this.rollback();
             });
+            return;
         }
         this.isExecute = true;
         try {
@@ -127,13 +131,25 @@ class Connection extends EventEmitter {
     }
     public rollbackAndRelease(): Promise<void> {
         return this.rollback()
-            .then(() => this.release(), () => this.release())
-            .then(() => Promise.resolve(), () => Promise.resolve());
+            .then(
+                () => this.release(),
+                () => this.release(),
+            )
+            .then(
+                () => Promise.resolve(),
+                () => Promise.resolve(),
+            );
     }
     public rollbackAndClose(): Promise<void> {
         return this.rollback()
-            .then(() => this.close(), () => this.close())
-            .then(() => Promise.resolve(), () => Promise.resolve());
+            .then(
+                () => this.close(),
+                () => this.close(),
+            )
+            .then(
+                () => Promise.resolve(),
+                () => Promise.resolve(),
+            );
     }
 }
 

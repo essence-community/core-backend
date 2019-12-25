@@ -42,6 +42,8 @@ class PluginManager {
             this.resetGateContextClass(),
             this.resetGatePluginsClass(),
             this.resetGateProviderClass(),
+            this.resetEventsClass(),
+            this.resetSchedulersClass(),
         ]);
     }
     /**
