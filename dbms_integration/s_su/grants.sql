@@ -4,6 +4,8 @@
 
 GRANT USAGE ON SCHEMA pkg_json_user TO s_ic;
 
+GRANT USAGE ON SCHEMA pkg_json_patcher TO s_ic;
+
 GRANT USAGE ON SCHEMA s_it TO s_ic;
 
 GRANT USAGE ON SCHEMA public TO s_ip;
@@ -19,6 +21,8 @@ GRANT EXECUTE ON FUNCTION pkg_json_user.f_modify_user(pc_json jsonb, pv_hash cha
 GRANT EXECUTE ON FUNCTION pkg_json_user.f_modify_user_action(pc_json jsonb, pv_hash character varying) TO s_ic;
 
 GRANT EXECUTE ON FUNCTION pkg_json_user.f_modify_user_department(pc_json jsonb, pv_hash character varying) TO s_ic;
+
+GRANT EXECUTE ON FUNCTION pkg_json_patcher.f_modify_patch(pv_user character varying, pk_session character varying, pc_json jsonb) TO s_ic;
 
 GRANT ALL ON SEQUENCE public.seq_log TO s_ip;
 
@@ -69,3 +73,7 @@ GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE s_it.t_json_tmp TO s_ip;
 GRANT SELECT ON TABLE s_it.t_param TO s_ic;
 
 GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE s_it.t_param TO s_ip;
+
+GRANT SELECT ON TABLE s_it.t_create_patch TO s_ic;
+
+GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE s_it.t_create_patch TO s_ip;

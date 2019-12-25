@@ -1,0 +1,17 @@
+{
+    "name": "@ungate-plugin/patcher",
+    "version": "1.0.0",
+    "description": "Формирование патча системы",
+    "author": "Ivan Artemov (honyrik@gmail.com)",
+    "license": "ISC",
+    "dependencies": {
+        "@ungate/plugininf": "^1.0.0",
+        "adm-zip": "^0.4.13",
+        "aws-sdk": "^2.585.0",
+        "uuidv4": "^6.0.0"
+    },
+    "devDependencies": {
+        "@types/adm-zip": "^0.4.32",
+        "@types/aws-sdk": "^2.7.0"
+    }
+}

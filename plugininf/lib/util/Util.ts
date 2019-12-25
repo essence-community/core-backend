@@ -2,6 +2,7 @@
  * Created by artemov_i on 05.12.2018.
  */
 
+import * as fs from "fs";
 import {
     forEach,
     isArray,
@@ -10,7 +11,8 @@ import {
     toNumber,
     toString,
 } from "lodash";
-import moment = require("moment");
+import * as moment from "moment";
+import * as path from "path";
 import ErrorException from "../errors/ErrorException";
 import ErrorGate from "../errors/ErrorGate";
 import { IParamInfo, IParamsInfo } from "../ICCTParams";
@@ -262,3 +264,23 @@ export function filterFilesData(gateContext: IContext) {
     }
     return () => true;
 }
+
+export const deleteFolderRecursive = (pathDir: string) => {
+    if (fs.existsSync(pathDir)) {
+        if (fs.lstatSync(pathDir).isDirectory()) {
+            fs.readdirSync(pathDir).forEach((file) => {
+                const curPath = path.join(pathDir, file);
+                if (fs.lstatSync(curPath).isDirectory()) {
+                    // recurse
+                    deleteFolderRecursive(curPath);
+                } else {
+                    // delete file
+                    fs.unlinkSync(curPath);
+                }
+            });
+            fs.rmdirSync(pathDir);
+            return;
+        }
+        fs.unlinkSync(pathDir);
+    }
+};

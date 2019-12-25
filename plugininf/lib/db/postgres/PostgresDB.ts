@@ -332,12 +332,12 @@ export default class PostgresDB {
     ): Promise<IResultProvider> {
         let estimateTimerId = null;
         let result;
-        const conn = inConnection
+        const conn: pg.Client | pg.PoolClient = inConnection
             ? inConnection
-            : await this.getConnection().then(async (ucoon) =>
-                  ucoon.getCurrentConnection(),
+            : await this.getConnection().then(async (c) =>
+                  c.getCurrentConnection(),
               );
-        const isRelease = isEmpty(inConnection);
+        const isRelease = isEmpty(inConnection) || options.isRelease;
 
         if (this.log.isDebugEnabled()) {
             const logParam = { ...params };
@@ -467,7 +467,11 @@ export default class PostgresDB {
                     }
                 });
             }
-            conn.on("error", (err) => result.stream.emit("error", err));
+            const errFn = (err) => result.stream.emit("error", err);
+            conn.once("error", errFn);
+            result.stream.on("end", () => {
+                conn.removeListener("error", errFn);
+            });
             return result;
         } catch (err) {
             if (estimateTimerId !== null) {
@@ -481,6 +485,7 @@ export default class PostgresDB {
                         () => Promise.reject(new Error(err)),
                     );
             }
+            this.log.error(err);
             throw new Error(err);
         }
     }

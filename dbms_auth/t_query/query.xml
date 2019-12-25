@@ -22,4 +22,8 @@
 <include file="./t_query/AuthShowSelectedRoleAction.sql" />
 <include file="./t_query/AuthShowSelectedRole.sql" />
 <include file="./t_query/Login.sql" />
+<include file="./t_query/AuthGetPatch.sql" />
+<include file="./t_query/AuthGetPatchRole.sql" />
+<include file="./t_query/AuthGetPatchAction.sql" />
+<include file="./t_query/AuthGetPatchAccount.sql" />
 </databaseChangeLog>

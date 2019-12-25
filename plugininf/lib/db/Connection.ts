@@ -40,7 +40,7 @@ class Connection extends EventEmitter {
             );
         } finally {
             if (result) {
-                result.stream.on("end", () => {
+                result.stream.once("end", () => {
                     this.isExecute = false;
                     this.emit("finish");
                 });

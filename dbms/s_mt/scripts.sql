@@ -1072,3 +1072,22 @@ INSERT INTO s_mt.t_sys_setting (ck_id,cv_value,ck_user,ct_change,cv_description)
 --changeset kutsenko:CORE-1468 dbms:postgresql
 INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change) 
 	VALUES ('a240c31303c74c5490623d7781964c11', 'ru_RU', 'meta', 'Минимальная длина этого поля :maxsize', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-23 17:25:53.736532+03');
+
+--changeset artemov_i:CORE-640 dbms:postgresql
+CREATE TABLE s_mt.t_create_patch (
+	ck_id uuid NOT NULL,
+	cv_file_name varchar(200) NOT NULL,
+	ck_user varchar(100) NOT NULL,
+	ct_change timestamptz NOT NULL,
+	сj_param jsonb NOT NULL,
+	cd_create date NOT NULL,
+	cn_size bigint NULL,
+	CONSTRAINT cin_p_create_patch PRIMARY KEY (ck_id)
+);
+COMMENT ON COLUMN s_mt.t_create_patch.ck_id IS 'Идентификатор';
+COMMENT ON COLUMN s_mt.t_create_patch.cv_file_name IS 'Наименование файла';
+COMMENT ON COLUMN s_mt.t_create_patch.ck_user IS 'Аудит идентификатор пользователя';
+COMMENT ON COLUMN s_mt.t_create_patch.ct_change IS 'Аудит время модификации';
+COMMENT ON COLUMN s_mt.t_create_patch.сj_param IS 'Параметры запуска';
+COMMENT ON COLUMN s_mt.t_create_patch.cd_create IS 'Дата сборки';
+COMMENT ON COLUMN s_mt.t_create_patch.cn_size IS 'Размер сборки';
