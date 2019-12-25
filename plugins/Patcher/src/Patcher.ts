@@ -3,45 +3,32 @@ import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
 import ICCTParams from "@ungate/plugininf/lib/ICCTParams";
 import IParamsInfo from "@ungate/plugininf/lib/ICCTParams";
 import IContext from "@ungate/plugininf/lib/IContext";
-import { uuid } from "uuidv4";
-import * as path from "path";
-import * as fs from "fs";
 import { IPluginRequestContext } from "@ungate/plugininf/lib/IPlugin";
 import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
 import IResult from "@ungate/plugininf/lib/IResult";
 import NullPlugin from "@ungate/plugininf/lib/NullPlugin";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
-import { isEmpty } from "@ungate/plugininf/lib/util/Util";
+import {
+    deleteFolderRecursive,
+    isEmpty,
+} from "@ungate/plugininf/lib/util/Util";
+import * as Zip from "adm-zip";
+import * as fs from "fs";
+import * as moment from "moment";
+import * as path from "path";
 import { Readable } from "stream";
+import { uuid } from "uuidv4";
+import { patchAuth } from "./auth/AuthPatch";
 import { DirStorage } from "./DirStorage";
-import { IFile, IPluginParams } from "./Patcher.types";
+import { patchIntegr } from "./integr/IntegrPatch";
+import { patchMeta } from "./meta/MetaPatch";
+import { IFile, IPluginParams, IStorage } from "./Patcher.types";
 import { IJson } from "./Patcher.types";
 import { S3Storage } from "./S3Storage";
-import { patchIntegr } from "./integr/IntegrPatch";
-import { patchAuth } from "./auth/AuthPatch";
-import { patchMeta } from "./meta/MetaPatch";
-import * as Zip from "adm-zip";
-import * as moment from "moment";
 
-const deleteFolderRecursive = (path) => {
-    var files = [];
-    if (fs.existsSync(path)) {
-        files = fs.readdirSync(path);
-        files.forEach((file) => {
-            var curPath = path + "/" + file;
-            if (fs.lstatSync(curPath).isDirectory()) {
-                // recurse
-                deleteFolderRecursive(curPath);
-            } else {
-                // delete file
-                fs.unlinkSync(curPath);
-            }
-        });
-        fs.rmdirSync(path);
-    }
-};
-export class Patcher extends NullPlugin {
+export class Patcher extends NullPlugin implements IStorage {
     public static getParamsInfo(): IParamsInfo {
+        // tslint:disable:object-literal-sort-keys
         return {
             cvTypeStorage: {
                 defaultValue: "riak",
@@ -76,6 +63,21 @@ export class Patcher extends NullPlugin {
         this.saveFile = storage.saveFile.bind(storage);
         this.deletePath = storage.deletePath.bind(storage);
         this.getFile = storage.getFile.bind(storage);
+    }
+    public saveFile(
+        f: string,
+        buffer: Buffer | Readable,
+        content: string,
+        metaData?: Record<string, string>,
+        size?: number,
+    ): Promise<void> {
+        throw new Error("Method not implemented.");
+    }
+    public deletePath(f: string): Promise<void> {
+        throw new Error("Method not implemented.");
+    }
+    public getFile(key: string): Promise<IFile> {
+        throw new Error("Method not implemented.");
     }
     /**
      * Загрузка файла в хранилище в режиме upload
@@ -201,8 +203,8 @@ export class Patcher extends NullPlugin {
                 .then(
                     (res) =>
                         new Promise((resolve, reject) => {
-                            res.stream.on("data", (res) => {
-                                this.logger.debug(res);
+                            res.stream.on("data", (row) => {
+                                this.logger.debug(row);
                             });
                             res.stream.on("error", (err) => reject(err));
                             res.stream.on("end", () => resolve());
@@ -222,14 +224,4 @@ export class Patcher extends NullPlugin {
         }
         return;
     }
-    private saveFile = (
-        path: string,
-        buffer: Buffer | Readable,
-        content: string,
-        metaData?: Record<string, string>,
-        size?: number,
-    ) => Promise.resolve();
-    private deletePath = (path: string) => Promise.resolve();
-    private getFile = (key: string): Promise<IFile> =>
-        Promise.resolve({} as IFile);
 }

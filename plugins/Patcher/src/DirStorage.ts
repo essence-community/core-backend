@@ -3,9 +3,8 @@ import * as os from "os";
 import * as path from "path";
 import { IRufusLogger } from "rufus";
 import { Readable } from "stream";
-import { uuid } from "uuidv4";
-import { IFile, IPluginParams } from "./Patcher.types";
-export class DirStorage {
+import { IFile, IPluginParams, IStorage } from "./Patcher.types";
+export class DirStorage implements IStorage {
     private params: IPluginParams;
     private logger: IRufusLogger;
     private UPLOAD_DIR: string = process.env.GATE_UPLOAD_DIR || os.tmpdir();

@@ -2,6 +2,11 @@ import Connection from "@ungate/plugininf/lib/db/Connection";
 import * as fs from "fs";
 import * as path from "path";
 import { IJson } from "../Patcher.types";
+import {
+    closeFsWriteStream,
+    createChangeXml,
+    createWriteStream,
+} from "../Utils";
 import { Lang } from "./Lang";
 import { Localization } from "./Localization";
 import { Message } from "./Message";
@@ -31,15 +36,6 @@ import {
     sqlSysSetting,
 } from "./SqlPostgres";
 import { SysSetting } from "./SysSetting";
-
-function createWriteStream(dir: string, name: string) {
-    const stream = fs.createWriteStream(path.join(dir, name + ".sql"));
-    stream.write("--liquibase formatted sql\n");
-    stream.write(
-        `--changeset patcher-core:${name} dbms:postgresql runOnChange:true splitStatements:false stripComments:false\n`,
-    );
-    return stream;
-}
 
 export async function patchMeta(dir: string, json: IJson, conn: Connection) {
     const includePage: string[] = [];
@@ -74,15 +70,7 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
                         res.stream.on("end", () => resolve());
                     }),
             );
-        await new Promise((resolve, reject) => {
-            sysSetting.end((err) => {
-                if (err) {
-                    return reject(err);
-                }
-                sysSetting.close();
-                resolve();
-            });
-        });
+        await closeFsWriteStream(sysSetting);
     }
     if (json.data.cct_message) {
         const message = createWriteStream(meta, "Message");
@@ -109,15 +97,7 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
                         res.stream.on("end", () => resolve());
                     }),
             );
-        await new Promise((resolve, reject) => {
-            message.end((err) => {
-                if (err) {
-                    return reject(err);
-                }
-                message.close();
-                resolve();
-            });
-        });
+        await closeFsWriteStream(message);
     }
     if (json.data.cct_lang) {
         const lang: { [key: string]: fs.WriteStream } = {};
@@ -173,18 +153,7 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
                     }),
             );
         await Promise.all(
-            Object.values(lang).map(
-                (f) =>
-                    new Promise((resolve, reject) => {
-                        f.end((err) => {
-                            if (err) {
-                                return reject(err);
-                            }
-                            f.close();
-                            resolve();
-                        });
-                    }),
-            ),
+            Object.values(lang).map((f) => closeFsWriteStream(f)),
         );
     }
     if (json.data.cct_page) {
@@ -386,18 +355,7 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
                     }),
             );
         await Promise.all(
-            Object.values(page).map(
-                (f) =>
-                    new Promise((resolve, reject) => {
-                        f.end((err) => {
-                            if (err) {
-                                return reject(err);
-                            }
-                            f.close();
-                            resolve();
-                        });
-                    }),
-            ),
+            Object.values(page).map((f) => closeFsWriteStream(f)),
         );
     }
     if (json.data.cct_query) {
@@ -456,43 +414,14 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
                     }),
             );
         await Promise.all(
-            Object.values(provider).map(
-                (f) =>
-                    new Promise((resolve, reject) => {
-                        f.end((err) => {
-                            if (err) {
-                                return reject(err);
-                            }
-                            f.close();
-                            resolve();
-                        });
-                    }),
-            ),
+            Object.values(provider).map((f) => closeFsWriteStream(f)),
         );
     }
 
-    return new Promise((resolve, reject) => {
-        fs.writeFile(
-            path.join(meta, "meta.xml"),
-            '<?xml version="1.0" encoding="UTF-8"?>\n' +
-                "<databaseChangeLog\n" +
-                '  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"\n' +
-                '  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n' +
-                '  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog\n' +
-                '         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">\n' +
-                [...include, ...includeQuery, ...includePage].reduce(
-                    (res, str) => {
-                        return `${res}        <include file="./meta/${str}.sql" />\n`;
-                    },
-                    "",
-                ) +
-                "</databaseChangeLog>",
-            (err) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve();
-            },
-        );
-    });
+    return createChangeXml(
+        path.join(meta, "meta.xml"),
+        [...include, ...includeQuery, ...includePage].map(
+            (str) => `        <include file="./meta/${str}.sql" />\n`,
+        ),
+    );
 }

@@ -3,30 +3,26 @@ import * as fs from "fs";
 import * as path from "path";
 import { IJson } from "../Patcher.types";
 import {
-    sqlInfo,
-    sqlAction,
-    sqlRole,
-    sqlRoleAction,
-    sqlAccount,
-    sqlAccountRole,
-    sqlAccountInfo,
-} from "./SqlPostgres";
-import { Info } from "./Info";
+    closeFsWriteStream,
+    createChangeXml,
+    createWriteStream,
+} from "../Utils";
+import { Account } from "./Account";
+import { AccountInfo } from "./AccountInfo";
+import { AccountRole } from "./AccountRole";
 import { Action } from "./Action";
+import { Info } from "./Info";
 import { Role } from "./Role";
 import { RoleAction } from "./RoleAction";
-import { Account } from "./Account";
-import { AccountRole } from "./AccountRole";
-import { AccountInfo } from "./AccountInfo";
-
-function createWriteStream(dir: string, name: string) {
-    const stream = fs.createWriteStream(path.join(dir, name + ".sql"));
-    stream.write("--liquibase formatted sql\n");
-    stream.write(
-        `--changeset patcher-core:${name} dbms:postgresql runOnChange:true splitStatements:false stripComments:false\n`,
-    );
-    return stream;
-}
+import {
+    sqlAccount,
+    sqlAccountInfo,
+    sqlAccountRole,
+    sqlAction,
+    sqlInfo,
+    sqlRole,
+    sqlRoleAction,
+} from "./SqlPostgres";
 
 export async function patchAuth(dir: string, json: IJson, conn: Connection) {
     const include: string[] = [];
@@ -59,15 +55,7 @@ export async function patchAuth(dir: string, json: IJson, conn: Connection) {
                         res.stream.on("end", () => resolve());
                     }),
             );
-        await new Promise((resolve, reject) => {
-            info.end((err) => {
-                if (err) {
-                    return reject(err);
-                }
-                info.close();
-                resolve();
-            });
-        });
+        await closeFsWriteStream(info);
     }
     if (json.data.cct_action) {
         const action = createWriteStream(meta, "Action");
@@ -94,15 +82,7 @@ export async function patchAuth(dir: string, json: IJson, conn: Connection) {
                         res.stream.on("end", () => resolve());
                     }),
             );
-        await new Promise((resolve, reject) => {
-            action.end((err) => {
-                if (err) {
-                    return reject(err);
-                }
-                action.close();
-                resolve();
-            });
-        });
+        await closeFsWriteStream(action);
     }
     if (json.data.cct_role) {
         const role = createWriteStream(meta, "Role");
@@ -133,8 +113,8 @@ export async function patchAuth(dir: string, json: IJson, conn: Connection) {
             .executeStmt(
                 sqlRoleAction,
                 {
-                    cct_role: JSON.stringify(json.data.cct_role),
                     cct_action: JSON.stringify(json.data.cct_action || "[]"),
+                    cct_role: JSON.stringify(json.data.cct_role),
                 },
                 {},
                 {
@@ -152,15 +132,7 @@ export async function patchAuth(dir: string, json: IJson, conn: Connection) {
                         res.stream.on("end", () => resolve());
                     }),
             );
-        await new Promise((resolve, reject) => {
-            role.end((err) => {
-                if (err) {
-                    return reject(err);
-                }
-                role.close();
-                resolve();
-            });
-        });
+        await closeFsWriteStream(role);
     }
     if (json.data.cct_role) {
         const account = createWriteStream(meta, "Account");
@@ -191,8 +163,8 @@ export async function patchAuth(dir: string, json: IJson, conn: Connection) {
             .executeStmt(
                 sqlAccountRole,
                 {
-                    cct_role: JSON.stringify(json.data.cct_role || "[]"),
                     cct_account: JSON.stringify(json.data.cct_account),
+                    cct_role: JSON.stringify(json.data.cct_role || "[]"),
                 },
                 {},
                 {
@@ -214,8 +186,8 @@ export async function patchAuth(dir: string, json: IJson, conn: Connection) {
             .executeStmt(
                 sqlAccountInfo,
                 {
-                    cct_info: JSON.stringify(json.data.cct_info || "[]"),
                     cct_account: JSON.stringify(json.data.cct_account),
+                    cct_info: JSON.stringify(json.data.cct_info || "[]"),
                 },
                 {},
                 {
@@ -233,35 +205,10 @@ export async function patchAuth(dir: string, json: IJson, conn: Connection) {
                         res.stream.on("end", () => resolve());
                     }),
             );
-        await new Promise((resolve, reject) => {
-            account.end((err) => {
-                if (err) {
-                    return reject(err);
-                }
-                account.close();
-                resolve();
-            });
-        });
+        await closeFsWriteStream(account);
     }
-    return new Promise((resolve, reject) => {
-        fs.writeFile(
-            path.join(meta, "auth.xml"),
-            '<?xml version="1.0" encoding="UTF-8"?>\n' +
-                "<databaseChangeLog\n" +
-                '  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"\n' +
-                '  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n' +
-                '  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog\n' +
-                '         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">\n' +
-                include.reduce((res, str) => {
-                    return `${res}        <include file="./auth/${str}.sql" />\n`;
-                }, "") +
-                "</databaseChangeLog>",
-            (err) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve();
-            },
-        );
-    });
+    return createChangeXml(
+        path.join(meta, "auth.xml"),
+        include.map((str) => `        <include file="./auth/${str}.sql" />\n`),
+    );
 }

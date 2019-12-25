@@ -2,18 +2,14 @@ import Connection from "@ungate/plugininf/lib/db/Connection";
 import * as fs from "fs";
 import * as path from "path";
 import { IJson } from "../Patcher.types";
-import { sqlProvider, sqlInterface } from "./SqlPostgres";
+import {
+    closeFsWriteStream,
+    createChangeXml,
+    createWriteStream,
+} from "../Utils";
 import { Interface } from "./Interface";
 import { Provider } from "./Provider";
-
-function createWriteStream(dir: string, name: string) {
-    const stream = fs.createWriteStream(path.join(dir, name + ".sql"));
-    stream.write("--liquibase formatted sql\n");
-    stream.write(
-        `--changeset patcher-core:${name} dbms:postgresql runOnChange:true splitStatements:false stripComments:false\n`,
-    );
-    return stream;
-}
+import { sqlInterface, sqlProvider } from "./SqlPostgres";
 
 export async function patchIntegr(dir: string, json: IJson, conn: Connection) {
     const include: string[] = [];
@@ -22,7 +18,7 @@ export async function patchIntegr(dir: string, json: IJson, conn: Connection) {
         fs.mkdirSync(meta);
     }
     if (json.data.cct_interface) {
-        const info = createWriteStream(meta, "Interface");
+        const integr = createWriteStream(meta, "Interface");
         include.push("Interface");
         await conn
             .executeStmt(
@@ -40,7 +36,7 @@ export async function patchIntegr(dir: string, json: IJson, conn: Connection) {
                 (res) =>
                     new Promise((resolve, reject) => {
                         res.stream.on("data", (row) => {
-                            info.write(new Provider(row).toRow());
+                            integr.write(new Provider(row).toRow());
                         });
                         res.stream.on("error", (err) => reject(err));
                         res.stream.on("end", () => resolve());
@@ -62,42 +58,18 @@ export async function patchIntegr(dir: string, json: IJson, conn: Connection) {
                 (res) =>
                     new Promise((resolve, reject) => {
                         res.stream.on("data", (row) => {
-                            info.write(new Interface(row).toRow());
+                            integr.write(new Interface(row).toRow());
                         });
                         res.stream.on("error", (err) => reject(err));
                         res.stream.on("end", () => resolve());
                     }),
             );
-        await new Promise((resolve, reject) => {
-            info.end((err) => {
-                if (err) {
-                    return reject(err);
-                }
-                info.close();
-                resolve();
-            });
-        });
+        await closeFsWriteStream(integr);
     }
-
-    return new Promise((resolve, reject) => {
-        fs.writeFile(
-            path.join(meta, "integr.xml"),
-            '<?xml version="1.0" encoding="UTF-8"?>\n' +
-                "<databaseChangeLog\n" +
-                '  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"\n' +
-                '  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n' +
-                '  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog\n' +
-                '         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">\n' +
-                include.reduce((res, str) => {
-                    return `${res}        <include file="./integr/${str}.sql" />\n`;
-                }, "") +
-                "</databaseChangeLog>",
-            (err) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve();
-            },
-        );
-    });
+    return createChangeXml(
+        path.join(meta, "integr.xml"),
+        include.map(
+            (str) => `        <include file="./integr/${str}.sql" />\n`,
+        ),
+    );
 }

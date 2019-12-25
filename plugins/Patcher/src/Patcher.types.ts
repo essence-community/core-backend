@@ -1,4 +1,5 @@
 import ICCTParams from "@ungate/plugininf/lib/ICCTParams";
+import { Readable } from "stream";
 
 export interface IPluginParams extends ICCTParams {
     cvTypeStorage?: "riak" | "aws" | "dir";
@@ -52,4 +53,16 @@ export interface IJson {
         cct_account_info?: string[];
         [key: string]: any;
     };
+}
+
+export declare class IStorage {
+    public saveFile(
+        path: string,
+        buffer: Buffer | Readable,
+        content: string,
+        metaData?: Record<string, string>,
+        size?: number,
+    ): Promise<void>;
+    public deletePath(path: string): Promise<void>;
+    public getFile(key: string): Promise<IFile>;
 }
