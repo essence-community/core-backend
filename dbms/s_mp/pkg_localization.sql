@@ -50,13 +50,13 @@ begin
     end if;
     /* Блок "Проверка переданных данных" */
     if pot_d_lang.ck_id is null then
-      perform pkg.p_set_error(200, '32d1685390d44934b3d5f71dc0084ee3');
+      perform pkg.p_set_error(200, 'meta:32d1685390d44934b3d5f71dc0084ee3');
     end if;
     if pot_d_lang.cv_name is null then
-      perform pkg.p_set_error(200, '3a0b8d771a0d497e8aa1c44255fa6e83');
+      perform pkg.p_set_error(200, 'meta:3a0b8d771a0d497e8aa1c44255fa6e83');
     end if;
     if pot_d_lang.cl_default is null or pot_d_lang.cl_default not in (0, 1) then
-      perform pkg.p_set_error(200, '7c47246c867740179cb1f2c7a3705d6d');
+      perform pkg.p_set_error(200, 'meta:7c47246c867740179cb1f2c7a3705d6d');
     end if;
     if pv_action = i::varchar then
         for rec in (
