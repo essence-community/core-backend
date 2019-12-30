@@ -431,3 +431,63 @@ export const sqlQueryPage =
     "    ck_query is not null\n" +
     "order by\n" +
     "    ck_query asc\n";
+
+export const sqlLocalizationPage =
+    "with recursive page_object as (\n" +
+    "    select\n" +
+    "        po.ck_id,\n" +
+    "        po.ck_page,\n" +
+    "        po.ck_parent,\n" +
+    "        po.ck_object,\n" +
+    "        o.ck_class,\n" +
+    "        o.cv_displayed,\n" +
+    "        1 as lvl\n" +
+    "    from\n" +
+    "        s_mt.t_page_object po\n" +
+    "    join s_mt.t_object o on\n" +
+    "        po.ck_object = o.ck_id\n" +
+    "    where\n" +
+    "        po.ck_parent is null\n" +
+    "        and po.ck_page in (select value from json_array_elements_text(:cct_page::json))\n" +
+    "union all\n" +
+    "    select\n" +
+    "        po.ck_id,\n" +
+    "        po.ck_page,\n" +
+    "        po.ck_parent,\n" +
+    "        po.ck_object,\n" +
+    "        o.ck_class,\n" +
+    "        o.cv_displayed,\n" +
+    "        rp.lvl + 1 as lvl\n" +
+    "    from\n" +
+    "        s_mt.t_page_object po\n" +
+    "    join s_mt.t_object o on\n" +
+    "        po.ck_object = o.ck_id\n" +
+    "    join page_object rp on\n" +
+    "        po.ck_parent = rp.ck_id\n" +
+    ")\n" +
+    "select\n" +
+    "    distinct p.ck_id as ck_page, l.*\n" +
+    "from\n" +
+    "    s_mt.t_page p\n" +
+    "left join page_object po on\n" +
+    "    p.ck_id = po.ck_page\n" +
+    "left join s_mt.t_page_object_attr po_attr on\n" +
+    "    po.ck_id = po_attr.ck_page_object\n" +
+    "left join s_mt.t_object_attr o_attr on\n" +
+    "    po.ck_object = o_attr.ck_object\n" +
+    "left join s_mt.t_class_attr ca on\n" +
+    "    po.ck_class = ca.ck_class\n" +
+    "left join s_mt.t_localization l on\n" +
+    "    l.ck_id = p.cv_name\n" +
+    "    or l.ck_id = po.cv_displayed\n" +
+    "    or l.ck_id = po_attr.cv_value\n" +
+    "    or l.ck_id = o_attr.cv_value\n" +
+    "    or l.ck_id = ca.cv_value\n" +
+    "where\n" +
+    "    l.ck_id is not null\n" +
+    "    and p.ck_id in (select value from json_array_elements_text(:cct_page::json))\n" +
+    "order by\n" +
+    "    p.ck_id asc,\n" +
+    "    l.ck_d_lang asc,\n" +
+    "    l.ct_change asc,\n" +
+    "    l.ck_id asc\n";
