@@ -79,8 +79,8 @@ select pkg_patcher.p_merge_object_attr('57C22EA5261D4E3294DDB76EDB1102BE', '84C8
 select pkg_patcher.p_merge_object_attr('EA6A61463D3F4EAF8AD0BEB8027731E8', '84C8AE5F2EA74E68B066CAC8C952996E', '126', 'ck_id', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-25T00:00:00.000+0000');
 select pkg_patcher.p_merge_object_attr('7F503115714F477EB9103EA6BB97F2D6', '84C8AE5F2EA74E68B066CAC8C952996E', '752', 'new:', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-25T00:00:00.000+0000');
 select pkg_patcher.p_merge_object_attr('6555', '20E904F618D14931B946EFA7E8201725', '1033', 'addwindow', '-11', '2018-02-23T00:00:00.000+0000');
-select pkg_patcher.p_merge_object_attr('2015', '87DD0319961C49E182C7D5ACA7FCECE7', '120', 'cv_value', '-11', '2018-02-23T00:00:00.000+0000');
 select pkg_patcher.p_merge_object_attr('15', 'EA7CFCD39A2948C2876FB8D0CF5BDC88', '120', 'ck_class', '-11', '2018-02-23T00:00:00.000+0000');
+select pkg_patcher.p_merge_object_attr('2015', '87DD0319961C49E182C7D5ACA7FCECE7', '120', 'cv_value', '-11', '2018-02-23T00:00:00.000+0000');
 select pkg_patcher.p_merge_object_attr('10713', '87DD0319961C49E182C7D5ACA7FCECE7', '121', '4000', '10020786', '2018-05-08T00:00:00.000+0000');
 select pkg_patcher.p_merge_object_attr('11', 'EA7CFCD39A2948C2876FB8D0CF5BDC88', '123', 'true', '-11', '2018-02-23T00:00:00.000+0000');
 select pkg_patcher.p_merge_object_attr('13', 'EA7CFCD39A2948C2876FB8D0CF5BDC88', '125', 'cv_displayed', '-11', '2018-02-23T00:00:00.000+0000');
@@ -129,14 +129,15 @@ select pkg_patcher.p_merge_object_attr('6', '5540018FA2FC4C619E0A90969D8E7B6B', 
 select pkg_patcher.p_merge_object_attr('3', '0202F94F3F624C13865A2B0AA9E8FDE5', '52', 'cv_name', '-11', '2018-02-23T00:00:00.000+0000');
 select pkg_patcher.p_merge_object_attr('34', '21E9F838378546E69359B0FF5313B9CA', '73', 'true', '-11', '2018-02-23T00:00:00.000+0000');
 select pkg_patcher.p_merge_object_attr('20', '21E9F838378546E69359B0FF5313B9CA', '86', 'cv_description', '-11', '2018-02-23T00:00:00.000+0000');
-select pkg_patcher.p_merge_object_attr('7', '948B958349E94465AD6DDE0D1D81123E', '47', 'cv_value', '-11', '2018-02-23T00:00:00.000+0000');
 select pkg_patcher.p_merge_object_attr('4', 'D853B3E280224C6C8C173CE8E7D2F484', '47', 'cv_description', '-11', '2018-02-23T00:00:00.000+0000');
+select pkg_patcher.p_merge_object_attr('7', '948B958349E94465AD6DDE0D1D81123E', '47', 'cv_value', '-11', '2018-02-23T00:00:00.000+0000');
 select pkg_patcher.p_merge_object_attr('485F3EB8842648E5B0967D9A50A6137B', '948B958349E94465AD6DDE0D1D81123E', 'DF0F8346F83146D39CDB9C2FB62D4497', 'meta', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-25T00:00:00.000+0000');
 select pkg_patcher.p_merge_object_attr('84FFDBDA747949B1E053809BA8C0D55B', '84FFDBDA747849B1E053809BA8C0D55B', '47', 'cv_displayed', '20780', '2019-03-26T00:00:00.000+0000');
 select pkg_patcher.p_merge_object_attr('E9D2C8E5C4BD4F8C9F8D5E08FA913445', '84FFDBDA747849B1E053809BA8C0D55B', 'DF0F8346F83146D39CDB9C2FB62D4497', 'meta', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-25T00:00:00.000+0000');
 select pkg_patcher.p_merge_object_attr('496', 'B25593736D6549B498335251E1FB280C', '433', 'disabled', '-11', '2018-02-23T00:00:00.000+0000');
 select pkg_patcher.p_merge_object_attr('495', 'B25593736D6549B498335251E1FB280C', '47', 'cv_description', '-11', '2018-02-23T00:00:00.000+0000');
 select pkg_patcher.p_merge_object_attr('1016', '52354F089D7D42958DE7EF095B3E55C1', '47', 'ck_query', '-11', '2018-02-23T00:00:00.000+0000');
+select pkg_patcher.p_merge_object_attr('06377C051FF64DA5BF59579A56B70B4F', '614202FC3A134191A5AB44D37F05BB40', '70', '18', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-31T00:00:00.000+0000');
 select pkg_patcher.p_merge_object_attr('31', '614202FC3A134191A5AB44D37F05BB40', '72', 'true', '-11', '2018-02-23T00:00:00.000+0000');
 select pkg_patcher.p_merge_object_attr('29', '614202FC3A134191A5AB44D37F05BB40', '85', 'cn_order', '-11', '2018-02-23T00:00:00.000+0000');
 select pkg_patcher.p_merge_object_attr('1015', '16E65663C5714E269C8289281C18DCA8', '47', 'cv_class_name', '-11', '2018-02-23T00:00:00.000+0000');
@@ -169,8 +170,8 @@ INSERT INTO s_mt.t_page_object (ck_id, ck_page, ck_object, cn_order, ck_parent, 
 INSERT INTO s_mt.t_page_object (ck_id, ck_page, ck_object, cn_order, ck_parent, ck_master, ck_user, ct_change) VALUES ('ED495AD9B3824353A01E62B72034837C', '1', 'AC0C3A9C3BB7491D9F300E75EB893683', 300, 'A2E6A655E2F644718EBE06777EAF431E', null, '20788', '2018-11-23T00:00:00.000+0000')  on conflict (ck_id) do update set ck_page = excluded.ck_page, ck_object = excluded.ck_object, cn_order = excluded.cn_order, ck_parent = excluded.ck_parent, ck_master = excluded.ck_master, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
 INSERT INTO s_mt.t_page_object (ck_id, ck_page, ck_object, cn_order, ck_parent, ck_master, ck_user, ct_change) VALUES ('D525EDC80CA043668D85D80A5D1DDEDD', '1', '5540018FA2FC4C619E0A90969D8E7B6B', 400, 'A2E6A655E2F644718EBE06777EAF431E', null, '20788', '2018-11-23T00:00:00.000+0000')  on conflict (ck_id) do update set ck_page = excluded.ck_page, ck_object = excluded.ck_object, cn_order = excluded.cn_order, ck_parent = excluded.ck_parent, ck_master = excluded.ck_master, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
 INSERT INTO s_mt.t_page_object (ck_id, ck_page, ck_object, cn_order, ck_parent, ck_master, ck_user, ct_change) VALUES ('18ED6D6CC4044633BA1E8198FD38F5B2', '1', '0202F94F3F624C13865A2B0AA9E8FDE5', 400, '5C6A671D04544C0BB178EAF337C55421', null, '20788', '2018-11-23T00:00:00.000+0000')  on conflict (ck_id) do update set ck_page = excluded.ck_page, ck_object = excluded.ck_object, cn_order = excluded.cn_order, ck_parent = excluded.ck_parent, ck_master = excluded.ck_master, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
-INSERT INTO s_mt.t_page_object (ck_id, ck_page, ck_object, cn_order, ck_parent, ck_master, ck_user, ct_change) VALUES ('2CE8A656931E46EC9A6B7E2253BC4D72', '1', 'D853B3E280224C6C8C173CE8E7D2F484', 500, '5C6A671D04544C0BB178EAF337C55421', null, '20788', '2018-11-23T00:00:00.000+0000')  on conflict (ck_id) do update set ck_page = excluded.ck_page, ck_object = excluded.ck_object, cn_order = excluded.cn_order, ck_parent = excluded.ck_parent, ck_master = excluded.ck_master, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
 INSERT INTO s_mt.t_page_object (ck_id, ck_page, ck_object, cn_order, ck_parent, ck_master, ck_user, ct_change) VALUES ('F4DC8090BB114294A3443D2B891BC7A1', '1', '948B958349E94465AD6DDE0D1D81123E', 500, 'A2E6A655E2F644718EBE06777EAF431E', null, '20788', '2018-11-23T00:00:00.000+0000')  on conflict (ck_id) do update set ck_page = excluded.ck_page, ck_object = excluded.ck_object, cn_order = excluded.cn_order, ck_parent = excluded.ck_parent, ck_master = excluded.ck_master, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
+INSERT INTO s_mt.t_page_object (ck_id, ck_page, ck_object, cn_order, ck_parent, ck_master, ck_user, ct_change) VALUES ('2CE8A656931E46EC9A6B7E2253BC4D72', '1', 'D853B3E280224C6C8C173CE8E7D2F484', 500, '5C6A671D04544C0BB178EAF337C55421', null, '20788', '2018-11-23T00:00:00.000+0000')  on conflict (ck_id) do update set ck_page = excluded.ck_page, ck_object = excluded.ck_object, cn_order = excluded.cn_order, ck_parent = excluded.ck_parent, ck_master = excluded.ck_master, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
 INSERT INTO s_mt.t_page_object (ck_id, ck_page, ck_object, cn_order, ck_parent, ck_master, ck_user, ct_change) VALUES ('612D744717E6433BB73735E7D299D02C', '1', '84FFDBDA747849B1E053809BA8C0D55B', 550, '5C6A671D04544C0BB178EAF337C55421', null, '20788', '2018-11-23T00:00:00.000+0000')  on conflict (ck_id) do update set ck_page = excluded.ck_page, ck_object = excluded.ck_object, cn_order = excluded.cn_order, ck_parent = excluded.ck_parent, ck_master = excluded.ck_master, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
 INSERT INTO s_mt.t_page_object (ck_id, ck_page, ck_object, cn_order, ck_parent, ck_master, ck_user, ct_change) VALUES ('15EE26FD33BF449CA9AED456B6B62EAD', '1', 'B25593736D6549B498335251E1FB280C', 600, 'A2E6A655E2F644718EBE06777EAF431E', null, '20788', '2018-11-23T00:00:00.000+0000')  on conflict (ck_id) do update set ck_page = excluded.ck_page, ck_object = excluded.ck_object, cn_order = excluded.cn_order, ck_parent = excluded.ck_parent, ck_master = excluded.ck_master, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
 INSERT INTO s_mt.t_page_object (ck_id, ck_page, ck_object, cn_order, ck_parent, ck_master, ck_user, ct_change) VALUES ('B175BDA4278D4CBE88FFF6AF3FE1A06B', '1', '52354F089D7D42958DE7EF095B3E55C1', 600, '5C6A671D04544C0BB178EAF337C55421', null, '20788', '2018-11-23T00:00:00.000+0000')  on conflict (ck_id) do update set ck_page = excluded.ck_page, ck_object = excluded.ck_object, cn_order = excluded.cn_order, ck_parent = excluded.ck_parent, ck_master = excluded.ck_master, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
@@ -178,8 +179,8 @@ INSERT INTO s_mt.t_page_object (ck_id, ck_page, ck_object, cn_order, ck_parent, 
 INSERT INTO s_mt.t_page_object (ck_id, ck_page, ck_object, cn_order, ck_parent, ck_master, ck_user, ct_change) VALUES ('11C33F9D95A94B519700BE82801D63F8', '1', 'A3875FB63D7042A6B61B371720EA55BF', 800, '5C6A671D04544C0BB178EAF337C55421', null, '20788', '2018-11-23T00:00:00.000+0000')  on conflict (ck_id) do update set ck_page = excluded.ck_page, ck_object = excluded.ck_object, cn_order = excluded.cn_order, ck_parent = excluded.ck_parent, ck_master = excluded.ck_master, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
 INSERT INTO s_mt.t_page_object (ck_id, ck_page, ck_object, cn_order, ck_parent, ck_master, ck_user, ct_change) VALUES ('29240A54994C421E9D15207209E4A821', '1', '66E12B205EC54282896B6B2498DE65A2', 900, '5C6A671D04544C0BB178EAF337C55421', null, '20788', '2018-11-23T00:00:00.000+0000')  on conflict (ck_id) do update set ck_page = excluded.ck_page, ck_object = excluded.ck_object, cn_order = excluded.cn_order, ck_parent = excluded.ck_parent, ck_master = excluded.ck_master, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
 INSERT INTO s_mt.t_page_object (ck_id, ck_page, ck_object, cn_order, ck_parent, ck_master, ck_user, ct_change) VALUES ('D6B4C8BC7E4A4E71B45AEB2CC5CF94AF', '1', '04ACBA57BDB541699A459C20B4906BFD', 1000, '5C6A671D04544C0BB178EAF337C55421', null, '20788', '2018-11-23T00:00:00.000+0000')  on conflict (ck_id) do update set ck_page = excluded.ck_page, ck_object = excluded.ck_object, cn_order = excluded.cn_order, ck_parent = excluded.ck_parent, ck_master = excluded.ck_master, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
-INSERT INTO s_mt.t_page_object (ck_id, ck_page, ck_object, cn_order, ck_parent, ck_master, ck_user, ct_change) VALUES ('A2C579B0B4354FF8B6F538D0EFC9DEA8', '1', '919257042BA64D498D596BA60FC05385', 10, '0C55D0F8D83A45EE8F70551FAE60E6D9', null, '20788', '2018-11-23T00:00:00.000+0000')  on conflict (ck_id) do update set ck_page = excluded.ck_page, ck_object = excluded.ck_object, cn_order = excluded.cn_order, ck_parent = excluded.ck_parent, ck_master = excluded.ck_master, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
 INSERT INTO s_mt.t_page_object (ck_id, ck_page, ck_object, cn_order, ck_parent, ck_master, ck_user, ct_change) VALUES ('2411C1D8ADB04A379FA1C2FE189F0EE6', '1', '18535FD223624FB5B6F57ACE83DF8592', 10, '5BF6176BFB61457AA9FAC0CFEB4301C5', null, '20788', '2018-11-23T00:00:00.000+0000')  on conflict (ck_id) do update set ck_page = excluded.ck_page, ck_object = excluded.ck_object, cn_order = excluded.cn_order, ck_parent = excluded.ck_parent, ck_master = excluded.ck_master, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
+INSERT INTO s_mt.t_page_object (ck_id, ck_page, ck_object, cn_order, ck_parent, ck_master, ck_user, ct_change) VALUES ('A2C579B0B4354FF8B6F538D0EFC9DEA8', '1', '919257042BA64D498D596BA60FC05385', 10, '0C55D0F8D83A45EE8F70551FAE60E6D9', null, '20788', '2018-11-23T00:00:00.000+0000')  on conflict (ck_id) do update set ck_page = excluded.ck_page, ck_object = excluded.ck_object, cn_order = excluded.cn_order, ck_parent = excluded.ck_parent, ck_master = excluded.ck_master, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
 INSERT INTO s_mt.t_page_object (ck_id, ck_page, ck_object, cn_order, ck_parent, ck_master, ck_user, ct_change) VALUES ('91E18E501A244AE3AF8D3648A0C0EE90', '1', '5EC79376D75B43FD81D098D60CF69613', 20, '0C55D0F8D83A45EE8F70551FAE60E6D9', null, '20788', '2018-11-23T00:00:00.000+0000')  on conflict (ck_id) do update set ck_page = excluded.ck_page, ck_object = excluded.ck_object, cn_order = excluded.cn_order, ck_parent = excluded.ck_parent, ck_master = excluded.ck_master, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
 INSERT INTO s_mt.t_page_object (ck_id, ck_page, ck_object, cn_order, ck_parent, ck_master, ck_user, ct_change) VALUES ('03176B8689C549698817353622E7D047', '1', '84C8AE5F2EA74E68B066CAC8C952996E', 50, 'F4DC8090BB114294A3443D2B891BC7A1', null, '20788', '2018-11-23T00:00:00.000+0000')  on conflict (ck_id) do update set ck_page = excluded.ck_page, ck_object = excluded.ck_object, cn_order = excluded.cn_order, ck_parent = excluded.ck_parent, ck_master = excluded.ck_master, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
 INSERT INTO s_mt.t_page_object (ck_id, ck_page, ck_object, cn_order, ck_parent, ck_master, ck_user, ct_change) VALUES ('2C5A97CFB940403892E98730791023E9', '1', '87DD0319961C49E182C7D5ACA7FCECE7', 100, 'F4DC8090BB114294A3443D2B891BC7A1', null, '20788', '2018-11-23T00:00:00.000+0000')  on conflict (ck_id) do update set ck_page = excluded.ck_page, ck_object = excluded.ck_object, cn_order = excluded.cn_order, ck_parent = excluded.ck_parent, ck_master = excluded.ck_master, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
@@ -187,8 +188,8 @@ INSERT INTO s_mt.t_page_object (ck_id, ck_page, ck_object, cn_order, ck_parent, 
 INSERT INTO s_mt.t_page_object (ck_id, ck_page, ck_object, cn_order, ck_parent, ck_master, ck_user, ct_change) VALUES ('81A6A6ADD81442B38DE54F44CB711B72', '1', 'EA7CFCD39A2948C2876FB8D0CF5BDC88', 100, '87739A7152B34EEF98EF55F4850B1189', null, '20788', '2018-11-23T00:00:00.000+0000')  on conflict (ck_id) do update set ck_page = excluded.ck_page, ck_object = excluded.ck_object, cn_order = excluded.cn_order, ck_parent = excluded.ck_parent, ck_master = excluded.ck_master, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
 INSERT INTO s_mt.t_page_object (ck_id, ck_page, ck_object, cn_order, ck_parent, ck_master, ck_user, ct_change) VALUES ('3706213B221A4C37BB2BBEA97C1026ED', '1', '98B367129551441BBC75BD5D42783962', 200, '87739A7152B34EEF98EF55F4850B1189', null, '20788', '2018-11-23T00:00:00.000+0000')  on conflict (ck_id) do update set ck_page = excluded.ck_page, ck_object = excluded.ck_object, cn_order = excluded.cn_order, ck_parent = excluded.ck_parent, ck_master = excluded.ck_master, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
 INSERT INTO s_mt.t_page_object (ck_id, ck_page, ck_object, cn_order, ck_parent, ck_master, ck_user, ct_change) VALUES ('21A3B553C2EC4C33B8FCBD23B3D2BF5D', '1', '9CB84B9533954CFFADFD349290E48881', 200, '26B66DC6D468498ABCFE8BDD1A033A6F', null, '20788', '2018-11-23T00:00:00.000+0000')  on conflict (ck_id) do update set ck_page = excluded.ck_page, ck_object = excluded.ck_object, cn_order = excluded.cn_order, ck_parent = excluded.ck_parent, ck_master = excluded.ck_master, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
-INSERT INTO s_mt.t_page_object (ck_id, ck_page, ck_object, cn_order, ck_parent, ck_master, ck_user, ct_change) VALUES ('856ED5051DE844CF8E3C9D3835D1B6C8', '1', '9FD9EF21FA5C47BAA05E3C89C1211C58', 300, '26B66DC6D468498ABCFE8BDD1A033A6F', null, '20788', '2018-11-23T00:00:00.000+0000')  on conflict (ck_id) do update set ck_page = excluded.ck_page, ck_object = excluded.ck_object, cn_order = excluded.cn_order, ck_parent = excluded.ck_parent, ck_master = excluded.ck_master, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
 INSERT INTO s_mt.t_page_object (ck_id, ck_page, ck_object, cn_order, ck_parent, ck_master, ck_user, ct_change) VALUES ('09CD698750D84F80B9D4C410FCA19DD7', '1', 'A250C26B41F84282BEBAE459FA63CE26', 300, '87739A7152B34EEF98EF55F4850B1189', null, '20788', '2018-11-23T00:00:00.000+0000')  on conflict (ck_id) do update set ck_page = excluded.ck_page, ck_object = excluded.ck_object, cn_order = excluded.cn_order, ck_parent = excluded.ck_parent, ck_master = excluded.ck_master, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
+INSERT INTO s_mt.t_page_object (ck_id, ck_page, ck_object, cn_order, ck_parent, ck_master, ck_user, ct_change) VALUES ('856ED5051DE844CF8E3C9D3835D1B6C8', '1', '9FD9EF21FA5C47BAA05E3C89C1211C58', 300, '26B66DC6D468498ABCFE8BDD1A033A6F', null, '20788', '2018-11-23T00:00:00.000+0000')  on conflict (ck_id) do update set ck_page = excluded.ck_page, ck_object = excluded.ck_object, cn_order = excluded.cn_order, ck_parent = excluded.ck_parent, ck_master = excluded.ck_master, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
 INSERT INTO s_mt.t_page_object (ck_id, ck_page, ck_object, cn_order, ck_parent, ck_master, ck_user, ct_change) VALUES ('D18417D5B1A8467BACCBA50ACCDDD251', '1', '21E9F838378546E69359B0FF5313B9CA', 400, '87739A7152B34EEF98EF55F4850B1189', null, '20788', '2018-11-23T00:00:00.000+0000')  on conflict (ck_id) do update set ck_page = excluded.ck_page, ck_object = excluded.ck_object, cn_order = excluded.cn_order, ck_parent = excluded.ck_parent, ck_master = excluded.ck_master, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
 INSERT INTO s_mt.t_page_object (ck_id, ck_page, ck_object, cn_order, ck_parent, ck_master, ck_user, ct_change) VALUES ('3029CE490EBF40948598ED577C3C8879', '1', '614202FC3A134191A5AB44D37F05BB40', 600, '87739A7152B34EEF98EF55F4850B1189', null, '20788', '2018-11-23T00:00:00.000+0000')  on conflict (ck_id) do update set ck_page = excluded.ck_page, ck_object = excluded.ck_object, cn_order = excluded.cn_order, ck_parent = excluded.ck_parent, ck_master = excluded.ck_master, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
 INSERT INTO s_mt.t_page_object (ck_id, ck_page, ck_object, cn_order, ck_parent, ck_master, ck_user, ct_change) VALUES ('0A89BE016960422B9393D84E3F5B2F2C', '1', '9F921E25EF614B7087D8F200AFE60E30', 710, '87739A7152B34EEF98EF55F4850B1189', null, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-27T00:00:00.000+0000')  on conflict (ck_id) do update set ck_page = excluded.ck_page, ck_object = excluded.ck_object, cn_order = excluded.cn_order, ck_parent = excluded.ck_parent, ck_master = excluded.ck_master, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
@@ -207,11 +208,108 @@ INSERT INTO s_mt.t_page_object_attr (ck_id, ck_page_object, ck_class_attr, cv_va
 INSERT INTO s_mt.t_page_object_attr (ck_id, ck_page_object, ck_class_attr, cv_value, ck_user, ct_change) VALUES ('EE926CFA38874B00A2494B2FA9C03D30', '017DDB1835B8476FB43415EA7B856155', '1255', '!g_cv_modify', '20788', '2018-11-23T00:00:00.000+0000')  ON CONFLICT ON CONSTRAINT cin_c_page_object_attr_1 do update set ck_id=excluded.ck_id, ck_page_object = excluded.ck_page_object, ck_class_attr = excluded.ck_class_attr, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
 INSERT INTO s_mt.t_page_object_attr (ck_id, ck_page_object, ck_class_attr, cv_value, ck_user, ct_change) VALUES ('B5C6C1CC75BC46BAB394B5B5373F6326', 'B378B8B3E2B0491C8C7F9DF3ED7BBF87', '151', null, '20788', '2018-11-23T00:00:00.000+0000')  ON CONFLICT ON CONSTRAINT cin_c_page_object_attr_1 do update set ck_id=excluded.ck_id, ck_page_object = excluded.ck_page_object, ck_class_attr = excluded.ck_class_attr, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
 update s_mt.t_page_object set ck_master='5C6A671D04544C0BB178EAF337C55421' where ck_id='A2E6A655E2F644718EBE06777EAF431E';
-update s_mt.t_page_object set ck_master='A2E6A655E2F644718EBE06777EAF431E' where ck_id='2C5A97CFB940403892E98730791023E9';
-update s_mt.t_page_object set ck_master='5C6A671D04544C0BB178EAF337C55421' where ck_id='6AC3CFE716134369B5E8E930AE1B01F0';
 update s_mt.t_page_object set ck_master='5C6A671D04544C0BB178EAF337C55421' where ck_id='81A6A6ADD81442B38DE54F44CB711B72';
+update s_mt.t_page_object set ck_master='5C6A671D04544C0BB178EAF337C55421' where ck_id='6AC3CFE716134369B5E8E930AE1B01F0';
+update s_mt.t_page_object set ck_master='A2E6A655E2F644718EBE06777EAF431E' where ck_id='2C5A97CFB940403892E98730791023E9';
 update s_mt.t_page_object set ck_master='5C6A671D04544C0BB178EAF337C55421' where ck_id='8DBAB84F392A4934B1B7E128643E8117';
 update s_mt.t_page_object set ck_master='5C6A671D04544C0BB178EAF337C55421' where ck_id='21A3B553C2EC4C33B8FCBD23B3D2BF5D';
 update s_mt.t_page_object set ck_master='5C6A671D04544C0BB178EAF337C55421' where ck_id='26B66DC6D468498ABCFE8BDD1A033A6F';
 update s_mt.t_page_object set ck_master='26B66DC6D468498ABCFE8BDD1A033A6F' where ck_id='97B0492D04DB4FE5AE4755F3688856E6';
 update s_mt.t_page_object set ck_master='5C6A671D04544C0BB178EAF337C55421' where ck_id='B378B8B3E2B0491C8C7F9DF3ED7BBF87';
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change)
+select t.ck_id, t.ck_d_lang, t.cr_namespace, t.cv_value, t.ck_user, t.ct_change::timestamp from (
+    select '0a0e3756ab6a470f8ac3cdecdfec1ae5' as ck_id, 'esrwerew' as ck_d_lang, 'meta' as cr_namespace, '##Need to translate##' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-17T00:00:00.000+0000' as ct_change
+    union all
+    select '3474b8f542864c9891fc1e4490ca8a98' as ck_id, 'esrwerew' as ck_d_lang, 'meta' as cr_namespace, '##Need to translate##' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-17T00:00:00.000+0000' as ct_change
+    union all
+    select '3723f896cd744f5eaf56f738c4cdd4b5' as ck_id, 'esrwerew' as ck_d_lang, 'meta' as cr_namespace, '##Need to translate##' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-17T00:00:00.000+0000' as ct_change
+    union all
+    select '5a2f5976bc2e48c5804399baabe7105b' as ck_id, 'esrwerew' as ck_d_lang, 'meta' as cr_namespace, '##Need to translate##' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-17T00:00:00.000+0000' as ct_change
+    union all
+    select '5b3266956f0c4f1b99d16a553cac57c7' as ck_id, 'esrwerew' as ck_d_lang, 'meta' as cr_namespace, '##Need to translate##' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-17T00:00:00.000+0000' as ct_change
+    union all
+    select '5e698beecec34866ad52783b66809a48' as ck_id, 'esrwerew' as ck_d_lang, 'meta' as cr_namespace, '##Need to translate##' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-17T00:00:00.000+0000' as ct_change
+    union all
+    select '6d12c16cd7fa46579477a107a53f0790' as ck_id, 'esrwerew' as ck_d_lang, 'meta' as cr_namespace, '##Need to translate##' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-17T00:00:00.000+0000' as ct_change
+    union all
+    select '6ff101333366469d82ed86732adcfeca' as ck_id, 'esrwerew' as ck_d_lang, 'meta' as cr_namespace, '##Need to translate##' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-17T00:00:00.000+0000' as ct_change
+    union all
+    select '80e96cb8a84a4b0291f5a70a905127d8' as ck_id, 'esrwerew' as ck_d_lang, 'meta' as cr_namespace, '##Need to translate##' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-17T00:00:00.000+0000' as ct_change
+    union all
+    select '844b481e956b402482bbc8a1193262cc' as ck_id, 'esrwerew' as ck_d_lang, 'meta' as cr_namespace, '##Need to translate##' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-17T00:00:00.000+0000' as ct_change
+    union all
+    select '85859d9988f64adaa920ef0841f8c030' as ck_id, 'esrwerew' as ck_d_lang, 'meta' as cr_namespace, '##Need to translate##' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-17T00:00:00.000+0000' as ct_change
+    union all
+    select '99cf8858a1c34473980a2381007f1d23' as ck_id, 'esrwerew' as ck_d_lang, 'meta' as cr_namespace, '##Need to translate##' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-17T00:00:00.000+0000' as ct_change
+    union all
+    select '9d85104e5aa343f09d991ba7f311a975' as ck_id, 'esrwerew' as ck_d_lang, 'meta' as cr_namespace, '##Need to translate##' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-17T00:00:00.000+0000' as ct_change
+    union all
+    select 'a4ab7737f254444c8aa4bac90debb634' as ck_id, 'esrwerew' as ck_d_lang, 'meta' as cr_namespace, '##Need to translate##' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-17T00:00:00.000+0000' as ct_change
+    union all
+    select 'b6780573558c46ac9f8f3c85ac45609e' as ck_id, 'esrwerew' as ck_d_lang, 'meta' as cr_namespace, '##Need to translate##' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-17T00:00:00.000+0000' as ct_change
+    union all
+    select 'b730045f4bfe4478bc53a457389a732e' as ck_id, 'esrwerew' as ck_d_lang, 'meta' as cr_namespace, '##Need to translate##' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-17T00:00:00.000+0000' as ct_change
+    union all
+    select 'd0ad23ef13f8493e996cfca8a98d0721' as ck_id, 'esrwerew' as ck_d_lang, 'meta' as cr_namespace, '##Need to translate##' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-17T00:00:00.000+0000' as ct_change
+    union all
+    select 'e83967ac02604581815f95aeb18faa44' as ck_id, 'esrwerew' as ck_d_lang, 'meta' as cr_namespace, '##Need to translate##' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-17T00:00:00.000+0000' as ct_change
+    union all
+    select 'e9b53190aefe4b58951d28ced35cc639' as ck_id, 'esrwerew' as ck_d_lang, 'meta' as cr_namespace, '##Need to translate##' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-17T00:00:00.000+0000' as ct_change
+    union all
+    select '6d12c16cd7fa46579477a107a53f0790' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Создать' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-04T00:00:00.000+0000' as ct_change
+    union all
+    select '0a0e3756ab6a470f8ac3cdecdfec1ae5' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Провайдер данных при модификации' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
+    union all
+    select '3474b8f542864c9891fc1e4490ca8a98' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Клонировать объект' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
+    union all
+    select '3723f896cd744f5eaf56f738c4cdd4b5' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Наименование объекта' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
+    union all
+    select '5a2f5976bc2e48c5804399baabe7105b' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Описание объекта' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
+    union all
+    select '5b3266956f0c4f1b99d16a553cac57c7' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Имя объекта' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
+    union all
+    select '5e698beecec34866ad52783b66809a48' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Порядок сортировки' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
+    union all
+    select '6ff101333366469d82ed86732adcfeca' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Класс' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
+    union all
+    select '80e96cb8a84a4b0291f5a70a905127d8' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Метод модификации' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
+    union all
+    select '844b481e956b402482bbc8a1193262cc' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Сервис' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
+    union all
+    select '85859d9988f64adaa920ef0841f8c030' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Тип атрибута' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
+    union all
+    select '99cf8858a1c34473980a2381007f1d23' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Родительский объект' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
+    union all
+    select '9d85104e5aa343f09d991ba7f311a975' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Имя сервиса' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
+    union all
+    select 'a4ab7737f254444c8aa4bac90debb634' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Атрибуты объекта' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
+    union all
+    select 'b6780573558c46ac9f8f3c85ac45609e' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Значение (переопределенное)' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
+    union all
+    select 'b730045f4bfe4478bc53a457389a732e' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Значение по умолчанию' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
+    union all
+    select 'bb8550c6ab904c9092249a521827d0f7' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Объекты' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
+    union all
+    select 'd0ad23ef13f8493e996cfca8a98d0721' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Редактировать значение' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
+    union all
+    select 'e83967ac02604581815f95aeb18faa44' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Клонирование объекта' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
+    union all
+    select 'e9b53190aefe4b58951d28ced35cc639' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Используется на страницах' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
+    union all
+    select '283ea78e90984136b023b7e063536ece' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Редактировать' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-26T00:00:00.000+0000' as ct_change
+    union all
+    select '83f0190603d94b94ac08f3471c90fb38' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Отображаемое имя' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-26T00:00:00.000+0000' as ct_change
+    union all
+    select '8fd23a27ba224ee48cdef41f72947665' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Отмена' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-26T00:00:00.000+0000' as ct_change
+    union all
+    select '98773577d9614dea95c7d010a72e2b81' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Сохранить' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-26T00:00:00.000+0000' as ct_change
+    union all
+    select 'a4b1d1f3995f499a8f2bac5b57a3cbdc' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Описание' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-26T00:00:00.000+0000' as ct_change
+    union all
+    select 'd13d80c5bb5d40c38a2593dfc268e16a' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Клонировать' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-26T00:00:00.000+0000' as ct_change
+    union all
+    select 'e0cd88534f90436da2b3b5eeae0ae340' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Наименование' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-26T00:00:00.000+0000' as ct_change
+) as t 
+ join s_mt.t_d_lang dl
+ on t.ck_d_lang = dl.ck_id
+on conflict on constraint cin_u_localization_1 do update set ck_id = excluded.ck_id, ck_d_lang = excluded.ck_d_lang, cr_namespace = excluded.cr_namespace, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
