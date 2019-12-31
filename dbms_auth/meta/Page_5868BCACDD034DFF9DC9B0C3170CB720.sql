@@ -107,22 +107,6 @@ update s_mt.t_page_object set ck_master='6F026AB69BBB47D29D0112DDC169A9DF' where
 update s_mt.t_page_object set ck_master='6F026AB69BBB47D29D0112DDC169A9DF' where ck_id='EAA1B79B6E2C43229C5B5AA4F8B58DB2';
 INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change)
 select t.ck_id, t.ck_d_lang, t.cr_namespace, t.cv_value, t.ck_user, t.ct_change::timestamp from (
-    select '47af90189bcb43e886bd6d5b9ddf6207' as ck_id, 'esrwerew' as ck_d_lang, 'meta' as cr_namespace, '##Need to translate##' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-17T00:00:00.000+0000' as ct_change
-    union all
-    select '537654c12753469795a39870be6ba775' as ck_id, 'esrwerew' as ck_d_lang, 'meta' as cr_namespace, '##Need to translate##' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-17T00:00:00.000+0000' as ct_change
-    union all
-    select '55a1171b5e1e4a0097ffdb0f424e4fe7' as ck_id, 'esrwerew' as ck_d_lang, 'meta' as cr_namespace, '##Need to translate##' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-17T00:00:00.000+0000' as ct_change
-    union all
-    select '6dc85da3308d4ef4ba9fad9cdee5ca65' as ck_id, 'esrwerew' as ck_d_lang, 'meta' as cr_namespace, '##Need to translate##' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-17T00:00:00.000+0000' as ct_change
-    union all
-    select '844069f9483f44a2962c006a7452c4dd' as ck_id, 'esrwerew' as ck_d_lang, 'meta' as cr_namespace, '##Need to translate##' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-17T00:00:00.000+0000' as ct_change
-    union all
-    select 'ae1b949d62474f46a1ec976fdd735030' as ck_id, 'esrwerew' as ck_d_lang, 'meta' as cr_namespace, '##Need to translate##' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-17T00:00:00.000+0000' as ct_change
-    union all
-    select 'd0ad23ef13f8493e996cfca8a98d0721' as ck_id, 'esrwerew' as ck_d_lang, 'meta' as cr_namespace, '##Need to translate##' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-17T00:00:00.000+0000' as ct_change
-    union all
-    select 'd5c9866e17f44704b7385edc724da7c8' as ck_id, 'esrwerew' as ck_d_lang, 'meta' as cr_namespace, '##Need to translate##' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-17T00:00:00.000+0000' as ct_change
-    union all
     select '1711e8b1d1d949be913b12a878ba0482' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Закрыть' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
     union all
     select '3755233db59d4305861c327dab09f8b0' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Код действия' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
