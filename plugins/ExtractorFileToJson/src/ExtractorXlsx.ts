@@ -46,7 +46,7 @@ export class ExtractorXlsx extends EventEmitter {
                 this.worksheet.on("row", this.bindParseRow);
             }
             this.flag += 1;
-        } else if ((event as string) !== "row") {
+        } else if ((event as string) !== "row" && (event as string) !== "end") {
             this.xlsx.on(event, listener);
         }
         return this;
@@ -68,7 +68,9 @@ export class ExtractorXlsx extends EventEmitter {
                 this.process();
             });
             this.worksheet.process();
-        } else if (!this.isEnd) {
+        } else if (this.isEnd && this.worksheets.length === 0) {
+            this.emit("end");
+        } else {
             setTimeout(() => this.process(), TIMEOUT);
         }
     }
