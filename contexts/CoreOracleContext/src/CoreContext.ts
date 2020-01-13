@@ -361,6 +361,7 @@ export default class CoreContext extends NullContext {
                     },
                     {
                         autoCommit: true,
+                        isRelease: true,
                     },
                 )
                 .then(
