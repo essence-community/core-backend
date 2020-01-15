@@ -134,7 +134,7 @@ export async function patchAuth(dir: string, json: IJson, conn: Connection) {
             );
         await closeFsWriteStream(role);
     }
-    if (json.data.cct_role) {
+    if (json.data.cct_account) {
         const account = createWriteStream(meta, "Account");
         include.push("Account");
         await conn
