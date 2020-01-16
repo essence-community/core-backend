@@ -113,7 +113,7 @@ export async function patchAuth(dir: string, json: IJson, conn: Connection) {
             .executeStmt(
                 sqlRoleAction,
                 {
-                    cct_action: JSON.stringify(json.data.cct_action || "[]"),
+                    cct_action: JSON.stringify(json.data.cct_action || []),
                     cct_role: JSON.stringify(json.data.cct_role),
                 },
                 {},
@@ -164,7 +164,7 @@ export async function patchAuth(dir: string, json: IJson, conn: Connection) {
                 sqlAccountRole,
                 {
                     cct_account: JSON.stringify(json.data.cct_account),
-                    cct_role: JSON.stringify(json.data.cct_role || "[]"),
+                    cct_role: JSON.stringify(json.data.cct_role || []),
                 },
                 {},
                 {
@@ -187,7 +187,7 @@ export async function patchAuth(dir: string, json: IJson, conn: Connection) {
                 sqlAccountInfo,
                 {
                     cct_account: JSON.stringify(json.data.cct_account),
-                    cct_info: JSON.stringify(json.data.cct_info || "[]"),
+                    cct_info: JSON.stringify(json.data.cct_info || []),
                 },
                 {},
                 {
