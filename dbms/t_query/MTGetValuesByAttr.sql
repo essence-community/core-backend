@@ -18,15 +18,11 @@ select jsonb_build_object(
 
        and ca.cv_value is not null
 
-       and lower(ca.cv_value) like lower(cast(:json as jsonb)->''filter''->>''cv_entered'') || ''%''
+       /*##filter.cv_entered*/and lower(ca.cv_value) like lower(cast(:json as jsonb)->''filter''->>''cv_entered'') || ''%''/*filter.cv_entered##*/
 
      group by ca.cv_value
 
-
-
      union
-
-
 
     select oa.cv_value
 
@@ -38,7 +34,7 @@ select jsonb_build_object(
 
        and oa.cv_value is not null
 
-       and lower(oa.cv_value) like lower(cast(:json as jsonb)->''filter''->>''cv_entered'') || ''%''
+       /*##filter.cv_entered*/and lower(oa.cv_value) like lower(cast(:json as jsonb)->''filter''->>''cv_entered'') || ''%''/*filter.cv_entered##*/
 
      group by oa.cv_value
 

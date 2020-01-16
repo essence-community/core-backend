@@ -18,15 +18,11 @@ select jsonb_build_object (
 
      and ca.cv_value is not null
 
-     and lower(ca.cv_value) like lower(cast(:json as jsonb)->''filter''->>''cv_entered'') || ''%''
+     /*##filter.cv_entered*/and lower(ca.cv_value) like lower(cast(:json as jsonb)->''filter''->>''cv_entered'') || ''%''/*filter.cv_entered##*/
 
    group by ca.cv_value
 
-
-
   union
-
-
 
  select oa.cv_value
 
@@ -38,15 +34,11 @@ select jsonb_build_object (
 
     and oa.cv_value is not null
 
-    and lower(oa.cv_value) like lower(cast(:json as jsonb)->''filter''->>''cv_entered'') || ''%''
+    /*##filter.cv_entered*/and lower(oa.cv_value) like lower(cast(:json as jsonb)->''filter''->>''cv_entered'') || ''%''/*filter.cv_entered##*/
 
   group by oa.cv_value
 
-
-
   union
-
-
 
   select poa.cv_value
 
@@ -58,14 +50,10 @@ select jsonb_build_object (
 
      and poa.cv_value is not null
 
-     and lower(poa.cv_value) like lower(cast(:json as jsonb)->''filter''->>''cv_entered'') || ''%''
+     /*##filter.cv_entered*/and lower(poa.cv_value) like lower(cast(:json as jsonb)->''filter''->>''cv_entered'') || ''%''/*filter.cv_entered##*/
 
    group by poa.cv_value
-
-
-
   order by cv_value
-
 ) t
 
    ', 'meta', '20783', '2019-05-31 11:45:15.860063+03', 'select', 'po_session', NULL, 'Необходимо актуализировать')
