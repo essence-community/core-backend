@@ -187,15 +187,13 @@ begin
 
     --проверка на добавление значения в локализацию
     if vot_class_attr.ck_attr in ('confirmquestion', 'info', 'tipmsg') then
-      select ck_id
-        into vot_localization.ck_d_lang
-        from t_d_lang where cl_default = 1;
+      vot_localization.ck_d_lang = nullif(trim(pc_json->'data'->>'g_sys_lang'), '');
       vot_localization.cr_namespace = 'meta';
       vot_localization.cv_value = substr(vot_class_attr.cv_value, 5);
       vot_localization.ck_user = pv_user;
       vot_localization.ct_change = CURRENT_TIMESTAMP;
 
-      vot_localization := pkg_localization.p_modify_localization(i::varchar, vot_localization);
+      vot_localization := pkg_localization.p_add_new_localization(vot_localization);
 
       if nullif(gv_error::varchar, '') is not null then
         return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}'; --ошибка прав доступа.
@@ -375,15 +373,13 @@ begin
     and substr(vot_object.cv_displayed, 0, 5) = 'new:'
     and length(vot_object.cv_displayed) > 4 then
 
-    select ck_id
-      into vot_localization.ck_d_lang
-      from t_d_lang where cl_default = 1;
+    vot_localization.ck_d_lang = nullif(trim(pc_json#>>'{data,g_sys_lang}'), '');
     vot_localization.cr_namespace = 'meta';
     vot_localization.cv_value = substr(vot_object.cv_displayed, 5);
     vot_localization.ck_user = pv_user;
     vot_localization.ct_change = CURRENT_TIMESTAMP;
 
-    vot_localization := pkg_localization.p_modify_localization(i::varchar, vot_localization);
+    vot_localization := pkg_localization.p_add_new_localization(vot_localization);
 
     if nullif(gv_error::varchar, '') is not null then
       return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}'; --ошибка прав доступа.
@@ -445,15 +441,13 @@ begin
 
     --проверка на добавление значения в локализацию
     if vv_attr in ('confirmquestion', 'info', 'tipmsg') then
-      select ck_id
-        into vot_localization.ck_d_lang
-        from t_d_lang where cl_default = 1;
+      vot_localization.ck_d_lang := nullif(trim(pc_json->'data'->>'g_sys_lang'), '');
       vot_localization.cr_namespace = 'meta';
       vot_localization.cv_value = substr(vot_object_attr.cv_value, 5);
       vot_localization.ck_user = pv_user;
       vot_localization.ct_change = CURRENT_TIMESTAMP;
 
-      vot_localization := pkg_localization.p_modify_localization(i::varchar, vot_localization);
+      vot_localization := pkg_localization.p_add_new_localization(vot_localization);
 
       if nullif(gv_error::varchar, '') is not null then
         return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}'; --ошибка прав доступа.
@@ -535,15 +529,13 @@ begin
     and substr(vot_page.cv_name, 0, 5) = 'new:'
     and length(vot_page.cv_name) > 4 then
 
-    select ck_id
-      into vot_localization.ck_d_lang
-      from t_d_lang where cl_default = 1;
+    vot_localization.ck_d_lang := nullif(trim(pc_json->'data'->>'g_sys_lang'), '');
     vot_localization.cr_namespace = 'meta';
     vot_localization.cv_value = substr(vot_page.cv_name, 5);
     vot_localization.ck_user = pv_user;
     vot_localization.ct_change = CURRENT_TIMESTAMP;
 
-    vot_localization := pkg_localization.p_modify_localization(i::varchar, vot_localization);
+    vot_localization := pkg_localization.p_add_new_localization(vot_localization);
 
     if nullif(gv_error::varchar, '') is not null then
       return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}'; --ошибка прав доступа.
@@ -653,15 +645,13 @@ begin
     and length(vot_page_object_attr.cv_value) > 4 then
     --проверка на добавление значения в локализацию
     if vv_attr in ('confirmquestion', 'info', 'tipmsg') then
-      select ck_id
-        into vot_localization.ck_d_lang
-        from t_d_lang where cl_default = 1;
+      vot_localization.ck_d_lang = nullif(trim(pc_json->'data'->>'g_sys_lang'), '');
       vot_localization.cr_namespace = 'meta';
       vot_localization.cv_value = substr(vot_page_object_attr.cv_value, 5);
       vot_localization.ck_user = pv_user;
       vot_localization.ct_change = CURRENT_TIMESTAMP;
 
-      vot_localization := pkg_localization.p_modify_localization(i::varchar, vot_localization);
+      vot_localization := pkg_localization.p_add_new_localization(vot_localization);
 
       if nullif(gv_error::varchar, '') is not null then
         return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}'; --ошибка прав доступа.

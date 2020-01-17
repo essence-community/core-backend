@@ -178,6 +178,52 @@ $$;
 
 ALTER FUNCTION pkg_localization.p_modify_localization(pv_action character varying, INOUT pot_localization s_mt.t_localization) OWNER TO s_mp;
 
+CREATE FUNCTION pkg_localization.p_add_new_localization(INOUT pot_localization s_mt.t_localization) RETURNS s_mt.t_localization
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pkg_localization', 's_mt', 'public'
+    AS $$
+declare
+  -- переменные пакета
+  i sessvarstr;
+  u sessvarstr;
+  d sessvarstr;
+  gv_error sessvarstr;
+  gv_warning sessvarstr;
+
+  -- переменные функции
+  rec record;
+  vv_d_lang varchar;
+  vv_value varchar;
+begin
+  i = sessvarstr_declare('pkg', 'i', 'I');
+  gv_error = sessvarstr_declare('pkg', 'gv_error', '');
+  gv_warning = sessvarstr_declare('pkg', 'gv_warning', '');
+  
+  vv_d_lang := pot_localization.ck_d_lang;
+  vv_value := pot_localization.cv_value;
+
+  select l.ck_id
+      into pot_localization.ck_d_lang
+  from t_d_lang l where l.cl_default = 1;
+
+  if vv_d_lang is not null and pot_localization.ck_d_lang <> vv_d_lang then
+    pot_localization.cv_value := '##Need to translate##';
+  end if;
+  pot_localization := pkg_localization.p_modify_localization(i::varchar, pot_localization);
+  if nullif(gv_error::varchar, '') is not null or nullif(gv_warning::varchar, '') is not null then
+      return;
+  end if;
+  if vv_d_lang is not null and pot_localization.ck_d_lang <> vv_d_lang then
+    pot_localization.cv_value := vv_value;
+    pot_localization.ck_d_lang := vv_d_lang;
+    pot_localization := pkg_localization.p_modify_localization(i::varchar, pot_localization);
+  end if;
+end;
+$$;
+
+ALTER FUNCTION pkg_localization.p_add_new_localization(INOUT pot_localization s_mt.t_localization) OWNER TO s_mp;
+
+
 CREATE FUNCTION pkg_localization.p_lock_d_lang(pk_id character varying) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 's_mt', 'pkg_localization', 'public'
