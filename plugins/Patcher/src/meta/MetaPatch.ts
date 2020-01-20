@@ -9,6 +9,7 @@ import {
 } from "../Utils";
 import { Lang } from "./Lang";
 import { Localization } from "./Localization";
+import { LocalizationPage } from "./LocalizationPage";
 import { Message } from "./Message";
 import { MObject } from "./MObject";
 import { ObjectAttr } from "./ObjectAttr";
@@ -35,9 +36,8 @@ import {
     sqlQueryPage,
     sqlSysSetting,
 } from "./SqlPostgres";
-import { SysSetting } from "./SysSetting";
 import { sqlLocalizationPage } from "./SqlPostgres";
-import { LocalizationPage } from "./LocalizationPage";
+import { SysSetting } from "./SysSetting";
 
 export async function patchMeta(dir: string, json: IJson, conn: Connection) {
     const includePage: string[] = [];
