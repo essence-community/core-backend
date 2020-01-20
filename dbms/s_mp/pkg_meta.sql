@@ -893,16 +893,14 @@ begin
                               case
                                 when ca.ck_attr is null then
                                 'I'
-                                when jt.ck_attr_type is null then
+                                when jt.ck_attr is null and ca.ck_attr is not null then
                                 'D'
                                 else
                                 'U'
                               end as cv_action
                         from (select (t.dt->>'ck_attr') as ck_attr, 
                                       (t.dt->>'cv_value') as cv_value, 
-                                      (t.dt->>'cl_required') as cl_required, 
-                                      (t.dt->>'ck_attr_type') as ck_attr_type, 
-                                      (t.dt->>'cv_description') as cv_description 
+                                      (t.dt->>'cl_required') as cl_required 
                                 from jsonb_array_elements(vcur_class.cj_class->'class_attributes') as t(dt)) jt
                         full join (select ca.ck_id, ca.ck_attr
                                     from s_mt.t_class c
@@ -915,9 +913,9 @@ begin
             vot_class_attr.ck_class    := vot_class.ck_id;
             vot_class_attr.ck_user     := vot_class.ck_user;
             vot_class_attr.ct_change   := CURRENT_TIMESTAMP;
-            vot_class_attr.cl_required := 1;
+            vot_class_attr.cl_required := coalesce(nullif(vcur.cl_required, '')::bigint, 0);
             vot_class_attr.ck_attr     := vcur.ck_attr;
-            vot_class_attr.cv_value    := vcur.cv_value;
+            vot_class_attr.cv_value    := nullif(vcur.cv_value, '');
           
             vot_class_attr := pkg_meta.p_modify_class_attr(vcur.cv_action, vot_class_attr);
           end loop;
