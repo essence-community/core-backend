@@ -91,7 +91,7 @@ export async function patchAuth(dir: string, json: IJson, conn: Connection) {
                             if (isNotFirst) {
                                 info.write(
                                     ") as t \n" +
-                                        " join s_mt.t_account ac\n" +
+                                        " join s_at.t_account ac\n" +
                                         " on t.ck_account = ac.ck_id\n" +
                                         "on conflict on constraint cin_i_account_info_1 do update set ck_id = excluded.ck_id, ck_account = excluded.ck_account, ck_d_info = excluded.ck_d_info, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change;\n",
                                 );
@@ -161,7 +161,7 @@ export async function patchAuth(dir: string, json: IJson, conn: Connection) {
                             if (isNotFirst) {
                                 action.write(
                                     ") as t \n" +
-                                        " join s_mt.t_role r\n" +
+                                        " join s_at.t_role r\n" +
                                         " on t.ck_role = r.ck_id\n" +
                                         "on conflict on constraint cin_u_role_action_1 do update set ck_id = excluded.ck_id, ck_action = excluded.ck_action, ck_role = excluded.ck_role, ck_user = excluded.ck_user, ct_change = excluded.ct_change;\n",
                                 );
@@ -231,7 +231,7 @@ export async function patchAuth(dir: string, json: IJson, conn: Connection) {
                             if (isNotFirst) {
                                 role.write(
                                     ") as t \n" +
-                                        " join s_mt.t_action ac\n" +
+                                        " join s_at.t_action ac\n" +
                                         " on t.ck_action = ac.ck_id\n" +
                                         "on conflict on constraint cin_u_role_action_1 do update set ck_id = excluded.ck_id, ck_action = excluded.ck_action, ck_role = excluded.ck_role, ck_user = excluded.ck_user, ct_change = excluded.ct_change;\n",
                                 );
@@ -274,7 +274,7 @@ export async function patchAuth(dir: string, json: IJson, conn: Connection) {
                             if (isNotFirst) {
                                 role.write(
                                     ") as t \n" +
-                                        " join s_mt.t_account ac\n" +
+                                        " join s_at.t_account ac\n" +
                                         " on t.ck_account = ac.ck_id\n" +
                                         "on conflict on constraint cin_u_account_role_1 do update set ck_id = excluded.ck_id, ck_account = excluded.ck_account, ck_role = excluded.ck_role, ck_user = excluded.ck_user, ct_change = excluded.ct_change;\n",
                                 );
@@ -344,7 +344,7 @@ export async function patchAuth(dir: string, json: IJson, conn: Connection) {
                             if (isNotFirst) {
                                 account.write(
                                     ") as t \n" +
-                                        " join s_mt.t_role r\n" +
+                                        " join s_at.t_role r\n" +
                                         " on t.ck_role = r.ck_id\n" +
                                         "on conflict on constraint cin_u_account_role_1 do update set ck_id = excluded.ck_id, ck_account = excluded.ck_account, ck_role = excluded.ck_role, ck_user = excluded.ck_user, ct_change = excluded.ct_change;\n",
                                 );
@@ -387,7 +387,7 @@ export async function patchAuth(dir: string, json: IJson, conn: Connection) {
                             if (isNotFirst) {
                                 account.write(
                                     ") as t \n" +
-                                        " join s_mt.t_d_info inf\n" +
+                                        " join s_at.t_d_info inf\n" +
                                         " on t.ck_d_info = inf.ck_id\n" +
                                         "on conflict on constraint cin_i_account_info_1 do update set ck_id = excluded.ck_id, ck_account = excluded.ck_account, ck_d_info = excluded.ck_d_info, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change;\n",
                                 );
