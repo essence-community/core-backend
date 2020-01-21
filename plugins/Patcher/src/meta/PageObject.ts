@@ -11,7 +11,7 @@ export class PageObject extends IRowPatch {
         return format(
             formatPageObjectSqlPostgres,
             this.toStringOrNull("ck_id"),
-            this.toStringOrNull("cv_page"),
+            this.toStringOrNull("ck_page"),
             this.toStringOrNull("ck_object"),
             this.row.cn_order,
             this.toStringOrNull("ck_parent"),
