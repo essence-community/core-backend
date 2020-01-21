@@ -37,6 +37,8 @@ export interface IFile {
 export interface IJson {
     service: {
         cv_action: string;
+        ck_page: string;
+        ck_page_object: string;
     };
     data: {
         ck_id?: string;
