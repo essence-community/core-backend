@@ -11,7 +11,7 @@ select /*Pagination*/
         l.ck_id,
         l.cv_value
     from t_localization l
-    where true
+    where l.cr_namespace = ''meta''
      /*##filter.g_sys_lang*/and l.ck_d_lang = :json::json#>>''{filter,g_sys_lang}''/*##filter.g_sys_lang*/
      /*##filter.ck_id*/and l.ck_id = :json::json#>>''{filter,ck_id}''/*filter.ck_id##*/
      /*##filter.cv_value*/and (l.ck_id = :json::json#>>''{filter,cv_value}'' or upper(l.cv_value) like upper(:json::json#>>''{filter,cv_value}'' || ''%''))/*filter.cv_value##*/
@@ -20,7 +20,8 @@ select /*Pagination*/
         l2.ck_id,
         l2.cv_value
     from t_localization l2
-    where l2.ck_d_lang in (select ck_id from t_d_lang where cl_default = 1)
+    where l2.cr_namespace = ''meta''
+    and l2.ck_d_lang in (select ck_id from t_d_lang where cl_default = 1)
     and l2.ck_id = :json::json#>>''{filter,ck_id}''
     and not exists (select 1 from t_localization
       where ck_id = :json::json#>>''{filter,ck_id}''
@@ -32,7 +33,8 @@ select /*Pagination*/
         l3.ck_id,
         l3.cv_value
     from t_localization l3
-    where l3.ck_d_lang in (select ck_id from t_d_lang where cl_default = 1)
+    where l3.cr_namespace = ''meta''
+    and l3.ck_d_lang in (select ck_id from t_d_lang where cl_default = 1)
     and l3.ck_id = :json::json#>>''{filter,cv_value}''
     /*##filter.ck_id*/and l.ck_id = :json::json#>>''{filter,ck_id}''/*filter.ck_id##*/
     and not exists (select 1 from t_localization

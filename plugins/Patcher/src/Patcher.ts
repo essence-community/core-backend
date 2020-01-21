@@ -8,6 +8,7 @@ import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
 import IResult from "@ungate/plugininf/lib/IResult";
 import NullPlugin from "@ungate/plugininf/lib/NullPlugin";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
+import { sendProcess } from "@ungate/plugininf/lib/util/ProcessSender";
 import {
     deleteFolderRecursive,
     isEmpty,
@@ -216,6 +217,25 @@ export class Patcher extends NullPlugin implements IStorage {
                         }),
                 );
             deleteFolderRecursive(temp);
+            gateContext.response.on("finish", () => {
+                sendProcess({
+                    command: "sendNotification",
+                    data: {
+                        ckUser: gateContext.session.ck_id,
+                        nameProvider: gateContext.session.ck_d_provider,
+                        text: JSON.stringify([
+                            {
+                                data: {
+                                    ck_page: json.service.ck_page,
+                                    ck_page_object: json.service.ck_page_object,
+                                },
+                                event: "reloadpageobject",
+                            },
+                        ]),
+                    },
+                    target: "cluster",
+                });
+            });
             return {
                 data: ResultStream([
                     {
