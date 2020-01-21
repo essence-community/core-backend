@@ -80,7 +80,7 @@ export async function patchAuth(dir: string, json: IJson, conn: Connection) {
                             } else {
                                 info.write(
                                     "INSERT INTO s_at.t_account_info (ck_id, ck_account, ck_d_info, cv_value, ck_user, ct_change)\n" +
-                                        "    select t.ck_id, t.ck_account::uuid, t.ck_d_info, t.cv_value, t.ck_user, t.ct_change::timestamp from (\n",
+                                        "    select t.ck_id, t.ck_account, t.ck_d_info, t.cv_value, t.ck_user, t.ct_change::timestamp from (\n",
                                 );
                                 isNotFirst = true;
                             }
@@ -150,7 +150,7 @@ export async function patchAuth(dir: string, json: IJson, conn: Connection) {
                             } else {
                                 action.write(
                                     "INSERT INTO s_at.t_role_action (ck_id, ck_action, ck_role, ck_user, ct_change)\n" +
-                                        "    select t.ck_id, t.ck_action::bigint, t.ck_role::uuid, t.ck_user, t.ct_change::timestamp from (",
+                                        "    select t.ck_id, t.ck_action, t.ck_role, t.ck_user, t.ct_change::timestamp from (",
                                 );
                                 isNotFirst = true;
                             }
@@ -220,7 +220,7 @@ export async function patchAuth(dir: string, json: IJson, conn: Connection) {
                             } else {
                                 role.write(
                                     "INSERT INTO s_at.t_role_action (ck_id, ck_action, ck_role, ck_user, ct_change)\n" +
-                                        "    select t.ck_id, t.ck_action::bigint, t.ck_role:uuid, t.ck_user, t.ct_change::timestamp from (",
+                                        "    select t.ck_id, t.ck_action, t.ck_role, t.ck_user, t.ct_change::timestamp from (",
                                 );
                                 isNotFirst = true;
                             }
@@ -263,7 +263,7 @@ export async function patchAuth(dir: string, json: IJson, conn: Connection) {
                             } else {
                                 role.write(
                                     "INSERT INTO s_at.t_account_role (ck_id, ck_role, ck_account, ck_user, ct_change)\n" +
-                                        "    select t.ck_id, t.ck_role::uuid, t.ck_account::uuid, t.ck_user, t.ct_change::timestamp from (\n",
+                                        "    select t.ck_id, t.ck_role, t.ck_account, t.ck_user, t.ct_change::timestamp from (\n",
                                 );
                                 isNotFirst = true;
                             }
@@ -333,7 +333,7 @@ export async function patchAuth(dir: string, json: IJson, conn: Connection) {
                             } else {
                                 account.write(
                                     "INSERT INTO s_at.t_account_role (ck_id, ck_role, ck_account, ck_user, ct_change)\n" +
-                                        "    select t.ck_id, t.ck_role::uuid, t.ck_account::uuid, t.ck_user, t.ct_change::timestamp from (\n",
+                                        "    select t.ck_id, t.ck_role, t.ck_account, t.ck_user, t.ct_change::timestamp from (\n",
                                 );
                                 isNotFirst = true;
                             }
@@ -376,7 +376,7 @@ export async function patchAuth(dir: string, json: IJson, conn: Connection) {
                             } else {
                                 account.write(
                                     "INSERT INTO s_at.t_account_info (ck_id, ck_account, ck_d_info, cv_value, ck_user, ct_change)\n" +
-                                        "    select t.ck_id, t.ck_account::uuid, t.ck_d_info, t.cv_value, t.ck_user, t.ct_change::timestamp from (\n",
+                                        "    select t.ck_id, t.ck_account, t.ck_d_info, t.cv_value, t.ck_user, t.ct_change::timestamp from (\n",
                                 );
                                 isNotFirst = true;
                             }

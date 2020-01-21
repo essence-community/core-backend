@@ -2,7 +2,7 @@ import { format } from "util";
 import { IRowPatch } from "../IRowPatch";
 
 const formatAccountRoleSqlPostgres =
-    "        select %s as ck_id, %s as ck_role, %s as ck_account, %s as ck_user, %s as ct_change\n";
+    "        select %s as ck_id, (%s)::uuid as ck_role, (%s)::uuid as ck_account, %s as ck_user, %s as ct_change\n";
 
 export class AccountRole extends IRowPatch {
     public toRow(): string {
