@@ -196,7 +196,7 @@ begin
                            where l.ck_id is null and nullif(m.cv_text, '') is not null
                            group by m.ck_id, m.cv_text
                           ) loop
-    if vot_rec.ck_local is null or cardinality(vot_rec.ck_local) = 0 then
+    if vot_rec.ck_local is null or cardinality(vot_rec.ck_local) = 0 or vot_rec.ck_local[1] is null then
       pot_localization.cr_namespace = 'message';
       pot_localization.cv_value = vot_rec.cv_text;
       pot_localization.ck_user = '-11';
@@ -220,7 +220,7 @@ begin
                     where l.ck_id is null and nullif(attr.cv_value, '') is not null
                     group by attr.ck_id, attr.cv_value
                     ) loop
-    if vot_rec.ck_local is null or cardinality(vot_rec.ck_local) = 0 then
+    if vot_rec.ck_local is null or cardinality(vot_rec.ck_local) = 0 or vot_rec.ck_local[1] is null then
       pot_localization.cr_namespace = 'meta';
       pot_localization.cv_value = vot_rec.cv_value;
       pot_localization.ck_user = '-11';
@@ -244,7 +244,7 @@ begin
                     where l.ck_id is null and nullif(attr.cv_value, '') is not null
                     group by attr.ck_id, attr.cv_value
                     ) loop
-    if vot_rec.ck_local is null or cardinality(vot_rec.ck_local) = 0 then
+    if vot_rec.ck_local is null or cardinality(vot_rec.ck_local) = 0 or vot_rec.ck_local[1] is null then
       pot_localization.cr_namespace = 'meta';
       pot_localization.cv_value = vot_rec.cv_value;
       pot_localization.ck_user = '-11';
@@ -268,7 +268,7 @@ begin
                     where l.ck_id is null and nullif(attr.cv_value, '') is not null
                     group by attr.ck_id, attr.cv_value
                     ) loop
-    if vot_rec.ck_local is null or cardinality(vot_rec.ck_local) = 0 then
+    if vot_rec.ck_local is null or cardinality(vot_rec.ck_local) = 0 or vot_rec.ck_local[1] is null then
       pot_localization.cr_namespace = 'meta';
       pot_localization.cv_value = vot_rec.cv_value;
       pot_localization.ck_user = '-11';
@@ -292,7 +292,7 @@ begin
                     where l.ck_id is null and nullif(o.cv_displayed, '') is not null
                     group by o.ck_id, o.cv_displayed
                     ) loop
-    if vot_rec.ck_local is null or cardinality(vot_rec.ck_local) = 0 then
+    if vot_rec.ck_local is null or cardinality(vot_rec.ck_local) = 0 or vot_rec.ck_local[1] is null then
       pot_localization.cr_namespace = 'meta';
       pot_localization.cv_value = vot_rec.cv_displayed;
       pot_localization.ck_user = '-11';
@@ -316,7 +316,7 @@ begin
                     where l.ck_id is null and nullif(p.cv_name, '') is not null
                     group by p.ck_id, p.cv_name
                     ) loop
-    if vot_rec.ck_local is null or cardinality(vot_rec.ck_local) = 0 then
+    if vot_rec.ck_local is null or cardinality(vot_rec.ck_local) = 0 or vot_rec.ck_local[1] is null then
       pot_localization.cr_namespace = 'meta';
       pot_localization.cv_value = vot_rec.cv_name;
       pot_localization.ck_user = '-11';
