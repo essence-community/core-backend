@@ -11,7 +11,7 @@ export class PageVariable extends IRowPatch {
         return format(
             formatPageVariableSqlPostgres,
             this.toStringOrNull("ck_id"),
-            this.toStringOrNull("cv_page"),
+            this.toStringOrNull("ck_page"),
             this.toStringOrNull("cv_name"),
             this.toStringOrNull("cv_description"),
             this.toStringOrNull("cv_value"),

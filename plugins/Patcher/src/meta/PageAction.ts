@@ -11,7 +11,7 @@ export class PageAction extends IRowPatch {
         return format(
             formatPageActionSqlPostgres,
             this.toStringOrNull("ck_id"),
-            this.toStringOrNull("cv_page"),
+            this.toStringOrNull("ck_page"),
             this.toStringOrNull("cr_type"),
             this.row.cn_action,
             this.toStringOrNull("ck_user"),
