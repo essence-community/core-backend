@@ -17,12 +17,14 @@ import { Page } from "./Page";
 import { PageAction } from "./PageAction";
 import { PageObject } from "./PageObject";
 import { PageObjectAttr } from "./PageObjectAttr";
+import { PageObjectMaster } from "./PageObjectMaster";
 import { PageVariable } from "./PageVariable";
 import { Provider } from "./Provider";
 import { Query } from "./Query";
 import {
     sqlDLang,
     sqlLocalization,
+    sqlLocalizationPage,
     sqlMessage,
     sqlObject,
     sqlObjectAttr,
@@ -30,13 +32,13 @@ import {
     sqlPageAction,
     sqlPageObject,
     sqlPageObjectAttr,
+    sqlPageObjectMaster,
     sqlPageVariable,
     sqlProvider,
     sqlQuery,
     sqlQueryPage,
     sqlSysSetting,
 } from "./SqlPostgres";
-import { sqlLocalizationPage } from "./SqlPostgres";
 import { SysSetting } from "./SysSetting";
 
 export async function patchMeta(dir: string, json: IJson, conn: Connection) {
@@ -321,6 +323,30 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
                         res.stream.on("data", (row) => {
                             page[row.ck_page].write(
                                 new PageObjectAttr(row).toRow(),
+                            );
+                        });
+                        res.stream.on("error", (err) => reject(err));
+                        res.stream.on("end", () => resolve());
+                    }),
+            );
+        await conn
+            .executeStmt(
+                sqlPageObjectMaster,
+                {
+                    cct_page: JSON.stringify(json.data.cct_page),
+                },
+                {},
+                {
+                    autoCommit: true,
+                    resultSet: true,
+                },
+            )
+            .then(
+                (res) =>
+                    new Promise((resolve, reject) => {
+                        res.stream.on("data", (row) => {
+                            page[row.ck_page].write(
+                                new PageObjectMaster(row).toRow(),
                             );
                         });
                         res.stream.on("error", (err) => reject(err));
