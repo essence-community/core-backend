@@ -93,7 +93,7 @@ export async function patchAuth(dir: string, json: IJson, conn: Connection) {
                                     ") as t \n" +
                                         " join s_at.t_account ac\n" +
                                         " on t.ck_account = ac.ck_id\n" +
-                                        "on conflict on constraint cin_i_account_info_1 do update set ck_id = excluded.ck_id, ck_account = excluded.ck_account, ck_d_info = excluded.ck_d_info, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change;\n",
+                                        "on conflict on constraint cin_u_account_info_1 do update set ck_id = excluded.ck_id, ck_account = excluded.ck_account, ck_d_info = excluded.ck_d_info, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change;\n",
                                 );
                             }
                             resolve();
@@ -389,7 +389,7 @@ export async function patchAuth(dir: string, json: IJson, conn: Connection) {
                                     ") as t \n" +
                                         " join s_at.t_d_info inf\n" +
                                         " on t.ck_d_info = inf.ck_id\n" +
-                                        "on conflict on constraint cin_i_account_info_1 do update set ck_id = excluded.ck_id, ck_account = excluded.ck_account, ck_d_info = excluded.ck_d_info, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change;\n",
+                                        "on conflict on constraint cin_u_account_info_1 do update set ck_id = excluded.ck_id, ck_account = excluded.ck_account, ck_d_info = excluded.ck_d_info, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change;\n",
                                 );
                             }
                             resolve();

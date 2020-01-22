@@ -21,3 +21,6 @@ COMMENT ON COLUMN s_at.t_create_patch.ct_change IS 'Аудит время мод
 COMMENT ON COLUMN s_at.t_create_patch.сj_param IS 'Параметры запуска';
 COMMENT ON COLUMN s_at.t_create_patch.cd_create IS 'Дата сборки';
 COMMENT ON COLUMN s_at.t_create_patch.cn_size IS 'Размер сборки';
+
+--changeset artemov_i:CORE-797_add_CONSTRAINT dbms:postgresql
+ALTER TABLE s_at.t_account_info ADD CONSTRAINT cin_u_account_info_1 UNIQUE (ck_d_info,ck_account);
