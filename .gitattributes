@@ -2,3 +2,4 @@
 *.toml		text eol=lf
 liquibase   text eol=lf
 update      text eol=lf
+patcher     text eol=lf
