@@ -2,11 +2,8 @@
     "name": "@ungate-plugin/preparequery",
     "version": "1.0.0",
     "description": "Плагин модификации SQL",
-    "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
-    },
     "author": "Ivan Artemov (honyrik@gmail.com)",
-    "license": "ISC",
+    "license": "MIT",
     "dependencies": {
         "@ungate/plugininf": "^1.0.0",
         "lodash": "^4.17.15"

@@ -16,6 +16,7 @@ packageJson.main = "server/index.js";
 delete packageJson.husky;
 packageJson.scripts = {
     server: "nodemon",
+    installSvc: "node server/installSvcWin.js",
 };
 packageJson.nodemonConfig = {
     ignore: ["libs/**", "node_modules/**"],
@@ -539,6 +540,19 @@ gulp.task("libs", () => {
     return Promise.all(rows);
 });
 
+gulp.task("winsvc", () => {
+    return new Promise((resolve, reject) => {
+        copyDir(
+            path.join(homeDir, "winsvc"),
+            path.join(homeDir, "bin", "server"),
+            (err) => {
+                if (err) reject(err);
+                resolve();
+            },
+        );
+    });
+});
+
 gulp.task("cert", () => {
     return new Promise((resolve, reject) => {
         copyDir(
@@ -844,6 +858,7 @@ gulp.task(
             "libs",
             "plugininf",
             "cert",
+            "winsvc",
         ),
         "packageJson",
     ),

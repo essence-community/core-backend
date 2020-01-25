@@ -3,7 +3,7 @@
     "version": "1.0.0",
     "description": "Провайдер подключения к PostgresSQL",
     "author": "Ivan Artemov (honyrik@gmail.com)",
-    "license": "ISC",
+    "license": "MIT",
     "dependencies": {
         "@ungate/plugininf": "^1.0.0",
         "lodash": "^4.17.15"

@@ -3,7 +3,7 @@
     "version": "1.0.0",
     "description": "Плагин преобразования табличных файлов в json",
     "author": "Ivan Artemov (honyrik@gmail.com)",
-    "license": "ISC",
+    "license": "MIT",
     "dependencies": {
         "@ungate/plugininf": "^1.0.0",
         "aws-sdk": "^2.585.0",

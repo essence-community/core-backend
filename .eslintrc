@@ -1,0 +1,66 @@
+{
+    "env": {
+        "browser": true,
+        "node": true
+    },
+    "globals": {
+        "pathgate": true,
+        "pathgatedb": true,
+        "pathgatecore": true,
+        "pathgateplugins": true,
+        "flagscmd": true,
+        "pathgateactions": true,
+        "pathgateproviders": true,
+        "pathgateconfplugins": true,
+        "pathgateschedulers": true
+    },
+    "extends": "airbnb",
+    "parserOptions": {
+        "ecmaVersion": 2017,
+        "sourceType": "module"
+    },
+    "rules": {
+        "global-require": 0,
+        "no-underscore-dangle": 0,
+        "one-var": 0,
+        "prefer-destructuring": 0,
+        "no-param-reassign": 0,
+        "class-methods-use-this": 0,
+        "linebreak-style": 0,
+        "function-paren-newline": ["error", "consistent"],
+        "quotes": ["error", "double", { "avoidEscape": true }],
+        "arrow-parens": ["error", "always"],
+        "max-len": ["error", {
+            "code": 200,
+            "ignoreComments": true,
+            "ignoreTrailingComments": true,
+            "ignoreUrls": true,
+            "ignoreRegExpLiterals": true
+        }],
+        "indent": [
+            "error",
+            4,
+            {
+                "VariableDeclarator": {
+                    "var": 1,
+                    "let": 1,
+                    "const": 1
+                },
+                "MemberExpression": 1,
+                "FunctionDeclaration": {
+                    "parameters": "first"
+                },
+                "FunctionExpression": {
+                    "parameters": "first"
+                },
+                "CallExpression": {
+                    "arguments": "first"
+                },
+                "ArrayExpression": 1,
+                "ObjectExpression": 1,
+                "ImportDeclaration": "first",
+                "flatTernaryExpressions": false
+            }
+        ]
+    }
+}

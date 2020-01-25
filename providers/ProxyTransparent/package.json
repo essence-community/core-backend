@@ -3,7 +3,7 @@
     "version": "1.0.0",
     "description": "Прокси провайдер",
     "author": "Ivan Artemov (honyrik@gmail.com)",
-    "license": "ISC",
+    "license": "MIT",
     "dependencies": {
         "@ungate/plugininf": "^1.0.0",
         "JSONStream": "^1.3.5",

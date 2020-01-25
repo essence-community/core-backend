@@ -4,7 +4,7 @@
     "description": "Общие классы",
     "main": "index.js",
     "author": "Ivan Artemov (honyrik@gmail.com)",
-    "license": "ISC",
+    "license": "MIT",
     "dependencies": {
         "cron": "^1.7.2",
         "js2xmlparser": "^4.0.0",
