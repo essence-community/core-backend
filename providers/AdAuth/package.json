@@ -3,7 +3,7 @@
     "version": "1.0.0",
     "description": "Провайдер авторизации Active Directory",
     "author": "Ivan Artemov (honyrik@gmail.com)",
-    "license": "ISC",
+    "license": "MIT",
     "dependencies": {
         "@ungate/plugininf": "^1.0.0",
         "activedirectory": "^0.7.2",
