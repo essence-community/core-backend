@@ -1991,6 +1991,9 @@ begin
     if pot_page_variable.cv_name is null then
       perform pkg.p_set_error(2);
     end if;
+    if upper(pot_page_variable.cv_name) like 'G_SESS%' or upper(pot_page_variable.cv_name) like 'G_SYS%' then
+      perform pkg.p_set_error(77);
+    end if;
     if pot_page_variable.cv_description is null then
       perform pkg.p_set_error(26);
     end if;
