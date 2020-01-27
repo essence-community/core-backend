@@ -27,3 +27,7 @@ on toa.ck_class_attr = ca.ck_id and ca.ck_attr = 'idproperty'
 join s_mt.t_class_attr ca1
 on ca.ck_class = ca1.ck_class and ca1.ck_attr = 'getmastervalue') as toa2
 where toa1.ck_class_attr = toa2.ck_class_attr;
+
+--changeset artemov_i:CORE-847_clear_page_variable dbms:postgresql
+DELETE FROM s_mt.t_page_variable
+WHERE upper(cv_name) like 'G_SESS%' or upper(cv_name) like 'G_SYS%' or upper(cv_name) like 'GSYS%' or upper(cv_name) like 'GSESS%';

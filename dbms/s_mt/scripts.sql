@@ -1716,3 +1716,9 @@ WHERE ck_id='3a0b8d771a0d497e8aa1c44255fa6e83' AND ck_d_lang='ru_RU';
 UPDATE s_mt.t_localization
 SET cr_namespace='static', cv_value='Минимальная длина этого поля :maxsize', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-12-23 22:25:53.736'
 WHERE ck_id='a240c31303c74c5490623d7781964c11' AND ck_d_lang='ru_RU';
+
+--changeset artemov_i:CORE-847 dbms:postgresql
+INSERT INTO s_mt.t_localization (ck_id,ck_d_lang,cr_namespace,cv_value,ck_user,ct_change)
+	VALUES ('16b6a8b83c0a44a4a2366af0127b6873','ru_RU','message','Создание переменных g_sys* или g_sess* запрещено!','4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-01-27 18:30:07.292');
+INSERT INTO s_mt.t_message (ck_id,cr_type,cv_text,ck_user,ct_change)
+	VALUES (77,'error','16b6a8b83c0a44a4a2366af0127b6873','4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-01-27 10:47:00.000');
