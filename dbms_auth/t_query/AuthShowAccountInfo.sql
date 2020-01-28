@@ -7,6 +7,19 @@ select
 	inf.ck_id as ck_d_info,
 	inf.cv_description,
 	inf.cr_type,
+	(case inf.cr_type
+	when ''boolean'' then
+		(case ainf.cv_value
+		when ''1'' then
+		''static:dacf7ab025c344cb81b700cfcc50e403''
+		else
+		''static:f0e9877df106481eb257c2c04f8eb039''
+		end)
+	when ''date'' then
+		to_char(to_date(ainf.cv_value, ''YYYY-MM-DD"T"HH24:MI:SS''), ''DD.MM.YYYY'')
+	else
+	  ainf.cv_value
+	end) as cv_value_view,
 	ainf.cv_value,
 	ainf.ck_user,
 	ainf.ct_change 
