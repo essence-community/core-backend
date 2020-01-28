@@ -143,19 +143,19 @@ begin
     return;
   end if;
   if pot_account.cv_login is null then
-    perform pkg.p_set_error(200, 'Логин');
+    perform pkg.p_set_error(200, 'meta:060a6513dc574996853d045276217394');
   end if;
   if pot_account.cv_name is null then
-    perform pkg.p_set_error(200, 'Имя');
+    perform pkg.p_set_error(200, 'meta:002ec63ccef84e759841e7a7e25e27f1');
   end if;
   if pot_account.cv_surname is null then
-    perform pkg.p_set_error(200, 'Фамилия');
+    perform pkg.p_set_error(200, 'meta:1e66498e8a4e48549fd83ff4b6f34af5');
   end if;
   if pv_action = i::varchar then
     for vcur_account in (
       select 1
       from s_at.t_account
-      where cv_login = pot_account.cv_login
+      where upper(cv_login) = upper(pot_account.cv_login)
       ) loop
         perform pkg.p_set_error(203);
       end loop;
@@ -180,7 +180,7 @@ begin
     end if;
  
     if pot_account.cv_hash_password is null then
-    	perform pkg.p_set_error(200, 'Пароль');
+    	perform pkg.p_set_error(200, 'meta:e59a81c8ac1846679714fad756f39649');
   	end if;
     if nullif(gv_error::varchar, '') is not null then
    	  return;
@@ -362,7 +362,7 @@ begin
     return;
   end if;
   if pot_action.cv_name is null then
-    perform pkg.p_set_error(200, 'Наименование');
+    perform pkg.p_set_error(200, 'meta:e0cd88534f90436da2b3b5eeae0ae340');
   end if;
   if nullif(gv_error::varchar, '') is not null then
     return;
@@ -372,7 +372,7 @@ begin
       pot_action.ck_id = nextval('seq_action'::regclass);
    end if;
    for vot_action in (select 1 from s_at.t_action where ck_id = pot_action.ck_id) loop
-  	perform pkg.p_set_error(201, 'Код действия');
+  	perform pkg.p_set_error(201, 'meta:3755233db59d4305861c327dab09f8b0');
     return;
    end loop;
    insert into s_at.t_action values (pot_action.*);
@@ -425,20 +425,20 @@ begin
     return;
   end if;
   if pot_d_info.ck_id is null then
-    perform pkg.p_set_error(200, 'Наименование');
+    perform pkg.p_set_error(200, 'meta:e0cd88534f90436da2b3b5eeae0ae340');
   end if;
   if pot_d_info.cv_description is null then
-    perform pkg.p_set_error(200, 'Описание');
+    perform pkg.p_set_error(200, 'meta:a4b1d1f3995f499a8f2bac5b57a3cbdc');
   end if;
   if pot_d_info.cr_type is null then
-    perform pkg.p_set_error(200, 'Тип');
+    perform pkg.p_set_error(200, 'meta:b5cf4acf63fd47ef9c8484f62a8efdf2');
   end if;
   if nullif(gv_error::varchar, '') is not null then
     return;
   end if;
   if pv_action = i::varchar then
    for vot_d_info in (select 1 from s_at.t_d_info where ck_id = pot_d_info.ck_id) loop
-      perform pkg.p_set_error(201, 'Наименование');
+      perform pkg.p_set_error(201, 'meta:e0cd88534f90436da2b3b5eeae0ae340');
       return;
    end loop;
    insert into s_at.t_d_info values (pot_d_info.*);
@@ -494,14 +494,14 @@ begin
     return;
   end if;
   if pot_role.cv_name is null then
-    perform pkg.p_set_error(200, 'Наименование');
+    perform pkg.p_set_error(200, 'meta:e0cd88534f90436da2b3b5eeae0ae340');
   end if;
   if nullif(gv_error::varchar, '') is not null then
     return;
   end if;
   if pv_action = i::varchar then
    for vot_role in (select 1 from s_at.t_role where cv_name = pot_role.cv_name) loop
-     perform pkg.p_set_error(201, 'Наименование');
+     perform pkg.p_set_error(201, 'meta:e0cd88534f90436da2b3b5eeae0ae340');
      return;
    end loop;
    pot_role.ck_id = public.uuid_generate_v4();
