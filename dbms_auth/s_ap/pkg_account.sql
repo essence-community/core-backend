@@ -362,7 +362,7 @@ begin
     return;
   end if;
   if pot_action.cv_name is null then
-    perform pkg.p_set_error(200, 'meta:e0cd88534f90436da2b3b5eeae0ae340	');
+    perform pkg.p_set_error(200, 'meta:e0cd88534f90436da2b3b5eeae0ae340');
   end if;
   if nullif(gv_error::varchar, '') is not null then
     return;
