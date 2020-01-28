@@ -24,3 +24,6 @@ COMMENT ON COLUMN s_at.t_create_patch.cn_size IS 'Размер сборки';
 
 --changeset artemov_i:CORE-797_add_CONSTRAINT dbms:postgresql
 ALTER TABLE s_at.t_account_info ADD CONSTRAINT cin_u_account_info_1 UNIQUE (ck_d_info,ck_account);
+
+--changeset artemov_i:CORE-870_add_INDEX dbms:postgresql
+CREATE UNIQUE INDEX cin_u_account_2 ON s_at.t_account (UPPER(cv_login));
