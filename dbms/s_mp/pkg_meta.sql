@@ -1354,6 +1354,24 @@ begin
     if pot_page.ck_parent is null and pot_page.cr_type in (1, 2) then
       perform pkg.p_set_error(11);
     end if;
+    -- Проверяем ссылку
+    if pot_page.cl_static is not null and pot_page.cl_static = 1::smallint then
+      if pot_page.cv_url is null then
+        perform pkg.p_set_error(200, 'meta:39aed4270cb64b6a843a2a334f440b48');
+      else
+        if upper(pot_page.cv_url) !~ '^[A-Z0-9_-]+$' or pot_page.cv_url ~ '(__|--|-_|_-)' then 
+          perform pkg.p_set_error(78, 'meta:39aed4270cb64b6a843a2a334f440b48');
+        end if;
+        for vcur_cnt in (
+          select 1
+          from s_mt.t_page a
+            where (pot_page.ck_id is not null and a.ck_id <> pot_page.ck_id or pot_page.ck_id is null) 
+              and upper(a.cv_url) = upper(pot_page.cv_url)
+        ) loop
+          perform pkg.p_set_error(201, 'meta:39aed4270cb64b6a843a2a334f440b48');
+        end loop;
+      end if;
+    end if;
     if pot_page.cr_type = 2 then /* проверки 35 и 36 актуальны только для страниц */
       if pn_action_view is null and (gl_warning::bigint) = 0 then
         perform pkg.p_set_warning(35);
