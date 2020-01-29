@@ -1722,3 +1722,11 @@ INSERT INTO s_mt.t_localization (ck_id,ck_d_lang,cr_namespace,cv_value,ck_user,c
 	VALUES ('16b6a8b83c0a44a4a2366af0127b6873','ru_RU','message','Создание переменных g_sys* или g_sess* запрещено!','4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-01-27 18:30:07.292');
 INSERT INTO s_mt.t_message (ck_id,cr_type,cv_text,ck_user,ct_change)
 	VALUES (77,'error','16b6a8b83c0a44a4a2366af0127b6873','4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-01-27 10:47:00.000');
+
+--changeset artemov_i:CORE-178 dbms:postgresql
+INSERT INTO s_mt.t_localization (ck_id,ck_d_lang,cr_namespace,cv_value,ck_user,ct_change)
+	VALUES ('2ac8f691eb154962bd174f3512ae2f61','ru_RU','message','Недопустимый символ в параметре "{0}"','4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-01-29 13:04:06.759');
+INSERT INTO s_mt.t_message (ck_id,cr_type,cv_text,ck_user,ct_change)
+	VALUES (78,'error','2ac8f691eb154962bd174f3512ae2f61','4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-01-29 08:06:00.000');
+DROP INDEX s_mt.cin_i_page_2;
+CREATE UNIQUE INDEX cin_i_page_2 ON s_mt.t_page (upper(cv_url));
