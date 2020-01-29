@@ -48,7 +48,7 @@ envName.forEach((name) => {
 const svc = new Service({
     description: "Json gate, project CORE",
     env,
-    name: "CORE_GATE",
+    name: "gate-core",
     script: path.join(__dirname, "svcWin.js"),
 });
 
