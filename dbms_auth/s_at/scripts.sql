@@ -27,3 +27,17 @@ ALTER TABLE s_at.t_account_info ADD CONSTRAINT cin_u_account_info_1 UNIQUE (ck_d
 
 --changeset artemov_i:CORE-870_add_INDEX dbms:postgresql
 CREATE UNIQUE INDEX cin_u_account_2 ON s_at.t_account (UPPER(cv_login));
+
+--changeset artemov_i:CORE-225 dbms:postgresql
+CREATE TRIGGER notify_account_event
+AFTER INSERT OR UPDATE OR DELETE ON s_at.t_account
+  FOR EACH ROW EXECUTE PROCEDURE notify_event();
+CREATE TRIGGER notify_account_role_event
+AFTER INSERT OR UPDATE OR DELETE ON s_at.t_account_role
+  FOR EACH ROW EXECUTE PROCEDURE notify_event();
+CREATE TRIGGER notify_account_info_event
+AFTER INSERT OR UPDATE OR DELETE ON s_at.t_account_info
+  FOR EACH ROW EXECUTE PROCEDURE notify_event();
+CREATE TRIGGER notify_role_action_event
+AFTER INSERT OR UPDATE OR DELETE ON s_at.t_role_action
+  FOR EACH ROW EXECUTE PROCEDURE notify_event();

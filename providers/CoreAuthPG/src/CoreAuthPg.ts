@@ -14,8 +14,11 @@ import NullAuthProvider, {
 } from "@ungate/plugininf/lib/NullAuthProvider";
 import { ReadStreamToArray } from "@ungate/plugininf/lib/stream/Util";
 import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
+import { debounce, noop } from "lodash";
 import { isObject } from "util";
 const Property = (global as IGlobalObject).property;
+
+const MAX_WAIT_RELOAD = 5000;
 
 export default class CoreAuthPg extends NullAuthProvider {
     public static getParamsInfo(): IParamsInfo {
@@ -28,6 +31,10 @@ export default class CoreAuthPg extends NullAuthProvider {
     public dataSource: PostgresDB;
 
     private dbUsers: ILocalDB;
+    private eventConnect: Connection;
+    private reloadTemp = debounce(() => {
+        this.initTemp().then(noop, (err) => this.log.error(err));
+    }, MAX_WAIT_RELOAD);
     constructor(name: string, params: ICCTParams) {
         super(name, params);
         this.params = {
@@ -91,7 +98,65 @@ export default class CoreAuthPg extends NullAuthProvider {
         if (!this.dbUsers) {
             this.dbUsers = await Property.getUsers();
         }
+        if (this.dataSource.pool) {
+            await this.dataSource.resetPool();
+        }
         await this.dataSource.createPool();
+        if (this.eventConnect) {
+            this.reloadTemp.cancel();
+            await this.eventConnect.rollbackAndClose();
+        }
+        this.eventConnect = await this.dataSource.getConnection();
+        await this.initEvents();
+        return this.initTemp();
+    }
+    public async destroy() {
+        this.reloadTemp.cancel();
+        await this.eventConnect.rollbackAndClose();
+        return this.dataSource.resetPool();
+    }
+    public async initContext(
+        context: IContext,
+        query: IQuery = {},
+    ): Promise<IQuery> {
+        const res = await super.initContext(context, query);
+        context.connection = await this.getConnection();
+        if (!isEmpty(res.modifyMethod) && res.modifyMethod !== "_") {
+            res.queryStr = `select ${res.modifyMethod}(:sess_ck_id, :sess_session, :json) as result`;
+            return res;
+        } else if (res.modifyMethod === "_") {
+            return res;
+        }
+        if (isEmpty(query.queryStr)) {
+            if (context.actionName !== "auth") {
+                throw new ErrorException(ErrorGate.NOTFOUND_QUERY);
+            } else {
+                query.queryStr =
+                    "/*Login*/ select pkg_json_account.f_get_user(:cv_login::varchar, :cv_password::varchar, :cv_token::varchar, 1::smallint) as ck_id";
+            }
+        }
+        return res;
+    }
+    private initEvents() {
+        this.log.info(`Init event ${this.name}`);
+        const conn = this.eventConnect.getCurrentConnection();
+        conn.on("notification", (msg) => {
+            this.log.trace("Notification %j", msg);
+            const payload = JSON.parse(msg.payload);
+            const table = payload.table?.toLowerCase();
+            if (
+                table &&
+                (table.endsWith("t_account") ||
+                    table.endsWith("t_account_role") ||
+                    table.endsWith("t_account_info") ||
+                    table.endsWith("t_role_action"))
+            ) {
+                this.reloadTemp();
+            }
+        });
+        return conn.query("LISTEN events");
+    }
+    private async initTemp() {
         const users = {};
         return this.dataSource
             .executeStmt(
@@ -211,27 +276,5 @@ export default class CoreAuthPg extends NullAuthProvider {
             .then(async () => {
                 await this.authController.updateUserInfo(this.name);
             });
-    }
-    public async initContext(
-        context: IContext,
-        query: IQuery = {},
-    ): Promise<IQuery> {
-        const res = await super.initContext(context, query);
-        context.connection = await this.getConnection();
-        if (!isEmpty(res.modifyMethod) && res.modifyMethod !== "_") {
-            res.queryStr = `select ${res.modifyMethod}(:sess_ck_id, :sess_session, :json) as result`;
-            return res;
-        } else if (res.modifyMethod === "_") {
-            return res;
-        }
-        if (isEmpty(query.queryStr)) {
-            if (context.actionName !== "auth") {
-                throw new ErrorException(ErrorGate.NOTFOUND_QUERY);
-            } else {
-                query.queryStr =
-                    "/*Login*/ select pkg_json_account.f_get_user(:cv_login::varchar, :cv_password::varchar, :cv_token::varchar, 1::smallint) as ck_id";
-            }
-        }
-        return res;
     }
 }
