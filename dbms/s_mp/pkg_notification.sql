@@ -53,3 +53,19 @@ $$;
 
 
 ALTER FUNCTION pkg_notification.p_modify_notification(pv_action character varying, INOUT pot_notification s_mt.t_notification) OWNER TO s_mp;
+
+CREATE FUNCTION pkg_notification.p_lock_notification(pk_id character varying) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 's_mt', 'pkg_notification', 'public'
+    AS $$
+declare
+  vn_lock bigint;
+begin
+  if pk_id is not null then
+    select 1 into vn_lock from s_mt.t_notification where ck_id = pk_id for update nowait;
+  end if;
+end;
+$$;
+
+
+ALTER FUNCTION pkg_notification.p_lock_notification(pk_id character varying) OWNER TO s_mp;
