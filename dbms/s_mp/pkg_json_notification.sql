@@ -29,7 +29,7 @@ begin
   vot_notification.cl_sent = nullif(trim(pc_json->'data'->>'cl_sent'), '')::smallint;
   vv_action = nullif(trim(pc_json#>>'{service,cv_action}'), '');
   -- Заблокируем запись
-  perform pkg_json_notification.p_lock_notification(vot_notification.ck_id);
+  perform pkg_notification.p_lock_notification(vot_notification.ck_id);
   if nullif(gv_error::varchar, '') is not null then
     return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}';
   end if;
@@ -49,18 +49,3 @@ $$;
 
 ALTER FUNCTION pkg_json_notification.f_modify_notification(pv_user character varying, pv_session character varying, pc_json jsonb) OWNER TO s_mp;
 
-CREATE FUNCTION pkg_json_notification.p_lock_notification(pk_id character varying) RETURNS void
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'pkg_json_notification', 'public'
-    AS $$
-declare
-  vn_lock bigint;
-begin
-  if pk_id is not null then
-    select 1 into vn_lock from s_mt.t_notification where ck_id = pk_id for update nowait;
-  end if;
-end;
-$$;
-
-
-ALTER FUNCTION pkg_json_notification.p_lock_notification(pk_id character varying) OWNER TO s_mp;

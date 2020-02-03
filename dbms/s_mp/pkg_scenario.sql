@@ -177,3 +177,35 @@ $$;
 
 
 ALTER FUNCTION pkg_scenario.p_modify_step(pv_action character varying, INOUT pot_step s_mt.t_step) OWNER TO s_mp;
+
+CREATE FUNCTION pkg_scenario.p_lock_scenario(pk_id character varying) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 's_mt', 'pkg_scenario', 'public'
+    AS $$
+declare
+  vn_lock bigint;
+begin
+  if pk_id is not null then
+    select 1 into vn_lock from s_mt.t_scenario where ck_id = pk_id for update nowait;
+  end if;
+end;
+$$;
+
+
+ALTER FUNCTION pkg_scenario.p_lock_scenario(pk_id character varying) OWNER TO s_mp;
+
+CREATE FUNCTION pkg_scenario.p_lock_step(pk_id character varying) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 's_mt', 'pkg_scenario', 'public'
+    AS $$
+declare
+  vn_lock bigint;
+begin
+  if pk_id is not null then
+    select 1 into vn_lock from s_mt.t_step where ck_id = pk_id for update nowait;
+  end if;
+end;
+$$;
+
+
+ALTER FUNCTION pkg_scenario.p_lock_step(pk_id character varying) OWNER TO s_mp;

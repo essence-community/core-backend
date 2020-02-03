@@ -65,7 +65,7 @@ begin
     return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}';
   end if;
   -- Заблокируем родительскую таблицу
-  perform pkg_json_scenario.p_lock_step(vk_main);
+  perform pkg_scenario.p_lock_step(vk_main);
   if nullif(gv_error::varchar, '') is not null then
     return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}';
   end if;
@@ -112,7 +112,7 @@ begin
     return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}';
   end if;
   -- Заблокируем основную таблицу
-  perform pkg_json_scenario.p_lock_scenario(vot_scenario.ck_id);
+  perform pkg_scenario.p_lock_scenario(vot_scenario.ck_id);
   if nullif(gv_error::varchar, '') is not null then
     return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}';
   end if;
@@ -160,7 +160,7 @@ begin
     return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}';
   end if;
   -- Заблокируем основную таблицу
-  perform pkg_json_scenario.p_lock_scenario(vk_main);
+  perform pkg_scenario.p_lock_scenario(vk_main);
   if nullif(gv_error::varchar, '') is not null then
     return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}';
   end if;
@@ -174,35 +174,3 @@ $$;
 
 
 ALTER FUNCTION pkg_json_scenario.f_modify_step(pv_user character varying, pv_session character varying, pc_json jsonb) OWNER TO s_mp;
-
-CREATE FUNCTION pkg_json_scenario.p_lock_scenario(pk_id character varying) RETURNS void
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'pkg_json_scenario', 'public'
-    AS $$
-declare
-  vn_lock bigint;
-begin
-  if pk_id is not null then
-    select 1 into vn_lock from s_mt.t_scenario where ck_id = pk_id for update nowait;
-  end if;
-end;
-$$;
-
-
-ALTER FUNCTION pkg_json_scenario.p_lock_scenario(pk_id character varying) OWNER TO s_mp;
-
-CREATE FUNCTION pkg_json_scenario.p_lock_step(pk_id character varying) RETURNS void
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'pkg_json_scenario', 'public'
-    AS $$
-declare
-  vn_lock bigint;
-begin
-  if pk_id is not null then
-    select 1 into vn_lock from s_mt.t_step where ck_id = pk_id for update nowait;
-  end if;
-end;
-$$;
-
-
-ALTER FUNCTION pkg_json_scenario.p_lock_step(pk_id character varying) OWNER TO s_mp;

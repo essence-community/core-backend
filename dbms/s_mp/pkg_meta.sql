@@ -2548,3 +2548,123 @@ $$;
 ALTER FUNCTION pkg_meta.p_refresh_page_object(pk_page character varying) OWNER TO s_mp;
 
 COMMENT ON FUNCTION pkg_meta.p_refresh_page_object(pk_page character varying) IS 'Перепривязка объетов страницы';
+
+CREATE FUNCTION pkg_meta.p_lock_attr(pk_id character varying) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 's_mt', 'pkg_meta', 'public'
+    AS $$
+declare
+  vn_lock bigint;
+begin
+  if pk_id is not null then
+    select 1 into vn_lock from s_mt.t_attr where ck_id = pk_id for update nowait;
+  end if;
+end;
+$$;
+
+ALTER FUNCTION pkg_meta.p_lock_attr(pk_id character varying) OWNER TO s_mp;
+
+CREATE FUNCTION pkg_meta.p_lock_class(pk_id character varying) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 's_mt', 'pkg_meta', 'public'
+    AS $$
+declare
+  vn_lock bigint;
+begin
+  if pk_id is not null then
+    select 1 into vn_lock from s_mt.t_class where ck_id = pk_id for update nowait;
+  end if;
+end;
+$$;
+
+ALTER FUNCTION pkg_meta.p_lock_class(pk_id character varying) OWNER TO s_mp;
+
+CREATE FUNCTION pkg_meta.p_lock_module(pk_id character varying) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 's_mt', 'pkg_meta', 'public'
+    AS $$
+declare
+  vn_lock bigint;
+begin
+  if pk_id is not null then
+    select 1 into vn_lock from s_mt.t_module where ck_id = pk_id for update nowait;
+  end if;
+end;
+$$;
+
+ALTER FUNCTION pkg_meta.p_lock_module(pk_id character varying) OWNER TO s_mp;
+
+CREATE FUNCTION pkg_meta.p_lock_object(pk_id character varying) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 's_mt', 'pkg_meta', 'public'
+    AS $$
+declare
+  vn_lock bigint;
+begin
+  if pk_id is not null then
+    select 1 into vn_lock from s_mt.t_object where ck_id = pk_id for update nowait;
+  end if;
+end;
+$$;
+
+ALTER FUNCTION pkg_meta.p_lock_object(pk_id character varying) OWNER TO s_mp;
+
+CREATE FUNCTION pkg_meta.p_lock_page(pk_id character varying) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 's_mt', 'pkg_meta', 'public'
+    AS $$
+declare
+  vn_lock bigint;
+begin
+  if pk_id is not null then
+    select 1 into vn_lock from s_mt.t_page where ck_id = pk_id for update nowait;
+  end if;
+end;
+$$;
+
+ALTER FUNCTION pkg_meta.p_lock_page(pk_id character varying) OWNER TO s_mp;
+
+CREATE FUNCTION pkg_meta.p_lock_page_object(pk_id character varying) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 's_mt', 'pkg_meta', 'public'
+    AS $$
+declare
+  vn_lock bigint;
+begin
+  if pk_id is not null then
+    select 1 into vn_lock from s_mt.t_page_object where ck_id = pk_id for update nowait;
+  end if;
+end;
+$$;
+
+ALTER FUNCTION pkg_meta.p_lock_page_object(pk_id character varying) OWNER TO s_mp;
+
+CREATE FUNCTION pkg_meta.p_lock_provider(pk_id character varying) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 's_mt', 'pkg_meta', 'public'
+    AS $$
+declare
+  vn_lock bigint;
+begin
+  if pk_id is not null then
+    select 1 into vn_lock from s_mt.t_provider where ck_id = pk_id for update nowait;
+  end if;
+end;
+$$;
+
+ALTER FUNCTION pkg_meta.p_lock_provider(pk_id character varying) OWNER TO s_mp;
+
+CREATE FUNCTION pkg_meta.p_lock_sys_setting(pk_id character varying) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 's_mt', 'pkg_meta', 'public'
+    AS $$
+declare
+  vn_lock bigint;
+begin
+  if pk_id is not null then
+    select 1 into vn_lock from s_mt.t_sys_setting where ck_id = pk_id for update nowait;
+  end if;
+end;
+$$;
+
+ALTER FUNCTION pkg_meta.p_lock_sys_setting(pk_id character varying) OWNER TO s_mp;

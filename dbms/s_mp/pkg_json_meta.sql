@@ -88,7 +88,7 @@ begin
   end if;
   --блочим основную таблицу
   if vv_action = u::varchar then
-    perform pkg_json_meta.p_lock_attr(pot_attr.ck_id);
+    perform pkg_meta.p_lock_attr(pot_attr.ck_id);
   end if;
   --проверяем и сохраняем данные
   pot_attr := pkg_meta.p_modify_attr(vv_action, pot_attr);
@@ -138,7 +138,7 @@ begin
     return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}'; --ошибка прав доступа.
   end if;
   --блочим основную таблицу
-  perform pkg_json_meta.p_lock_class(vk_main);
+  perform pkg_meta.p_lock_class(vk_main);
   --проверяем и сохраняем данные
   pot_class := pkg_meta.p_modify_class(vv_action, pot_class);
   --логируем данные
@@ -211,7 +211,7 @@ begin
     return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}'; --ошибка прав доступа.
   end if;
   --блочим основную таблицу
-  perform pkg_json_meta.p_lock_class(vk_main);
+  perform pkg_meta.p_lock_class(vk_main);
   --проверяем и сохраняем данные
   vot_class_attr := pkg_meta.p_modify_class_attr(vv_action, vot_class_attr);
   --логируем данные
@@ -259,7 +259,7 @@ begin
     return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}'; --ошибка прав доступа.
   end if;
   --блочим основную таблицу
-  perform pkg_json_meta.p_lock_class(vk_main);
+  perform pkg_meta.p_lock_class(vk_main);
   --проверяем и сохраняем данные
   pot_class_hierarchy := pkg_meta.p_modify_class_hierarchy(vv_action, pot_class_hierarchy);
   --логируем данные
@@ -307,7 +307,7 @@ begin
   end if;
   -- Заблокируем основную таблицу
   if vv_action = u::varchar then
-    perform pkg_json_meta.p_lock_module(vot_module.ck_id);
+    perform pkg_meta.p_lock_module(vot_module.ck_id);
   end if;
   if vv_action is null then
     perform pkg.p_set_error(500);
@@ -388,7 +388,7 @@ begin
     vot_object.cv_displayed := coalesce(vot_localization.ck_id, '');
   end if;
   --блочим основную таблицу
-  perform pkg_json_meta.p_lock_object(vk_main);
+  perform pkg_meta.p_lock_object(vk_main);
   --проверяем и сохраняем данные
   vot_object := pkg_meta.p_modify_object(vv_action, vot_object);
   --Логируем данные
@@ -465,7 +465,7 @@ begin
     return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}'; --ошибка прав доступа.
   end if;
   --блочим основную таблицу
-  perform pkg_json_meta.p_lock_object(vk_main);
+  perform pkg_meta.p_lock_object(vk_main);
   --проверяем и сохраняем данные
   vot_object_attr := pkg_meta.p_modify_object_attr(vv_action, vot_object_attr);
   --Логируем данные
@@ -544,7 +544,7 @@ begin
     vot_page.cv_name := coalesce(vot_localization.ck_id, '');
   end if;
   --блочим основную таблицу
-  perform pkg_json_meta.p_lock_page(vk_main);
+  perform pkg_meta.p_lock_page(vk_main);
   --проверяем и сохраняем данные
   vot_page := pkg_meta.p_modify_page(vv_action, vot_page, vn_action_view, vn_action_edit);
   --Логируем данные
@@ -591,7 +591,7 @@ begin
     return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}'; --ошибка прав доступа.
   end if;
   --блочим основную таблицу
-  perform pkg_json_meta.p_lock_page(vk_main);
+  perform pkg_meta.p_lock_page(vk_main);
   --проверяем и сохраняем данные
   pot_page_object := pkg_meta.p_modify_page_object(vv_action, pot_page_object);
   --Логируем данные
@@ -668,7 +668,7 @@ begin
     return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}'; --ошибка прав доступа.
   end if;
   --блочим основную таблицу
-  perform pkg_json_meta.p_lock_page_object(vk_main);
+  perform pkg_meta.p_lock_page_object(vk_main);
   --проверяем и сохраняем данные
   vot_page_object_attr := pkg_meta.p_modify_page_object_attr(vv_action, vot_page_object_attr);
   --Логируем данные
@@ -713,7 +713,7 @@ begin
     return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}';
   end if;
   -- Заблокируем основную таблицу
-  perform pkg_json_meta.p_lock_page(vk_main);
+  perform pkg_meta.p_lock_page(vk_main);
   if nullif(gv_error::varchar, '') is not null then
     return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}';
   end if;
@@ -757,7 +757,7 @@ begin
   end if;
   -- Заблокируем основную таблицу
   if vv_action = u::varchar then
-    perform pkg_json_meta.p_lock_provider(vot_provider.ck_id);
+    perform pkg_meta.p_lock_provider(vot_provider.ck_id);
   end if;
   if nullif(gv_error::varchar, '') is not null then
     return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}';
@@ -803,7 +803,7 @@ begin
   vv_action = (pc_json->'service'->>'cv_action');
   perform gl_warning == (pc_json->'service'->>'cl_warning')::bigint;
   -- Заблокируем основную таблицу
-  perform pkg_json_meta.p_lock_sys_setting(vot_sys_setting.ck_id);
+  perform pkg_meta.p_lock_sys_setting(vot_sys_setting.ck_id);
   if nullif(gv_error::varchar, '') is not null then
     return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}';
   end if;
@@ -865,131 +865,3 @@ $$;
 
 
 ALTER FUNCTION pkg_json_meta.f_refresh_page_object(pv_user character varying, pv_session character varying, pc_json jsonb) OWNER TO s_mp;
-
-CREATE FUNCTION pkg_json_meta.p_lock_attr(pk_id character varying) RETURNS void
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'pkg_json_meta', 'public'
-    AS $$
-declare
-  vn_lock bigint;
-begin
-  if pk_id is not null then
-    select 1 into vn_lock from s_mt.t_attr where ck_id = pk_id for update nowait;
-  end if;
-end;
-$$;
-
-
-ALTER FUNCTION pkg_json_meta.p_lock_attr(pk_id character varying) OWNER TO s_mp;
-
-CREATE FUNCTION pkg_json_meta.p_lock_class(pk_id character varying) RETURNS void
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'pkg_json_meta', 'public'
-    AS $$
-declare
-  vn_lock bigint;
-begin
-  if pk_id is not null then
-    select 1 into vn_lock from s_mt.t_class where ck_id = pk_id for update nowait;
-  end if;
-end;
-$$;
-
-
-ALTER FUNCTION pkg_json_meta.p_lock_class(pk_id character varying) OWNER TO s_mp;
-
-CREATE FUNCTION pkg_json_meta.p_lock_module(pk_id character varying) RETURNS void
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'pkg_json_meta', 'public'
-    AS $$
-declare
-  vn_lock bigint;
-begin
-  if pk_id is not null then
-    select 1 into vn_lock from s_mt.t_module where ck_id = pk_id for update nowait;
-  end if;
-end;
-$$;
-
-
-ALTER FUNCTION pkg_json_meta.p_lock_module(pk_id character varying) OWNER TO s_mp;
-
-CREATE FUNCTION pkg_json_meta.p_lock_object(pk_id character varying) RETURNS void
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'pkg_json_meta', 'public'
-    AS $$
-declare
-  vn_lock bigint;
-begin
-  if pk_id is not null then
-    select 1 into vn_lock from s_mt.t_object where ck_id = pk_id for update nowait;
-  end if;
-end;
-$$;
-
-
-ALTER FUNCTION pkg_json_meta.p_lock_object(pk_id character varying) OWNER TO s_mp;
-
-CREATE FUNCTION pkg_json_meta.p_lock_page(pk_id character varying) RETURNS void
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'pkg_json_meta', 'public'
-    AS $$
-declare
-  vn_lock bigint;
-begin
-  if pk_id is not null then
-    select 1 into vn_lock from s_mt.t_page where ck_id = pk_id for update nowait;
-  end if;
-end;
-$$;
-
-
-ALTER FUNCTION pkg_json_meta.p_lock_page(pk_id character varying) OWNER TO s_mp;
-
-CREATE FUNCTION pkg_json_meta.p_lock_page_object(pk_id character varying) RETURNS void
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'pkg_json_meta', 'public'
-    AS $$
-declare
-  vn_lock bigint;
-begin
-  if pk_id is not null then
-    select 1 into vn_lock from s_mt.t_page_object where ck_id = pk_id for update nowait;
-  end if;
-end;
-$$;
-
-
-ALTER FUNCTION pkg_json_meta.p_lock_page_object(pk_id character varying) OWNER TO s_mp;
-
-CREATE FUNCTION pkg_json_meta.p_lock_provider(pk_id character varying) RETURNS void
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'pkg_json_meta', 'public'
-    AS $$
-declare
-  vn_lock bigint;
-begin
-  if pk_id is not null then
-    select 1 into vn_lock from s_mt.t_provider where ck_id = pk_id for update nowait;
-  end if;
-end;
-$$;
-
-
-ALTER FUNCTION pkg_json_meta.p_lock_provider(pk_id character varying) OWNER TO s_mp;
-
-CREATE FUNCTION pkg_json_meta.p_lock_sys_setting(pk_id character varying) RETURNS void
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'pkg_json_meta', 'public'
-    AS $$
-declare
-  vn_lock bigint;
-begin
-  if pk_id is not null then
-    select 1 into vn_lock from s_mt.t_sys_setting where ck_id = pk_id for update nowait;
-  end if;
-end;
-$$;
-
-
-ALTER FUNCTION pkg_json_meta.p_lock_sys_setting(pk_id character varying) OWNER TO s_mp;
