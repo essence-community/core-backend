@@ -56,10 +56,14 @@ class Connection extends EventEmitter {
             return;
         }
         if (this.isExecute) {
-            this.once("finish", () => {
-                this.release();
+            return new Promise((resolve, reject) => {
+                this.once("finish", () => {
+                    this.release().then(
+                        () => resolve(),
+                        (err) => reject(err),
+                    );
+                });
             });
-            return;
         }
         try {
             this.isExecute = true;
@@ -76,10 +80,14 @@ class Connection extends EventEmitter {
             return;
         }
         if (this.isExecute) {
-            this.once("finish", () => {
-                this.close();
+            return new Promise((resolve, reject) => {
+                this.once("finish", () => {
+                    this.close().then(
+                        () => resolve(),
+                        (err) => reject(err),
+                    );
+                });
             });
-            return;
         }
         try {
             this.isExecute = true;
@@ -96,10 +104,14 @@ class Connection extends EventEmitter {
             return;
         }
         if (this.isExecute) {
-            this.once("finish", () => {
-                this.commit();
+            return new Promise((resolve, reject) => {
+                this.once("finish", () => {
+                    this.commit().then(
+                        () => resolve(),
+                        (err) => reject(err),
+                    );
+                });
             });
-            return;
         }
         this.isExecute = true;
         try {
@@ -115,10 +127,14 @@ class Connection extends EventEmitter {
             return;
         }
         if (this.isExecute) {
-            this.once("finish", () => {
-                this.rollback();
+            return new Promise((resolve, reject) => {
+                this.once("finish", () => {
+                    this.rollback().then(
+                        () => resolve(),
+                        (err) => reject(err),
+                    );
+                });
             });
-            return;
         }
         this.isExecute = true;
         try {

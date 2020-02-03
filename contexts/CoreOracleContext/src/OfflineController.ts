@@ -122,6 +122,11 @@ export default class OfflineController implements ICoreController {
     }
     public async getSetting(gateContext: IContext): Promise<any> {
         const { js } = gateContext.params;
+        const json = JSON.parse(gateContext.params.json || "{}");
+        const ckId = json.filter?.ck_id;
+        if (ckId) {
+            await this.loadSysSetting();
+        }
         const data = await this.tempTable.dbSysSettings.find({});
         data.push({
             ck_id: "core_gate_version",
@@ -148,7 +153,8 @@ export default class OfflineController implements ICoreController {
                 data: ResultStream(
                     data
                         .sort(sortFilesData(gateContext))
-                        .filter(filterFilesData(gateContext)),
+                        .filter(filterFilesData(gateContext))
+                        .filter((obj) => !ckId || obj.ck_id === ckId),
                 ),
                 type: "success",
             });
