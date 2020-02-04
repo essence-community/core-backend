@@ -109,6 +109,7 @@
     <include file="./t_query/MTGetLocalization.sql" />
     <include file="./t_query/MTGetLocalizationValue.sql" />
     <include file="./t_query/MTGetLocalNameSpace.sql" />
+    <include file="./t_query/MTGetMainAppInfo.sql" />
     <include file="./t_query/MTObjectAttrType.sql" />
     <include file="./t_query/MTPageObjectAttrType.sql" />
     <include file="./t_query/MTClassAttrType.sql" />
