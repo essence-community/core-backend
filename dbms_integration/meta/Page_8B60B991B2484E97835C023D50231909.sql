@@ -102,42 +102,6 @@ update s_mt.t_page_object set ck_master='3122411C6D6F4356A161B0B9799F0840' where
 update s_mt.t_page_object set ck_master='3122411C6D6F4356A161B0B9799F0840' where ck_id='1CDF9B5617D34FB09583EFE2006110BB';
 INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change)
 select t.ck_id, t.ck_d_lang, t.cr_namespace, t.cv_value, t.ck_user, t.ct_change::timestamp from (
-    select '0e804404b039411e83292c0b1658c0ee' as ck_id, 'eng_US' as ck_d_lang, 'meta' as cr_namespace, '##Need to translate##' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-25T00:00:00.000+0000' as ct_change
-    union all
-    select '356026998685486b99fc07969bd2af68' as ck_id, 'eng_US' as ck_d_lang, 'meta' as cr_namespace, '##Need to translate##' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-25T00:00:00.000+0000' as ct_change
-    union all
-    select '45747a3e5f8e4f519d63e8a6e1c3243c' as ck_id, 'eng_US' as ck_d_lang, 'meta' as cr_namespace, '##Need to translate##' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-25T00:00:00.000+0000' as ct_change
-    union all
-    select '6727af8d818542fba835d152ebef3430' as ck_id, 'eng_US' as ck_d_lang, 'meta' as cr_namespace, '##Need to translate##' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-25T00:00:00.000+0000' as ct_change
-    union all
-    select '7425a5c6e803436f8e06399c89dc7fd6' as ck_id, 'eng_US' as ck_d_lang, 'meta' as cr_namespace, '##Need to translate##' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-25T00:00:00.000+0000' as ct_change
-    union all
-    select '751e3a8b87b44beba52b0d4dbc27ae81' as ck_id, 'eng_US' as ck_d_lang, 'meta' as cr_namespace, '##Need to translate##' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-25T00:00:00.000+0000' as ct_change
-    union all
-    select '980446eade8a46bb9a55471686587bbd' as ck_id, 'eng_US' as ck_d_lang, 'meta' as cr_namespace, '##Need to translate##' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-25T00:00:00.000+0000' as ct_change
-    union all
-    select '9b82c8e576784bd5b52d48d1bc96aa32' as ck_id, 'eng_US' as ck_d_lang, 'meta' as cr_namespace, '##Need to translate##' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-25T00:00:00.000+0000' as ct_change
-    union all
-    select '9ebee4a3e35b48e5ba50090a1bbbb411' as ck_id, 'eng_US' as ck_d_lang, 'meta' as cr_namespace, '##Need to translate##' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-25T00:00:00.000+0000' as ct_change
-    union all
-    select 'c8d602c66c7247a0b3bc5b26caaa39c8' as ck_id, 'eng_US' as ck_d_lang, 'meta' as cr_namespace, '##Need to translate##' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-25T00:00:00.000+0000' as ct_change
-    union all
-    select 'd6698d28cb3444138523a21141c16570' as ck_id, 'eng_US' as ck_d_lang, 'meta' as cr_namespace, '##Need to translate##' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-25T00:00:00.000+0000' as ct_change
-    union all
-    select 'd9df123fbc844da39be9b002d49e7bc4' as ck_id, 'eng_US' as ck_d_lang, 'meta' as cr_namespace, '##Need to translate##' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-25T00:00:00.000+0000' as ct_change
-    union all
-    select 'e352f04a992a45abbbc8d7aa4f9fc256' as ck_id, 'eng_US' as ck_d_lang, 'meta' as cr_namespace, '##Need to translate##' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-25T00:00:00.000+0000' as ct_change
-    union all
-    select 'eb3f37c72da848b4a73500bc35ed8c08' as ck_id, 'eng_US' as ck_d_lang, 'meta' as cr_namespace, '##Need to translate##' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-25T00:00:00.000+0000' as ct_change
-    union all
-    select '8fd23a27ba224ee48cdef41f72947665' as ck_id, 'eng_US' as ck_d_lang, 'meta' as cr_namespace, '##Need to translate##' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2020-01-20T00:00:00.000+0000' as ct_change
-    union all
-    select '98773577d9614dea95c7d010a72e2b81' as ck_id, 'eng_US' as ck_d_lang, 'meta' as cr_namespace, '##Need to translate##' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2020-01-20T00:00:00.000+0000' as ct_change
-    union all
-    select 'a4b1d1f3995f499a8f2bac5b57a3cbdc' as ck_id, 'eng_US' as ck_d_lang, 'meta' as cr_namespace, '##Need to translate##' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2020-01-20T00:00:00.000+0000' as ct_change
-    union all
-    select 'e0cd88534f90436da2b3b5eeae0ae340' as ck_id, 'eng_US' as ck_d_lang, 'meta' as cr_namespace, '##Need to translate##' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2020-01-20T00:00:00.000+0000' as ct_change
-    union all
     select '356026998685486b99fc07969bd2af68' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Идентификатор' as cv_value, '-11' as ck_user, '2019-12-09T00:00:00.000+0000' as ct_change
     union all
     select 'c8d602c66c7247a0b3bc5b26caaa39c8' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Провайдер' as cv_value, '-11' as ck_user, '2019-12-09T00:00:00.000+0000' as ct_change
