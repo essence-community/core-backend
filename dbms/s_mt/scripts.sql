@@ -1736,3 +1736,10 @@ INSERT INTO s_mt.t_localization (ck_id,ck_d_lang,cr_namespace,cv_value,ck_user,c
 	VALUES ('09bd93d52fad476ab9f1314269b2f166','ru_RU','message','Системная ошибка: редактирование уникального идентификатора запрещено','4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-02-06 19:49:00.701');
 INSERT INTO s_mt.t_message (ck_id,cr_type,cv_text,ck_user,ct_change)
 	VALUES (519,'error','09bd93d52fad476ab9f1314269b2f166','4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-02-06 14:50:10.000');
+
+--changeset artemov_i:CORE-907 dbms:postgresql
+ALTER TABLE s_mt.t_provider ALTER COLUMN ck_id TYPE varchar(32) USING ck_id::varchar;
+INSERT INTO s_mt.t_localization (ck_id,ck_d_lang,cr_namespace,cv_value,ck_user,ct_change)
+	VALUES ('c7871bbd0e844793a47185a29b2b79f1','ru_RU','message','Максимальное количество символов {0} у параметра "{1}"','4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-02-06 20:58:14.658');
+INSERT INTO s_mt.t_message (ck_id,cr_type,cv_text,ck_user,ct_change)
+	VALUES (79,'error','c7871bbd0e844793a47185a29b2b79f1','4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-02-06 16:06:00.000');

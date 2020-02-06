@@ -2080,10 +2080,16 @@ begin
     if pot_provider.cv_name is null then
       perform pkg.p_set_error(2);
     end if;
+    if length(pot_provider.ck_id) > 32 then
+      perform pkg.p_set_error(79, 32, 'meta:153d12ad65b44cfa85f5d1e88d11cc2a');
+    end if;
+    if nullif(gv_error::varchar, '') is not null then
+      return;
+    end if;
     /**/
-    if pv_action = i::varchar and nullif(gv_error::varchar, '') is null then
+    if pv_action = i::varchar then
       insert into s_mt.t_provider values (pot_provider.*);
-    elsif pv_action = u::varchar and nullif(gv_error::varchar, '') is null then
+    elsif pv_action = u::varchar then
       update s_mt.t_provider set
         (ck_id, cv_name, ck_user, ct_change) = row(pot_provider.*)
        where ck_id = pot_provider.ck_id;
