@@ -1800,7 +1800,7 @@ begin
                  t.cv_variable
           from t_variable
           cross join unnest(pkg_util.f_get_global_from_string(t_variable.cv_value, ck_attr)) as t(cv_variable)
-          where ck_attr in ('disabledrules', 'hiddenrules', 'getglobaltostore', 'getglobal', 'readonlyrules', 'setglobal', 'columnsfilter')
+          where ck_attr in ('disabledrules', 'hiddenrules', 'getglobaltostore', 'getglobal', 'readonlyrules', 'setrecordtoglobal', 'setglobal', 'columnsfilter')
           and upper(t.cv_variable) not ilike 'G_SYS%' and upper(t.cv_variable) not ilike 'G_SESS%'
         )v
         left join s_mt.t_page_variable pv on pv.ck_page = v.ck_page
@@ -1815,7 +1815,7 @@ begin
       select 1
       from s_mt.t_class_attr ca
       where ca.ck_id = pot_page_object_attr.ck_class_attr and
-        ca.ck_attr in ('setglobal')
+        ca.ck_attr in ('setrecordtoglobal', 'setglobal')
     )loop
       -- проверка на то, что одна и та же переменная не сетится несколько раз из разных мест
       for vcur_check in (
@@ -1831,7 +1831,7 @@ begin
              on poa.ck_page_object = po.ck_id
             join s_mt.t_class_attr ca
              on ca.ck_id = poa.ck_class_attr
-            where ca.ck_attr in ('setglobal')
+            where ca.ck_attr in ('setglobal', 'setrecordtoglobal')
                 /* в рамках страницы, на которой мы работаем с переменной */
             and p.ck_id = (select ck_page from s_mt.t_page_object where ck_id = pot_page_object_attr.ck_page_object)
                 /* при апдейте не будем учитывать текущий объект */
@@ -1881,7 +1881,7 @@ begin
                on ca.ck_id = poa.ck_class_attr
               join s_mt.t_object o
                on o.ck_id = po.ck_object
-              where ca.ck_attr in ('setglobal', 'columnsfilter')
+              where ca.ck_attr in ('setglobal', 'setrecordtoglobal', 'columnsfilter')
                   /* в рамках страницы, на которой мы работаем с переменной */
               and po.ck_page = (select ck_page from s_mt.t_page_object where ck_id = pot_page_object_attr.ck_page_object)
                   /* при апдейте не будем учитывать текущий объект */
@@ -1979,7 +1979,8 @@ begin
           where p.ck_id = pot_page_variable.ck_page
            and ca.ck_attr in (
               'setglobal',
-              'getglobal',
+              'getglobal', 
+              'setrecordtoglobal',
               'getglobaltostore',
               'hiddenrules',
               'disabledrules',

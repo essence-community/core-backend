@@ -39,7 +39,7 @@ declare
 begin
   res := '{}'::ct_varchar;
   if pv_string is not null then
-    if pv_attr = 'setglobal' then
+    if pv_attr = 'setglobal' or pv_attr = 'setrecordtoglobal' then
       -- ищем глобальные переменные в правой части равенства или в начале строки
       vv_pattern := '\=([g][A-z_0-9]+)|^([g][A-z_0-9]+)$';
     elsif pv_attr = 'columnsfilter' then
