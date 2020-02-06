@@ -2088,7 +2088,7 @@ begin
         (ck_id, cv_name, ck_user, ct_change) = row(pot_provider.*)
        where ck_id = pot_provider.ck_id;
       if not found then
-        perform pkg.p_set_error(504);
+        perform pkg.p_set_error(519);
       end if;
     end if;
   end if;  

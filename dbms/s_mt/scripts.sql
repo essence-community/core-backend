@@ -1730,3 +1730,9 @@ INSERT INTO s_mt.t_message (ck_id,cr_type,cv_text,ck_user,ct_change)
 	VALUES (78,'error','2ac8f691eb154962bd174f3512ae2f61','4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-01-29 08:06:00.000');
 DROP INDEX s_mt.cin_i_page_2;
 CREATE UNIQUE INDEX cin_i_page_2 ON s_mt.t_page (upper(cv_url));
+
+--changeset artemov_i:CORE-908 dbms:postgresql
+INSERT INTO s_mt.t_localization (ck_id,ck_d_lang,cr_namespace,cv_value,ck_user,ct_change)
+	VALUES ('09bd93d52fad476ab9f1314269b2f166','ru_RU','message','Системная ошибка: редактирование уникального идентификатора запрещено','4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-02-06 19:49:00.701');
+INSERT INTO s_mt.t_message (ck_id,cr_type,cv_text,ck_user,ct_change)
+	VALUES (519,'error','09bd93d52fad476ab9f1314269b2f166','4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-02-06 14:50:10.000');
