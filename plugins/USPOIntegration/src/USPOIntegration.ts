@@ -90,6 +90,7 @@ export default class USPOIntegration extends NullPlugin {
             if (isEmpty(query.extraInParams)) {
                 query.extraInParams = [];
             }
+            if (!json.incomingData.params.export_excel) {
             query.extraInParams.push({
                 cl_replace: true,
                 cv_name: "json",
@@ -102,25 +103,7 @@ export default class USPOIntegration extends NullPlugin {
                             .format("YYYY-MM-DDTHH:mm:ss"),
                         cl_sent: 0,
                         ck_user: jsonData.session.ck_id,
-                        cv_message: json.incomingData.params.export_excel
-                            ? JSON.stringify(
-                                  json.status === "success"
-                                      ? {
-                                            export_excel: `${
-                                                this.params.prefixPath
-                                            }${util.format(
-                                                "/%s/%s",
-                                                json.queueId,
-                                                jsonData.session.session,
-                                            )}`,
-                                        }
-                                      : {
-                                            cv_error: {
-                                                "50": ["Выгрузка в excel"],
-                                            },
-                                        },
-                              )
-                            : JSON.stringify({
+                        cv_message: JSON.stringify({
                                   cv_error: {
                                       [json.status === "success" ? 47 : 50]: [
                                           json.reportName,
