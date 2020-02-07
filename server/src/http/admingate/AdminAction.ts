@@ -82,7 +82,7 @@ export default class AdminAction {
                                 ...Object.entries(val.data).reduce(
                                     (obj, arr) => ({
                                         ...obj,
-                                        [`data.${arr[0]}`]: arr[1],
+                                        [`data_${arr[0]}`]: arr[1],
                                     }),
                                     {},
                                 ),
@@ -109,7 +109,7 @@ export default class AdminAction {
                                 ...Object.entries(val.data).reduce(
                                     (obj, arr) => ({
                                         ...obj,
-                                        [`data.${arr[0]}`]: arr[1],
+                                        [`data_${arr[0]}`]: arr[1],
                                     }),
                                     {},
                                 ),

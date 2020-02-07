@@ -1,10 +1,10 @@
 {
     "name": "@ungate/server",
-    "version": "2.0.1",
+    "version": "2.1.0",
     "description": "Общие классы",
     "main": "index.js",
     "author": "Ivan Artemov (honyrik@gmail.com)",
-    "license": "ISC",
+    "license": "MIT",
     "dependencies": {
         "@iarna/toml": "^2.2.3",
         "@ungate/nedb-multi": "^1.0.0",

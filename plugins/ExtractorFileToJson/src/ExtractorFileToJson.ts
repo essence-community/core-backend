@@ -269,11 +269,18 @@ export default class ExtractorFileToJson extends NullPlugin {
                         query,
                         1,
                         (numPack += 1),
-                    ).then((res) => {
-                        result = [...result, ...res];
-                        extractCsv.resume();
-                        return res;
-                    }),
+                    ).then(
+                        (res) => {
+                            result = [...result, ...res];
+                            extractCsv.resume();
+                            return res;
+                        },
+                        (err) => {
+                            extractCsv.emit("error", err);
+                            extractCsv.resume();
+                            throw err;
+                        },
+                    ),
                 );
             });
         });
@@ -308,11 +315,18 @@ export default class ExtractorFileToJson extends NullPlugin {
                         query,
                         id,
                         (numPack += 1),
-                    ).then((res) => {
-                        result = [...result, ...res];
-                        extractorXlsx.resume();
-                        return res;
-                    }),
+                    ).then(
+                        (res) => {
+                            result = [...result, ...res];
+                            extractorXlsx.resume();
+                            return res;
+                        },
+                        (err) => {
+                            extractorXlsx.emit("error", err);
+                            extractorXlsx.resume();
+                            throw err;
+                        },
+                    ),
                 );
             });
             extractorXlsx.process();
@@ -349,11 +363,18 @@ export default class ExtractorFileToJson extends NullPlugin {
                         query,
                         1,
                         (numPack += 1),
-                    ).then((res) => {
-                        result = [...result, ...res];
-                        extractorDbf.resume();
-                        return res;
-                    }),
+                    ).then(
+                        (res) => {
+                            result = [...result, ...res];
+                            extractorDbf.resume();
+                            return res;
+                        },
+                        (err) => {
+                            extractorDbf.emit("error", err);
+                            extractorDbf.resume();
+                            throw err;
+                        },
+                    ),
                 );
             });
         });
@@ -403,7 +424,7 @@ export default class ExtractorFileToJson extends NullPlugin {
                 num_pack: numPack,
             },
         });
-        return this.callRows(gateContext, query);
+        return this.callRows(gateContext, query, index, numPack);
     }
     /**
      * Сохраняем
@@ -411,11 +432,24 @@ export default class ExtractorFileToJson extends NullPlugin {
      * @param gateContext
      * @param query
      */
-    private callRows(gateContext: IContext, query: IGateQuery) {
+    private callRows(
+        gateContext: IContext,
+        query: IGateQuery,
+        index: number,
+        numPack: number,
+    ) {
         return gateContext.provider
             .processDml(gateContext, query)
             .then((res) => ReadStreamToArray(res.stream))
             .then((arr) => {
+                if (this.logger.isDebugEnabled()) {
+                    this.logger.debug(
+                        "Num sheet: %s, Num pack: %s\nResult: %j",
+                        index,
+                        numPack,
+                        arr,
+                    );
+                }
                 const [row] = arr;
                 if (row && row.result) {
                     try {

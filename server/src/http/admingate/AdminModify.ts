@@ -9,6 +9,8 @@ import { isEmpty } from "@ungate/plugininf/lib/util/Util";
 import { forEach, isArray } from "lodash";
 import Property from "../../core/property/index";
 import RiakAction from "./RiakAction";
+import BreakException from '@ungate/plugininf/lib/errors/BreakException';
+import ResultStream from '@ungate/plugininf/lib/stream/ResultStream';
 
 const actions = ["i", "u", "d"];
 export default class AdminModify {
@@ -79,7 +81,7 @@ export default class AdminModify {
         return [];
     }
 
-    private callLocalDb(localDb: ILocalDB, json: IObjectParam) {
+    private async callLocalDb(localDb: ILocalDB, json: IObjectParam) {
         if (json.data.cct_params) {
             const cctParams = json.data.cct_params;
             json.data.cct_params = {};
@@ -131,6 +133,7 @@ export default class AdminModify {
                     json.data.cct_params[val.column] = undefined;
                 }
             });
+            delete json.data.cv_params;
         }
         switch (json.service.cv_action.toLowerCase()) {
             case "i": {
@@ -151,6 +154,22 @@ export default class AdminModify {
                         json.data[`cct_params.${key}`] = val;
                     });
                     delete json.data.cct_params;
+                }
+                const rec = await localDb.findOne({
+                    ck_id: ckId,
+                }, true);
+                if (!rec) {
+                    throw new BreakException({
+                        data: ResultStream([
+                            {
+                                ck_id: "",
+                                cv_error: {
+                                    519: [],
+                                },
+                            },
+                        ]),
+                        type: "success",
+                    });
                 }
                 return localDb
                     .update(

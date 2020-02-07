@@ -196,7 +196,7 @@ begin
                            where l.ck_id is null and nullif(m.cv_text, '') is not null
                            group by m.ck_id, m.cv_text
                           ) loop
-    if vot_rec.ck_local is null or cardinality(vot_rec.ck_local) = 0 then
+    if vot_rec.ck_local is null or cardinality(vot_rec.ck_local) = 0 or vot_rec.ck_local[1] is null then
       pot_localization.cr_namespace = 'message';
       pot_localization.cv_value = vot_rec.cv_text;
       pot_localization.ck_user = '-11';
@@ -220,7 +220,7 @@ begin
                     where l.ck_id is null and nullif(attr.cv_value, '') is not null
                     group by attr.ck_id, attr.cv_value
                     ) loop
-    if vot_rec.ck_local is null or cardinality(vot_rec.ck_local) = 0 then
+    if vot_rec.ck_local is null or cardinality(vot_rec.ck_local) = 0 or vot_rec.ck_local[1] is null then
       pot_localization.cr_namespace = 'meta';
       pot_localization.cv_value = vot_rec.cv_value;
       pot_localization.ck_user = '-11';
@@ -244,7 +244,7 @@ begin
                     where l.ck_id is null and nullif(attr.cv_value, '') is not null
                     group by attr.ck_id, attr.cv_value
                     ) loop
-    if vot_rec.ck_local is null or cardinality(vot_rec.ck_local) = 0 then
+    if vot_rec.ck_local is null or cardinality(vot_rec.ck_local) = 0 or vot_rec.ck_local[1] is null then
       pot_localization.cr_namespace = 'meta';
       pot_localization.cv_value = vot_rec.cv_value;
       pot_localization.ck_user = '-11';
@@ -268,7 +268,7 @@ begin
                     where l.ck_id is null and nullif(attr.cv_value, '') is not null
                     group by attr.ck_id, attr.cv_value
                     ) loop
-    if vot_rec.ck_local is null or cardinality(vot_rec.ck_local) = 0 then
+    if vot_rec.ck_local is null or cardinality(vot_rec.ck_local) = 0 or vot_rec.ck_local[1] is null then
       pot_localization.cr_namespace = 'meta';
       pot_localization.cv_value = vot_rec.cv_value;
       pot_localization.ck_user = '-11';
@@ -292,7 +292,7 @@ begin
                     where l.ck_id is null and nullif(o.cv_displayed, '') is not null
                     group by o.ck_id, o.cv_displayed
                     ) loop
-    if vot_rec.ck_local is null or cardinality(vot_rec.ck_local) = 0 then
+    if vot_rec.ck_local is null or cardinality(vot_rec.ck_local) = 0 or vot_rec.ck_local[1] is null then
       pot_localization.cr_namespace = 'meta';
       pot_localization.cv_value = vot_rec.cv_displayed;
       pot_localization.ck_user = '-11';
@@ -316,7 +316,7 @@ begin
                     where l.ck_id is null and nullif(p.cv_name, '') is not null
                     group by p.ck_id, p.cv_name
                     ) loop
-    if vot_rec.ck_local is null or cardinality(vot_rec.ck_local) = 0 then
+    if vot_rec.ck_local is null or cardinality(vot_rec.ck_local) = 0 or vot_rec.ck_local[1] is null then
       pot_localization.cr_namespace = 'meta';
       pot_localization.cv_value = vot_rec.cv_name;
       pot_localization.ck_user = '-11';
@@ -652,5 +652,69 @@ begin
 end;
 $$;
 
-
 ALTER FUNCTION pkg_patcher.p_lock_patch(pk_id uuid) OWNER TO s_mp;
+
+CREATE OR REPLACE FUNCTION pkg_patcher.p_find_static_in_meta_localization()
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'pkg_patcher', 's_mt', 'public'
+AS $function$
+declare
+  vv_id varchar;
+  pot_localization s_mt.t_localization;
+begin  
+  for pot_localization in (
+      select 
+          distinct tl.*
+      from
+        s_mt.t_localization tl
+      left join s_mt.t_page p on
+        tl.ck_id = p.cv_name
+      left join s_mt.t_object o on
+        tl.ck_id = o.cv_displayed
+      left join s_mt.t_page_object_attr poa on
+        tl.ck_id = poa.cv_value
+      left join s_mt.t_object_attr oa on
+        tl.ck_id = oa.cv_value
+      left join s_mt.t_class_attr ca on
+        tl.ck_id = ca.cv_value
+      where
+        tl.cr_namespace = 'static'
+        and (p.cv_name is not null
+        or o.cv_displayed is not null
+        or poa.cv_value is not null
+        or oa.cv_value is not null
+        or ca.cv_value is not null)
+  ) loop
+      vv_id := lower(sys_guid());
+      -- page object attr
+      UPDATE s_mt.t_page_object_attr
+        set cv_value = vv_id
+      where cv_value = pot_localization.ck_id;
+      -- object attr
+      UPDATE s_mt.t_object_attr
+        set cv_value = vv_id
+      where cv_value = pot_localization.ck_id;
+      -- class attr
+      UPDATE s_mt.t_class_attr
+        set cv_value = vv_id
+      where cv_value = pot_localization.ck_id;
+      -- cv_displayed
+      UPDATE s_mt.t_object
+        set cv_displayed = vv_id
+      where cv_displayed = pot_localization.ck_id;
+      -- page cv_name
+      UPDATE s_mt.t_page
+        set cv_name = vv_id
+      where cv_name = pot_localization.ck_id;
+      -- New string
+      INSERT INTO s_mt.t_localization
+        (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change)
+      VALUES (vv_id, pot_localization.ck_d_lang, 'meta', pot_localization.cv_value, pot_localization.ck_user, CURRENT_TIMESTAMP);
+  end loop;
+end;
+$function$
+;
+
+COMMENT ON FUNCTION pkg_patcher.p_find_static_in_meta_localization() IS 'Разделяем статичные атрибуты с meta';

@@ -32,6 +32,8 @@ export default class OnlineController implements ICoreController {
     }
     public async getSetting(gateContext: IContext): Promise<any> {
         const { js } = gateContext.params;
+        const json = JSON.parse(gateContext.params.json || "{}");
+        const ckId = json.filter?.ck_id;
         return new Promise((resolve, reject) => {
             this.dataSource
                 .executeStmt(
@@ -85,6 +87,10 @@ export default class OnlineController implements ICoreController {
                                             .sort(sortFilesData(gateContext))
                                             .filter(
                                                 filterFilesData(gateContext),
+                                            )
+                                            .filter(
+                                                (obj) =>
+                                                    !ckId || obj.ck_id === ckId,
                                             ),
                                     ),
                                     type: "success",

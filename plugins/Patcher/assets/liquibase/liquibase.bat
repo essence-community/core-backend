@@ -30,4 +30,4 @@ goto setup
 
 IF NOT DEFINED JAVA_OPTS set JAVA_OPTS=
 
-java -cp "%CP%" -Dfile.encoding=UTF8 -Djaxb.encoding=UTF-8 %JAVA_OPTS% liquibase.integration.commandline.Main %CMD_LINE_ARGS%
+java -cp "%CP%" -Dfile.encoding=UTF8 -Djaxb.encoding=UTF-8 %JAVA_OPTS% ru.opencore.Main %CMD_LINE_ARGS%

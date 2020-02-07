@@ -8,11 +8,13 @@ import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
 import IResult from "@ungate/plugininf/lib/IResult";
 import NullPlugin from "@ungate/plugininf/lib/NullPlugin";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
+import { sendProcess } from "@ungate/plugininf/lib/util/ProcessSender";
 import {
     deleteFolderRecursive,
     isEmpty,
 } from "@ungate/plugininf/lib/util/Util";
 import * as Zip from "adm-zip";
+import * as crypto from "crypto";
 import * as fs from "fs";
 import * as moment from "moment";
 import * as path from "path";
@@ -136,17 +138,21 @@ export class Patcher extends NullPlugin implements IStorage {
                 await patchIntegr(temp, json, gateContext.connection);
                 include.push("integr/integr.xml");
                 nameBd = "core_integr";
+                this.calcMd5(path.join(temp, "integr"));
                 zip.addLocalFolder(path.join(temp, "integr"), "integr");
             } else if (json.service.cv_action === "auth") {
                 await patchAuth(temp, json, gateContext.connection);
                 include.push("auth/auth.xml");
                 nameBd = "core_auth";
+                this.calcMd5(path.join(temp, "auth"));
                 zip.addLocalFolder(path.join(temp, "auth"), "auth");
             } else {
                 await patchMeta(temp, json, gateContext.connection);
                 include.push("meta/meta.xml");
+                this.calcMd5(path.join(temp, "meta"));
                 zip.addLocalFolder(path.join(temp, "meta"), "meta");
             }
+
             zip.addFile(
                 "liquibase.properties",
                 Buffer.from(
@@ -211,6 +217,25 @@ export class Patcher extends NullPlugin implements IStorage {
                         }),
                 );
             deleteFolderRecursive(temp);
+            gateContext.response.on("finish", () => {
+                sendProcess({
+                    command: "sendNotification",
+                    data: {
+                        ckUser: gateContext.session.ck_id,
+                        nameProvider: gateContext.session.ck_d_provider,
+                        text: JSON.stringify([
+                            {
+                                data: {
+                                    ck_page: json.service.ck_page,
+                                    ck_page_object: json.service.ck_page_object,
+                                },
+                                event: "reloadpageobject",
+                            },
+                        ]),
+                    },
+                    target: "cluster",
+                });
+            });
             return {
                 data: ResultStream([
                     {
@@ -223,5 +248,20 @@ export class Patcher extends NullPlugin implements IStorage {
             };
         }
         return;
+    }
+
+    private calcMd5(dir: string) {
+        fs.readdirSync(dir).forEach((file) => {
+            const f = path.join(dir, file);
+            if (fs.lstatSync(f).isFile) {
+                fs.writeFileSync(
+                    path.join(dir, `${file}.md5`),
+                    crypto
+                        .createHash("md5")
+                        .update(fs.readFileSync(f))
+                        .digest("hex"),
+                );
+            }
+        });
     }
 }

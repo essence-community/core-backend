@@ -3,7 +3,7 @@
     "version": "1.0.0",
     "description": "Локализация",
     "author": "Oleh Kutsenko (inthedark1225@gmail.com)",
-    "license": "ISC",
+    "license": "MIT",
     "dependencies": {
         "@ungate/plugininf": "^1.0.0",
         "lodash": "^4.17.15"

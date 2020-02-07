@@ -1091,3 +1091,655 @@ COMMENT ON COLUMN s_mt.t_create_patch.ct_change IS 'Аудит время мод
 COMMENT ON COLUMN s_mt.t_create_patch.сj_param IS 'Параметры запуска';
 COMMENT ON COLUMN s_mt.t_create_patch.cd_create IS 'Дата сборки';
 COMMENT ON COLUMN s_mt.t_create_patch.cn_size IS 'Размер сборки';
+
+--changeset artemov_i:CORE-650 dbms:postgresql
+ALTER TABLE s_mt.t_localization DROP CONSTRAINT cin_c_localization_2;
+ALTER TABLE s_mt.t_localization ADD CONSTRAINT cin_c_localization_2 CHECK (cr_namespace in ('meta', 'message', 'static'));
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Загрузка', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 15:12:44.764'
+WHERE ck_id='ad39828554114893872302a0aaa031af' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Формат даты: ''гггг''', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 21:14:23.551'
+WHERE ck_id='773ed9a089214ab9b0bd149be5685ba0' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Да', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-12 19:00:24.442'
+WHERE ck_id='dacf7ab025c344cb81b700cfcc50e403' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Нет', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-14 21:22:10.312'
+WHERE ck_id='f0e9877df106481eb257c2c04f8eb039' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Продолжить?', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 13:06:38.134'
+WHERE ck_id='5a33b10058114ae7876067447fde8242' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Печать', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 13:18:34.541'
+WHERE ck_id='937e99f97aea414f97f501e3b8a0b843' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Отмена', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 13:18:56.415'
+WHERE ck_id='64aacc431c4c4640b5f2c45def57cae9' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Hаименование файла', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 13:19:25.168'
+WHERE ck_id='662d857575ed4a26bca536b18fbac6ff' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Печать в excel', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 13:19:55.869'
+WHERE ck_id='7578080854a84cc3b4faad62d4499a4b' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Добавить все', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 13:23:54.780'
+WHERE ck_id='d78431bbcb484da4b516bc00626965ba' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Добавить выделенное', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 13:24:12.810'
+WHERE ck_id='833289fd818f4340b584beb9068f670b' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Удалить выделенное', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 13:24:33.842'
+WHERE ck_id='67677d8e457c409daaef5fe5b90ec491' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Удалить все', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 13:24:53.715'
+WHERE ck_id='c4684efb2ea444f4b9192db3c4b4b843' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Развернуть фильтры', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 13:29:44.094'
+WHERE ck_id='76dd4f170842474d9776fe712e48d8e6' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Скрыть фильтры', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 13:30:04.724'
+WHERE ck_id='72b93dbe37884153a95363420b9ceb59' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Очистить', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 13:30:26.871'
+WHERE ck_id='cda88d85fb7e4a88932dc232d7604bfb' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Поиск', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 13:30:50.219'
+WHERE ck_id='704af666dbd3465781149e4282df5dcf' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Дата с', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 13:41:21.377'
+WHERE ck_id='6aa4a0027b7e41309787b086de051536' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Дата по', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 13:41:37.168'
+WHERE ck_id='f806e79ffa3342ff81b150ce2279099f' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Точная дата', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 13:41:50.636'
+WHERE ck_id='e001f50e66034472a486099ea5f96218' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Настройки пользователя', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 13:42:24.549'
+WHERE ck_id='102972d8258947b7b3cf2b70b258278a' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Сохранить', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 13:44:17.777'
+WHERE ck_id='8a930c6b5dd440429c0f0e867ce98316' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Отменить', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 13:45:13.588'
+WHERE ck_id='3d27a32643ed4a7aa52b7e4b8a36806b' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Колонка с типом', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 13:46:06.715'
+WHERE ck_id='223dbd23bba54e4c91f59ef4cdea8ffa' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Показать/скрыть колонки', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 13:46:55.899'
+WHERE ck_id='017af47503474ec58542b9db53bdeeff' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Отображение Истории', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 13:47:57.198'
+WHERE ck_id='20732b2df62f4dd5baf97d12cf2a3e9c' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Населенный пункт', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 13:56:57.196'
+WHERE ck_id='d0e89e0caa6c476e87fb9564ca0d45ac' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Регион', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 13:57:11.300'
+WHERE ck_id='dd72982c8ecd46e094823c088e2aa91e' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Улица', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 13:57:31.648'
+WHERE ck_id='efdf47b812344d3aaa5228520f04a04e' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Дом', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 13:57:57.590'
+WHERE ck_id='c215efe4c3254c9690a5d0744c0a89b4' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Добавление документа', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 13:58:35.100'
+WHERE ck_id='6a4c7f4488164e7e8fabd46e0cc01ccc' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Добавить', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 13:58:54.286'
+WHERE ck_id='3a5239ee97d9464c9c4143c18fda9815' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Кнопка добавления документа', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 13:59:13.344'
+WHERE ck_id='a1ff62833ba8490fb626baa1ddf0f0f7' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Добавить файл', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 13:59:33.217'
+WHERE ck_id='0e55e1e9994c44f7978f3b76f5bd819f' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Отменить?', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 13:59:59.298'
+WHERE ck_id='9b475e25ae8a40b0b158543b84ba8c08' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Загрузить', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 14:00:42.107'
+WHERE ck_id='02260da507494f2f9956ba9e0f37b1f1' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Удалить', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 14:01:24.295'
+WHERE ck_id='f7e324760ede4c88b4f11f0af26c9e97' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Удалить?', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 14:01:59.153'
+WHERE ck_id='0cd0fc9bff2641f68f0f9712395f7b82' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Информация', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 14:02:15.173'
+WHERE ck_id='627518f4034947aa9989507c5688cfff' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Обновить', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 14:02:35.992'
+WHERE ck_id='33c9b02a9140428d9747299b9a767abb' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Клонировать', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 14:13:44.047'
+WHERE ck_id='54e15e2eec334f3c839a64cde73c2dcb' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Настройки системы', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-19 03:12:34.889'
+WHERE ck_id='9c97fa4879f144a7b571c4905fa020cc' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Редактировать', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 14:15:21.398'
+WHERE ck_id='deb1b07ddddf43c386682b20504fea0d' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Предыдущая запись', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 14:15:46.967'
+WHERE ck_id='d529fbf32aae4b85b9971fca87b4e409' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Следующая запись', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 14:16:02.669'
+WHERE ck_id='e00978fb845249fdbdf003cd0aa2898e' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Наименование объекта обслуживания', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 14:18:28.313'
+WHERE ck_id='1dabbff97463462f9776c1c62160c0ed' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Назад', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 14:22:45.973'
+WHERE ck_id='85c19e316e9e446d9383a9ffe184d19a' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Далее', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 14:23:02.791'
+WHERE ck_id='dcfd5234c348410994c690eec7d28028' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Выбрать', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 14:24:03.180'
+WHERE ck_id='147bb56012624451971b35b1a4ef55e6' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Поля должны быть заполнены в требуемом количестве', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 14:35:50.274'
+WHERE ck_id='a5a5d7213d1f4f77861ed40549ee9c57' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Добавить ещё', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 14:46:08.782'
+WHERE ck_id='ba416597affb4e3a91b1be3f8e0c8960' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Очистить все', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 15:01:40.668'
+WHERE ck_id='b0c16afd6507416196e01223630f9d62' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Все', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 15:05:41.492'
+WHERE ck_id='bfecce4e8b9844afab513efa5ea53353' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Ошибки', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 15:06:12.123'
+WHERE ck_id='7185a3b731b14e1ea8fb86056b571fe5' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Предупреждения', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 15:06:25.690'
+WHERE ck_id='10666aec26534e179b22f681700f22b7' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Оповещения', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 15:06:41.581'
+WHERE ck_id='880a932500234fa2b2f22a4b36bd6cd8' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Разработка', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 15:06:59.611'
+WHERE ck_id='1650aebec6b348f094680ba725441ef0' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Прочитать все', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 15:08:20.514'
+WHERE ck_id='f42e28fe1287412fa6ec91b421377139' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Неуспешно', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 15:12:30.039'
+WHERE ck_id='73de7f460cc04bc8a068429d66e684ce' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Успешно', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 15:13:01.907'
+WHERE ck_id='5454b0c6f64b41daab8deb88f948a4f1' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Закрыть вкладку', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 15:21:41.571'
+WHERE ck_id='74776ef247274a55a2a76f7df34ffe41' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Закрыть другие вкладки', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 15:22:11.329'
+WHERE ck_id='63b54227225e4ea5a2ba644eced838ec' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Закрыть вкладки справа', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 15:22:44.209'
+WHERE ck_id='bceed776538747b9a0c88d4f73b70711' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Закрыть все вкладки', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 15:23:02.551'
+WHERE ck_id='a0cb66a96d8740a19397ece02d537f86' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Тема', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 15:36:06.908'
+WHERE ck_id='0b5e4673fa194e16a0c411ff471d21d2' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Темная тема', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 15:36:26.395'
+WHERE ck_id='66ef0068472a4a0394710177f828a9b1' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Светлая тема', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 15:37:11.390'
+WHERE ck_id='fd7c7f3539954cc8a55876e3514906b5' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='c', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 18:52:43.682'
+WHERE ck_id='d7d40d765f0840beb7f0db2b9298ac0c' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='по', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 18:53:22.916'
+WHERE ck_id='acc7f22ccbc6407bb253f8c47a684c45' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Сбросить все данные?', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 20:04:31.804'
+WHERE ck_id='b03cbbb047ca438f920c799c5f48ecaf' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Корневой каталог', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 20:12:21.071'
+WHERE ck_id='e3e33760864d44f88a9ecfe8f5da7a0b' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Загрузка файла завершена', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 20:16:29.398'
+WHERE ck_id='31b05bf92be1431894c448c4c3ef95bb' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Сохранение файла...', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 20:16:58.368'
+WHERE ck_id='aff0422be07246fb844794e2329fc578' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Ошибка', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 20:17:36.737'
+WHERE ck_id='c80abfb5b59c400ca1f8f9e868e4c761' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Удалить файл', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 20:21:41.903'
+WHERE ck_id='b711be91555b46bab25971b7da959653' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='от', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 20:22:44.137'
+WHERE ck_id='1f560294a2a446c4a23fb3f9d7f94dc6' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Максимальная длина этого поля :maxsize', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 20:25:00.489'
+WHERE ck_id='e668fef0db6d4eeb9eb72c62a8d31052' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Значение этого поля не может быть больше :maxvalue', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 20:25:22.763'
+WHERE ck_id='58b71773e7664e70874020a45705bc4c' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Значение этого поля не может быть меньше :minvalue', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 20:26:01.755'
+WHERE ck_id='31d96e87a5514f509c75bc701b772504' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Обязателен для заполнения', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 20:26:25.277'
+WHERE ck_id='58c125b1b34f445c9ae5640ff3122e03' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Неверный формат поля :attribute.', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 20:27:02.394'
+WHERE ck_id='f488a90cb69e4567a092325fecffb1ed' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Дата "по" не может быть меньше даты "с"', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 20:27:25.890'
+WHERE ck_id='4f5060a1dc7c4f5ca76a606b4977f868' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Дата "с" не может быть больше даты "по"', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 20:27:58.031'
+WHERE ck_id='93e0035fa0684768839021399baed028' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Изменен', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 20:31:33.253'
+WHERE ck_id='a51733f718974db891606a516a906d4a' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Пользователь', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 20:32:35.350'
+WHERE ck_id='359b72856d284d1baf5ff9e14e8293c9' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Первая страница', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 20:34:51.119'
+WHERE ck_id='23264e86a9cd446f83cee0eb86c20bd9' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Предыдущая страница', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 20:35:37.881'
+WHERE ck_id='267e96bb282843abaa25b3e78bd874f1' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Следующая страница', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 20:36:03.007'
+WHERE ck_id='d4d9e481a0e14bbd9e1e76537e8cbfd0' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Последняя страница', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 20:36:27.227'
+WHERE ck_id='d0f0a046dee344d1b5bbbadcd8d848db' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Ошибка в разпознавании данных', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 20:42:52.928'
+WHERE ck_id='63538aa4bcd748349defdf7510fc9c10' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Превышен максимальный допустимый размер для загружаемого файла. Разрешены файлы размером не более', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 20:46:26.402'
+WHERE ck_id='7d9d6e64612643cfa6bb568cd3bde543' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Данный формат файлов не поддерживается. Разрешены форматы:', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 20:48:09.628'
+WHERE ck_id='5d4e96bd15bb429195f2bbef3e0ff126' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='байт', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 20:49:24.044'
+WHERE ck_id='bc377ecb59164cc4915c669130e298ef' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='тб', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 20:52:32.062'
+WHERE ck_id='05eab6e983464c5f8708045bd5131ebe' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='гб', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 20:53:03.071'
+WHERE ck_id='8d7f133d5ef04c4485748e38635fe9eb' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='мб', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 20:54:30.475'
+WHERE ck_id='58f3245889924db1b023691819f34607' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='кб', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 20:54:48.052'
+WHERE ck_id='82c9683d5aa7483aadc6b0b21f3dd174' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Глобальные переменные для', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 20:57:06.800'
+WHERE ck_id='dcfb61366b054c6e95ae83593cfb9cd9' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Выбрана', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 21:00:27.869'
+WHERE ck_id='e28e56d7b12e4ea2b7663b3e66473b9e' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Выбрано', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 21:01:02.407'
+WHERE ck_id='783922ac8cf84a5eac8d1b17c77de544' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='запись', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 21:01:24.090'
+WHERE ck_id='0cd9a67ed46d4d70959182cc6260b221' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='записи', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 21:02:00.241'
+WHERE ck_id='87acd17f8ae243798e97549a5761cfaf' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='записей', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 21:02:38.835'
+WHERE ck_id='2485088fda3d4d9cb5de9c25534cdf23' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Инициазилация с', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 21:09:20.382'
+WHERE ck_id='e077e7f97f954e85905a8e754511e441' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Выполнение', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 21:09:45.062'
+WHERE ck_id='9207ff3b431a4dc58f16a28d2aae0ea8' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Исходный код', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 21:10:23.407'
+WHERE ck_id='6029c25920ff4f79b9b52d664322b3d9' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Переменные', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 21:10:47.322'
+WHERE ck_id='a363461339754846881b1f84b6706851' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Значение для', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 21:11:22.661'
+WHERE ck_id='a326c00cf6b54d7ebdc358e283383ccb' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Результат', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 21:12:06.533'
+WHERE ck_id='b4458be782404651a4cfcad47d2ae17a' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Тип данных в результате', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 21:12:36.019'
+WHERE ck_id='c816bc224d6e4ae5b60d9c7dd2e6b612' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='не является правильной датой - дата должна быть указана в формате ''гггг''', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 21:14:54.864'
+WHERE ck_id='271b81793a72461192644b7f4578ac51' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value=':inputValue не является правильной датой - дата должна быть указана в формате ''гггг''', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 21:15:30.945'
+WHERE ck_id='3c205218305a4a25bada37004775789c' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Формат даты: ''ммм гггг''', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 21:16:15.576'
+WHERE ck_id='02983497059143b9b97cc0e7d0c4691d' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='не является правильной датой - дата должна быть указана в формате ''ммм гггг''', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 21:16:41.456'
+WHERE ck_id='a40a4372823f44ffa7a69e699b0b15db' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value=':inputValue не является правильной датой - дата должна быть указана в формате ''ммм гггг''', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 21:17:37.022'
+WHERE ck_id='6b6305d16db148d986e782a66c4318da' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Формат даты: ''дд.мм.гггг''', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 21:18:14.216'
+WHERE ck_id='acfdddfef80c4e5c90a3052e286d7919' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='не является правильной датой - дата должна быть указана в формате ''дд.мм.гггг''', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 21:18:35.109'
+WHERE ck_id='f0f42f35a2d241f3b51cd16747c37186' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value=':inputValue не является правильной датой - дата должна быть указана в формате ''дд.мм.гггг''', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 21:19:17.581'
+WHERE ck_id='77050515e7b2462e95429b9df33a7958' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Формат даты: ''дд.мм.гггг чч:00''', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 21:19:52.648'
+WHERE ck_id='149c3a8684224bc2939e613271f5c704' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='не является правильной датой - дата должна быть указана в формате ''дд.мм.гггг чч:00''', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 21:20:32.478'
+WHERE ck_id='ce35e3e6067d4343af8b30ea38d01f96' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value=':inputValue не является правильной датой - дата должна быть указана в формате ''дд.мм.гггг чч:00''', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 21:21:06.399'
+WHERE ck_id='1583ea7e4b054c759818771219303c3c' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Формат даты: ''дд.мм.гггг чч:ми''', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 21:21:32.428'
+WHERE ck_id='6b5f29158ba142c3963649e1219a8f1e' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='не является правильной датой - дата должна быть указана в формате ''дд.мм.гггг чч:ми''', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 21:22:11.033'
+WHERE ck_id='c43175882dda4f7abce9bb7325cd8847' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value=':inputValue не является правильной датой - дата должна быть указана в формате ''дд.мм.гггг чч:ми''', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 21:22:44.853'
+WHERE ck_id='a1fadf8d7e73453b8a1ed526f3d1103e' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Формат даты: ''дд.мм.гггг чч:ми:сс''', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 21:23:26.919'
+WHERE ck_id='52f802c6dab84eacbb4e6068aedcaa77' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='не является правильной датой - дата должна быть указана в формате ''дд.мм.гггг чч:ми:сс''', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 21:23:49.486'
+WHERE ck_id='6b95585ef5f442e6922459c81db7c1f3' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value=':inputValue не является правильной датой - дата должна быть указана в формате ''дд.мм.гггг чч:ми:сс''', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 21:24:44.183'
+WHERE ck_id='5f09f8f54f174ecfb6befd64ca4c3423' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Изображение', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 21:28:15.957'
+WHERE ck_id='157badbc579e439d8cae1d60ceff9aa9' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Добавление', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 21:34:56.756'
+WHERE ck_id='aa75a46ca0a44a6a8a16ffa1357ec313' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Клонирование', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 21:35:32.757'
+WHERE ck_id='7437988e948f4962abba9656e4988adc' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Редактирование', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 21:35:55.082'
+WHERE ck_id='8059806cc90c4ba4be7fa5ae15d5e64b' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Подтверждение', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 21:40:22.726'
+WHERE ck_id='ec238e2ccc1842d780b140a4bbedfdaf' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Невозможно загрузить модули', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 21:46:58.721'
+WHERE ck_id='b9c874da6b0e4694b93db69088a556da' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Модули', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 21:47:20.709'
+WHERE ck_id='02f274362cf847cba8d806687d237698' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Супер Глобальные переменные', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 21:55:02.415'
+WHERE ck_id='d2c071c58aca4b73853c1fcc6e2f08a3' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Описание', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 21:57:48.828'
+WHERE ck_id='900d174d0a994374a01b0005756521bc' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Код ошибки', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-15 21:58:18.748'
+WHERE ck_id='67aefce5785a4326920bef69acb5a403' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Оповещение', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-18 20:08:32.643'
+WHERE ck_id='2ff612aa52314ddea65a5d303c867eb8' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Ошибка подключения к серверу оповещения, превышен лимит попыток переподключения', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-18 20:47:05.060'
+WHERE ck_id='bcdc7e54547e405c9873b3ebea4f84c4' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Ошибка подключения к серверу оповещения', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-18 20:47:41.170'
+WHERE ck_id='4b4ef9aed688462799f24efe8413da9f' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Блокировка', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-18 21:13:03.879'
+WHERE ck_id='cad7307902954c1b92b626e42da53aa3' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Отладка', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-18 21:14:36.568'
+WHERE ck_id='4fdb2cdb2e5047048da10f9dbe83188d' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Ошибка загрузки', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-18 21:14:57.848'
+WHERE ck_id='cecc548fc7444813a3d00eb7bb067a3f' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Снятие блокировки', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-18 21:16:03.154'
+WHERE ck_id='d22b1f7a48b9402e9c0c17b508c5a906' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Загружено', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-18 21:16:19.190'
+WHERE ck_id='179cc83540e94b87a8d8aff919552f22' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Предупреждение', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-18 21:16:30.887'
+WHERE ck_id='e6f8166771e04b849855254c5d926ff6' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Превышено время ожидания', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-18 21:19:36.964'
+WHERE ck_id='06dfd0c3b97b45e5abc146a14c0fab37' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Неизвестное количество страниц', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-18 21:20:39.070'
+WHERE ck_id='44e3485c6b0c47dc8a0792c90af62962' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Сервер авторизации временно недоступен', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-18 23:33:04.514'
+WHERE ck_id='23cd49d589b74476acaa0b347b207d00' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Не удалось получить доступ к сервису', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-18 23:33:28.208'
+WHERE ck_id='1d5ca35298f346cab823812e2b57e15a' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Сессия недействительна', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-18 23:33:48.410'
+WHERE ck_id='5bf781f61f9c44b8b23c76aec75e5d10' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Неверные имя пользователя или пароль', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-18 23:34:17.042'
+WHERE ck_id='b5a60b8ff5cd419ebe487a68215f4490' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Ошбика при выполнении parse:', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-18 23:37:25.387'
+WHERE ck_id='993c801f7f8b4284b3b1a0f624496ac8' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Ошибка парсинга', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-18 23:38:42.336'
+WHERE ck_id='4b067f4b55154c46b0a8d6b34d4d9bfb' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Ошибка запуска', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-18 23:39:04.785'
+WHERE ck_id='b621b9209813416dba9d5c12ccc93fdf' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Ошибка при сохранении данных:', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-18 23:46:46.782'
+WHERE ck_id='27a9d844da20453195f59f75185d7c99' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Существует неудаленная store, нужно удалять ненужные сторы!.', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-18 23:53:53.804'
+WHERE ck_id='7ef1547ac7084e178bf1447361e3ccc3' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Не могу загрузить данны. Не задан ck_query для конфига:', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-18 23:55:47.935'
+WHERE ck_id='0d43efb6fc3546bbba80c8ac24ab3031' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Сервис временно недоступен - {{query}}. Попробуйте выполнить операцию позднее.', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-19 00:02:05.663'
+WHERE ck_id='4fdb3577f24440ceb8c717adf68bac48' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Ошибка обращения к сервису {{query}}', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-19 00:03:23.210'
+WHERE ck_id='515a199e09914e3287afd9c95938f3a7' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Не получилось распознать ошибку. Возможно, возникла проблема с сетевым подключением', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-19 00:04:49.004'
+WHERE ck_id='2d209550310a4fae90389134a5b12353' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Не определана reloadStoreAction для {{name}}', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-19 01:19:57.593'
+WHERE ck_id='83490c56debb4a399f05518608e3bace' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Не определана clearStoreAction для {{name}}', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-19 01:20:38.578'
+WHERE ck_id='5c3108d6508a4141bdca1e52881e196d' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='{{currentpage}} из {{pages}}', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-19 01:26:34.262'
+WHERE ck_id='3dd42493c346447897d017af3668d998' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Превышено время ожидаения формы.', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-19 01:45:30.979'
+WHERE ck_id='5327513a9d344e2184cca94cde783a52' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Ошибка получения оповещения {{message}}', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-19 01:57:34.954'
+WHERE ck_id='8fe6e023ee11462db952d62d6b8b265e' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Данные изменены вне формы:', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-19 01:58:02.791'
+WHERE ck_id='f9c3bf3691864f4d87a46a9ba367a855' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Поле может работать некорректно без column, автогенерируемое значение: {{key}}', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-19 02:02:18.234'
+WHERE ck_id='d4055d1153af44a4ba5eb73ac9bc437e' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Поле не может быть построено: {{key}}', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-19 02:03:33.747'
+WHERE ck_id='d56944511bd243b1a0914ccdea58ce0d' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Ошибка:', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-19 02:04:22.568'
+WHERE ck_id='47b7b12c1d9c413da54a08331191aded' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Информация:', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-19 02:05:13.926'
+WHERE ck_id='cfac299d53f8466d9745ddfa53e09958' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Необходимо заполнить orderproperty для дальнейшей работы таблицы', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-19 02:06:22.489'
+WHERE ck_id='40dd53ff1c214bfab79ecd40612de8f5' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Поле может работать некорректно без ck_page_object, автогенерируемое значение: {{name}}', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-19 02:09:22.945'
+WHERE ck_id='c3513e8150484b31a4ad4227f9664e7f' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Описание: {{description}}', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-19 02:13:22.043'
+WHERE ck_id='b6c8c1519907418caad7f647068d1fb2' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Код ошибки: {{code}}', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-19 02:14:02.601'
+WHERE ck_id='4cf741cfcf18478ab4ed3c3c79255a39' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Ожидание загрузки привышено {{timeout}}ms, проверьте циклиность использования глобальных переменных для сервиса {{query}}', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-19 02:20:47.819'
+WHERE ck_id='344bbb5fb4a84d89b93c448a5c29e1d7' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Запрос ''reloadStoreAction'' запрещен в TableFieldModel', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-19 02:25:15.155'
+WHERE ck_id='58715205c88c4d60aac6bfe2c3bfa516' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Ок', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-19 02:26:21.711'
+WHERE ck_id='8004527cce454f8f83c7d739460f5822' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='О программе', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-19 02:32:57.468'
+WHERE ck_id='6cf398ee03df42529323bd4ff9f584d5' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Имя пользователя', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-19 02:56:27.291'
+WHERE ck_id='d016a5a3d0964cd69fd15c6e283db77e' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Версия {{BRANCH_NAME}} ({{COMMIT_ID}} от {{BRANCH_DATE_TIME}})', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-19 02:50:11.846'
+WHERE ck_id='26686005b3584a12aeb9ca9e96e54753' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Загрузка...', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-19 02:51:02.336'
+WHERE ck_id='8aebd9c71dda43fc8583d96f1d4d0d01' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Пароль', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-19 02:56:53.421'
+WHERE ck_id='8d380b7c5e6d4fcfb9d608d69464fe2a' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Войти', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-19 02:57:21.327'
+WHERE ck_id='664bdebac78e47079bb685732899c5f6' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Главная страница', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-19 02:58:04.655'
+WHERE ck_id='a54bed8bf1574dc185aaf1f74aa85148' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Страница не обнаружена или заполнена неверно!', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-19 03:05:03.595'
+WHERE ck_id='1764da1153734ec8b4fc4cf48cc78c88' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Не найдена информация о фильтрации!', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-19 03:05:25.533'
+WHERE ck_id='e7f66e6d5b5340909ea4ded06f5a034f' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Вы пытаетесь перейти на страницу c такими параметрами:', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-19 03:05:48.286'
+WHERE ck_id='b35d5fa33cb14a1db46c4f684dc14037' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Страница: {{page}}', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-19 03:06:31.618'
+WHERE ck_id='6f93ca102d5f488aa3082e0344486e9e' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Фильтр: {{filter}}', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-19 03:07:03.811'
+WHERE ck_id='dda349a2de0049408168eb5d148442df' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Параметры заданы не верно', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-19 03:07:40.772'
+WHERE ck_id='86d945313cbd41beb5f5068c2696bcec' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Статус авторизации: {{status}}', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-19 03:08:11.139'
+WHERE ck_id='6512d68884cd4848ba6129655dec51d4' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='авторизирован', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-19 03:10:06.876'
+WHERE ck_id='0d9c5a0b816947a781f02baad2c2ce22' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='не авторизирован', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-19 03:10:23.636'
+WHERE ck_id='e8281a11d60542c684f76ffab31216aa' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Продолжить', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-19 03:10:57.400'
+WHERE ck_id='fad9bcdb1bf54640ab58d1781546c72c' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Задержка Tooltip перед показом (delayTooltipShow)', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-19 03:12:50.604'
+WHERE ck_id='d39cbeb8128e4f68b201b25291889dd2' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Отступ Tooltip по диагонали (offsetTooltip)', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-19 03:13:11.519'
+WHERE ck_id='a43c94932e3a48c9867ac7b39bb22e60' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Задержка Tooltip при движении (debounceTooltipTime)', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-19 03:13:27.118'
+WHERE ck_id='a376942ff8af4ec58eeb18ea5a05e772' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Включить режим объединения ячеек таблиц в wysiwyg (wysiwygCombineFields)', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-19 03:13:55.376'
+WHERE ck_id='9a381df0ef4948ebaacb05852324d036' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Включить режим отображения отладочного окна при передаче параметров извне (redirectDebugWindow)', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-19 03:14:18.030'
+WHERE ck_id='c038518f0652435ba9914848f8693454' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Включить эксперементальный режим (experimentalUI)', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-19 03:14:34.791'
+WHERE ck_id='0852f8c548c741d39521833cd739a9f4' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Список модулей (modules)', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-19 03:14:58.589'
+WHERE ck_id='ad56476c04ff4d6091d5e87f5d823a9b' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Выход', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-19 03:23:30.398'
+WHERE ck_id='8c0119ba23c74e158c5d50c83884fcb5' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Язык', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-19 03:25:53.736'
+WHERE ck_id='4ae012ef02dd4cf4a7eafb422d1db827' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Отображаемое имя', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-25 18:25:13.736'
+WHERE ck_id='37023be03a484bd5928791eebcd47f51' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Наименование', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-11-25 22:01:03.544'
+WHERE ck_id='3a0b8d771a0d497e8aa1c44255fa6e83' AND ck_d_lang='ru_RU';
+UPDATE s_mt.t_localization
+SET cr_namespace='static', cv_value='Минимальная длина этого поля :maxsize', ck_user='4fd05ca9-3a9e-4d66-82df-886dfa082113', ct_change='2019-12-23 22:25:53.736'
+WHERE ck_id='a240c31303c74c5490623d7781964c11' AND ck_d_lang='ru_RU';
+
+--changeset artemov_i:CORE-847 dbms:postgresql
+INSERT INTO s_mt.t_localization (ck_id,ck_d_lang,cr_namespace,cv_value,ck_user,ct_change)
+	VALUES ('16b6a8b83c0a44a4a2366af0127b6873','ru_RU','message','Создание переменных g_sys* или g_sess* запрещено!','4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-01-27 18:30:07.292');
+INSERT INTO s_mt.t_message (ck_id,cr_type,cv_text,ck_user,ct_change)
+	VALUES (77,'error','16b6a8b83c0a44a4a2366af0127b6873','4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-01-27 10:47:00.000');
+
+--changeset artemov_i:CORE-178 dbms:postgresql
+INSERT INTO s_mt.t_localization (ck_id,ck_d_lang,cr_namespace,cv_value,ck_user,ct_change)
+	VALUES ('2ac8f691eb154962bd174f3512ae2f61','ru_RU','message','Недопустимый символ в параметре "{0}"','4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-01-29 13:04:06.759');
+INSERT INTO s_mt.t_message (ck_id,cr_type,cv_text,ck_user,ct_change)
+	VALUES (78,'error','2ac8f691eb154962bd174f3512ae2f61','4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-01-29 08:06:00.000');
+DROP INDEX s_mt.cin_i_page_2;
+CREATE UNIQUE INDEX cin_i_page_2 ON s_mt.t_page (upper(cv_url));
+
+--changeset artemov_i:CORE-908 dbms:postgresql
+INSERT INTO s_mt.t_localization (ck_id,ck_d_lang,cr_namespace,cv_value,ck_user,ct_change)
+	VALUES ('09bd93d52fad476ab9f1314269b2f166','ru_RU','message','Системная ошибка: редактирование уникального идентификатора запрещено','4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-02-06 19:49:00.701');
+INSERT INTO s_mt.t_message (ck_id,cr_type,cv_text,ck_user,ct_change)
+	VALUES (519,'error','09bd93d52fad476ab9f1314269b2f166','4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-02-06 14:50:10.000');
+
+--changeset artemov_i:CORE-907 dbms:postgresql
+ALTER TABLE s_mt.t_provider ALTER COLUMN ck_id TYPE varchar(32) USING ck_id::varchar;
+INSERT INTO s_mt.t_localization (ck_id,ck_d_lang,cr_namespace,cv_value,ck_user,ct_change)
+	VALUES ('c7871bbd0e844793a47185a29b2b79f1','ru_RU','message','Максимальное количество символов {0} у параметра "{1}"','4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-02-06 20:58:14.658');
+INSERT INTO s_mt.t_message (ck_id,cr_type,cv_text,ck_user,ct_change)
+	VALUES (79,'error','c7871bbd0e844793a47185a29b2b79f1','4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-02-06 16:06:00.000');

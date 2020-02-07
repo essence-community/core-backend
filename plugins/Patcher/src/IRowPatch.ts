@@ -8,7 +8,7 @@ export abstract class IRowPatch {
     public abstract toRow(): string;
     public toStringOrNull(key: string, defaultValue: string = "null") {
         const val = this.row[key];
-        return isEmpty(val) ? defaultValue : `'${val.replace("'", "''")}'`;
+        return isEmpty(val) ? defaultValue : `'${val.replace(/'/g, "''")}'`;
     }
     public toTimestamp(key: string) {
         const val = this.row[key];

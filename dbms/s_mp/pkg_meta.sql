@@ -893,16 +893,14 @@ begin
                               case
                                 when ca.ck_attr is null then
                                 'I'
-                                when jt.ck_attr_type is null then
+                                when jt.ck_attr is null and ca.ck_attr is not null then
                                 'D'
                                 else
                                 'U'
                               end as cv_action
                         from (select (t.dt->>'ck_attr') as ck_attr, 
                                       (t.dt->>'cv_value') as cv_value, 
-                                      (t.dt->>'cl_required') as cl_required, 
-                                      (t.dt->>'ck_attr_type') as ck_attr_type, 
-                                      (t.dt->>'cv_description') as cv_description 
+                                      (t.dt->>'cl_required') as cl_required 
                                 from jsonb_array_elements(vcur_class.cj_class->'class_attributes') as t(dt)) jt
                         full join (select ca.ck_id, ca.ck_attr
                                     from s_mt.t_class c
@@ -915,9 +913,9 @@ begin
             vot_class_attr.ck_class    := vot_class.ck_id;
             vot_class_attr.ck_user     := vot_class.ck_user;
             vot_class_attr.ct_change   := CURRENT_TIMESTAMP;
-            vot_class_attr.cl_required := 1;
+            vot_class_attr.cl_required := coalesce(nullif(vcur.cl_required, '')::bigint, 0);
             vot_class_attr.ck_attr     := vcur.ck_attr;
-            vot_class_attr.cv_value    := vcur.cv_value;
+            vot_class_attr.cv_value    := nullif(vcur.cv_value, '');
           
             vot_class_attr := pkg_meta.p_modify_class_attr(vcur.cv_action, vot_class_attr);
           end loop;
@@ -1356,6 +1354,24 @@ begin
     if pot_page.ck_parent is null and pot_page.cr_type in (1, 2) then
       perform pkg.p_set_error(11);
     end if;
+    -- Проверяем ссылку
+    if pot_page.cl_static is not null and pot_page.cl_static = 1::smallint then
+      if pot_page.cv_url is null then
+        perform pkg.p_set_error(200, 'meta:39aed4270cb64b6a843a2a334f440b48');
+      else
+        if upper(pot_page.cv_url) !~ '^[A-Z0-9_-]+$' or pot_page.cv_url ~ '(__|--|-_|_-)' then 
+          perform pkg.p_set_error(78, 'meta:39aed4270cb64b6a843a2a334f440b48');
+        end if;
+        for vcur_cnt in (
+          select 1
+          from s_mt.t_page a
+            where (pot_page.ck_id is not null and a.ck_id <> pot_page.ck_id or pot_page.ck_id is null) 
+              and upper(a.cv_url) = upper(pot_page.cv_url)
+        ) loop
+          perform pkg.p_set_error(201, 'meta:39aed4270cb64b6a843a2a334f440b48');
+        end loop;
+      end if;
+    end if;
     if pot_page.cr_type = 2 then /* проверки 35 и 36 актуальны только для страниц */
       if pn_action_view is null and (gl_warning::bigint) = 0 then
         perform pkg.p_set_warning(35);
@@ -1784,7 +1800,8 @@ begin
                  t.cv_variable
           from t_variable
           cross join unnest(pkg_util.f_get_global_from_string(t_variable.cv_value, ck_attr)) as t(cv_variable)
-          where ck_attr in ('disabledrules', 'hiddenrules', 'getglobaltostore', 'getglobal', 'readonlyrules', 'setglobal', 'columnsfilter')
+          where ck_attr in ('disabledrules', 'hiddenrules', 'getglobaltostore', 'getglobal', 'readonlyrules', 'setrecordtoglobal', 'setglobal', 'columnsfilter')
+          and upper(t.cv_variable) not ilike 'G_SYS%' and upper(t.cv_variable) not ilike 'G_SESS%'
         )v
         left join s_mt.t_page_variable pv on pv.ck_page = v.ck_page
          and pv.cv_name = v.cv_variable
@@ -1798,7 +1815,7 @@ begin
       select 1
       from s_mt.t_class_attr ca
       where ca.ck_id = pot_page_object_attr.ck_class_attr and
-        ca.ck_attr in ('setglobal')
+        ca.ck_attr in ('setrecordtoglobal', 'setglobal')
     )loop
       -- проверка на то, что одна и та же переменная не сетится несколько раз из разных мест
       for vcur_check in (
@@ -1814,7 +1831,7 @@ begin
              on poa.ck_page_object = po.ck_id
             join s_mt.t_class_attr ca
              on ca.ck_id = poa.ck_class_attr
-            where ca.ck_attr in ('setglobal')
+            where ca.ck_attr in ('setglobal', 'setrecordtoglobal')
                 /* в рамках страницы, на которой мы работаем с переменной */
             and p.ck_id = (select ck_page from s_mt.t_page_object where ck_id = pot_page_object_attr.ck_page_object)
                 /* при апдейте не будем учитывать текущий объект */
@@ -1864,7 +1881,7 @@ begin
                on ca.ck_id = poa.ck_class_attr
               join s_mt.t_object o
                on o.ck_id = po.ck_object
-              where ca.ck_attr in ('setglobal', 'columnsfilter')
+              where ca.ck_attr in ('setglobal', 'setrecordtoglobal', 'columnsfilter')
                   /* в рамках страницы, на которой мы работаем с переменной */
               and po.ck_page = (select ck_page from s_mt.t_page_object where ck_id = pot_page_object_attr.ck_page_object)
                   /* при апдейте не будем учитывать текущий объект */
@@ -1962,7 +1979,8 @@ begin
           where p.ck_id = pot_page_variable.ck_page
            and ca.ck_attr in (
               'setglobal',
-              'getglobal',
+              'getglobal', 
+              'setrecordtoglobal',
               'getglobaltostore',
               'hiddenrules',
               'disabledrules',
@@ -1991,6 +2009,9 @@ begin
     /* Блок "Проверка переданных данных" */
     if pot_page_variable.cv_name is null then
       perform pkg.p_set_error(2);
+    end if;
+    if upper(pot_page_variable.cv_name) like 'G_SESS%' or upper(pot_page_variable.cv_name) like 'G_SYS%' then
+      perform pkg.p_set_error(77);
     end if;
     if pot_page_variable.cv_description is null then
       perform pkg.p_set_error(26);
@@ -2059,15 +2080,21 @@ begin
     if pot_provider.cv_name is null then
       perform pkg.p_set_error(2);
     end if;
+    if length(pot_provider.ck_id) > 32 then
+      perform pkg.p_set_error(79, 32, 'meta:153d12ad65b44cfa85f5d1e88d11cc2a');
+    end if;
+    if nullif(gv_error::varchar, '') is not null then
+      return;
+    end if;
     /**/
-    if pv_action = i::varchar and nullif(gv_error::varchar, '') is null then
+    if pv_action = i::varchar then
       insert into s_mt.t_provider values (pot_provider.*);
-    elsif pv_action = u::varchar and nullif(gv_error::varchar, '') is null then
+    elsif pv_action = u::varchar then
       update s_mt.t_provider set
         (ck_id, cv_name, ck_user, ct_change) = row(pot_provider.*)
        where ck_id = pot_provider.ck_id;
       if not found then
-        perform pkg.p_set_error(504);
+        perform pkg.p_set_error(519);
       end if;
     end if;
   end if;  
@@ -2528,3 +2555,123 @@ $$;
 ALTER FUNCTION pkg_meta.p_refresh_page_object(pk_page character varying) OWNER TO s_mp;
 
 COMMENT ON FUNCTION pkg_meta.p_refresh_page_object(pk_page character varying) IS 'Перепривязка объетов страницы';
+
+CREATE FUNCTION pkg_meta.p_lock_attr(pk_id character varying) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 's_mt', 'pkg_meta', 'public'
+    AS $$
+declare
+  vn_lock bigint;
+begin
+  if pk_id is not null then
+    select 1 into vn_lock from s_mt.t_attr where ck_id = pk_id for update nowait;
+  end if;
+end;
+$$;
+
+ALTER FUNCTION pkg_meta.p_lock_attr(pk_id character varying) OWNER TO s_mp;
+
+CREATE FUNCTION pkg_meta.p_lock_class(pk_id character varying) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 's_mt', 'pkg_meta', 'public'
+    AS $$
+declare
+  vn_lock bigint;
+begin
+  if pk_id is not null then
+    select 1 into vn_lock from s_mt.t_class where ck_id = pk_id for update nowait;
+  end if;
+end;
+$$;
+
+ALTER FUNCTION pkg_meta.p_lock_class(pk_id character varying) OWNER TO s_mp;
+
+CREATE FUNCTION pkg_meta.p_lock_module(pk_id character varying) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 's_mt', 'pkg_meta', 'public'
+    AS $$
+declare
+  vn_lock bigint;
+begin
+  if pk_id is not null then
+    select 1 into vn_lock from s_mt.t_module where ck_id = pk_id for update nowait;
+  end if;
+end;
+$$;
+
+ALTER FUNCTION pkg_meta.p_lock_module(pk_id character varying) OWNER TO s_mp;
+
+CREATE FUNCTION pkg_meta.p_lock_object(pk_id character varying) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 's_mt', 'pkg_meta', 'public'
+    AS $$
+declare
+  vn_lock bigint;
+begin
+  if pk_id is not null then
+    select 1 into vn_lock from s_mt.t_object where ck_id = pk_id for update nowait;
+  end if;
+end;
+$$;
+
+ALTER FUNCTION pkg_meta.p_lock_object(pk_id character varying) OWNER TO s_mp;
+
+CREATE FUNCTION pkg_meta.p_lock_page(pk_id character varying) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 's_mt', 'pkg_meta', 'public'
+    AS $$
+declare
+  vn_lock bigint;
+begin
+  if pk_id is not null then
+    select 1 into vn_lock from s_mt.t_page where ck_id = pk_id for update nowait;
+  end if;
+end;
+$$;
+
+ALTER FUNCTION pkg_meta.p_lock_page(pk_id character varying) OWNER TO s_mp;
+
+CREATE FUNCTION pkg_meta.p_lock_page_object(pk_id character varying) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 's_mt', 'pkg_meta', 'public'
+    AS $$
+declare
+  vn_lock bigint;
+begin
+  if pk_id is not null then
+    select 1 into vn_lock from s_mt.t_page_object where ck_id = pk_id for update nowait;
+  end if;
+end;
+$$;
+
+ALTER FUNCTION pkg_meta.p_lock_page_object(pk_id character varying) OWNER TO s_mp;
+
+CREATE FUNCTION pkg_meta.p_lock_provider(pk_id character varying) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 's_mt', 'pkg_meta', 'public'
+    AS $$
+declare
+  vn_lock bigint;
+begin
+  if pk_id is not null then
+    select 1 into vn_lock from s_mt.t_provider where ck_id = pk_id for update nowait;
+  end if;
+end;
+$$;
+
+ALTER FUNCTION pkg_meta.p_lock_provider(pk_id character varying) OWNER TO s_mp;
+
+CREATE FUNCTION pkg_meta.p_lock_sys_setting(pk_id character varying) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 's_mt', 'pkg_meta', 'public'
+    AS $$
+declare
+  vn_lock bigint;
+begin
+  if pk_id is not null then
+    select 1 into vn_lock from s_mt.t_sys_setting where ck_id = pk_id for update nowait;
+  end if;
+end;
+$$;
+
+ALTER FUNCTION pkg_meta.p_lock_sys_setting(pk_id character varying) OWNER TO s_mp;

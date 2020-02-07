@@ -58,7 +58,8 @@ begin
 		'column', coalesce(pv_column, vot_d_info.ck_id),
 		'datatype', 'text',
 		'cl_dataset', 0,
-		'cv_displayed', vot_d_info.cv_description,
+		'cv_displayed', vot_d_info.ck_id,
+    'info', vot_d_info.cv_description,
 		'ck_page_object', sys_guid(),
 		'required', vv_required,
 		'defaultvalue', vv_value
@@ -71,7 +72,8 @@ begin
 		'column', coalesce(pv_column, vot_d_info.ck_id),
 		'datatype', 'textarea',
 		'cl_dataset', 0,
-		'cv_displayed', vot_d_info.cv_description,
+		'cv_displayed', vot_d_info.ck_id,
+    'info', vot_d_info.cv_description,
 		'ck_page_object', sys_guid(),
 		'required', vv_required,
 		'defaultvalue', vv_value
@@ -84,7 +86,8 @@ begin
 		'column', coalesce(pv_column, vot_d_info.ck_id),
 		'datatype', 'integer',
 		'cl_dataset', 0,
-		'cv_displayed', vot_d_info.cv_description,
+		'cv_displayed', vot_d_info.ck_id,
+    'info', vot_d_info.cv_description,
 		'ck_page_object', sys_guid(),
 		'required', vv_required,
 		'defaultvalue', vv_value
@@ -97,7 +100,8 @@ begin
 		'column', coalesce(pv_column, vot_d_info.ck_id),
 		'datatype', 'numeric',
 		'cl_dataset', 0,
-		'cv_displayed', vot_d_info.cv_description,
+		'cv_displayed', vot_d_info.ck_id,
+    'info', vot_d_info.cv_description,
 		'ck_page_object', sys_guid(),
 		'defaultvalue', vv_value,
 		'required', vv_required,
@@ -113,7 +117,8 @@ begin
 		'datatype', 'date',
 		'format', '3',
 		'cl_dataset', 0,
-		'cv_displayed', vot_d_info.cv_description,
+		'cv_displayed', vot_d_info.ck_id,
+    'info', vot_d_info.cv_description,
 		'required', vv_required,
 		'ck_page_object', sys_guid(),
 		'defaultvalue', vv_value
@@ -126,7 +131,8 @@ begin
 		'column', coalesce(pv_column, vot_d_info.ck_id),
 		'datatype', 'checkbox',
 		'cl_dataset', 0,
-		'cv_displayed', vot_d_info.cv_description,
+		'cv_displayed', vot_d_info.ck_id,
+    'info', vot_d_info.cv_description,
 		'required', vv_required,
 		'ck_page_object', sys_guid(),
 		'defaultvalue', vv_value
@@ -166,7 +172,7 @@ begin
   *
   into vot_account
   from s_at.t_account
-  where cv_login = pv_login and cv_hash_password = pkg_account.f_create_hash(cv_salt, pv_password);
+  where upper(cv_login) = upper(pv_login) and cv_hash_password = pkg_account.f_create_hash(cv_salt, pv_password);
   -- логируем данные
   if pl_audit = 1 then
      perform pkg_log.p_save('-11', '', jsonb_build_object('cv_login', pv_login, 'cv_token', pv_token), 'Login', vot_account.ck_id::varchar, 'i');
@@ -235,7 +241,7 @@ begin
   -- вызовем метод создание пользователя
   vot_account := pkg_account.p_modify_account(vv_action, vot_account, vct_account_info);
   -- логируем данные
-  perform pkg_log.p_save(pv_user, pv_session, pc_json, 't_account', vot_account.ck_id::varchar, vv_action);
+  perform pkg_log.p_save(pv_user, pv_session, pc_json, 'pkg_json_account.f_modify_account', vot_account.ck_id::varchar, vv_action);
   return '{"ck_id":"' || coalesce(vot_account.ck_id::varchar, '') || '","cv_error":' || pkg.p_form_response() || '}';
   end;$BODY$;
 
@@ -282,7 +288,7 @@ begin
   -- вызовем метод создание пользователя
   vot_account_info := pkg_account.p_modify_account_info(vv_action, vot_account_info);
   -- логируем данные
-  perform pkg_log.p_save(pv_user, pv_session, pc_json, 't_account_info', vot_account_info.ck_id::varchar, vv_action);
+  perform pkg_log.p_save(pv_user, pv_session, pc_json, 'pkg_json_account.f_modify_account_info', vot_account_info.ck_id::varchar, vv_action);
   return '{"ck_id":"' || coalesce(vot_account_info.ck_id::varchar, '') || '","cv_error":' || pkg.p_form_response() || '}';
   end;$BODY$;
 
@@ -332,7 +338,7 @@ begin
   	perform pkg_account.p_modify_account_role(vv_action, vot_account_role);
   end loop;
   -- логируем данные
-  perform pkg_log.p_save(pv_user, pv_session, pc_json, 't_account_role', vot_account_role.ck_role::varchar, vv_action);
+  perform pkg_log.p_save(pv_user, pv_session, pc_json, 'pkg_json_account.f_modify_account_role', vot_account_role.ck_role::varchar, vv_action);
   return '{"ck_id":"' || coalesce(vot_account_role.ck_role::varchar, '') || '","cv_error":' || pkg.p_form_response() || '}';
 end;
 $BODY$;
@@ -379,7 +385,7 @@ begin
   -- вызовем метод измения действия
   vot_action := pkg_account.p_modify_action(vv_action, vot_action);
   -- логируем данные
-  perform pkg_log.p_save(pv_user, pv_session, pc_json, 't_action', vot_action.ck_id::varchar, vv_action);
+  perform pkg_log.p_save(pv_user, pv_session, pc_json, 'pkg_json_account.f_modify_action', vot_action.ck_id::varchar, vv_action);
   return '{"ck_id":"' || coalesce(vot_action.ck_id::varchar, '') || '","cv_error":' || pkg.p_form_response() || '}';
   end;$BODY$;
 
@@ -429,7 +435,7 @@ begin
   	perform pkg_account.p_modify_role_action(vv_action, vot_role_action);
   end loop;
   -- логируем данные
-  perform pkg_log.p_save(pv_user, pv_session, pc_json, 't_role_action', vot_role_action.ck_role::varchar, vv_action);
+  perform pkg_log.p_save(pv_user, pv_session, pc_json, 'pkg_json_account.f_modify_action_role', vot_role_action.ck_role::varchar, vv_action);
   return '{"ck_id":"' || coalesce(vot_role_action.ck_role::varchar, '') || '","cv_error":' || pkg.p_form_response() || '}';
 end;
 $BODY$;
@@ -477,7 +483,7 @@ begin
   -- вызовем метод изменения
   vot_d_info := pkg_account.p_modify_d_info(vv_action, vot_d_info);
   -- логируем данные
-  perform pkg_log.p_save(pv_user, pv_session, pc_json, 't_d_info', vot_d_info.ck_id, vv_action);
+  perform pkg_log.p_save(pv_user, pv_session, pc_json, 'pkg_json_account.f_modify_d_info', vot_d_info.ck_id, vv_action);
   return '{"ck_id":"' || coalesce(vot_d_info.ck_id, '') || '","cv_error":' || pkg.p_form_response() || '}';
   end;
 $BODY$;
@@ -524,7 +530,7 @@ begin
   -- вызовем метод измения роли
   vot_role := pkg_account.p_modify_role(vv_action, vot_role);
   -- логируем данные
-  perform pkg_log.p_save(pv_user, pv_session, pc_json, 't_role', vot_role.ck_id::varchar, vv_action);
+  perform pkg_log.p_save(pv_user, pv_session, pc_json, 'pkg_json_account.f_modify_role', vot_role.ck_id::varchar, vv_action);
   return '{"ck_id":"' || coalesce(vot_role.ck_id::varchar, '') || '","cv_error":' || pkg.p_form_response() || '}';
 end;
 $BODY$;
@@ -575,7 +581,7 @@ begin
   	perform pkg_account.p_modify_account_role(vv_action, vot_account_role);
   end loop;
   -- логируем данные
-  perform pkg_log.p_save(pv_user, pv_session, pc_json, 't_account_role', vot_account_role.ck_role::varchar, vv_action);
+  perform pkg_log.p_save(pv_user, pv_session, pc_json, 'pkg_json_account.f_modify_role_account', vot_account_role.ck_role::varchar, vv_action);
   return '{"ck_id":"' || coalesce(vot_account_role.ck_role::varchar, '') || '","cv_error":' || pkg.p_form_response() || '}';
 end;
 $BODY$;
@@ -626,7 +632,7 @@ begin
   	perform pkg_account.p_modify_role_action(vv_action, vot_role_action);
   end loop;
   -- логируем данные
-  perform pkg_log.p_save(pv_user, pv_session, pc_json, 't_role_action', vot_role_action.ck_action::varchar, vv_action);
+  perform pkg_log.p_save(pv_user, pv_session, pc_json, 'pkg_json_account.f_modify_role_action', vot_role_action.ck_action::varchar, vv_action);
   return '{"ck_id":"' || coalesce(vot_role_action.ck_action::varchar, '') || '","cv_error":' || pkg.p_form_response() || '}';
 end;
 $BODY$;

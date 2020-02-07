@@ -23,6 +23,7 @@ function prePareMsg(context: RequestContext, str: string): string {
 }
 // tslint:disable: variable-name
 export default class RequestContext implements IContext {
+    private _endResponse?: any;
     public get isResponded() {
         return this._isResponded;
     }
@@ -145,21 +146,24 @@ export default class RequestContext implements IContext {
     }
     public set connection(conn: Connection) {
         if (conn) {
-            const commitAndRelease = async () => {
-                this._response.removeListener("pipe", commitAndRelease);
-                this._response.removeListener("finish", commitAndRelease);
-                this._response.removeListener("close", commitAndRelease);
+            this._endResponse = this._endResponse || this._response.end;
+            this._response.end = async (...arg) => {
                 try {
                     await conn.commit();
                     await conn.release();
                 } catch (e) {
                     conn.rollbackAndRelease().then(noop, noop);
                     this.error(e);
+                } finally {
+                    this._endResponse.apply(this._response, arg);
+                    this._response.end = this._endResponse;
+                    this._endResponse = undefined;
                 }
             };
-            this._response.once("finish", commitAndRelease);
-            this._response.once("pipe", commitAndRelease);
-            this._response.once("close", commitAndRelease);
+        }
+        if (this._connection && !conn) {
+            this._response.end = this._endResponse;
+            this._endResponse = undefined;
         }
         this._connection = conn;
     }

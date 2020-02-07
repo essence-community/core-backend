@@ -9,5 +9,6 @@
   <include file="./public/public.xml" />
   <include file="./s_at/s_at.xml" />
   <include file="./s_ap/s_ap.xml" />
+  <include file="./auth/auth.xml" />
   <include file="./s_su/grants.sql" />
 </databaseChangeLog>

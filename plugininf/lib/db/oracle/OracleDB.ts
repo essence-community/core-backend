@@ -651,19 +651,21 @@ export default class OracleDB {
                 }
                 if (isRelease) {
                     result.stream.on("end", () => {
-                        if (options.autoCommit) {
-                            this.onRelease(conn).then(noop, noop);
-                        } else {
-                            this.onCommit(conn)
-                                .then(
-                                    () => this.onRelease(conn),
-                                    (err) => {
-                                        this.log.warn(err);
-                                        return this.onRelease(conn);
-                                    },
-                                )
-                                .then(noop, noop);
-                        }
+                        setTimeout(() => {
+                            if (options.autoCommit) {
+                                this.onRelease(conn).then(noop, noop);
+                            } else {
+                                this.onCommit(conn)
+                                    .then(
+                                        () => this.onRelease(conn),
+                                        (err) => {
+                                            this.log.warn(err);
+                                            return this.onRelease(conn);
+                                        },
+                                    )
+                                    .then(noop, noop);
+                            }
+                        }, 0);
                     });
                 }
                 return Promise.resolve(result);

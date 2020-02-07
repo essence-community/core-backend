@@ -25,3 +25,4 @@ CREATE ROLE s_ac WITH
   NOREPLICATION;
 
 ALTER ROLE s_ac SET search_path TO public, s_at, pg_catalog;
+ALTER USER s_ac WITH PASSWORD 's_ac';

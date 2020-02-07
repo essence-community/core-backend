@@ -4,7 +4,7 @@
     "description": "Fork nedb-multi",
     "main": "index.js",
     "author": "Ivan Artemov (honyrik@gmail.com)",
-    "license": "ISC",
+    "license": "MIT",
     "dependencies": {
         "@iarna/toml": "^2.2.3",
         "axon": "^2.0.3",

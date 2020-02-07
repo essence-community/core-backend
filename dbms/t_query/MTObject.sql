@@ -62,7 +62,7 @@ with recursive
 
     left join (select po.ck_object,
 
-                      string_agg(p.cv_name, '', '' order by p.cv_name) as cv_pages
+                      string_agg(''$t('' || p.cv_name || '')'', '', '' order by p.cv_name) as cv_pages
 
                  from s_mt.t_page_object po
 
@@ -87,10 +87,7 @@ with recursive
                                       and po.ck_page = (cast(:json as jsonb)->''filter''->>''ck_page'')::varchar)/*filter.ck_page##*/
 
 
-
     union all
-
-
 
     select q.sort || o.cn_order as sort,
 
@@ -150,7 +147,7 @@ with recursive
 
     left join (select po.ck_object,
 
-                      string_agg(p.cv_name, '', '' order by p.cv_name) as cv_pages
+                      string_agg(''$t('' || p.cv_name || '')'', '', '' order by p.cv_name) as cv_pages
 
                  from s_mt.t_page_object po
 
@@ -203,7 +200,6 @@ with recursive
     from q
 
    order by &SORT, q.sort
-
    ', 'meta', '20783', '2019-05-30 15:22:49.352201+03', 'select', 'po_session', NULL, 'Необходимо актуализировать')
 on conflict (ck_id) do update set cc_query = excluded.cc_query, ck_provider = excluded.ck_provider, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cr_type = excluded.cr_type, cr_access = excluded.cr_access;
 

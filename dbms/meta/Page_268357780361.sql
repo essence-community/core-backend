@@ -9,7 +9,7 @@ select pkg_patcher.p_merge_object('7B511D868B5D954CE053809BA8C098D7', '8', null,
 select pkg_patcher.p_merge_object('7B6855FFD50E052EE053809BA8C0CCCE', '16', '7B511D868B5D954CE053809BA8C098D7', 'column edit', 5, null, 'column edit', null, null, null, '20788', '2018-11-23T00:00:00.000+0000');
 select pkg_patcher.p_merge_object('7B516907E04995DBE053809BA8C0143F', '9', '7B511D868B5D954CE053809BA8C098D7', 'ck_id', 10, null, 'ck_id', '002ec63ccef84e759841e7a7e25e27f1', null, null, '20788', '2018-12-07T00:00:00.000+0000');
 select pkg_patcher.p_merge_object('7B67FE4A449B95A4E053809BA8C0EF74', '9', '7B511D868B5D954CE053809BA8C098D7', 'cv_value', 20, null, 'cv_value', '21fe3558a31c44ef8c93da0d7cd79d3b', null, null, '20788', '2018-12-07T00:00:00.000+0000');
-select pkg_patcher.p_merge_object('7C81353E4D1B19FAE053809BA8C08693', '9', '7B511D868B5D954CE053809BA8C098D7', 'cv_description', 30, null, 'cv_description', '900d174d0a994374a01b0005756521bc', null, null, '20788', '2018-12-07T00:00:00.000+0000');
+select pkg_patcher.p_merge_object('7C81353E4D1B19FAE053809BA8C08693', '9', '7B511D868B5D954CE053809BA8C098D7', 'cv_description', 30, null, 'cv_description', 'a4b1d1f3995f499a8f2bac5b57a3cbdc', null, null, '20788', '2018-12-07T00:00:00.000+0000');
 select pkg_patcher.p_merge_object_attr('33681260521', '7B511D868B5D954CE053809BA8C098D7', '1643', 'false', '20788', '2018-11-25T00:00:00.000+0000');
 select pkg_patcher.p_merge_object_attr('78563296821', '7B516907E04995DBE053809BA8C0143F', '179', '25%', '20788', '2018-12-07T00:00:00.000+0000');
 select pkg_patcher.p_merge_object_attr('33692472621', '7B516907E04995DBE053809BA8C0143F', '433', 'disabled', '20788', '2018-11-25T00:00:00.000+0000');
