@@ -339,14 +339,24 @@ export default class OfflineController implements ICoreController {
         );
         if (doc) {
             if (isEmpty(doc.cn_action) || !caActions.includes(doc.cn_action)) {
-                return Promise.reject(CoreContext.accessDenied());
+                throw CoreContext.accessDenied();
             }
-            return Promise.reject(
-                new BreakException({
-                    data: ResultStream(doc.json),
+            if (version === "3") {
+                throw new BreakException({
+                    data: ResultStream([
+                        {
+                            children: doc.json,
+                            global_value: doc.global_values,
+                        },
+                    ]),
                     type: "success",
-                }),
-            );
+                });
+            }
+
+            throw new BreakException({
+                data: ResultStream(doc.json),
+                type: "success",
+            });
         }
         return this.onlineFindPages(
             gateContext,
@@ -666,6 +676,7 @@ export default class OfflineController implements ICoreController {
                           self.loadModify(),
                           self.loadModifyAction(),
                           self.loadMessage(),
+                          self.loadSysSetting(),
                       ],
             ),
         );
