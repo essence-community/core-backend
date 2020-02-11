@@ -2081,9 +2081,6 @@ begin
     if pot_provider.cv_name is null then
       perform pkg.p_set_error(2);
     end if;
-    if length(pot_provider.ck_id) > 32 then
-      perform pkg.p_set_error(79, 32, 'meta:153d12ad65b44cfa85f5d1e88d11cc2a');
-    end if;
     if nullif(gv_error::varchar, '') is not null then
       return;
     end if;
