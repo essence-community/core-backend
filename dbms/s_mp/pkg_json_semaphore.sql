@@ -20,8 +20,8 @@ begin
   perform pkg.p_reset_response();
   -- JSON -> rowtype
 
-  vk_semaphore = trim(pc_json->'data'->>'ck_id');
-  vv_action = trim(pc_json->'service'->>'cv_action');
+  vk_semaphore = trim(pc_json#>>'{data,ck_id}');
+  vv_action = trim(pc_json#>>'{service,cv_action}');
 
   -- Вызов основной функции, где происходит инкремент/декремент
   if vv_action = 'inc' then

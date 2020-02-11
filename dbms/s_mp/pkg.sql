@@ -240,3 +240,24 @@ $$;
 ALTER FUNCTION pkg.sp_add(spv_macro character varying) OWNER TO s_mp;
 
 COMMENT ON FUNCTION pkg.sp_add(spv_macro character varying) IS 'саб-метод для добавления записии в коллекцию варчаров';
+
+
+CREATE FUNCTION pkg.f_check_error(code varchar, err varchar) RETURNS character varying
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pkg', 'public'
+    AS $$
+declare 
+gv_error sessvarstr;
+gv_warning sessvarstr;
+begin
+  gv_error = sessvarstr_declare('pkg', 'gv_error', '');
+  gv_warning = sessvarstr_declare('pkg', 'gv_warning', '');
+  
+  if nullif(gv_error::varchar, '') is not null or nullif(gv_warning::varchar, '') is not null then
+   	return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}';
+  end if;
+  raise exception '%: %', code, err;
+end;
+$$;
+
+ALTER FUNCTION pkg.f_check_error(code varchar, err varchar) OWNER TO s_mp;

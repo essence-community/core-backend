@@ -32,19 +32,19 @@ begin
   -- Обнулим глобальные переменные с перечнем ошибок/предупреждений/информационных сообщений
   perform pkg.p_reset_response();
   -- JSON -> rowtype
-  vot_action.ck_id = trim(pc_json->'data'->>'ck_id')::varchar;
-  vot_action.ck_step = trim(pc_json->'service'->>'ck_main')::varchar;
-  vot_action.cn_order = trim(pc_json->'data'->>'cn_order')::bigint;
-  vk_page = trim(pc_json->'data'->>'ck_page');
-  vk_page_object = trim(pc_json->'data'->>'ck_page_object');
-  vot_action.cv_value = trim(pc_json->'data'->>'cv_value');
-  vot_action.cv_description = trim(pc_json->'data'->>'cv_description');
-  vot_action.ck_d_action = trim(pc_json->'data'->>'ck_d_action');
-  vot_action.cl_expected = trim(pc_json->'data'->>'cl_expected')::smallint;
+  vot_action.ck_id = trim(pc_json#>>'{data,ck_id}')::varchar;
+  vot_action.ck_step = trim(pc_json#>>'{service,ck_main}')::varchar;
+  vot_action.cn_order = trim(pc_json#>>'{data,cn_order}')::bigint;
+  vk_page = trim(pc_json#>>'{data,ck_page}');
+  vk_page_object = trim(pc_json#>>'{data,ck_page_object}');
+  vot_action.cv_value = trim(pc_json#>>'{data,cv_value}');
+  vot_action.cv_description = trim(pc_json#>>'{data,cv_description}');
+  vot_action.ck_d_action = trim(pc_json#>>'{data,ck_d_action}');
+  vot_action.cl_expected = trim(pc_json#>>'{data,cl_expected}')::smallint;
   vot_action.ck_user = pv_user;
   vot_action.ct_change = CURRENT_TIMESTAMP;
-  vv_action = (pc_json->'service'->>'cv_action');
-  vk_main = (pc_json->'service'->>'ck_main')::varchar;
+  vv_action = (pc_json#>>'{service,cv_action}');
+  vk_main = (pc_json#>>'{service,ck_main}')::varchar;
 
   -- определим, какого типа эта запись - работа с объектом или смена страницы
   if vv_action in (i::varchar, u::varchar) then
@@ -97,14 +97,14 @@ begin
   -- Обнулим глобальные переменные с перечнем ошибок/предупреждений/информационных сообщений
   perform pkg.p_reset_response();
   -- JSON -> rowtype
-  vot_scenario.ck_id = trim(pc_json->'data'->>'ck_id')::varchar;
-  vot_scenario.cn_order = trim(pc_json->'data'->>'cn_order')::bigint;
-  vot_scenario.cv_name = trim(pc_json->'data'->>'cv_name');
-  vot_scenario.cl_valid = trim(pc_json->'data'->>'cl_valid')::smallint;
-  vot_scenario.cv_description = trim(pc_json->'data'->>'cv_description');
+  vot_scenario.ck_id = trim(pc_json#>>'{data,ck_id}')::varchar;
+  vot_scenario.cn_order = trim(pc_json#>>'{data,cn_order}')::bigint;
+  vot_scenario.cv_name = trim(pc_json#>>'{data,cv_name}');
+  vot_scenario.cl_valid = trim(pc_json#>>'{data,cl_valid}')::smallint;
+  vot_scenario.cv_description = trim(pc_json#>>'{data,cv_description}');
   vot_scenario.ck_user = pv_user;
   vot_scenario.ct_change = CURRENT_TIMESTAMP;
-  vv_action = (pc_json->'service'->>'cv_action');
+  vv_action = (pc_json#>>'{service,cv_action}');
 
   -- Проверим права доступа
   perform pkg_access.p_check_access(pv_user, vot_scenario.ck_id);
@@ -145,14 +145,14 @@ begin
   -- Обнулим глобальные переменные с перечнем ошибок/предупреждений/информационных сообщений
   perform pkg.p_reset_response();
   -- JSON -> rowtype
-  vot_step.ck_id = trim(pc_json->'data'->>'ck_id')::varchar;
-  vot_step.ck_scenario = trim(pc_json->'service'->>'ck_main')::varchar;
-  vot_step.cn_order = trim(pc_json->'data'->>'cn_order')::bigint;
-  vot_step.cv_name = trim(pc_json->'data'->>'cv_name');
+  vot_step.ck_id = trim(pc_json#>>'{data,ck_id}')::varchar;
+  vot_step.ck_scenario = trim(pc_json#>>'{service,ck_main}')::varchar;
+  vot_step.cn_order = trim(pc_json#>>'{data,cn_order}')::bigint;
+  vot_step.cv_name = trim(pc_json#>>'{data,cv_name}');
   vot_step.ck_user = pv_user;
   vot_step.ct_change = CURRENT_TIMESTAMP;
-  vv_action = (pc_json->'service'->>'cv_action');
-  vk_main = (pc_json->'service'->>'ck_main')::varchar;
+  vv_action = (pc_json#>>'{service,cv_action}');
+  vk_main = (pc_json#>>'{service,ck_main}')::varchar;
 
   -- Проверим права доступа
   perform pkg_access.p_check_access(pv_user, vk_main);

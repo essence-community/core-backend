@@ -21,12 +21,12 @@ begin
   -- Обнулим глобальные переменные с перечнем ошибок/предупреждений/информационных сообщений
   perform pkg.p_reset_response();
   -- JSON -> rowtype
-  vot_notification.ck_id = nullif(trim(pc_json->'data'->>'ck_id'), '');
-  vot_notification.cd_st = nullif(trim(pc_json->'data'->>'cd_st'), '')::date;
-  vot_notification.cd_en = nullif(trim(pc_json->'data'->>'cd_en'), '')::date;
-  vot_notification.ck_user = nullif(trim(pc_json->'data'->>'ck_user'), '');
-  vot_notification.cv_message = nullif(trim(pc_json->'data'->>'cv_message'), '');
-  vot_notification.cl_sent = nullif(trim(pc_json->'data'->>'cl_sent'), '')::smallint;
+  vot_notification.ck_id = nullif(trim(pc_json#>>'{data,ck_id}'), '');
+  vot_notification.cd_st = nullif(trim(pc_json#>>'{data,cd_st}'), '')::date;
+  vot_notification.cd_en = nullif(trim(pc_json#>>'{data,cd_en}'), '')::date;
+  vot_notification.ck_user = nullif(trim(pc_json#>>'{data,ck_user}'), '');
+  vot_notification.cv_message = nullif(trim(pc_json#>>'{data,cv_message}'), '');
+  vot_notification.cl_sent = nullif(trim(pc_json#>>'{data,cl_sent}'), '')::smallint;
   vv_action = nullif(trim(pc_json#>>'{service,cv_action}'), '');
   -- Заблокируем запись
   perform pkg_notification.p_lock_notification(vot_notification.ck_id);

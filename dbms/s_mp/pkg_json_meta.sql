@@ -29,10 +29,10 @@ begin
   perform pkg.p_reset_response();--(pv_user);
   --JSON -> rowtype
 
-  vot_object.ck_id = nullif(trim(pc_json->'data'->>'ck_id'), '');
-  vot_object.ck_parent = nullif(trim(pc_json->'data'->>'ck_parent'), '');
-  vv_action = (pc_json->'service'->>'cv_action');
-  vk_main = (pc_json->'service'->>'ck_main')::bigint;
+  vot_object.ck_id = nullif(trim(pc_json#>>'{data,ck_id}'), '');
+  vot_object.ck_parent = nullif(trim(pc_json#>>'{data,ck_parent}'), '');
+  vv_action = (pc_json#>>'{service,cv_action}');
+  vk_main = (pc_json#>>'{service,ck_main}')::bigint;
 
   -- проверим права доступа
   perform pkg_access.p_check_access(pv_user, vk_main::varchar);
@@ -73,13 +73,13 @@ begin
   perform pkg.p_reset_response();
   --JSON -> rowtype
 
-  pot_attr.ck_id = nullif(trim(pc_json->'data'->>'ck_id'), '');
-  pot_attr.cv_description = nullif(trim(pc_json->'data'->>'cv_description'), '');
-  pot_attr.ck_attr_type = nullif(trim(pc_json->'data'->>'ck_attr_type'), '');
+  pot_attr.ck_id = nullif(trim(pc_json#>>'{data,ck_id}'), '');
+  pot_attr.cv_description = nullif(trim(pc_json#>>'{data,cv_description}'), '');
+  pot_attr.ck_attr_type = nullif(trim(pc_json#>>'{data,ck_attr_type}'), '');
   pot_attr.ck_user = pv_user;
   pot_attr.ct_change = CURRENT_TIMESTAMP;
-  vv_action = (pc_json->'service'->>'cv_action');
-  vk_main = (pc_json->'service'->>'ck_main');
+  vv_action = (pc_json#>>'{service,cv_action}');
+  vk_main = (pc_json#>>'{service,ck_main}');
 
   --проверка прав доступа
   perform pkg_access.p_check_access(pv_user, vk_main);
@@ -122,15 +122,15 @@ begin
   perform pkg.p_reset_response();
   --JSON -> rowtype
 
-  pot_class.ck_id = nullif(trim(pc_json->'data'->>'ck_id'), '');
-  pot_class.cv_name = nullif(trim(pc_json->'data'->>'cv_name'), '');
-  pot_class.cv_description = nullif(trim(pc_json->'data'->>'cv_description'), '');
-  pot_class.cl_final = trim(pc_json->'data'->>'cl_final')::int2;
-  pot_class.cl_dataset = trim(pc_json->'data'->>'cl_dataset')::int2;
+  pot_class.ck_id = nullif(trim(pc_json#>>'{data,ck_id}'), '');
+  pot_class.cv_name = nullif(trim(pc_json#>>'{data,cv_name}'), '');
+  pot_class.cv_description = nullif(trim(pc_json#>>'{data,cv_description}'), '');
+  pot_class.cl_final = trim(pc_json#>>'{data,cl_final}')::int2;
+  pot_class.cl_dataset = trim(pc_json#>>'{data,cl_dataset}')::int2;
   pot_class.ck_user = pv_user;
   pot_class.ct_change = CURRENT_TIMESTAMP;
-  vv_action = (pc_json->'service'->>'cv_action');
-  vk_main = (pc_json->'service'->>'ck_main');
+  vv_action = (pc_json#>>'{service,cv_action}');
+  vk_main = (pc_json#>>'{service,ck_main}');
 
   --проверка прав доступа
   perform pkg_access.p_check_access(pv_user, vk_main);
@@ -171,15 +171,15 @@ begin
   --обнулим глобальные переменные с перечнем ошибок/предупреждений/информационных сообщений
   perform pkg.p_reset_response();
   --JSON -> rowtype
-  vot_class_attr.ck_id = nullif(trim(pc_json->'data'->>'ck_id'), '');
-  vot_class_attr.ck_class = nullif(trim(pc_json->'service'->>'ck_main'), '');
-  vot_class_attr.ck_attr = nullif(trim(pc_json->'data'->>'ck_attr'), '');
-  vot_class_attr.cv_value = (pc_json->'data'->>'cv_value');
-  vot_class_attr.cl_required = trim(pc_json->'data'->>'cl_required')::int2;
+  vot_class_attr.ck_id = nullif(trim(pc_json#>>'{data,ck_id}'), '');
+  vot_class_attr.ck_class = nullif(trim(pc_json#>>'{service,ck_main}'), '');
+  vot_class_attr.ck_attr = nullif(trim(pc_json#>>'{data,ck_attr}'), '');
+  vot_class_attr.cv_value = (pc_json#>>'{data,cv_value}');
+  vot_class_attr.cl_required = trim(pc_json#>>'{data,cl_required}')::int2;
   vot_class_attr.ck_user = pv_user;
   vot_class_attr.ct_change = CURRENT_TIMESTAMP;
-  vv_action = (pc_json->'service'->>'cv_action');
-  vk_main = (pc_json->'service'->>'ck_main');
+  vv_action = (pc_json#>>'{service,cv_action}');
+  vk_main = (pc_json#>>'{service,ck_main}');
 
   if nullif(trim(vot_class_attr.cv_value), '') is not null 
     and substr(vot_class_attr.cv_value, 0, 5) = 'new:'
@@ -187,7 +187,7 @@ begin
 
     --проверка на добавление значения в локализацию
     if vot_class_attr.ck_attr in ('confirmquestion', 'info', 'tipmsg') then
-      vot_localization.ck_d_lang = nullif(trim(pc_json->'data'->>'g_sys_lang'), '');
+      vot_localization.ck_d_lang = nullif(trim(pc_json#>>'{data,g_sys_lang}'), '');
       vot_localization.cr_namespace = 'meta';
       vot_localization.cv_value = substr(vot_class_attr.cv_value, 5);
       vot_localization.ck_user = pv_user;
@@ -244,14 +244,14 @@ begin
   perform pkg.p_reset_response();
   --JSON -> rowtype
 
-  pot_class_hierarchy.ck_id = nullif(trim(pc_json->'data'->>'ck_id'), '');
-  pot_class_hierarchy.ck_class_parent = nullif(trim(pc_json->'service'->>'ck_main'), '');
-  pot_class_hierarchy.ck_class_child = nullif(trim(pc_json->'data'->>'ck_class'), '');
-  pot_class_hierarchy.ck_class_attr = nullif(trim(pc_json->'data'->>'ck_class_attr'), '');
+  pot_class_hierarchy.ck_id = nullif(trim(pc_json#>>'{data,ck_id}'), '');
+  pot_class_hierarchy.ck_class_parent = nullif(trim(pc_json#>>'{service,ck_main}'), '');
+  pot_class_hierarchy.ck_class_child = nullif(trim(pc_json#>>'{data,ck_class}'), '');
+  pot_class_hierarchy.ck_class_attr = nullif(trim(pc_json#>>'{data,ck_class_attr}'), '');
   pot_class_hierarchy.ck_user = pv_user;
   pot_class_hierarchy.ct_change = CURRENT_TIMESTAMP;
-  vv_action = (pc_json->'service'->>'cv_action');
-  vk_main = (pc_json->'service'->>'ck_main');
+  vv_action = (pc_json#>>'{service,cv_action}');
+  vk_main = (pc_json#>>'{service,ck_main}');
 
   --проверка прав доступа
   perform pkg_access.p_check_access(pv_user, vk_main);
@@ -290,16 +290,16 @@ begin
   --обнулим глобальные переменные с перечнем ошибок/предупреждений/информационных сообщений
   perform pkg.p_reset_response();
   --JSON -> rowtype
-  vot_module.ck_id = nullif(trim(pc_json->'data'->>'ck_id'), '');
-  vot_module.cv_name = nullif(trim(pc_json->'data'->>'cv_name'), '');
+  vot_module.ck_id = nullif(trim(pc_json#>>'{data,ck_id}'), '');
+  vot_module.cv_name = nullif(trim(pc_json#>>'{data,cv_name}'), '');
   vot_module.ck_user = pv_user;
   vot_module.ct_change = CURRENT_TIMESTAMP;
-  vot_module.cv_version = nullif(trim(pc_json->'data'->>'cv_version'), '');
-  vot_module.cv_version_api = nullif(trim(pc_json->'data'->>'cv_version_api'), '');
-  vot_module.cl_available = (pc_json->'data'->>'cl_available')::int2;
-  vot_module.cc_manifest = trim(pc_json->'data'->>'cc_manifest')::json;
-  vot_module.cc_config = trim(pc_json->'data'->>'cc_config')::json;
-  vv_action = (pc_json->'service'->>'cv_action');
+  vot_module.cv_version = nullif(trim(pc_json#>>'{data,cv_version}'), '');
+  vot_module.cv_version_api = nullif(trim(pc_json#>>'{data,cv_version_api}'), '');
+  vot_module.cl_available = (pc_json#>>'{data,cl_available}')::int2;
+  vot_module.cc_manifest = trim(pc_json#>>'{data,cc_manifest}')::json;
+  vot_module.cc_config = trim(pc_json#>>'{data,cc_config}')::json;
+  vv_action = (pc_json#>>'{service,cv_action}');
   -- Проверим права доступа
   perform pkg_access.p_check_access(pv_user, vot_module.ck_id);
   if nullif(gv_error::varchar, '') is not null then
@@ -360,8 +360,8 @@ begin
   vot_object.ck_provider = nullif(trim(pc_json#>>'{data,ck_provider}'), '');
   vot_object.ck_user = pv_user;
   vot_object.ct_change = CURRENT_TIMESTAMP;
-  vv_action = (pc_json->'service'->>'cv_action');
-  vk_main = (pc_json->'service'->>'ck_main');
+  vv_action = (pc_json#>>'{service,cv_action}');
+  vk_main = (pc_json#>>'{service,ck_main}');
 
   --проверка прав доступа
   perform pkg_access.p_check_access(pv_user, vk_main);
@@ -425,15 +425,15 @@ begin
   perform pkg.p_reset_response();
   --JSON -> rowtype
 
-  vot_object_attr.ck_id = nullif(trim(pc_json->'data'->>'ck_id'), '');
-  vot_object_attr.ck_object = nullif(trim(pc_json->'service'->>'ck_main'), '');
-  vot_object_attr.ck_class_attr = nullif(trim(pc_json->'data'->>'ck_class_attr'), '');
-  vot_object_attr.cv_value = (pc_json->'data'->>'cv_value');
+  vot_object_attr.ck_id = nullif(trim(pc_json#>>'{data,ck_id}'), '');
+  vot_object_attr.ck_object = nullif(trim(pc_json#>>'{service,ck_main}'), '');
+  vot_object_attr.ck_class_attr = nullif(trim(pc_json#>>'{data,ck_class_attr}'), '');
+  vot_object_attr.cv_value = (pc_json#>>'{data,cv_value}');
   vot_object_attr.ck_user = pv_user;
   vot_object_attr.ct_change = CURRENT_TIMESTAMP;
-  vv_action = (pc_json->'service'->>'cv_action');
-  vv_attr = (pc_json->'data'->>'ck_attr');
-  vk_main = (pc_json->'service'->>'ck_main');
+  vv_action = (pc_json#>>'{service,cv_action}');
+  vv_attr = (pc_json#>>'{data,ck_attr}');
+  vk_main = (pc_json#>>'{service,ck_main}');
   
   if nullif(trim(vot_object_attr.cv_value), '') is not null 
     and substr(vot_object_attr.cv_value, 0, 5) = 'new:'
@@ -441,7 +441,7 @@ begin
 
     --проверка на добавление значения в локализацию
     if vv_attr in ('confirmquestion', 'info', 'tipmsg') then
-      vot_localization.ck_d_lang := nullif(trim(pc_json->'data'->>'g_sys_lang'), '');
+      vot_localization.ck_d_lang := nullif(trim(pc_json#>>'{data,g_sys_lang}'), '');
       vot_localization.cr_namespace = 'meta';
       vot_localization.cv_value = substr(vot_object_attr.cv_value, 5);
       vot_localization.ck_user = pv_user;
@@ -502,22 +502,22 @@ begin
   --обнулим глобальные переменные с перечнем ошибок/предупреждений/информационных сообщений
   perform pkg.p_reset_response();
   --JSON -> rowtype
-  vot_page.ck_id = nullif(trim(pc_json->'data'->>'ck_id'), '');
-  vot_page.ck_parent = nullif(trim(pc_json->'data'->>'ck_parent'), '');
-  vot_page.cr_type = nullif(trim(pc_json->'data'->>'cr_type'), '')::bigint;
-  vot_page.cv_name = nullif(trim(pc_json->'data'->>'cv_name'), '');
-  vot_page.cn_order = nullif(trim(pc_json->'data'->>'cn_order'), '')::bigint;
-  vot_page.cl_menu = nullif(trim(pc_json->'data'->>'cl_menu'), '')::smallint;
-  vot_page.cl_static = nullif(trim(pc_json->'data'->>'cl_static'), '')::smallint;
-  vot_page.cv_url = nullif(trim(pc_json->'data'->>'cv_url'), '');
-  vot_page.ck_icon = nullif(trim(pc_json->'data'->>'ck_icon'), '');
-  vn_action_view = nullif(trim(pc_json->'data'->>'cn_action_view'), '')::bigint;
-  vn_action_edit = nullif(trim(pc_json->'data'->>'cn_action_edit'), '')::bigint;
+  vot_page.ck_id = nullif(trim(pc_json#>>'{data,ck_id}'), '');
+  vot_page.ck_parent = nullif(trim(pc_json#>>'{data,ck_parent}'), '');
+  vot_page.cr_type = nullif(trim(pc_json#>>'{data,cr_type}'), '')::bigint;
+  vot_page.cv_name = nullif(trim(pc_json#>>'{data,cv_name}'), '');
+  vot_page.cn_order = nullif(trim(pc_json#>>'{data,cn_order}'), '')::bigint;
+  vot_page.cl_menu = nullif(trim(pc_json#>>'{data,cl_menu}'), '')::smallint;
+  vot_page.cl_static = nullif(trim(pc_json#>>'{data,cl_static}'), '')::smallint;
+  vot_page.cv_url = nullif(trim(pc_json#>>'{data,cv_url}'), '');
+  vot_page.ck_icon = nullif(trim(pc_json#>>'{data,ck_icon}'), '');
+  vn_action_view = nullif(trim(pc_json#>>'{data,cn_action_view}'), '')::bigint;
+  vn_action_edit = nullif(trim(pc_json#>>'{data,cn_action_edit}'), '')::bigint;
   vot_page.ck_user = pv_user;
   vot_page.ct_change = CURRENT_TIMESTAMP;
-  vv_action = (pc_json->'service'->>'cv_action');
-  vk_main = (pc_json->'service'->>'ck_main');
-  perform gl_warning == (pc_json->'service'->>'cl_warning')::bigint;
+  vv_action = (pc_json#>>'{service,cv_action}');
+  vk_main = (pc_json#>>'{service,ck_main}');
+  perform gl_warning == (pc_json#>>'{service,cl_warning}')::bigint;
 
   --проверка прав доступа
   perform pkg_access.p_check_access(pv_user, vk_main);
@@ -529,7 +529,7 @@ begin
     and substr(vot_page.cv_name, 0, 5) = 'new:'
     and length(vot_page.cv_name) > 4 then
 
-    vot_localization.ck_d_lang := nullif(trim(pc_json->'data'->>'g_sys_lang'), '');
+    vot_localization.ck_d_lang := nullif(trim(pc_json#>>'{data,g_sys_lang}'), '');
     vot_localization.cr_namespace = 'meta';
     vot_localization.cv_value = substr(vot_page.cv_name, 5);
     vot_localization.ck_user = pv_user;
@@ -574,16 +574,16 @@ begin
   --обнулим глобальные переменные с перечнем ошибок/предупреждений/информационных сообщений
   perform pkg.p_reset_response();
   --JSON -> rowtype
-  pot_page_object.ck_page = nullif(trim(pc_json->'service'->>'ck_main'), '');
-  pot_page_object.ck_object = nullif(trim(pc_json->'data'->>'ck_object'), '');
-  pot_page_object.ck_id = nullif(trim(pc_json->'data'->>'ck_id'), '');
-  pot_page_object.cn_order = nullif(trim(pc_json->'data'->>'cn_order'), '')::bigint;
-  pot_page_object.ck_master = nullif(trim(pc_json->'data'->>'ck_master'), '');
-  pot_page_object.ck_parent = nullif(trim(pc_json->'data'->>'ck_parent'), '');
+  pot_page_object.ck_page = nullif(trim(pc_json#>>'{service,ck_main}'), '');
+  pot_page_object.ck_object = nullif(trim(pc_json#>>'{data,ck_object}'), '');
+  pot_page_object.ck_id = nullif(trim(pc_json#>>'{data,ck_id}'), '');
+  pot_page_object.cn_order = nullif(trim(pc_json#>>'{data,cn_order}'), '')::bigint;
+  pot_page_object.ck_master = nullif(trim(pc_json#>>'{data,ck_master}'), '');
+  pot_page_object.ck_parent = nullif(trim(pc_json#>>'{data,ck_parent}'), '');
   pot_page_object.ck_user = pv_user;
   pot_page_object.ct_change = CURRENT_TIMESTAMP;
-  vv_action = (pc_json->'service'->>'cv_action');
-  vk_main = (pc_json->'service'->>'ck_main');
+  vv_action = (pc_json#>>'{service,cv_action}');
+  vk_main = (pc_json#>>'{service,ck_main}');
 
   --проверка прав доступа
   perform pkg_access.p_check_access(pv_user, vk_main);
@@ -629,23 +629,23 @@ begin
   --обнулим глобальные переменные с перечнем ошибок/предупреждений/информационных сообщений
   perform pkg.p_reset_response();
   --JSON -> rowtype
-  vot_page_object_attr.ck_id = nullif(trim(pc_json->'data'->>'ck_id'), '');
-  vot_page_object_attr.ck_page_object = nullif(trim(pc_json->'service'->>'ck_main'), '');
-  vot_page_object_attr.ck_class_attr = nullif(trim(pc_json->'data'->>'ck_class_attr'), '');
-  vot_page_object_attr.cv_value = (pc_json->'data'->>'cv_value');
+  vot_page_object_attr.ck_id = nullif(trim(pc_json#>>'{data,ck_id}'), '');
+  vot_page_object_attr.ck_page_object = nullif(trim(pc_json#>>'{service,ck_main}'), '');
+  vot_page_object_attr.ck_class_attr = nullif(trim(pc_json#>>'{data,ck_class_attr}'), '');
+  vot_page_object_attr.cv_value = (pc_json#>>'{data,cv_value}');
   vot_page_object_attr.ck_user = pv_user;
   vot_page_object_attr.ct_change = CURRENT_TIMESTAMP;
-  vv_action = (pc_json->'service'->>'cv_action');
-  vv_attr = (pc_json->'data'->>'ck_attr');
-  vk_main = (pc_json->'service'->>'ck_main');
-  perform gl_warning == (pc_json->'service'->>'cl_warning')::bigint;
+  vv_action = (pc_json#>>'{service,cv_action}');
+  vv_attr = (pc_json#>>'{data,ck_attr}');
+  vk_main = (pc_json#>>'{service,ck_main}');
+  perform gl_warning == (pc_json#>>'{service,cl_warning}')::bigint;
 
   if nullif(trim(vot_page_object_attr.cv_value), '') is not null 
     and substr(vot_page_object_attr.cv_value, 0, 5) = 'new:'
     and length(vot_page_object_attr.cv_value) > 4 then
     --проверка на добавление значения в локализацию
     if vv_attr in ('confirmquestion', 'info', 'tipmsg') then
-      vot_localization.ck_d_lang = nullif(trim(pc_json->'data'->>'g_sys_lang'), '');
+      vot_localization.ck_d_lang = nullif(trim(pc_json#>>'{data,g_sys_lang}'), '');
       vot_localization.cr_namespace = 'meta';
       vot_localization.cv_value = substr(vot_page_object_attr.cv_value, 5);
       vot_localization.ck_user = pv_user;
@@ -698,15 +698,15 @@ begin
   -- Обнулим глобальные переменные с перечнем ошибок/предупреждений/информационных сообщений
   perform pkg.p_reset_response();
   -- JSON -> rowtype
-  vot_page_variable.ck_id = nullif(trim(pc_json->'data'->>'ck_id'), '');
-  vot_page_variable.ck_page = nullif(trim(pc_json->'service'->>'ck_main'), '');
-  vot_page_variable.cv_name = nullif(trim(pc_json->'data'->>'cv_name'), '');
+  vot_page_variable.ck_id = nullif(trim(pc_json#>>'{data,ck_id}'), '');
+  vot_page_variable.ck_page = nullif(trim(pc_json#>>'{service,ck_main}'), '');
+  vot_page_variable.cv_name = nullif(trim(pc_json#>>'{data,cv_name}'), '');
   vot_page_variable.cv_value = nullif(pc_json#>>'{data,cv_value}', '');
-  vot_page_variable.cv_description = nullif(trim(pc_json->'data'->>'cv_description'), '');
+  vot_page_variable.cv_description = nullif(trim(pc_json#>>'{data,cv_description}'), '');
   vot_page_variable.ck_user = pv_user;
   vot_page_variable.ct_change = CURRENT_TIMESTAMP;
-  vv_action = (pc_json->'service'->>'cv_action');
-  vk_main = (pc_json->'service'->>'ck_main');
+  vv_action = (pc_json#>>'{service,cv_action}');
+  vk_main = (pc_json#>>'{service,ck_main}');
   -- Проверим права доступа
   perform pkg_access.p_check_access(pv_user, vk_main);
   if nullif(gv_error::varchar, '') is not null then
@@ -747,11 +747,11 @@ begin
   --обнулим глобальные переменные с перечнем ошибок/предупреждений/информационных сообщений
   perform pkg.p_reset_response();
   --JSON -> rowtype
-  vot_provider.ck_id = nullif(trim(pc_json->'data'->>'ck_id'), '');
-  vot_provider.cv_name = nullif(trim(pc_json->'data'->>'cv_name'), '');
+  vot_provider.ck_id = nullif(trim(pc_json#>>'{data,ck_id}'), '');
+  vot_provider.cv_name = nullif(trim(pc_json#>>'{data,cv_name}'), '');
   vot_provider.ck_user = pv_user;
   vot_provider.ct_change = CURRENT_TIMESTAMP;
-  vv_action = (pc_json->'service'->>'cv_action');
+  vv_action = (pc_json#>>'{service,cv_action}');
   if nullif(gv_error::varchar, '') is not null then
     return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}';
   end if;
@@ -769,7 +769,18 @@ begin
   return '{"ck_id":"' || coalesce(vot_provider.ck_id, '') || '","cv_error":' || pkg.p_form_response() || '}';
   exception
     when others then
-      return '{"ck_id":"' || coalesce(vot_provider.ck_id, '') || '","cv_error":{"512":[]}}';
+      if SQLSTATE = '22001' then
+        if length(nullif(trim(pc_json#>>'{data,ck_id}'), '')) > 32 then
+          perform pkg.p_set_error(79, '32', 'meta:153d12ad65b44cfa85f5d1e88d11cc2a');
+        end if;
+        if length(nullif(trim(pc_json#>>'{data,cv_name}'), '')) > 255 then
+          perform pkg.p_set_error(79, '255', 'meta:e0cd88534f90436da2b3b5eeae0ae340');
+        end if;
+        if nullif(gv_error::varchar, '') is not null then
+   	      return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}';
+        end if;
+      end if;
+      raise exception '%: %', SQLSTATE, SQLERRM;
 end;
 $$;
 
@@ -795,13 +806,13 @@ begin
   --обнулим глобальные переменные с перечнем ошибок/предупреждений/информационных сообщений
   perform pkg.p_reset_response();
   --JSON -> rowtype
-  vot_sys_setting.ck_id = nullif(trim(pc_json->'data'->>'ck_id'), '');
-  vot_sys_setting.cv_value = nullif(trim(pc_json->'data'->>'cv_value'), '');
-  vot_sys_setting.cv_description = nullif(trim(pc_json->'data'->>'cv_description'), '');
+  vot_sys_setting.ck_id = nullif(trim(pc_json#>>'{data,ck_id}'), '');
+  vot_sys_setting.cv_value = nullif(trim(pc_json#>>'{data,cv_value}'), '');
+  vot_sys_setting.cv_description = nullif(trim(pc_json#>>'{data,cv_description}'), '');
   vot_sys_setting.ck_user = pv_user;
   vot_sys_setting.ct_change = CURRENT_TIMESTAMP;
-  vv_action = (pc_json->'service'->>'cv_action');
-  perform gl_warning == (pc_json->'service'->>'cl_warning')::bigint;
+  vv_action = (pc_json#>>'{service,cv_action}');
+  perform gl_warning == (pc_json#>>'{service,cl_warning}')::bigint;
   -- Заблокируем основную таблицу
   perform pkg_meta.p_lock_sys_setting(vot_sys_setting.ck_id);
   if nullif(gv_error::varchar, '') is not null then
@@ -814,7 +825,18 @@ begin
   return '{"ck_id":"' || coalesce(vot_sys_setting.ck_id, '') || '","cv_error":' || pkg.p_form_response() || '}';
   exception
     when others then
-      return '{"ck_id":"' || coalesce(vot_sys_setting.ck_id, '') || '","cv_error":{"512":[]}}';
+      if SQLSTATE = '22001' then
+        if length(nullif(trim(pc_json#>>'{data,ck_id}'), '')) > 255 then
+          perform pkg.p_set_error(79, '255', 'meta:e0cd88534f90436da2b3b5eeae0ae340');
+        end if;
+        if length(nullif(trim(pc_json#>>'{data,cv_description}'), '')) > 2000 then
+          perform pkg.p_set_error(79, '2000', 'meta:a4b1d1f3995f499a8f2bac5b57a3cbdc');
+        end if;
+        if nullif(gv_error::varchar, '') is not null then
+   	      return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}';
+        end if;
+      end if;
+      raise exception '%: %', SQLSTATE, SQLERRM;
 end;
 $$;
 
@@ -842,11 +864,11 @@ begin
   perform pkg.p_reset_response();--(pv_user);
   --JSON -> rowtype
 
-  pot_page.ck_id = nullif(trim(pc_json->'data'->>'ck_id'), '');
+  pot_page.ck_id = nullif(trim(pc_json#>>'{data,ck_id}'), '');
   pot_page.ck_user = pv_user;
   pot_page.ct_change = CURRENT_TIMESTAMP;
-  vv_action = (pc_json->'service'->>'cv_action');
-  vk_main = (pc_json->'service'->>'ck_main')::bigint;
+  vv_action = (pc_json#>>'{service,cv_action}');
+  vk_main = (pc_json#>>'{service,ck_main}')::bigint;
 
   -- проверим права доступа
   perform pkg_access.p_check_access(pv_user, vk_main::varchar);
