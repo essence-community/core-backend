@@ -1800,7 +1800,7 @@ begin
                  t.cv_variable
           from t_variable
           cross join unnest(pkg_util.f_get_global_from_string(t_variable.cv_value, ck_attr)) as t(cv_variable)
-          where ck_attr in ('disabledrules', 'hiddenrules', 'getglobaltostore', 'getglobal', 'readonlyrules', 'setrecordtoglobal', 'setglobal', 'columnsfilter')
+          where ck_attr in ('activerules', 'disabledrules', 'hiddenrules', 'getglobaltostore', 'getglobal', 'readonlyrules', 'setrecordtoglobal', 'setglobal', 'columnsfilter')
           and upper(t.cv_variable) not ilike 'G_SYS%' and upper(t.cv_variable) not ilike 'G_SESS%'
         )v
         left join s_mt.t_page_variable pv on pv.ck_page = v.ck_page
@@ -1979,7 +1979,8 @@ begin
           where p.ck_id = pot_page_variable.ck_page
            and ca.ck_attr in (
               'setglobal',
-              'getglobal', 
+              'getglobal',
+              'activerules', 
               'setrecordtoglobal',
               'getglobaltostore',
               'hiddenrules',

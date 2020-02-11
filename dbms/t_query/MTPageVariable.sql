@@ -52,7 +52,7 @@ from (select v.ck_id,
         on o.ck_id = po.ck_object
       where po.ck_page = (cast(:json as jsonb)->''master''->>''ck_id'')::varchar
         and poa.cv_value like ''%'' || v.cv_name || ''%''
-        and ca.ck_attr in (''setglobal'')) as cv_path_set,
+        and ca.ck_attr in (''setglobal'',''setrecordtoglobal'')) as cv_path_set,
     (
       select
         string_agg((
@@ -96,6 +96,7 @@ from (select v.ck_id,
                           ''disabledrules'',
                           ''columnsfilter'',
                           ''readonlyrules'',
+                          ''activerules'',
                           ''requiredrules'')) as cv_path_get,
     v.ck_user,
     v.ct_change
