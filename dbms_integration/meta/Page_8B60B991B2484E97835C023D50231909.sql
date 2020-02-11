@@ -7,7 +7,7 @@ INSERT INTO s_mt.t_page_action (ck_id, ck_page, cr_type, cn_action, ck_user, ct_
 INSERT INTO s_mt.t_page_action (ck_id, ck_page, cr_type, cn_action, ck_user, ct_change)VALUES('D7EC1D44D9174B14ADB3EAA59758C59A', '8B60B991B2484E97835C023D50231909', 'view', 515, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-19T00:00:00.000+0000') on conflict (ck_id) do update set ck_page = excluded.ck_page, cr_type = excluded.cr_type, cn_action = excluded.cn_action, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
 select pkg_patcher.p_merge_object('D647270354794881BC735F7038016488', '8', null, 'Patch Integr Grid', 10, 'ITGetPatch', 'Patch Integr Grid', 'e352f04a992a45abbbc8d7aa4f9fc256', 'pkg_json_patcher.f_modify_patch', 's_ic_adm', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-01-16T00:00:00.000+0000');
 select pkg_patcher.p_merge_object('CA876D87B2CB44C09F74112B6ADA7050', '35', null, 'Patch Intrgr Tab', 20, null, 'Patch Intrgr Tab', null, null, null, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-19T00:00:00.000+0000');
-select pkg_patcher.p_merge_object('5849FD08F92B47369F952378CE556EED', '57', 'D647270354794881BC735F7038016488', 'Download Button', 5, null, 'Скачивание', null, null, null, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-24T00:00:00.000+0000');
+select pkg_patcher.p_merge_object('5849FD08F92B47369F952378CE556EED', '57', 'D647270354794881BC735F7038016488', 'Download Button', 5, null, 'Скачивание', '6e59eaefe0b24e9eaf5e0c01c9b4b9a9', null, null, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-02-11T00:00:00.000+0000');
 select pkg_patcher.p_merge_object('09C2277143FC46639D1567883971C22C', '19', 'D647270354794881BC735F7038016488', 'Create Button', 10, null, 'Create Button', 'eb3f37c72da848b4a73500bc35ed8c08', null, null, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-19T00:00:00.000+0000');
 select pkg_patcher.p_merge_object('B05807A8476E4917BC9BDA10115C85C0', '9', 'D647270354794881BC735F7038016488', 'Наименование', 20, null, 'Наименование', 'e0cd88534f90436da2b3b5eeae0ae340', null, null, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-19T00:00:00.000+0000');
 select pkg_patcher.p_merge_object('99258F2CDF034FA692E6F5B667B012BE', '8', 'CA876D87B2CB44C09F74112B6ADA7050', 'Integr Grid', 30, 'ITGetPatchInterface', 'Интеграционные сервисы', 'd6698d28cb3444138523a21141c16570', null, null, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-24T00:00:00.000+0000');
@@ -106,23 +106,25 @@ select t.ck_id, t.ck_d_lang, t.cr_namespace, t.cv_value, t.ck_user, t.ct_change:
     union all
     select 'c8d602c66c7247a0b3bc5b26caaa39c8' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Провайдер' as cv_value, '-11' as ck_user, '2019-12-09T00:00:00.000+0000' as ct_change
     union all
+    select '6e59eaefe0b24e9eaf5e0c01c9b4b9a9' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Скачать' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
+    union all
     select '0e804404b039411e83292c0b1658c0ee' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Checkbox' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-17T00:00:00.000+0000' as ct_change
-    union all
-    select '45747a3e5f8e4f519d63e8a6e1c3243c' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Тип интеграционного интерфейса' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-17T00:00:00.000+0000' as ct_change
-    union all
-    select '6727af8d818542fba835d152ebef3430' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'ИД связанного сервиса' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-17T00:00:00.000+0000' as ct_change
     union all
     select '7425a5c6e803436f8e06399c89dc7fd6' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Размер сборки, МБ' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-17T00:00:00.000+0000' as ct_change
     union all
     select '9b82c8e576784bd5b52d48d1bc96aa32' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Дата сборки' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-17T00:00:00.000+0000' as ct_change
-    union all
-    select 'd6698d28cb3444138523a21141c16570' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Интеграционные сервисы' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-17T00:00:00.000+0000' as ct_change
     union all
     select 'd9df123fbc844da39be9b002d49e7bc4' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Состав  сборки' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-17T00:00:00.000+0000' as ct_change
     union all
     select 'e352f04a992a45abbbc8d7aa4f9fc256' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Патч' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-17T00:00:00.000+0000' as ct_change
     union all
     select 'eb3f37c72da848b4a73500bc35ed8c08' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Собрать' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-17T00:00:00.000+0000' as ct_change
+    union all
+    select '45747a3e5f8e4f519d63e8a6e1c3243c' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Тип интеграционного интерфейса' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-17T00:00:00.000+0000' as ct_change
+    union all
+    select '6727af8d818542fba835d152ebef3430' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'ИД связанного сервиса' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-17T00:00:00.000+0000' as ct_change
+    union all
+    select 'd6698d28cb3444138523a21141c16570' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Интеграционные сервисы' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-17T00:00:00.000+0000' as ct_change
     union all
     select '751e3a8b87b44beba52b0d4dbc27ae81' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Как установить' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-18T00:00:00.000+0000' as ct_change
     union all
