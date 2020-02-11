@@ -7,7 +7,7 @@ const { exec } = require("child_process");
 const homeDir = __dirname;
 const packageJson = JSON.parse(fs.readFileSync("./package.json"));
 const serverJson = JSON.parse(fs.readFileSync("./server/package.json"));
-const versionApp = fs.readFileSync("./VERSION");
+const versionApp = fs.readFileSync("./VERSION").toString();
 delete serverJson.devDependencies;
 delete packageJson.devDependencies;
 delete packageJson.workspaces;
@@ -48,7 +48,7 @@ const schedulerPlugins = process.env.SCHEDULERS_PLUGINS
     : null;
 
 exec('git log -n 1 --pretty="format:%h от %ai"', (err, stdout) => {
-    packageJson.nodemonConfig.env.GATE_VERSION = `${versionApp} (${stdout})`;
+    packageJson.nodemonConfig.env.GATE_VERSION = `${versionApp.trim()} (${stdout.trim()})`;
 });
 
 const isDev = process.env.NODE_ENV === "development";
