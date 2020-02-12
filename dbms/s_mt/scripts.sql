@@ -1743,3 +1743,8 @@ INSERT INTO s_mt.t_localization (ck_id,ck_d_lang,cr_namespace,cv_value,ck_user,c
 	VALUES ('c7871bbd0e844793a47185a29b2b79f1','ru_RU','message','Максимальное количество символов {0} у параметра "{1}"','4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-02-06 20:58:14.658');
 INSERT INTO s_mt.t_message (ck_id,cr_type,cv_text,ck_user,ct_change)
 	VALUES (79,'error','c7871bbd0e844793a47185a29b2b79f1','4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-02-06 16:06:00.000');
+
+--changeset kutsenko:CORE-1550 dbms:postgresql
+UPDATE s_mt.t_localization SET cr_namespace = 'static' WHERE ck_id IN (
+	SELECT ck_id FROM s_mt.t_localization l WHERE l.cr_namespace = 'static'
+)
