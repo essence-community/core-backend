@@ -1748,3 +1748,6 @@ INSERT INTO s_mt.t_message (ck_id,cr_type,cv_text,ck_user,ct_change)
 UPDATE s_mt.t_localization SET cr_namespace = 'static' WHERE ck_id IN (
 	SELECT ck_id FROM s_mt.t_localization l WHERE l.cr_namespace = 'static'
 )
+
+--changeset artemov_i:CORE-989 dbms:postgresql
+ALTER TABLE s_mt.t_query ALTER COLUMN ck_provider TYPE varchar(32) USING ck_provider::varchar;
