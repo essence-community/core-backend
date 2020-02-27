@@ -76,20 +76,30 @@ export default class PostgreSQLDb extends NullProvider {
         if (!isEmpty(this.params.preExecuteSql)) {
             const processDmlPre = this.processDml;
             this.processDml = async (context: IContext, query: IGateQuery) => {
-                await context.connection.executeStmt(
+                const res = await context.connection.executeStmt(
                     this.params.preExecuteSql,
                     query.inParams,
                     query.outParams,
                 );
+                await new Promise((resolve, reject) => {
+                    res.stream.on("error", (err) => reject(err));
+                    res.stream.on("data", noop);
+                    res.stream.on("end", () => resolve());
+                });
                 return processDmlPre.call(this, context, query);
             };
             const processSqlPre = this.processSql;
             this.processSql = async (context: IContext, query: IGateQuery) => {
-                await context.connection.executeStmt(
+                const res = await context.connection.executeStmt(
                     this.params.preExecuteSql,
                     query.inParams,
                     query.outParams,
                 );
+                await new Promise((resolve, reject) => {
+                    res.stream.on("error", (err) => reject(err));
+                    res.stream.on("data", noop);
+                    res.stream.on("end", () => resolve());
+                });
                 return processSqlPre.call(this, context, query);
             };
         }
@@ -104,7 +114,18 @@ export default class PostgreSQLDb extends NullProvider {
                             query.inParams,
                             query.outParams,
                         )
-                        .then(noop, (err) =>
+                        .then(
+                            (resPost) =>
+                                new Promise((resolve, reject) => {
+                                    resPost.stream.on("error", (err) =>
+                                        reject(err),
+                                    );
+                                    resPost.stream.on("data", noop);
+                                    resPost.stream.on("end", () => resolve());
+                                }),
+                        )
+                        .then(noop)
+                        .catch((err) =>
                             context.error(
                                 `Error execute postExecuteSql:\n${err.message}`,
                                 err,
@@ -124,7 +145,18 @@ export default class PostgreSQLDb extends NullProvider {
                             query.inParams,
                             query.outParams,
                         )
-                        .then(noop, (err) =>
+                        .then(
+                            (resPost) =>
+                                new Promise((resolve, reject) => {
+                                    resPost.stream.on("error", (err) =>
+                                        reject(err),
+                                    );
+                                    resPost.stream.on("data", noop);
+                                    resPost.stream.on("end", () => resolve());
+                                }),
+                        )
+                        .then(noop)
+                        .catch((err) =>
                             context.error(
                                 `Error execute postExecuteSql:\n${err.message}`,
                                 err,
