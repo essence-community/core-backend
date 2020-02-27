@@ -4,7 +4,6 @@ import OracleDB from "@ungate/plugininf/lib/db/oracle";
 import BreakException from "@ungate/plugininf/lib/errors/BreakException";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
-import ICCTParams from "@ungate/plugininf/lib/ICCTParams";
 import IContext from "@ungate/plugininf/lib/IContext";
 import IGlobalObject from "@ungate/plugininf/lib/IGlobalObject";
 import IQuery, { IGateQuery } from "@ungate/plugininf/lib/IQuery";
@@ -13,17 +12,18 @@ import { IUserData } from "@ungate/plugininf/lib/ISession";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
 import { isObject } from "lodash";
 import IOracleController from "./IOracleController";
+import { IParamOracle } from "./OracleDb.types";
 const Property = (global as IGlobalObject).property;
 const wsQuerySQL =
     "select cc_query from t_query where upper(ck_id) = upper(:query)";
 
 export default class CoreOracle implements IOracleController {
     public dataSource: OracleDB;
-    public params: ICCTParams;
+    public params: IParamOracle;
     public name: string;
     private dbUsers: ILocalDB;
     private dbCache: ILocalDB;
-    constructor(name: string, params: ICCTParams, dataSource: OracleDB) {
+    constructor(name: string, params: IParamOracle, dataSource: OracleDB) {
         this.name = name;
         this.params = params;
         this.dataSource = dataSource;

@@ -4,7 +4,18 @@ export default interface ICCTParams {
 
 export interface IParamInfo {
     required?: boolean;
-    type: "string" | "boolean" | "integer" | "numeric" | "date" | "password";
+    type:
+        | "string"
+        | "boolean"
+        | "integer"
+        | "numeric"
+        | "date"
+        | "password"
+        | "long_string";
+    setGlobal?: string;
+    getGlobal?: string;
+    hiddenRules?: string;
+    disabledRules?: string;
     defaultValue?: any;
     name: string;
     description?: string;

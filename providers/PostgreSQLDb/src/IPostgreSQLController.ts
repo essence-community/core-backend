@@ -5,12 +5,13 @@ import IContext from "@ungate/plugininf/lib/IContext";
 import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
 import IQuery from "@ungate/plugininf/lib/IQuery";
 import { IResultProvider } from "@ungate/plugininf/lib/IResult";
+import { IParamPg } from "./PostgreSQLDb.types";
 
 export default abstract class IPostgreSQLController {
     public name: string;
-    public params: ICCTParams;
+    public params: IParamPg;
     public dataSource: PostgresDB;
-    constructor(name: string, params: ICCTParams, dataSource: PostgresDB) {
+    constructor(name: string, params: IParamPg, dataSource: PostgresDB) {
         this.name = name;
         this.params = params;
         this.dataSource = dataSource;
