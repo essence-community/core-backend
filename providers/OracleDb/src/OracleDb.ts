@@ -127,7 +127,18 @@ export default class OracleDBPlugin extends NullProvider {
                             query.inParams,
                             query.outParams,
                         )
-                        .then(noop, (err) =>
+                        .then(
+                            (resPost) =>
+                                new Promise((resolve, reject) => {
+                                    resPost.stream.on("error", (err) =>
+                                        reject(err),
+                                    );
+                                    resPost.stream.on("data", noop);
+                                    resPost.stream.on("end", () => resolve());
+                                }),
+                        )
+                        .then(noop)
+                        .catch((err) =>
                             context.error(
                                 `Error execute postExecuteSql:\n${err.message}`,
                                 err,
@@ -147,7 +158,18 @@ export default class OracleDBPlugin extends NullProvider {
                             query.inParams,
                             query.outParams,
                         )
-                        .then(noop, (err) =>
+                        .then(
+                            (resPost) =>
+                                new Promise((resolve, reject) => {
+                                    resPost.stream.on("error", (err) =>
+                                        reject(err),
+                                    );
+                                    resPost.stream.on("data", noop);
+                                    resPost.stream.on("end", () => resolve());
+                                }),
+                        )
+                        .then(noop)
+                        .catch((err) =>
                             context.error(
                                 `Error execute postExecuteSql:\n${err.message}`,
                                 err,
