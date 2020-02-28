@@ -26,6 +26,7 @@ select pkg_patcher.p_merge_object_attr('86DF93672AAF58F0E053809BA8C0726A', '86B7
 select pkg_patcher.p_merge_object_attr('86B72CAAACA4437CE053809BA8C07CAA', '86B72CAAACA2437CE053809BA8C07CAA', '126', 'ck_id', '20783', '2019-04-19T00:00:00.000+0000');
 select pkg_patcher.p_merge_object_attr('86E11382480C58EAE053809BA8C096F6', '86B72CAAACA2437CE053809BA8C07CAA', '127', 'remote', '20783', '2019-04-19T00:00:00.000+0000');
 select pkg_patcher.p_merge_object_attr('86E11382480D58EAE053809BA8C096F6', '86B72CAAACA2437CE053809BA8C07CAA', '863', 'cv_entered', '20783', '2019-04-19T00:00:00.000+0000');
+select pkg_patcher.p_merge_object_attr('0203FD181DC246E496837A22D6BB9AAC', '86B72CAAACA2437CE053809BA8C07CAA', 'DD92D2006CC84B44803C2DF03D532C5D', 'meta', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-02-28T00:00:00.000+0000');
 select pkg_patcher.p_merge_object_attr('64199', '4B8AB86588DA424EBD4D6DF9A2E98085', '179', '7%', '20788', '2018-12-08T00:00:00.000+0000');
 select pkg_patcher.p_merge_object_attr('64194', '4B8AB86588DA424EBD4D6DF9A2E98085', '47', 'ck_provider', '10020788', '2018-09-01T00:00:00.000+0000');
 select pkg_patcher.p_merge_object_attr('78518448421', '7C8088D3D3B48928E053809BA8C0C76A', '179', '10%', '20788', '2018-12-08T00:00:00.000+0000');
@@ -43,3 +44,24 @@ INSERT INTO s_mt.t_page_object (ck_id, ck_page, ck_object, cn_order, ck_parent, 
 INSERT INTO s_mt.t_page_object (ck_id, ck_page, ck_object, cn_order, ck_parent, ck_master, ck_user, ct_change) VALUES ('86E11382481158EAE053809BA8C096F6', '12987721', '1CCFF24F069A4D328611E3FB4A9249C8', 40, '86E11382480E58EAE053809BA8C096F6', null, '20788', '2018-12-08T00:00:00.000+0000')  on conflict (ck_id) do update set ck_page = excluded.ck_page, ck_object = excluded.ck_object, cn_order = excluded.cn_order, ck_parent = excluded.ck_parent, ck_master = excluded.ck_master, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
 INSERT INTO s_mt.t_page_object (ck_id, ck_page, ck_object, cn_order, ck_parent, ck_master, ck_user, ct_change) VALUES ('86E11382481658EAE053809BA8C096F6', '12987721', '86A49061739F2AFDE053809BA8C0EE3C', 10, '86E11382481458EAE053809BA8C096F6', null, '20788', '2018-12-08T00:00:00.000+0000')  on conflict (ck_id) do update set ck_page = excluded.ck_page, ck_object = excluded.ck_object, cn_order = excluded.cn_order, ck_parent = excluded.ck_parent, ck_master = excluded.ck_master, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
 INSERT INTO s_mt.t_page_object (ck_id, ck_page, ck_object, cn_order, ck_parent, ck_master, ck_user, ct_change) VALUES ('86E11382481558EAE053809BA8C096F6', '12987721', '86B72CAAACA2437CE053809BA8C07CAA', 20, '86E11382481458EAE053809BA8C096F6', null, '20788', '2018-12-08T00:00:00.000+0000')  on conflict (ck_id) do update set ck_page = excluded.ck_page, ck_object = excluded.ck_object, cn_order = excluded.cn_order, ck_parent = excluded.ck_parent, ck_master = excluded.ck_master, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change)
+select t.ck_id, t.ck_d_lang, t.cr_namespace, t.cv_value, t.ck_user, t.ct_change::timestamp from (
+    select '002ec63ccef84e759841e7a7e25e27f1' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Имя' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
+    union all
+    select '29170697a3e946e182fabfc3f8f06d7e' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Имя сервиса' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
+    union all
+    select '4d8d29a47fe24d9381329c0510c05942' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Тип запроса' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
+    union all
+    select '7444bf57e2044a2cb3fd266398ff7371' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Где используется' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
+    union all
+    select 'aaf9025cde674df68d6f07e7fbfe6ee1' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Провайдер' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
+    union all
+    select 'b744eb99612247088221bfe583069d60' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Фильтры' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
+    union all
+    select 'f61b22bbb7144b1db8da8b64aa4847c8' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Проверка доступа' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
+    union all
+    select 'fa5c0a601c3845f0938602d0fa7f71dc' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Сервисы' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
+) as t 
+ join s_mt.t_d_lang dl
+ on t.ck_d_lang = dl.ck_id
+on conflict on constraint cin_u_localization_1 do update set ck_id = excluded.ck_id, ck_d_lang = excluded.ck_d_lang, cr_namespace = excluded.cr_namespace, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
