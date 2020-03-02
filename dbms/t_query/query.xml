@@ -119,4 +119,6 @@
     <include file="./t_query/MTGetPatchQuery.sql" />
     <include file="./t_query/MTGetPatchMessage.sql" />
     <include file="./t_query/MTGetPatchLang.sql" />
+    <include file="./t_query/MTGetObjectUsedQuery.sql" />
+    <include file="./t_query/MTGetPageUsedQuery.sql" />
 </databaseChangeLog>
