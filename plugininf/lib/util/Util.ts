@@ -34,6 +34,7 @@ export function dateBetween(date: Date, fromDate: Date, toDate: Date) {
 function parseParam(conf: IParamInfo, value: any) {
     switch (conf.type) {
         case "string":
+        case "long_string":
         case "password":
             return toString(value);
         case "boolean": {
@@ -47,6 +48,8 @@ function parseParam(conf: IParamInfo, value: any) {
             return toNumber(value);
         case "date":
             return moment(value).toDate();
+        default:
+            return toString(value);
     }
 }
 /**

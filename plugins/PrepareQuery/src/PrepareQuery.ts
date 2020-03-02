@@ -61,11 +61,11 @@ export default class PrepareQuery extends NullPlugin {
                     );
                 }
 
-                if (!isEmpty(jnFetch)) {
+                if (!isEmpty(jnFetch) && /^\d+$/.test(jnFetch)) {
                     query.applyMacro("&FETCH", jnFetch);
                 }
 
-                if (!isEmpty(jnOffset)) {
+                if (!isEmpty(jnOffset) && /^\d+$/.test(jnOffset)) {
                     query.applyMacro("&OFFSET", jnOffset);
                 }
 
