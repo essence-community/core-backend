@@ -12,10 +12,11 @@ select
   m.cc_manifest,
   m.cc_config
 from s_mt.t_module m
-where &FILTER 
-/*##filter.ck_id*/ and m.ck_id = (cast(:json as jsonb)->''filter''->>''ck_id'')/*filter.ck_id##*/
-/*##filter.cl_available*/ and m.cl_available = (cast(:json as jsonb)->''filter''->>''cl_available'')::bigint/*filter.cl_available##*/
-/*##filter.cv_version_api*/ and REGEXP_REPLACE(m.cv_version_api, ''^(\d+\.\d+).*'',''\1'') = REGEXP_REPLACE((cast(:json as jsonb)->''filter''->>''cv_version_api''), ''^(\d+\.\d+).*'',''\1'') /*filter.cv_version_api##*/
+where &FILTER
+/*##master.ck_id*/ and m.ck_id = :json::json#>>''{master,ck_id}''/*master.ck_id##*/ 
+/*##filter.ck_id*/ and m.ck_id = :json::json#>>''{filter,ck_id}''/*filter.ck_id##*/
+/*##filter.cl_available*/ and m.cl_available = (:json::json#>>''{filter,cl_available}'')::bigint/*filter.cl_available##*/
+/*##filter.cv_version_api*/ and REGEXP_REPLACE(m.cv_version_api, ''^(\d+\.\d+).*'',''\1'') = REGEXP_REPLACE((:json::json#>>''{filter,cv_version_api}''), ''^(\d+\.\d+).*'',''\1'') /*filter.cv_version_api##*/
 order by &SORT
   ', 'meta', '-11', '2019-05-21 16:55:33.287994+03', 'select', 'free', NULL, 'Необходимо актуализировать')
 on conflict (ck_id) do update set cc_query = excluded.cc_query, ck_provider = excluded.ck_provider, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cr_type = excluded.cr_type, cr_access = excluded.cr_access;
