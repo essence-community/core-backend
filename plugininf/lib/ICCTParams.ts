@@ -11,7 +11,8 @@ export interface IParamInfo {
         | "numeric"
         | "date"
         | "password"
-        | "long_string";
+        | "long_string"
+        | "combo";
     setGlobal?: string;
     getGlobal?: string;
     hiddenRules?: string;
@@ -19,6 +20,18 @@ export interface IParamInfo {
     defaultValue?: any;
     name: string;
     description?: string;
+    valueField?: string;
+    displayField?: string;
+    query?: string;
+    minValue?: string;
+    maxValue?: string;
+    allownew?: string;
+    maxsize?: string;
+    minchars?: string;
+    pagesize?: string;
+    querymode?: "remote" | "local";
+    queryparam?: string;
+    records?: Array<Record<string, string | number>>;
 }
 
 export interface IParamsInfo {
