@@ -8,7 +8,7 @@ select t.ck_id,
        t.ck_user,
        t.ct_change
 from   
-( select c.ck_id,
+( select distinct c.ck_id,
        c.cv_name,
        c.cv_description,
        c.ck_user,
@@ -18,7 +18,7 @@ from
     on m.ck_id = mc.ck_module
   join s_mt.t_class c
     on c.ck_id = mc.ck_class
- where m.cv_name = :json::json#>>''{master,cv_name}''
+ where m.cv_name = :json::json#>>''{master,cv_name}'' and m.cl_available = 1
  /*##filter.ck_id*/and c.ck_id = :json::json#>>''{filter,ck_id}''/*filter.ck_id##*/
 ) t
  where true and ( &FILTER )
