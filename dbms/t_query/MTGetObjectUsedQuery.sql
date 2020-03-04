@@ -11,6 +11,9 @@ select
 from
     (
         with obj as (
+            with class_attr as (
+                select ck_id from s_mt.t_class_attr ca where ca.ck_attr in (''defaultvaluequery'',''redirectusequery'',''updatequery'')
+            )
             select
                 distinct o.ck_id,
                 o.cv_name,
@@ -20,9 +23,9 @@ from
             from
                 s_mt.t_query tq
             left join s_mt.t_object_attr o_attr on
-                o_attr.cv_value = tq.ck_id
+                o_attr.ck_class_attr in (select ck_id from class_attr) and o_attr.cv_value = tq.ck_id
             left join s_mt.t_class_attr ca on
-                ca.cv_value = tq.ck_id
+                ca.ck_id in (select ck_id from class_attr) and ca.cv_value = tq.ck_id
             join s_mt.t_object o on
                 tq.ck_id = o.ck_query
                 or o_attr.ck_object = o.ck_id

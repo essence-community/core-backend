@@ -10,6 +10,9 @@ select
 from
     (
         with obj as (
+            with class_attr as (
+                select ck_id from s_mt.t_class_attr ca where ca.ck_attr in (''defaultvaluequery'',''redirectusequery'',''updatequery'')
+            )
             select
                 distinct 
                 p.ck_id,
@@ -20,11 +23,11 @@ from
             from
                 s_mt.t_query tq
             left join s_mt.t_object_attr o_attr on
-                o_attr.cv_value = tq.ck_id
+                o_attr.ck_class_attr in (select ck_id from class_attr) and o_attr.cv_value = tq.ck_id
             left join s_mt.t_class_attr ca on
-                ca.cv_value = tq.ck_id
+                ca.ck_id in (select ck_id from class_attr) and ca.cv_value = tq.ck_id
             left join s_mt.t_page_object_attr po_attr on
-                po_attr.cv_value = tq.ck_id
+                po_attr.ck_class_attr in (select ck_id from class_attr) and po_attr.cv_value = tq.ck_id
             left join s_mt.t_page_object po on
                 po.ck_id = po_attr.ck_page_object
             join s_mt.t_object o on
