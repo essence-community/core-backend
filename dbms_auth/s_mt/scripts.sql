@@ -21,3 +21,8 @@ INSERT INTO s_mt.t_localization (ck_id,ck_d_lang,cr_namespace,cv_value,ck_user,c
 	VALUES ('c7871bbd0e855693a47185a29b2b79f1','ru_RU','static','Гостевая учетная запись','4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-03-04 20:58:14.658');
 INSERT INTO s_mt.t_sys_setting (ck_id,cv_value,ck_user,ct_change,cv_description)
     VALUES ('enable_guest_login','false','4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-03-04 20:58:14.658','Включаем гостевой доступ');
+
+--changeset artemov_i:CORE-1035-rename dbms:postgresql
+update s_mt.t_sys_setting
+    set ck_id='g_sys_enable_guest_login'
+where ck_id='enable_guest_login';
