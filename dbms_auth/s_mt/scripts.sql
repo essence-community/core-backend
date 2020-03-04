@@ -26,3 +26,5 @@ INSERT INTO s_mt.t_sys_setting (ck_id,cv_value,ck_user,ct_change,cv_description)
 update s_mt.t_sys_setting
     set ck_id='g_sys_enable_guest_login'
 where ck_id='enable_guest_login';
+INSERT INTO s_mt.t_localization (ck_id,ck_d_lang,cr_namespace,cv_value,ck_user,ct_change)
+	VALUES ('02776da507494f2f9956ba9e0f37b1f1','ru_RU','static','как гость','4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-03-04 08:00:00.000');
