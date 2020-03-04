@@ -6,7 +6,7 @@ select
 from
     (
         select
-            m.ck_id,
+            coalesce(am.ck_id, m.cv_name) as ck_id,
             m.cv_name,
             am.ck_user,
             am.ct_change at time zone :sess_cv_timezone as ct_change,
@@ -18,13 +18,12 @@ from
         from
             (
                 select
-                    distinct m.ck_id,
-                    m.cv_name
+                    distinct m.cv_name
                 from
                     s_mt.t_module m
             ) as m
         left join s_mt.t_module am on
-            m.ck_id = am.ck_id
+            m.cv_name = am.cv_name
             and am.cl_available = 1
     ) as dm
 where &FILTER

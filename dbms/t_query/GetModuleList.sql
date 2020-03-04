@@ -13,9 +13,9 @@ select
   m.cc_config
 from s_mt.t_module m
 where &FILTER
-/*##master.ck_id*/ and m.ck_id = :json::json#>>''{master,ck_id}''/*master.ck_id##*/ 
+/*##master.cv_name*/ and m.cv_name = :json::json#>>''{master,cv_name}''/*master.cv_name##*/ 
 /*##filter.ck_id*/ and m.ck_id = :json::json#>>''{filter,ck_id}''/*filter.ck_id##*/
-/*##filter.cl_available*/ and m.cl_available = (:json::json#>>''{filter,cl_available}'')::bigint/*filter.cl_available##*/
+/*##filter.cl_available*/ and m.cl_available = (:json::json#>>''{filter,cl_available}'')::smallint/*filter.cl_available##*/
 /*##filter.cv_version_api*/ and REGEXP_REPLACE(m.cv_version_api, ''^(\d+\.\d+).*'',''\1'') = REGEXP_REPLACE((:json::json#>>''{filter,cv_version_api}''), ''^(\d+\.\d+).*'',''\1'') /*filter.cv_version_api##*/
 order by &SORT
   ', 'meta', '-11', '2019-05-21 16:55:33.287994+03', 'select', 'free', NULL, 'Необходимо актуализировать')
