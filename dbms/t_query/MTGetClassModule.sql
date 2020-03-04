@@ -13,10 +13,12 @@ from
        c.cv_description,
        c.ck_user,
        c.ct_change at time zone :sess_cv_timezone as ct_change
-  from s_mt.t_module_class mc
+  from s_mt.t_module m
+  join s_mt.t_module_class mc
+    on m.ck_id = mc.ck_module
   join s_mt.t_class c
     on c.ck_id = mc.ck_class
- where mc.ck_module = :json::json#>>''{master,ck_id}''
+ where m.cv_name = :json::json#>>''{master,cv_name}''
  /*##filter.ck_id*/and c.ck_id = :json::json#>>''{filter,ck_id}''/*filter.ck_id##*/
 ) t
  where true and ( &FILTER )
