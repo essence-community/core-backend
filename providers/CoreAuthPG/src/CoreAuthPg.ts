@@ -11,24 +11,42 @@ import IQuery from "@ungate/plugininf/lib/IQuery";
 import { IResultProvider } from "@ungate/plugininf/lib/IResult";
 import NullAuthProvider, {
     IAuthResult,
+    IAuthProviderParam,
 } from "@ungate/plugininf/lib/NullAuthProvider";
 import { ReadStreamToArray } from "@ungate/plugininf/lib/stream/Util";
 import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
 import { debounce, noop } from "lodash";
 import { isObject } from "util";
+import ISession from "@ungate/plugininf/lib/ISession";
 const Property = (global as IGlobalObject).property;
 
 const MAX_WAIT_RELOAD = 5000;
 
+export interface IParamsProvider extends IAuthProviderParam {
+    guestAccount?: string;
+}
 export default class CoreAuthPg extends NullAuthProvider {
     public static getParamsInfo(): IParamsInfo {
+        /* tslint:disable:object-literal-sort-keys */
         return {
             ...NullAuthProvider.getParamsInfo(),
             ...PostgresDB.getParamsInfo(),
+            guestAccount: {
+                type: "combo",
+                name: "static:c7871bbd0e855693a47185a29b2b79f1",
+                query: "AuthShowAccount",
+                pagesize: "10",
+                displayField: "cv_login",
+                valueField: "ck_id",
+                querymode: "remote",
+                queryparam: "cv_login",
+            },
         };
+        /* tslint:enable:object-literal-sort-keys */
     }
 
     public dataSource: PostgresDB;
+    public params: IParamsProvider;
 
     private dbUsers: ILocalDB;
     private eventConnect: Connection;
@@ -49,6 +67,31 @@ export default class CoreAuthPg extends NullAuthProvider {
             poolMax: this.params.poolMax,
             queryTimeout: this.params.queryTimeout,
         });
+        if (!isEmpty(this.params.guestAccount)) {
+            this.afterSession = async (
+                context: IContext,
+                sessionId?: string,
+                session?: ISession,
+            ): Promise<ISession> => {
+                if (session) {
+                    return session;
+                }
+                const {
+                    session: sessGuest,
+                    ...sessDataGuest
+                }: any = await this.createSession(
+                    this.params.guestAccount,
+                    {},
+                    this.params.sessionDuration,
+                );
+                return {
+                    ck_id: this.params.guestAccount,
+                    ck_d_provider: this.name,
+                    data: sessDataGuest,
+                    session: sessGuest,
+                };
+            };
+        }
     }
     public getConnection(): Promise<Connection> {
         return this.dataSource.getConnection();
@@ -102,17 +145,16 @@ export default class CoreAuthPg extends NullAuthProvider {
             await this.dataSource.resetPool();
         }
         await this.dataSource.createPool();
-        if (this.eventConnect) {
-            this.reloadTemp.cancel();
-            await this.eventConnect.rollbackAndClose();
+        if (process.env.UNGATE_HTTP_ID === "1") {
+            await this.initEvents();
         }
-        this.eventConnect = await this.dataSource.getConnection();
-        await this.initEvents();
         return this.initTemp();
     }
     public async destroy() {
-        this.reloadTemp.cancel();
-        await this.eventConnect.rollbackAndClose();
+        if (process.env.UNGATE_HTTP_ID === "1") {
+            this.reloadTemp.cancel();
+            await this.eventConnect.rollbackAndClose();
+        }
         return this.dataSource.resetPool();
     }
     public async initContext(
@@ -137,24 +179,36 @@ export default class CoreAuthPg extends NullAuthProvider {
         }
         return res;
     }
-    private initEvents() {
-        this.log.info(`Init event ${this.name}`);
-        const conn = this.eventConnect.getCurrentConnection();
-        conn.on("notification", (msg) => {
-            this.log.trace("Notification %j", msg);
-            const payload = JSON.parse(msg.payload);
-            const table = payload.table?.toLowerCase();
-            if (
-                table &&
-                (table.endsWith("t_account") ||
-                    table.endsWith("t_account_role") ||
-                    table.endsWith("t_account_info") ||
-                    table.endsWith("t_role_action"))
-            ) {
-                this.reloadTemp();
+    private async initEvents() {
+        try {
+            this.log.info(`Init event ${this.name}`);
+            if (this.eventConnect) {
+                this.reloadTemp.cancel();
+                await this.eventConnect.rollbackAndClose();
             }
-        });
-        return conn.query("LISTEN events");
+            this.eventConnect = await this.dataSource.getConnection();
+            const conn = this.eventConnect.getCurrentConnection();
+            conn.on("notification", (msg) => {
+                this.log.trace("Notification %j", msg);
+                const payload = JSON.parse(msg.payload);
+                const table = payload.table?.toLowerCase();
+                if (
+                    table &&
+                    (table.endsWith("t_account") ||
+                        table.endsWith("t_account_role") ||
+                        table.endsWith("t_account_info") ||
+                        table.endsWith("t_role_action"))
+                ) {
+                    this.reloadTemp();
+                }
+            });
+            conn.on("error", () => {
+                return this.initEvents();
+            });
+            return conn.query("LISTEN events");
+        } catch (err) {
+            setTimeout(() => this.initEvents(), MAX_WAIT_RELOAD);
+        }
     }
     private async initTemp() {
         const users = {};

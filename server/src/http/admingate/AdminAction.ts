@@ -424,7 +424,7 @@ export default class AdminAction {
                                     gateContext,
                                     arr[0],
                                     json.filter.ck_page,
-                                    (json.filter.childs || [])[0],
+                                    (json.filter.ca_childs || [])[0],
                                     arr[1] as IParamInfo,
                                     doc.cct_params,
                                 ),
@@ -511,6 +511,8 @@ export default class AdminAction {
                 return {
                     ...defaultAttr,
                     datatype: "integer",
+                    maxvalue: conf.maxValue,
+                    minvalue: conf.minValue,
                     defaultvalue: isEmpty(params[name])
                         ? conf.defaultValue
                         : params[name],
@@ -537,6 +539,24 @@ export default class AdminAction {
                     datatype: "checkbox",
                     defaultvalue: +(params[name] || conf.defaultValue),
                     type: "IFIELD",
+                };
+            }
+            case "combo": {
+                return {
+                    ...defaultAttr,
+                    autoload: "true",
+                    ck_page_object: child.ck_page_object,
+                    ck_query: conf.query,
+                    cl_dataset: 1,
+                    datatype: "combo",
+                    defaultvalue: params[name] || conf.defaultValue,
+                    displayfield: conf.displayField,
+                    type: "IFIELD",
+                    valuefield: conf.valueField,
+                    querymode: conf.querymode,
+                    queryparam: conf.queryparam,
+                    allownew: conf.allownew,
+                    pagesize: conf.pagesize,
                 };
             }
             default: {
