@@ -73,6 +73,9 @@ export default class CoreAuthPg extends NullAuthProvider {
                 sessionId?: string,
                 session?: ISession,
             ): Promise<ISession> => {
+                if (session) {
+                    return session;
+                }
                 if (context.params.connect_guest === "true") {
                     const {
                         session: sessGuest,
