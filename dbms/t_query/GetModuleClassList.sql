@@ -5,7 +5,7 @@ select
   c.ck_id,
   c.cv_name,
   c.ck_user,
-  c.ct_change,
+  c.ct_change at time zone :sess_cv_timezone as ct_change,
   string_agg(opb.cv_name, '', '' ORDER BY opb.cv_name ASC) as cv_class_objects
 from s_mt.t_module m
 join s_mt.t_module_class mc

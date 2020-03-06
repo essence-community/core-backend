@@ -18,7 +18,7 @@ select
     a.cv_patronymic,
     a.cv_email,
 	ra.ck_user,
-	ra.ct_change
+	ra.ct_change at time zone :sess_cv_timezone as ct_change
 from t_account a
 left join t_account_role ra
  on a.ck_id = ra.ck_account and ra.ck_role =
@@ -29,4 +29,4 @@ left join t_account_role ra
  order by &SORT
 offset &OFFSET rows
  fetch first &FETCH rows only','authcore','-11','2019-08-13 18:30:00.000','select','po_session','Список выбраных пользователей')
-on conflict (ck_id) do update set cc_query = excluded.cc_query, ck_provider = excluded.ck_provider, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cr_type = excluded.cr_type, cr_access = excluded.cr_access;
+on conflict (ck_id) do update set cc_query = excluded.cc_query, ck_provider = excluded.ck_provider, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cr_type = excluded.cr_type, cr_access = excluded.cr_access, cv_description = excluded.cv_description;
