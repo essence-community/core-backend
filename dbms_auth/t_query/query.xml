@@ -27,4 +27,7 @@
 <include file="./t_query/AuthGetPatchAction.sql" />
 <include file="./t_query/AuthGetPatchAccount.sql" />
 <include file="./t_query/AuthGetPatchInfo.sql" />
+<include file="./t_query/AuthShowToken.sql" />
+<include file="./t_query/AuthDefaultTokenExpire.sql" />
+<include file="./t_query/AuthGenerateToken.sql" />
 </databaseChangeLog>

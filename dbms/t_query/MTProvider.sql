@@ -8,7 +8,7 @@ select t.ck_id,
 
        t.ck_user,
 
-       t.ct_change
+       t.ct_change at time zone :sess_cv_timezone as ct_change
 
   from s_mt.t_provider t
 
