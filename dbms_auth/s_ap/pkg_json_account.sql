@@ -160,7 +160,6 @@ declare
 
   -- переменные функции
   vot_account s_at.t_account;
-  vv_account uuid := NULL;
   vot_auth_token s_at.t_auth_token;
 begin
   -- инициализация/получение переменных пакета
