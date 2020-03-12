@@ -160,22 +160,36 @@ declare
 
   -- переменные функции
   vot_account s_at.t_account;
-  vv_account uuid := NULL;
+  vot_auth_token s_at.t_auth_token;
 begin
   -- инициализация/получение переменных пакета
   gv_error = sessvarstr_declare('pkg', 'gv_error', '');
-  if pv_token = 'C1AC0E74F4A3929C0760828ACADE3B77C1A33EB' then
-    vv_account := '61af10df-db13-4d15-a5a5-c3e6d7bc1362'::uuid;
-  end if;
+
   -- код функции
   --обнулим глобальные переменные с перечнем ошибок/предупреждений/информационных сообщений, выставим пользователя
   perform pkg.p_reset_response();--(pn_user);
+  
   --JSON -> rowtype
+  if pv_token is not null then
+    select 
+      t.* 
+      into vot_auth_token
+    from s_at.t_auth_token t 
+      where t.ck_id = pv_token and CURRENT_TIMESTAMP BETWEEN t.ct_start and t.ct_expire;
+    
+    if vot_auth_token.ck_account is not null and vot_auth_token.cl_single = 1 then
+        vot_auth_token.ck_user = vot_auth_token.ck_account::varchar;
+        vot_auth_token.ct_expire = CURRENT_TIMESTAMP;
+        vot_auth_token.ct_change = CURRENT_TIMESTAMP;
+        vot_auth_token := pkg_account.p_modify_auth_token('U', vot_auth_token);
+    end if;
+  end if;
+
   select
-  *
-  into vot_account
+    *
+    into vot_account
   from s_at.t_account
-  where (upper(cv_login) = upper(pv_login) and cv_hash_password = pkg_account.f_create_hash(cv_salt, pv_password)) or (vv_account is not null and ck_id = vv_account);
+    where (upper(cv_login) = upper(pv_login) and cv_hash_password = pkg_account.f_create_hash(cv_salt, pv_password)) or (vot_auth_token.ck_account is not null and ck_id = vot_auth_token.ck_account);
   -- логируем данные
   if pl_audit = 1 then
      perform pkg_log.p_save('-11', '', jsonb_build_object('cv_login', pv_login, 'cv_token', pv_token), 'Login', vot_account.ck_id::varchar, 'i');
@@ -645,3 +659,51 @@ ALTER FUNCTION pkg_json_account.f_modify_role_action(character varying, characte
 
 COMMENT ON FUNCTION pkg_json_account.f_modify_role_action(character varying, character varying, jsonb)
     IS 'добавление/редактирование/удаление связи ролей и действий';
+
+CREATE OR REPLACE FUNCTION pkg_json_account.f_modify_auth_token(
+	pv_user character varying,
+	pv_session character varying,
+	pc_json jsonb)
+    RETURNS text
+    LANGUAGE 'plpgsql'
+    SECURITY DEFINER 
+    SET search_path=public, pkg_account, s_at
+AS $BODY$
+declare
+  -- переменные пакета
+  gv_error sessvarstr;
+
+  -- переменные функции
+  vot_auth_token s_at.t_auth_token;
+  vv_action  varchar(1);
+begin
+  -- инициализация/получение переменных пакета
+  gv_error = sessvarstr_declare('pkg', 'gv_error', '');
+
+  -- код функции
+  --обнулим глобальные переменные с перечнем ошибок/предупреждений/информационных сообщений, выставим пользователя
+  perform pkg.p_reset_response();--(pn_user);
+  --JSON -> rowtype
+  vv_action = trim(pc_json#>>'{service,cv_action}');
+  vot_auth_token.ck_id = nullif(trim(pc_json#>>'{data,ck_id}'), '');
+  vot_auth_token.ct_start = COALESCE(nullif(trim(pc_json#>>'{data,ct_start}'), ''), CURRENT_TIMESTAMP::varchar)::timestamp;
+  vot_auth_token.ct_expire = COALESCE(nullif(trim(pc_json#>>'{data,ct_expire}'), ''), (CURRENT_TIMESTAMP + interval '2 minute')::varchar)::timestamp;
+  vot_auth_token.ck_account = nullif(trim(pc_json#>>'{data,ck_account}'), '');
+  vot_auth_token.cl_single = (COALESCE(nullif(trim(pc_json#>>'{data,cl_single}'), ''), '1'))::smallint;
+  vot_auth_token.ck_user = pv_user;
+  vot_auth_token.ct_change = CURRENT_TIMESTAMP;
+  -- лочим действие и роль
+  
+  perform pkg_account.p_lock_auth_token(vot_auth_token.ck_id);
+	vot_auth_token := pkg_account.p_modify_auth_token(vv_action, vot_auth_token);
+  -- логируем данные
+  perform pkg_log.p_save(pv_user, pv_session, pc_json, 'pkg_json_account.f_modify_auth_token', vot_auth_token.ck_id::varchar, vv_action);
+  return '{"ck_id":"' || coalesce(vot_auth_token.ck_id::varchar, '') || '","cv_error":' || pkg.p_form_response() || '}';
+end;
+$BODY$;
+
+ALTER FUNCTION pkg_json_account.f_modify_auth_token(character varying, character varying, jsonb)
+    OWNER TO s_ap;
+
+COMMENT ON FUNCTION pkg_json_account.f_modify_auth_token(character varying, character varying, jsonb)
+    IS 'добавление/редактирование/удаление токенов';

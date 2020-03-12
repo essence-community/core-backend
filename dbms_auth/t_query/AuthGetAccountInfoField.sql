@@ -11,4 +11,4 @@ json_build_object(''type'', ''PANEL'',
 			''contentview'', ''vbox'',
 			''ck_page_object'', sys_guid(),
 			''cv_helper_color'', ''red'') as json','authcore','-11','2019-08-13 18:30:00.000','select','po_session','Поля ввода')
-on conflict (ck_id) do update set cc_query = excluded.cc_query, ck_provider = excluded.ck_provider, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cr_type = excluded.cr_type, cr_access = excluded.cr_access;
+on conflict (ck_id) do update set cc_query = excluded.cc_query, ck_provider = excluded.ck_provider, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cr_type = excluded.cr_type, cr_access = excluded.cr_access, cv_description = excluded.cv_description;

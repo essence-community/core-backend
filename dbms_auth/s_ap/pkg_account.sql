@@ -572,3 +572,78 @@ ALTER FUNCTION pkg_account.p_modify_role_action(character varying, s_at.t_role_a
 
 COMMENT ON FUNCTION pkg_account.p_modify_role_action(character varying, s_at.t_role_action)
     IS 'Добавлени/редактирование/удаление связи ролей и экшенов';
+
+CREATE OR REPLACE FUNCTION pkg_account.p_lock_auth_token(
+	pk_id character varying)
+    RETURNS void
+    LANGUAGE 'plpgsql'
+    SECURITY DEFINER 
+    SET search_path=public, pkg, pkg_account, s_at
+AS $BODY$
+declare
+  vn_lock bigint;
+begin
+  if pk_id is not null then
+    select 1 into vn_lock from s_at.t_auth_token where ck_id = pk_id for update nowait;
+  end if;
+end;
+$BODY$;
+
+ALTER FUNCTION pkg_account.p_lock_auth_token(character varying)
+    OWNER TO s_ap;
+
+CREATE OR REPLACE FUNCTION pkg_account.p_modify_auth_token(
+	pv_action character varying,
+	INOUT pot_auth_token s_at.t_auth_token)
+    RETURNS s_at.t_auth_token
+    LANGUAGE 'plpgsql'
+    SECURITY DEFINER 
+    SET search_path=public, pkg, pkg_account, s_at
+AS $BODY$
+declare
+  -- переменные пакета
+  i sessvarstr;
+  u sessvarstr;
+  d sessvarstr;
+  gv_error sessvarstr;
+ 
+  vv_salt varchar;
+begin
+  -- инициализация/получение переменных пакета
+  i = sessvarstr_declare('pkg', 'i', 'I');
+  u = sessvarstr_declare('pkg', 'u', 'U');
+  d = sessvarstr_declare('pkg', 'd', 'D');
+  gv_error = sessvarstr_declare('pkg', 'gv_error', '');
+
+  -- код функции
+  if pv_action = d::varchar then  
+    delete from s_at.t_auth_token where ck_id = pot_auth_token.ck_id;
+    return;
+  end if;
+  if pv_action = i::varchar then
+    if pot_auth_token.ck_account is null then
+      perform pkg.p_set_error(200, 'meta:9cbe9222069f462795ce3fc6e6c32de5');
+    end if;
+    if nullif(gv_error::varchar, '') is not null then
+      return;
+    end if;
+    vv_salt := encode(digest(pot_auth_token.ck_account::varchar || pot_auth_token.ct_start::varchar, 'sha256'), 'hex');
+    pot_auth_token.ck_id = substring(pkg_account.f_create_hash(vv_salt, public.sys_guid()),0,50);
+    insert into s_at.t_auth_token values (pot_auth_token.*);
+   return;
+  end if;
+  update s_at.t_auth_token
+    set (ct_expire,ck_user,ct_change) = 
+    (pot_auth_token.ct_expire,pot_auth_token.ck_user,pot_auth_token.ct_change)
+  where ck_id = pot_auth_token.ck_id;
+  if not found then
+    perform pkg.p_set_error(504);
+  end if;
+end;
+$BODY$;
+
+ALTER FUNCTION pkg_account.p_modify_auth_token(character varying, s_at.t_auth_token)
+    OWNER TO s_ap;
+
+COMMENT ON FUNCTION pkg_account.p_modify_auth_token(character varying, s_at.t_auth_token)
+    IS 'Добавлени/редактирование/удаление токенов';
