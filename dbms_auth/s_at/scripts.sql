@@ -78,3 +78,9 @@ COMMENT ON COLUMN s_at.t_auth_token.ck_user IS 'ИД пользователя а
 COMMENT ON COLUMN s_at.t_auth_token.ct_change IS 'Время модификации';
 INSERT INTO s_at.t_action (ck_id,cv_name,cv_description,ck_user,ct_change)
 	VALUES (89999,'Генерация токена','Генерация токена','4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-03-06 19:15:11.069');
+
+--changeset romanyuk-a:CORE-1082 dbms:postgresql
+INSERT INTO s_at.t_account_role (ck_id,ck_role,ck_user,ct_change,ck_account)
+	VALUES ('58fe9436-69f8-4ef9-be6f-9a89c25d0482','ea196953-643d-4666-9a0d-b37689837e2f','4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-03-13 10:05:58.723','f167f04b-0a85-4e6f-94df-02ae416087b1');
+INSERT INTO s_at.t_account_role (ck_id,ck_role,ck_user,ct_change,ck_account)
+	VALUES ('d3d4993d-2858-4f9e-ba06-8ef0bdf1e56b','ea196953-643d-4666-9a0d-b37689837e2f','4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-03-13 10:05:51.723','4fd05ca9-3a9e-4d66-82df-886dfa082113');
