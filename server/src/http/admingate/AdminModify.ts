@@ -1,16 +1,16 @@
 import ILocalDB from "@ungate/plugininf/lib/db/local/ILocalDB";
+import BreakException from "@ungate/plugininf/lib/errors/BreakException";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
 import ICCTParams from "@ungate/plugininf/lib/ICCTParams";
 import IContext from "@ungate/plugininf/lib/IContext";
 import IObjectParam from "@ungate/plugininf/lib/IObjectParam";
 import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
+import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
 import { isEmpty } from "@ungate/plugininf/lib/util/Util";
 import { forEach, isArray } from "lodash";
 import Property from "../../core/property/index";
 import RiakAction from "./RiakAction";
-import BreakException from '@ungate/plugininf/lib/errors/BreakException';
-import ResultStream from '@ungate/plugininf/lib/stream/ResultStream';
 
 const actions = ["i", "u", "d"];
 export default class AdminModify {
@@ -155,9 +155,12 @@ export default class AdminModify {
                     });
                     delete json.data.cct_params;
                 }
-                const rec = await localDb.findOne({
-                    ck_id: ckId,
-                }, true);
+                const rec = await localDb.findOne(
+                    {
+                        ck_id: ckId,
+                    },
+                    true,
+                );
                 if (!rec) {
                     throw new BreakException({
                         data: ResultStream([

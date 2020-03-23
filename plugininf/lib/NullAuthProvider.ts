@@ -11,11 +11,16 @@ import IQuery, { IGateQuery } from "./IQuery";
 import { IResultProvider } from "./IResult";
 import ISession from "./ISession";
 import NullProvider from "./NullProvider";
+import { IParamsProvider } from "./NullProvider";
 import { isEmpty } from "./util/Util";
 
 export interface IAuthResult {
     ck_user: string;
     data?: IObjectParam;
+}
+export interface IAuthProviderParam extends IParamsProvider {
+    onlySession: boolean;
+    sessionDuration: number;
 }
 export default abstract class NullAuthProvider extends NullProvider {
     public static getParamsInfo(): IParamsInfo {
@@ -33,6 +38,7 @@ export default abstract class NullAuthProvider extends NullProvider {
             },
         };
     }
+    public params: IAuthProviderParam;
     public isAuth: boolean = true;
     public authController: IAuthController;
     constructor(name: string, params: ICCTParams) {

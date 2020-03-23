@@ -15,3 +15,20 @@ VALUES (203,'error','Уже существует пользователь с т�
 --changeset artemov_i:CORE-399 dbms:postgresql
 INSERT INTO s_mt.t_message (ck_id,cr_type,cv_text,ck_user,ct_change)
 VALUES (204,'error','Удаление невозможно, т.к. существуют связанные записи','4fd05ca9-3a9e-4d66-82df-886dfa082113','2019-10-30 10:30:00.000');
+
+--changeset artemov_i:CORE-1035 dbms:postgresql
+INSERT INTO s_mt.t_localization (ck_id,ck_d_lang,cr_namespace,cv_value,ck_user,ct_change)
+	VALUES ('c7871bbd0e855693a47185a29b2b79f1','ru_RU','static','Гостевая учетная запись','4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-03-04 20:58:14.658');
+INSERT INTO s_mt.t_sys_setting (ck_id,cv_value,ck_user,ct_change,cv_description)
+    VALUES ('enable_guest_login','false','4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-03-04 20:58:14.658','Включаем гостевой доступ');
+
+--changeset artemov_i:CORE-1035-rename dbms:postgresql
+update s_mt.t_sys_setting
+    set ck_id='g_sys_enable_guest_login'
+where ck_id='enable_guest_login';
+INSERT INTO s_mt.t_localization (ck_id,ck_d_lang,cr_namespace,cv_value,ck_user,ct_change)
+	VALUES ('02776da507494f2f9956ba9e0f37b1f1','ru_RU','static','как гость','4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-03-04 08:00:00.000');
+
+--changeset artemov_i:CORE-1035-auto-connect dbms:postgresql
+INSERT INTO s_mt.t_sys_setting (ck_id,cv_value,ck_user,ct_change,cv_description)
+    VALUES ('auto_connect_guest','false','4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-03-04 20:58:14.658','По умолчанию авторизуемся как гость');

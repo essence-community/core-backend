@@ -119,4 +119,10 @@
     <include file="./t_query/MTGetPatchQuery.sql" />
     <include file="./t_query/MTGetPatchMessage.sql" />
     <include file="./t_query/MTGetPatchLang.sql" />
+    <include file="./t_query/MTGetObjectUsedQuery.sql" />
+    <include file="./t_query/MTGetPageUsedQuery.sql" />
+    <include file="./t_query/MTGetDistinctModuleList.sql" />
+    <include file="./t_query/MTGetObjectUsedClassModule.sql" />
+    <include file="./t_query/MTGetClassModule.sql" />
+    <include file="./t_query/MTGetCurrentDateTime.sql" />
 </databaseChangeLog>

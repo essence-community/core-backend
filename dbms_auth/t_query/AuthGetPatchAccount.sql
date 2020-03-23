@@ -16,7 +16,7 @@ select
        ac.cv_patronymic,
        ac.cv_email,
        ac.ck_user,
-       ac.ct_change
+       ac.ct_change at time zone :sess_cv_timezone as ct_change
 from t_account ac
 join t_create_patch cp
   on cp.ck_id = (:json::json#>>''{master,ck_id}'')::uuid and cp.сj_param::jsonb#>>''{data,cct_account}'' is not null and ac.ck_id in (select value::uuid from jsonb_array_elements_text(cp.сj_param#>''{data,cct_account}''))
@@ -28,5 +28,5 @@ where true
 offset &OFFSET rows
  fetch first &FETCH rows only
   ', 'authcore', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-24 15:31:04.052526+03', 'select', 'po_session', NULL, 'Список пользователей вошедших в патч')
-on conflict (ck_id) do update set cc_query = excluded.cc_query, ck_provider = excluded.ck_provider, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cr_type = excluded.cr_type, cr_access = excluded.cr_access;
+on conflict (ck_id) do update set cc_query = excluded.cc_query, ck_provider = excluded.ck_provider, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cr_type = excluded.cr_type, cr_access = excluded.cr_access, cv_description = excluded.cv_description;
 

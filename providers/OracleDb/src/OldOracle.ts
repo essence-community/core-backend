@@ -2,20 +2,20 @@ import Connection from "@ungate/plugininf/lib/db/Connection";
 import OracleDB from "@ungate/plugininf/lib/db/oracle";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
-import ICCTParams from "@ungate/plugininf/lib/ICCTParams";
 import IContext from "@ungate/plugininf/lib/IContext";
 import IQuery, { IGateQuery } from "@ungate/plugininf/lib/IQuery";
 import { IResultProvider } from "@ungate/plugininf/lib/IResult";
 import { noop } from "lodash";
 import IOracleController from "./IOracleController";
+import { IParamOracle } from "./OracleDb.types";
 const wsQuerySQL =
     "select vl_query, kd_type, pr_auth from report.wd_sqlstore where upper(nm_query) = upper(:nm_query)";
 
 export default class OldOracle implements IOracleController {
     public dataSource: OracleDB;
-    public params: ICCTParams;
+    public params: IParamOracle;
     public name: string;
-    constructor(name: string, params: ICCTParams, dataSource: OracleDB) {
+    constructor(name: string, params: IParamOracle, dataSource: OracleDB) {
         this.name = name;
         this.params = params;
         this.dataSource = dataSource;

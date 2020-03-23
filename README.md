@@ -18,15 +18,15 @@
 
 ```yarn build```
 
-Соберает сборку в папку bin.
+Собирает в папку bin.
 
 ### Основные настройки переменного окружения
 
-LOGGER_CONF - ссылка на файл ностроек логера logger.json
+LOGGER_CONF - ссылка на файл настроек логера logger.json
 
-GATE_HOME_DIR - домашняя папкка сервера
+GATE_HOME_DIR - домашняя папка сервера
 
-GATE_CLUSTER_NUM - количество процессов node.js, по умолчанию количество ядер
+GATE_CLUSTER_NUM - количество процессов node.js. По умолчанию: количество ядер
 
 GATE_HTTP_PORT - порт http кластера
 
@@ -34,19 +34,19 @@ GATE_UPLOAD_DIR - темповая папка загрузки файлов
 
 NEDB_MULTI_PORT - порт доступа к сокету nedb 
 
-NEDB_MULTI_HOST - ip адресс nedb
+NEDB_MULTI_HOST - ip адрес nedb
 
 NEDB_TEMP_DB - темповая папка nedb
 
-CONTEXT_PLUGIN_DIR - папка плагинов context по умолчанию $GATE_HOME_DIR/plugins/context
+CONTEXT_PLUGIN_DIR - папка плагинов context. По умолчанию: $GATE_HOME_DIR/plugins/context
 
-PROVIDER_PLUGIN_DIR - папка плагинов provider по умолчанию $GATE_HOME_DIR/plugins/provider
+PROVIDER_PLUGIN_DIR - папка плагинов provider. По умолчанию: $GATE_HOME_DIR/plugins/provider
 
-DATA_PLUGIN_DIR - папка плагинов data по умолчанию $GATE_HOME_DIR/plugins/data
+DATA_PLUGIN_DIR - папка плагинов data. По умолчанию: $GATE_HOME_DIR/plugins/data
 
-EVENT_PLUGIN_DIR - папка плагинов event по умолчанию $GATE_HOME_DIR/plugins/event
+EVENT_PLUGIN_DIR - папка плагинов event. По умолчанию: $GATE_HOME_DIR/plugins/event
 
-SCHEDULER_PLUGIN_DIR - папка плагинов scheduler по умолчанию $GATE_HOME_DIR/plugins/scheduler
+SCHEDULER_PLUGIN_DIR - папка плагинов scheduler. По умолчанию: $GATE_HOME_DIR/plugins/scheduler
 
 PROPERTY_DIR - путь до папки настроек шлюза
 
@@ -58,4 +58,4 @@ GATE_ADMIN_CLUSTER_CA - сертификат root
 
 GATE_ADMIN_CLUSTER_PORT - порт межсетевого взаимодействия
 
-GATE_NODE_NAME - наименование сервера по умолчанию имя машины
+GATE_NODE_NAME - наименование сервера. По умолчанию: имя машины

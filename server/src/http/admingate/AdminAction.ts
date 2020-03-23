@@ -424,7 +424,7 @@ export default class AdminAction {
                                     gateContext,
                                     arr[0],
                                     json.filter.ck_page,
-                                    (json.filter.childs || [])[0],
+                                    (json.filter.ca_childs || [])[0],
                                     arr[1] as IParamInfo,
                                     doc.cct_params,
                                 ),
@@ -463,79 +463,100 @@ export default class AdminAction {
         conf: IParamInfo,
         params = {},
     ) {
+        /* tslint:disable:object-literal-sort-keys */
+        const defaultAttr = {
+            ck_page: ckPage,
+            ck_page_object: uuidv4(),
+            setglobal: conf.setGlobal,
+            getglobal: conf.getGlobal,
+            hiddenrules: conf.hiddenRules,
+            disabledrules: conf.disabledRules,
+            column: name,
+            cv_displayed: conf.name,
+            info: conf.description,
+            required: conf.required ? "true" : "false",
+        };
         switch (conf.type) {
             case "string": {
                 return {
-                    ck_page: ckPage,
-                    ck_page_object: uuidv4(),
-                    column: name,
-                    cv_displayed: conf.name,
+                    ...defaultAttr,
                     datatype: "text",
                     defaultvalue: isObject(params[name])
                         ? JSON.stringify(params[name])
                         : params[name] || conf.defaultValue,
-                    info: conf.description,
-                    required: conf.required ? "true" : "false",
+                    type: "IFIELD",
+                };
+            }
+            case "long_string": {
+                return {
+                    ...defaultAttr,
+                    datatype: "textarea",
+                    defaultvalue: isObject(params[name])
+                        ? JSON.stringify(params[name])
+                        : params[name] || conf.defaultValue,
                     type: "IFIELD",
                 };
             }
             case "password": {
                 return {
-                    ck_page: ckPage,
-                    ck_page_object: uuidv4(),
-                    column: name,
-                    cv_displayed: conf.name,
+                    ...defaultAttr,
                     datatype: "password",
                     defaultvalue: isEmpty(params[name])
                         ? ""
                         : "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8",
-                    info: conf.description,
-                    required: conf.required ? "true" : "false",
                     type: "IFIELD",
                 };
             }
             case "integer": {
                 return {
-                    ck_page: ckPage,
-                    ck_page_object: uuidv4(),
-                    column: name,
-                    cv_displayed: conf.name,
+                    ...defaultAttr,
                     datatype: "integer",
-                    defaultvalue: params[name] || conf.defaultValue,
-                    info: conf.description,
-                    required: conf.required ? "true" : "false",
+                    maxvalue: conf.maxValue,
+                    minvalue: conf.minValue,
+                    defaultvalue: isEmpty(params[name])
+                        ? conf.defaultValue
+                        : params[name],
                     type: "IFIELD",
                 };
             }
             case "boolean": {
                 if (isEmpty(conf.defaultValue)) {
                     return {
+                        ...defaultAttr,
                         autoload: "true",
-                        ck_page: ckPage,
                         ck_page_object: child.ck_page_object,
                         ck_query: "GTGetBoolean",
                         cl_dataset: 1,
-                        column: name,
-                        cv_displayed: conf.name,
                         datatype: "combo",
                         defaultvalue: params[name] || conf.defaultValue,
                         displayfield: "ck_id",
-                        info: conf.description,
-                        required: conf.required ? "true" : "false",
                         type: "IFIELD",
                         valuefield: "ck_id",
                     };
                 }
                 return {
-                    ck_page: ckPage,
-                    ck_page_object: uuidv4(),
-                    column: name,
-                    cv_displayed: conf.name,
+                    ...defaultAttr,
                     datatype: "checkbox",
                     defaultvalue: +(params[name] || conf.defaultValue),
-                    info: conf.description,
-                    required: conf.required ? "true" : "false",
                     type: "IFIELD",
+                };
+            }
+            case "combo": {
+                return {
+                    ...defaultAttr,
+                    autoload: "true",
+                    ck_page_object: child.ck_page_object,
+                    ck_query: conf.query,
+                    cl_dataset: 1,
+                    datatype: "combo",
+                    defaultvalue: params[name] || conf.defaultValue,
+                    displayfield: conf.displayField,
+                    type: "IFIELD",
+                    valuefield: conf.valueField,
+                    querymode: conf.querymode,
+                    queryparam: conf.queryparam,
+                    allownew: conf.allownew,
+                    pagesize: conf.pagesize,
                 };
             }
             default: {
@@ -543,5 +564,6 @@ export default class AdminAction {
                 return undefined;
             }
         }
+        /* tslint:enable:object-literal-sort-keys */
     }
 }

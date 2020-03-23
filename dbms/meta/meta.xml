@@ -6,12 +6,15 @@
   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 	<include file="./meta/MetaClass.sql" />
-	<include file="./meta/Localization_ru_RU.sql" />
+	<include file="./meta/Localization_message_ru_RU.sql" />
+    <include file="./meta/Localization_meta_ru_RU.sql" />
+    <include file="./meta/Localization_static_ru_RU.sql" />
     <include file="./meta/Page_4.sql" />
     <include file="./meta/Page_5.sql" />
     <include file="./meta/Page_302.sql" />
     <include file="./meta/Page_BC4B5C748874439E9CED6E8F76933B84.sql" />
     <include file="./meta/Page_12127721.sql" />
+	<include file="./meta/Page_25887721.sql" />
     <include file="./meta/Page_22D2F53FE7E24680917B85D9A95237BD.sql" />
 	<include file="./meta/Page_FA489CA01DB649ED914DC3E7C5E061F2.sql" />
     <include file="./meta/Page_12128581.sql" />
@@ -30,4 +33,5 @@
     <include file="./meta/Page_1875398035771.sql" />
 	<include file="./meta/Page_1626AD0E15B446D4B478CCC5AC2B6E60.sql" />
     <include file="./meta/Page_483653E7F5BC481D86375F5A3C803AC2.sql" />
+	<include file="./meta/Page_87C1A7620D9D4B35A9AD2460DB3A2358.sql" />
 </databaseChangeLog>
