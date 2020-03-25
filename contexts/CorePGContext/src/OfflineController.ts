@@ -166,7 +166,7 @@ export default class OfflineController implements ICoreController {
     }
     public findModify(gateContext: IContext): Promise<any> {
         if (!gateContext.session) {
-            return Promise.reject(CoreContext.accessDenied());
+            return Promise.reject(new ErrorException(ErrorGate.REQUIRED_AUTH));
         } else if (!gateContext.params.page_object) {
             return Promise.reject(
                 new ErrorException(-1, 'Not found require param "page_object"'),
@@ -382,7 +382,7 @@ export default class OfflineController implements ICoreController {
             .then(
                 (res) =>
                     new Promise((resolve, reject) => {
-                        const data = {};
+                        const data: Record<string, any> = {};
                         res.stream.on("error", (err) =>
                             reject(new Error(err.message)),
                         );
@@ -429,7 +429,7 @@ export default class OfflineController implements ICoreController {
                             Object.entries(data).some((arr) => {
                                 if (
                                     arr[0] === ckPage ||
-                                    arr[1]["cv_url"] === ckPage
+                                    arr[1].cv_url === ckPage
                                 ) {
                                     page = arr[1];
                                     return true;
@@ -501,6 +501,9 @@ export default class OfflineController implements ICoreController {
             )
             .then(async (doc) => {
                 if (doc) {
+                    if (doc.cr_access !== "free" && !gateContext.session) {
+                        throw new ErrorException(ErrorGate.REQUIRED_AUTH);
+                    }
                     if (doc.cr_access === "po_session") {
                         const access = await this.tempTable.dbQueryAction.findOne(
                             {
@@ -549,16 +552,29 @@ export default class OfflineController implements ICoreController {
                         },
                     };
                 }
-                return this.onlineFindQuery(name, pageObject, caActions, true);
+                return this.onlineFindQuery({
+                    caActions,
+                    gateContext,
+                    isSave: true,
+                    name,
+                    pageObject,
+                });
             });
     }
 
-    public onlineFindQuery(
-        name: string,
-        pageObject: any,
+    public onlineFindQuery({
+        gateContext,
+        name,
+        pageObject,
         caActions,
-        isSave: boolean = false,
-    ) {
+        isSave = false,
+    }: {
+        gateContext: IContext;
+        name: string;
+        pageObject: any;
+        caActions;
+        isSave?: boolean;
+    }) {
         return this.dataSource
             .executeStmt(this.queryFindSql, null, { ck_query: name })
             .then(
@@ -588,6 +604,14 @@ export default class OfflineController implements ICoreController {
                                         .then(noop, noop);
                                 }
                                 const [doc] = data;
+                                if (
+                                    doc.cr_access !== "free" &&
+                                    !gateContext.session
+                                ) {
+                                    throw new ErrorException(
+                                        ErrorGate.REQUIRED_AUTH,
+                                    );
+                                }
                                 if (doc.cr_access === "po_session") {
                                     const access = await this.tempTable.dbQueryAction.findOne(
                                         {
