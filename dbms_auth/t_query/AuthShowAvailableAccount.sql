@@ -16,7 +16,7 @@ select
     a.cv_surname,
     a.cv_patronymic,
     a.cv_email,
-    a.cv_timezone at time zone :sess_cv_timezone as ct_change
+    a.cv_timezone
 from t_account a
 left join t_account_role ra
  on a.ck_id = ra.ck_account and ra.ck_role =
