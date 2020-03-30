@@ -1751,3 +1751,9 @@ UPDATE s_mt.t_localization SET cr_namespace = 'static' WHERE ck_id IN (
 
 --changeset artemov_i:CORE-989 dbms:postgresql
 ALTER TABLE s_mt.t_query ALTER COLUMN ck_provider TYPE varchar(32) USING ck_provider::varchar;
+
+--changeset kutsenko:CORE-1671 dbms:postgresql
+DELETE FROM s_mt.t_page_object_attr tpoa WHERE tpoa.ck_class_attr IN (SELECT tca.ck_class FROM s_mt.t_class_attr tca WHERE tca.ck_attr = 'reloadservice');
+DELETE FROM s_mt.t_object_attr toa WHERE toa.ck_class_attr IN (SELECT tca.ck_class FROM s_mt.t_class_attr tca WHERE tca.ck_attr = 'reloadservice');
+DELETE FROM s_mt.t_class_attr tca WHERE tca.ck_attr = 'reloadservice';
+DELETE FROM s_mt.t_attr ta WHERE ck_id = 'reloadservice';
