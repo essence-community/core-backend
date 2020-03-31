@@ -1,6 +1,9 @@
 import IGlobalObject from "@ungate/plugininf/lib/IGlobalObject";
 import ISession from "@ungate/plugininf/lib/ISession";
+import Logger from "@ungate/plugininf/lib/Logger";
+import { debounce } from "@ungate/plugininf/lib/util/Util";
 import { isFunction, isObject, noop } from "lodash";
+const logger = Logger.getLogger("CoreContext");
 type TCallBack = () => Promise<void>;
 interface IFObject {
     scope?: any;
@@ -21,10 +24,7 @@ class BMask {
         return this.maskFlag;
     }
 
-    /**
-     * Включаем маску
-     */
-    public mask(session?: ISession) {
+    private debounceMask = debounce((session?: ISession) => {
         const old = this.maskFlag;
         return this.fireEvent("beforechange", true, old, session)
             .then(() => {
@@ -34,13 +34,25 @@ class BMask {
                 }
                 return Promise.resolve();
             })
-            .catch(() => Promise.resolve());
+            .catch((err) => {
+                logger.error(err);
+                return Promise.resolve();
+            });
+    }, 200);
+
+    /**
+     * Включаем маску
+     */
+    public mask(session?: ISession) {
+        this.debounceMask(session);
+        return Promise.resolve();
     }
 
     /**
      * Включаем маску
      */
     public unmask(session?: ISession) {
+        this.debounceMask.cancel();
         const old = this.maskFlag;
         return this.fireEvent("beforechange", false, old, session)
             .then(() => {
@@ -50,7 +62,10 @@ class BMask {
                 }
                 return Promise.resolve();
             })
-            .catch(() => Promise.resolve());
+            .catch((err) => {
+                logger.error(err);
+                return Promise.resolve();
+            });
     }
 
     /**
@@ -112,7 +127,7 @@ class BMask {
         if (this._events[event]) {
             return this._events[event].reduce(
                 (obj, val) =>
-                    obj.then(async () => {
+                    obj.then(() => {
                         const result = val.callback.call(val.scope, ...arg);
                         if (
                             isObject(result) &&

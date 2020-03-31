@@ -608,8 +608,10 @@ export default class OfflineController implements ICoreController {
                                     doc.cr_access !== "free" &&
                                     !gateContext.session
                                 ) {
-                                    throw new ErrorException(
-                                        ErrorGate.REQUIRED_AUTH,
+                                    return reject(
+                                        new ErrorException(
+                                            ErrorGate.REQUIRED_AUTH,
+                                        ),
                                     );
                                 }
                                 if (doc.cr_access === "po_session") {

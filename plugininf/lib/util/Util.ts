@@ -287,3 +287,44 @@ export const deleteFolderRecursive = (pathDir: string) => {
         fs.unlinkSync(pathDir);
     }
 };
+
+type TDebounce = (...arg) => void;
+
+export function throttle(f: TDebounce, t: number) {
+    let lastCall = null;
+    return (...args) => {
+        const previousCall = lastCall;
+        lastCall = Date.now();
+        if (
+            previousCall === undefined || // function is being called for the first time
+            lastCall - previousCall > t
+        ) {
+            // throttle time has elapsed
+            f(...args);
+        }
+    };
+}
+
+export interface IDebounce extends TDebounce {
+    cancel: () => void;
+}
+export function debounce(f: TDebounce, t: number): IDebounce {
+    let lastCallTimer = null;
+    let lastCall = null;
+    const fn = (...args) => {
+        const previousCall = lastCall;
+        lastCall = Date.now();
+        if (previousCall && lastCall - previousCall <= t) {
+            clearTimeout(lastCallTimer);
+        }
+        lastCallTimer = setTimeout(() => {
+            lastCallTimer = null;
+            lastCall = null;
+            f(...args);
+        }, t);
+    };
+    fn.cancel = () => {
+        clearTimeout(lastCallTimer);
+    };
+    return fn;
+}

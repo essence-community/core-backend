@@ -360,10 +360,13 @@ export default class CoreContext extends NullContext {
                 )
                 .then(
                     (docs) =>
-                        new Promise((resolv, reject) => {
+                        new Promise((resolv) => {
                             const rows = [];
                             docs.stream.on("data", (chunk) => rows.push(chunk));
-                            docs.stream.on("error", (err) => reject(err));
+                            docs.stream.on("error", (err) => {
+                                logger.error(err);
+                                resolv();
+                            });
                             docs.stream.on("end", () => {
                                 if (rows.length && rows[0].result) {
                                     try {
@@ -371,26 +374,20 @@ export default class CoreContext extends NullContext {
                                             ? rows[0].result
                                             : JSON.parse(rows[0].result);
                                         if (result.cv_error) {
-                                            return reject(
-                                                new BreakException({
-                                                    data: ResultStream([
-                                                        result,
-                                                    ]),
-                                                    type: "success",
-                                                }),
-                                            );
+                                            logger.error(result);
+                                            return resolv();
                                         }
                                     } catch (e) {
-                                        return Promise.reject(e);
+                                        logger.error(e);
+                                        return resolv(e);
                                     }
-                                    return resolv();
                                 }
                                 return resolv();
                             });
                         }),
                     (err) => {
                         logger.error(err);
-                        return Promise.reject(err);
+                        return Promise.resolve();
                     },
                 ),
         );
