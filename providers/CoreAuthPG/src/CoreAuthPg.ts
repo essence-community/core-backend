@@ -217,10 +217,7 @@ export default class CoreAuthPg extends NullAuthProvider {
             this.log.error(err);
             return new Promise((resolve, reject) => {
                 setTimeout(
-                    () =>
-                        this.initEvents()
-                            .then(() => resolve())
-                            .catch(() => reject()),
+                    () => this.initEvents().then(resolve, reject),
                     MAX_WAIT_RELOAD,
                 );
             });
