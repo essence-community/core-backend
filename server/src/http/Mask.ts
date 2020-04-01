@@ -3,7 +3,7 @@ import ISession from "@ungate/plugininf/lib/ISession";
 import Logger from "@ungate/plugininf/lib/Logger";
 import { debounce } from "@ungate/plugininf/lib/util/Util";
 import { isFunction, isObject, noop } from "lodash";
-const logger = Logger.getLogger("CoreContext");
+const logger = Logger.getLogger("Mask");
 type TCallBack = () => Promise<void>;
 interface IFObject {
     scope?: any;

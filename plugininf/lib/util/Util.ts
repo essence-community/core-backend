@@ -290,8 +290,15 @@ export const deleteFolderRecursive = (pathDir: string) => {
 
 type TDebounce = (...arg) => void;
 
+/**
+ * Функция вызывается не более одного раза в указанный период времени 
+ * (например, раз в 10 секунд). Другими словами ― троттлинг предотвращает запуск функции, 
+ * если она уже запускалась недавно.
+ * @param f {Function} Функция которая должна вызваться
+ * @param t {number} Время в милиссекундах
+ */
 export function throttle(f: TDebounce, t: number) {
-    let lastCall = null;
+    let lastCall;
     return (...args) => {
         const previousCall = lastCall;
         lastCall = Date.now();
@@ -308,6 +315,13 @@ export function throttle(f: TDebounce, t: number) {
 export interface IDebounce extends TDebounce {
     cancel: () => void;
 }
+/**
+ * Все вызовы будут игнорироваться до тех пор, 
+ * пока они не прекратятся на определённый период времени. 
+ * Только после этого функция будет вызвана. 
+ * @param f {Function} Функция которая должна вызваться
+ * @param t {number} Время в милиссекундах
+ */
 export function debounce(f: TDebounce, t: number): IDebounce {
     let lastCallTimer = null;
     let lastCall = null;
