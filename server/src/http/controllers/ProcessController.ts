@@ -26,12 +26,16 @@ class ProcessController {
     public async reloadProvider(data) {
         const provider = PluginManager.getGateProvider(data.name);
         if (provider) {
-            log.info(`Start init provider ${data.name}`);
+            log.info(
+                `Start init provider ${data.name} process: ${process.env.UNGATE_HTTP_ID}`,
+            );
             Mask.mask(data.session)
                 .then(() =>
                     provider.init(true).then(
                         () => {
-                            log.info(`End init provider ${data.name}`);
+                            log.info(
+                                `End init provider ${data.name} process: ${process.env.UNGATE_HTTP_ID}`,
+                            );
                             return Mask.unmask(data.session);
                         },
                         (err) => {
@@ -40,7 +44,8 @@ class ProcessController {
                         },
                     ),
                 )
-                .then(noop);
+                .then(noop)
+                .catch(() => Mask.unmask(data.session));
         }
     }
 
@@ -51,7 +56,9 @@ class ProcessController {
      */
     public async reloadAllProvider(data) {
         const rows = [];
-        log.info("Start init provider all");
+        log.info(
+            `Start init provider all process: ${process.env.UNGATE_HTTP_ID}`,
+        );
         Mask.mask(data.session)
             .then(() => {
                 PluginManager.getGateProviders().forEach((provider) => {
@@ -59,7 +66,9 @@ class ProcessController {
                 });
                 return Promise.all(rows).then(
                     () => {
-                        log.info("End init provider all");
+                        log.info(
+                            `End init provider all process: ${process.env.UNGATE_HTTP_ID}`,
+                        );
                         return Mask.unmask(data.session);
                     },
                     (err) => {
@@ -68,7 +77,8 @@ class ProcessController {
                     },
                 );
             })
-            .then(noop);
+            .then(noop)
+            .catch(() => Mask.unmask(data.session));
     }
 
     /**
@@ -79,12 +89,16 @@ class ProcessController {
     public async reloadContext(data) {
         const config = PluginManager.getGateContext(data.name);
         if (config) {
-            log.info(`Start init config ${data.name}`);
+            log.info(
+                `Start init config ${data.name} process: ${process.env.UNGATE_HTTP_ID}`,
+            );
             Mask.mask(data.session)
                 .then(() =>
                     config.init(true).then(
                         () => {
-                            log.info(`End init config ${data.name}`);
+                            log.info(
+                                `End init config ${data.name} process: ${process.env.UNGATE_HTTP_ID}`,
+                            );
                             return Mask.unmask(data.session);
                         },
                         (err) => {
@@ -93,7 +107,8 @@ class ProcessController {
                         },
                     ),
                 )
-                .then(noop);
+                .then(noop)
+                .catch(() => Mask.unmask(data.session));
         }
     }
 
@@ -108,7 +123,8 @@ class ProcessController {
                     return Mask.unmask(data.session);
                 }),
             )
-            .then(noop);
+            .then(noop)
+            .catch(() => Mask.unmask(data.session));
     }
 
     /**
@@ -136,7 +152,8 @@ class ProcessController {
                     return Mask.unmask(data.session);
                 }),
             )
-            .then(noop);
+            .then(noop)
+            .catch(() => Mask.unmask(data.session));
     }
 
     /**
@@ -145,7 +162,9 @@ class ProcessController {
      */
     public async reloadAllContext(data) {
         const rows = [];
-        log.info("Start init config all");
+        log.info(
+            `Start init config all process: ${process.env.UNGATE_HTTP_ID}`,
+        );
         Mask.mask(data.session)
             .then(() => {
                 PluginManager.getGateContexts().forEach((config) => {
@@ -153,7 +172,9 @@ class ProcessController {
                 });
                 return Promise.all(rows).then(
                     () => {
-                        log.info("End init config all");
+                        log.info(
+                            `End init config all process: ${process.env.UNGATE_HTTP_ID}`,
+                        );
                         return Mask.unmask(data.session);
                     },
                     (err) => {
@@ -162,7 +183,8 @@ class ProcessController {
                     },
                 );
             })
-            .then(noop);
+            .then(noop)
+            .catch(() => Mask.unmask(data.session));
     }
 
     /**
@@ -190,7 +212,8 @@ class ProcessController {
                 await PluginManager.removeAllGateProvider();
                 return Mask.unmask(data.session);
             })
-            .then(noop);
+            .then(noop)
+            .catch(() => Mask.unmask(data.session));
     }
 
     /**

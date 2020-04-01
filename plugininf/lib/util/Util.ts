@@ -287,3 +287,58 @@ export const deleteFolderRecursive = (pathDir: string) => {
         fs.unlinkSync(pathDir);
     }
 };
+
+type TDebounce = (...arg) => void;
+
+/**
+ * Функция вызывается не более одного раза в указанный период времени
+ * (например, раз в 10 секунд). Другими словами ― троттлинг предотвращает запуск функции,
+ * если она уже запускалась недавно.
+ * @param f {Function} Функция которая должна вызваться
+ * @param t {number} Время в милиссекундах
+ */
+export function throttle(f: TDebounce, t: number) {
+    let lastCall;
+    return (...args) => {
+        const previousCall = lastCall;
+        lastCall = Date.now();
+        if (
+            previousCall === undefined || // function is being called for the first time
+            lastCall - previousCall > t
+        ) {
+            // throttle time has elapsed
+            f(...args);
+        }
+    };
+}
+
+export interface IDebounce extends TDebounce {
+    cancel: () => void;
+}
+/**
+ * Все вызовы будут игнорироваться до тех пор,
+ * пока они не прекратятся на определённый период времени.
+ * Только после этого функция будет вызвана.
+ * @param f {Function} Функция которая должна вызваться
+ * @param t {number} Время в милиссекундах
+ */
+export function debounce(f: TDebounce, t: number): IDebounce {
+    let lastCallTimer = null;
+    let lastCall = null;
+    const fn = (...args) => {
+        const previousCall = lastCall;
+        lastCall = Date.now();
+        if (previousCall && lastCall - previousCall <= t) {
+            clearTimeout(lastCallTimer);
+        }
+        lastCallTimer = setTimeout(() => {
+            lastCallTimer = null;
+            lastCall = null;
+            f(...args);
+        }, t);
+    };
+    fn.cancel = () => {
+        clearTimeout(lastCallTimer);
+    };
+    return fn;
+}
