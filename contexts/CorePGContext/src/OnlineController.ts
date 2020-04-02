@@ -117,7 +117,10 @@ export default class OnlineController implements ICoreController {
             );
         }
         const pageObject = (gateContext.params.page_object || "").toLowerCase();
-        const caActions = [this.params.anonymousAction, ...[gateContext.session?.data.ca_actions || []]];
+        const caActions = [
+            this.params.anonymousAction,
+            ...[gateContext.session?.data.ca_actions || []],
+        ];
         return this.controller.onlineFindModify(
             gateContext,
             pageObject,
@@ -141,7 +144,10 @@ export default class OnlineController implements ICoreController {
         gateContext: IContext,
         name: string,
     ): Promise<IContextPluginResult> {
-        const caActions = [this.params.anonymousAction, ...[gateContext.session?.data.ca_actions || []]];
+        const caActions = [
+            this.params.anonymousAction,
+            ...[gateContext.session?.data.ca_actions || []],
+        ];
         const pageObject = (gateContext.params.page_object || "").toLowerCase();
         return this.controller.onlineFindQuery({
             caActions,

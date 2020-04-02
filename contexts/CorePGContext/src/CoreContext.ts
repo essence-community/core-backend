@@ -206,7 +206,10 @@ export default class CoreContext extends NullContext {
                 }
                 const version = this.params.versionApi[name];
                 const json = JSON.parse(gateContext.params.json || "{}");
-                const caActions = [this.params.anonymousAction, ...[gateContext.session?.data.ca_actions || []]];
+                const caActions = [
+                    this.params.anonymousAction,
+                    ...[gateContext.session?.data.ca_actions || []],
+                ];
                 if (version !== "2" && (!json.filter || !json.filter.ck_page)) {
                     return Promise.reject(CoreContext.accessDenied());
                 } else if (
