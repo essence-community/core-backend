@@ -46,11 +46,6 @@ export default class CoreContext extends NullContext {
                 name: "Режим отладки",
                 type: "boolean",
             },
-            anonymousAction: {
-                defaultValue: 99999,
-                name: "Экшен анонимного входа",
-                type: "integer",
-            },
             defaultDepartmentQueryName: {
                 defaultValue: "ModifyDefaultDepartment",
                 name: "Установка подразделения по умолчанию",
@@ -148,6 +143,7 @@ export default class CoreContext extends NullContext {
         this.params = {
             ...this.params,
             ...initParams(CoreContext.getParamsInfo(), params),
+            anonymousAction: 99999,
         };
         this.dataSource = new PostgresDB(`${this.name}_context`, {
             connectString: this.params.connectString,
@@ -171,13 +167,13 @@ export default class CoreContext extends NullContext {
             this.controller = new OnlineController(
                 name,
                 this.dataSource,
-                this.params as ICoreParams,
+                this.params,
             );
         } else {
             this.controller = new OfflineController(
                 name,
                 this.dataSource,
-                this.params as ICoreParams,
+                this.params,
             );
         }
         Mask.on("beforechange", this.beforeMask, this);
