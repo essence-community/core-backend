@@ -494,7 +494,7 @@ export default class OfflineController implements ICoreController {
     public async findQuery(gateContext: IContext, name: string): Promise<any> {
         const caActions = [
             this.params.anonymousAction,
-            ...[gateContext.session?.data.ca_actions || []],
+            ...(gateContext.session?.data.ca_actions || []),
         ];
         const pageObject = (gateContext.params.page_object || "").toLowerCase();
         return this.tempTable.dbQuery

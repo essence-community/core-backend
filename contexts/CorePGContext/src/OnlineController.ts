@@ -146,7 +146,7 @@ export default class OnlineController implements ICoreController {
     ): Promise<IContextPluginResult> {
         const caActions = [
             this.params.anonymousAction,
-            ...[gateContext.session?.data.ca_actions || []],
+            ...(gateContext.session?.data.ca_actions || []),
         ];
         const pageObject = (gateContext.params.page_object || "").toLowerCase();
         return this.controller.onlineFindQuery({
