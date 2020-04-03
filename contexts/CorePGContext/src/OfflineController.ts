@@ -819,7 +819,10 @@ export default class OfflineController implements ICoreController {
                         res.stream.on("data", (row) => {
                             data.push(row);
                             if (row.ck_id === "anonymous_action") {
-                                this.params.anonymousAction = parseInt(row.cv_value, 10);
+                                this.params.anonymousAction = parseInt(
+                                    row.cv_value,
+                                    10,
+                                );
                             }
                         });
                         res.stream.on("end", () => {
