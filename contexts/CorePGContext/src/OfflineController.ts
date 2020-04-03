@@ -175,7 +175,7 @@ export default class OfflineController implements ICoreController {
         const pageObject = (gateContext.params.page_object || "").toLowerCase();
         const caActions = [
             this.params.anonymousAction,
-            ...[gateContext.session?.data.ca_actions || []],
+            ...(gateContext.session?.data.ca_actions || []),
         ];
         return this.tempTable.dbModifyAction
             .findOne(
