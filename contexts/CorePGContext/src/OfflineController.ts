@@ -699,6 +699,7 @@ export default class OfflineController implements ICoreController {
                           self.loadQueryAction(),
                           self.loadModifyAction(),
                           self.loadMessage(),
+                          self.loadSysSetting(),
                       ]
                     : [
                           self.loadPages(),
@@ -817,6 +818,12 @@ export default class OfflineController implements ICoreController {
                         const data = [];
                         res.stream.on("data", (row) => {
                             data.push(row);
+                            if (row.ck_id === "anonymous_action") {
+                                this.params.anonymousAction = parseInt(
+                                    row.cv_value,
+                                    10,
+                                );
+                            }
                         });
                         res.stream.on("end", () => {
                             this.tempTable.dbSysSettings.insert(data).then(

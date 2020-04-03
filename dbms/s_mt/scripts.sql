@@ -1757,3 +1757,7 @@ DELETE FROM s_mt.t_page_object_attr tpoa WHERE tpoa.ck_class_attr IN (SELECT tca
 DELETE FROM s_mt.t_object_attr toa WHERE toa.ck_class_attr IN (SELECT tca.ck_class FROM s_mt.t_class_attr tca WHERE tca.ck_attr = 'reloadservice');
 DELETE FROM s_mt.t_class_attr tca WHERE tca.ck_attr = 'reloadservice';
 DELETE FROM s_mt.t_attr ta WHERE ck_id = 'reloadservice';
+
+--changeset artemov_i:CORE-1137 dbms:postgresql
+INSERT INTO s_mt.t_sys_setting (ck_id,cv_value,cv_description,ck_user,ct_change)
+VALUES ('anonymous_action','99999','Действие для анонимного входа','4fd05ca9-3a9e-4d66-82df-886dfa082113','2019-08-05 10:15:50.000');
