@@ -208,7 +208,7 @@ export default class CoreContext extends NullContext {
                 const json = JSON.parse(gateContext.params.json || "{}");
                 const caActions = [
                     this.params.anonymousAction,
-                    ...[gateContext.session?.data.ca_actions || []],
+                    ...(gateContext.session?.data.ca_actions || []),
                 ];
                 if (version !== "2" && (!json.filter || !json.filter.ck_page)) {
                     return Promise.reject(CoreContext.accessDenied());
