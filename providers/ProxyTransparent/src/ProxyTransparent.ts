@@ -70,7 +70,16 @@ export default class ProxyTransparent extends NullProvider {
         delete headers["content-encoding"];
         delete headers["content-length"];
         delete headers["transfer-encoding"];
-        const paramsQuery = { ...gateContext.params };
+        /* tslint:disable:object-literal-sort-keys */
+        const paramsQuery = {
+            action: gateContext.actionName,
+            session: gateContext.sessionId,
+            provider: gateContext.providerName,
+            query: gateContext.queryName,
+            plugin: gateContext.pluginName.join(","),
+            ...gateContext.params,
+        };
+        /* tslint:enable:object-literal-sort-keys */
         const urlGate = url.parse(this.params.gateUrl) as any;
         urlGate.query = QueryString.parse(
             (gateContext.request as any)._parsedUrl.query,
