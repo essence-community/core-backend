@@ -9,4 +9,7 @@
          <include file="./t_query/IBGetInterface.sql" />
          <include file="./t_query/IBGetPatch.sql" />
          <include file="./t_query/IBGetPatchInterface.sql" />
+         <include file="./t_query/IBGetDInterface.sql" />
+         <include file="./t_query/IBGetDProvider.sql" />
+         <include file="./t_query/IBGetScenario.sql" />
 </databaseChangeLog>
