@@ -402,6 +402,7 @@ begin
     /*Удаление*/
     begin
       delete from s_mt.t_class_attr where ck_class = pot_class.ck_id;
+      delete from s_mt.t_class_hierarchy where ck_class_child = pot_class.ck_id or ck_class_parent = pot_class.ck_id;
       delete from s_mt.t_class where ck_id = pot_class.ck_id;
     exception
       when integrity_constraint_violation then
