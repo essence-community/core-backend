@@ -802,6 +802,7 @@ begin
       for vcur_class in (select value as cj_class from jsonb_array_elements(pot_module.cc_manifest::jsonb)) loop
           -- Добавляем/Изменяем класс модуля
           for vcur in (select jt.ck_class_id,
+                              jt.cv_datatype_type,
                               jt.cl_dataset,
                               jt.cl_final,
                               jt.cv_description,
@@ -826,14 +827,18 @@ begin
                                       (vcur_class.cj_class#>>'{class,cl_final}') as cl_final,
                                       (vcur_class.cj_class#>>'{class,cv_description}') as cv_description,
                                       (vcur_class.cj_class#>>'{class,cv_name}') as cv_name,
-                                      (vcur_class.cj_class#>>'{class,cv_type}') as cv_type
-                                from dual) jt
+                                      (vcur_class.cj_class#>>'{class,cv_type}') as cv_type,
+                                      (select (t.dt->>'cv_value') as cv_value
+                                        from jsonb_array_elements(vcur_class.cj_class->'class_attributes') as t(dt)
+                                        where (t.dt->>'ck_attr') = 'datatype') as cv_datatype_type) jt
                         left join (select c.ck_id as ck_class, ca.ck_id as ck_class_attr, m.ck_id as ck_module, ca.cv_value from s_mt.t_module m
                              join s_mt.t_module_class mc on m.ck_id = mc.ck_module
                              join s_mt.t_class c on mc.ck_class = c.ck_id
                              left join s_mt.t_class_attr ca on c.ck_id = ca.ck_class and ca.ck_attr = 'type') as wmc
                           on ((pv_action = u::varchar and wmc.ck_module = pot_module.ck_id)
-                           or (pv_action = i::varchar and wmc.ck_module = vv_id)) and wmc.cv_value = jt.cv_type
+                           or (pv_action = i::varchar and (vv_id is null or wmc.ck_module = vv_id))) and 
+                           (jt.ck_class_id is null and ((jt.cv_datatype_type is null and wmc.ck_class = jt.cv_type) or (jt.cv_datatype_type is not null and wmc.ck_class = lower(jt.cv_type || ':' || jt.cv_datatype_type))) 
+                           or (jt.ck_class_id is not null and jt.ck_class_id = wmc.ck_class))
                         ) loop
             vot_class.ck_id          := coalesce(vcur.ck_class, vcur.ck_class_id, vcur.cv_type);
             vot_class.cv_name        := vcur.cv_name;
@@ -847,13 +852,8 @@ begin
               for vcheck_class in (select 1 from s_mt.t_class where ck_id = vot_class.ck_id) loop
                 vl_new_id := 1;
               end loop;
-              if vot_class.ck_id = 'IFIELD' then
-                for vcheck_class in (select (t.dt->>'ck_attr') as ck_attr, 
-                                      (t.dt->>'cv_value') as cv_value
-                                from jsonb_array_elements(vcur_class.cj_class->'class_attributes') as t(dt)
-                                where (t.dt->>'ck_attr') = 'datatype') loop
-                               vot_class.ck_id =  vot_class.ck_id || ':' || vcheck_class.cv_value;
-                end loop; 
+              if vcur.ck_class_id is null and vcur.cv_datatype_type is not null then
+                vot_class.ck_id = lower(vcur.cv_type || ':' || vcur.cv_datatype_type);
               end if;
               vot_class := pkg_meta.p_modify_class(vcur.cv_action, vot_class, vl_new_id);
             else
