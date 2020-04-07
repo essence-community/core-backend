@@ -42,7 +42,7 @@ begin
   --блочим основную таблицу
   perform pkg_integr.p_lock_d_provider(pot_d_provider.ck_id);
   --проверяем и сохраняем данные
-  pot_d_provider := pkg_integr.p_modify_provider(vv_action, pot_d_provider);
+  pot_d_provider := pkg_integr.p_modify_d_provider(vv_action, pot_d_provider);
   --логируем данные
   perform pkg_log.p_save(pv_user, pk_session, pc_json, 'pkg_json_integr.f_modify_d_provider', pot_d_provider.ck_id::varchar, vv_action);
   return '{"ck_id":"' || coalesce(pot_d_provider.ck_id::varchar, '') || '","cv_error":' || pkg.p_form_response() || '}';
@@ -162,8 +162,8 @@ begin
   perform pkg.p_reset_response();
   --JSON -> rowtype
 
-  pot_scenario.ck_id = (nullif(trim(pc_json#>>'{data,ck_id}'), ''));
-  pot_scenario.cc_scenario = nullif(trim(pc_json#>>'{data,cc_scenario}'), '');
+  pot_scenario.ck_id = nullif(trim(pc_json#>>'{data,ck_id}'), '');
+  pot_scenario.cc_scenario = (nullif(trim(pc_json#>>'{data,cc_scenario}'), ''))::jsonb;
   pot_scenario.cn_action = (nullif(trim(pc_json#>>'{data,cn_action}'), ''))::bigint;
   pot_scenario.cv_description = nullif(trim(pc_json#>>'{data,cv_description}'), '');
   pot_scenario.ck_user = pv_user;

@@ -58,8 +58,8 @@ COMMENT ON TABLE ${user.table}.t_d_provider  IS 'Источник данных';
 CREATE TABLE ${user.table}.t_interface 
    (	
     ck_id VARCHAR(50) NOT NULL, 
-	ck_d_interface VARCHAR(20) NOT NULL, 
-	ck_d_provider VARCHAR(20) NOT NULL, 
+	ck_d_interface VARCHAR(50) NOT NULL, 
+	ck_d_provider VARCHAR(50) NOT NULL, 
 	cc_query TEXT, 
 	cv_description VARCHAR(4000),
 	ck_user varchar(150) NOT NULL,

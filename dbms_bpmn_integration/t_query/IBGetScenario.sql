@@ -10,6 +10,7 @@ select
   s.ck_id, 
 	s.cn_action, 
 	s.cv_description,
+  s.cc_scenario,
   s.ck_user,
   s.ct_change at time zone :sess_cv_timezone as ct_change
 from t_scenario s

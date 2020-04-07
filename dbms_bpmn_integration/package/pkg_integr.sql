@@ -74,7 +74,7 @@ $$;
 
 ALTER FUNCTION pkg_integr.p_lock_d_provider(pk_id varchar) OWNER TO ${user.update};
 
-CREATE FUNCTION pkg_integr.p_modify_d_provider(pv_action varchar, INOUT pot_d_interface ${user.table}.t_d_interface) RETURNS ${user.table}.t_d_interface
+CREATE FUNCTION pkg_integr.p_modify_d_interface(pv_action varchar, INOUT pot_d_interface ${user.table}.t_d_interface) RETURNS ${user.table}.t_d_interface
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'pkg_integr', '${user.table}', 'public'
     AS $$
@@ -122,7 +122,7 @@ begin
 end;
 $$;
 
-ALTER FUNCTION pkg_integr.p_modify_patch(pv_action varchar, INOUT pot_d_interface ${user.table}.t_d_interface) OWNER TO ${user.update};
+ALTER FUNCTION pkg_integr.p_modify_d_interface(pv_action varchar, INOUT pot_d_interface ${user.table}.t_d_interface) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_integr.p_lock_d_interface(pk_id varchar) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
@@ -186,9 +186,15 @@ begin
     if pv_action = i::varchar then
       insert into ${user.table}.t_interface values (pot_interface.*);
     elsif pv_action = u::varchar then
-      update ${user.table}.t_interface set
-        (ck_d_interface, ck_d_provider, cv_description, ck_user, ct_change) = (pot_interface.ck_d_interface, pot_interface.ck_d_provider, pot_interface.cv_description, pot_interface.ck_user, pot_interface.ct_change)
-      where ck_id = pot_interface.ck_id;
+      if pot_interface.cc_query is null then
+        update ${user.table}.t_interface set
+          (ck_d_interface, ck_d_provider, cv_description, ck_user, ct_change) = (pot_interface.ck_d_interface, pot_interface.ck_d_provider, pot_interface.cv_description, pot_interface.ck_user, pot_interface.ct_change)
+        where ck_id = pot_interface.ck_id;
+      else 
+        update ${user.table}.t_interface set
+          (cc_query, ck_d_interface, ck_d_provider, cv_description, ck_user, ct_change) = (pot_interface.cc_query, pot_interface.ck_d_interface, pot_interface.ck_d_provider, pot_interface.cv_description, pot_interface.ck_user, pot_interface.ct_change)
+        where ck_id = pot_interface.ck_id;
+      end if;
       if not found then
         perform pkg.p_set_error(504);
       end if;
@@ -213,7 +219,7 @@ $$;
 
 ALTER FUNCTION pkg_integr.p_lock_interface(pk_id varchar) OWNER TO ${user.update};
 
-CREATE FUNCTION pkg_integr.p_modify_scenario(pv_action varchar, INOUT pot_interface ${user.table}.t_scenario) RETURNS ${user.table}.t_scenario
+CREATE FUNCTION pkg_integr.p_modify_scenario(pv_action varchar, INOUT pot_scenario ${user.table}.t_scenario) RETURNS ${user.table}.t_scenario
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'pkg_integr', '${user.table}', 'public'
     AS $$
@@ -250,7 +256,7 @@ begin
       insert into ${user.table}.t_scenario values (pot_scenario.*);
     elsif pv_action = u::varchar then
       update ${user.table}.t_scenario set
-        (cn_action, cv_description, ck_user, ct_change) = (pot_scenario.cn_action, pot_scenario.cv_description, pot_scenario.ck_user, pot_scenario.ct_change)
+        (cc_scenario, cn_action, cv_description, ck_user, ct_change) = (pot_scenario.cc_scenario, pot_scenario.cn_action, pot_scenario.cv_description, pot_scenario.ck_user, pot_scenario.ct_change)
       where ck_id = pot_scenario.ck_id;
       if not found then
         perform pkg.p_set_error(504);
