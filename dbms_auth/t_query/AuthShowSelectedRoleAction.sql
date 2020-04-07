@@ -3,7 +3,6 @@
 INSERT INTO s_mt.t_query (ck_id,cc_query,ck_provider,ck_user,ct_change,cr_type,cr_access,cv_description)
 VALUES ('AuthShowSelectedRoleAction','/*AuthShowSelectedRoleAction*/
 select /*Pagination*/
-       row_number() over(order by &SORT)as jn_rownum,
        count(1) over() as jn_total_cnt,
        /*Roles*/
        t.*

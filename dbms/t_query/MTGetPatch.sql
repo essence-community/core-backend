@@ -2,7 +2,6 @@
 --changeset artemov_i:MTGetPatch dbms:postgresql runOnChange:true splitStatements:false stripComments:false
 INSERT INTO s_mt.t_query (ck_id, cc_query, ck_provider, ck_user, ct_change, cr_type, cr_access, cn_action, cv_description) VALUES ('MTGetPatch', '--MTGetPatch
 select /*Pagination*/
-       row_number() over(order by &SORT)as jn_rownum,
        count(1) over() as jn_total_cnt,
        /*Patch*/
        t.*
