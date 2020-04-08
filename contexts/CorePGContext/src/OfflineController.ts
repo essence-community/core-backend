@@ -342,7 +342,9 @@ export default class OfflineController implements ICoreController {
         );
         if (doc) {
             if (isEmpty(doc.cn_action) || !caActions.includes(doc.cn_action)) {
-                throw CoreContext.accessDenied();
+                throw gateContext.session
+                    ? CoreContext.accessDenied()
+                    : new ErrorException(ErrorGate.REQUIRED_AUTH);
             }
             if (version === "3") {
                 throw new BreakException({
@@ -461,9 +463,13 @@ export default class OfflineController implements ICoreController {
                                         isEmpty(page.cn_action) ||
                                         !caActions.includes(page.cn_action)
                                     ) {
-                                        return reject(
-                                            CoreContext.accessDenied(),
-                                        );
+                                        return gateContext.session
+                                            ? reject(CoreContext.accessDenied())
+                                            : reject(
+                                                  new ErrorException(
+                                                      ErrorGate.REQUIRED_AUTH,
+                                                  ),
+                                              );
                                     }
                                     if (version === "3") {
                                         return reject(
