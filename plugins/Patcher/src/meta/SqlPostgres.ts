@@ -152,12 +152,20 @@ export const sqlObjectAttr =
     "join s_mt.t_object o\n" +
     "  on o.ck_id = po.ck_object )\n" +
     "select\n" +
-    "    attr.*,\n" +
+    "    attr.ck_id,\n" +
+    "    attr.ck_object,\n" +
+    "    attr.ck_class_attr,\n" +
+    "    attr.cv_value,\n" +
+    "    attr.ck_user,\n" +
+    "    attr.ct_change,\n" +
+    "    ca.ck_attr,\n" +
     "    ob.ck_page\n" +
     "from\n" +
     "    obj ob \n" +
     "join s_mt.t_object_attr attr\n" +
     "on ob.ck_id = attr.ck_object\n" +
+    "join s_mt.t_class_attr ca\n" +
+    "on ca.ck_id = attr.ck_class_attr\n" +
     "order by ob.lvl asc, ob.cn_order asc, attr.ck_class_attr asc\n";
 export const sqlPage =
     "with recursive page as (\n" +
@@ -307,11 +315,14 @@ export const sqlPageObjectAttr =
     "    attr.cv_value,\n" +
     "    attr.ck_user,\n" +
     "    attr.ct_change,\n" +
+    "    ca.ck_attr," +
     "    po.ck_page\n" +
     "from\n" +
     "    s_mt.t_page_object_attr attr\n" +
     "join page_object po on\n" +
     "    ck_page_object = po.ck_id\n" +
+    "join s_mt.t_class_attr ca\n" +
+    "on ca.ck_id = attr.ck_class_attr\n" +
     "order by po.lvl asc, po.cn_order asc, attr.ck_class_attr asc \n";
 export const sqlPageVariable =
     "select\n" +

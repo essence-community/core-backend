@@ -2,7 +2,7 @@ import { format } from "util";
 import { IRowPatch } from "../IRowPatch";
 
 const formatMObjectAttrSqlPostgres =
-    "select pkg_patcher.p_merge_object_attr(%s, %s, %s, %s, %s, %s);\n";
+    "select pkg_patcher.p_merge_object_attr(%s, %s, %s, %s, %s, %s, %s);\n";
 
 export class ObjectAttr extends IRowPatch {
     public toRow(): string {
@@ -14,6 +14,7 @@ export class ObjectAttr extends IRowPatch {
             this.toStringOrNull("cv_value"),
             this.toStringOrNull("ck_user"),
             this.toTimestamp("ct_change"),
+            this.toStringOrNull("ck_attr"),
         );
     }
 }
