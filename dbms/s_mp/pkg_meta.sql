@@ -344,8 +344,15 @@ begin
                         from s_mt.t_attr_type att
                        where att.ck_id = pot_attr.ck_attr_type
                       having count(att.ck_id) = 0) loop
-      perform pkg.p_set_error(37); /* Недопустимый тип атрибута, см. С_Тип атрибута */
+      perform pkg.p_set_error(37, 'meta:1938adda682e4c60a26b8eccfa7daff5'); /* Недопустимый тип атрибута, см. С_Тип атрибута */
     end loop;
+    for pcur_type in (select 1
+                        from s_mt.t_d_attr_data_type adt
+                       where adt.ck_id = pot_attr.ck_d_data_type
+                      having count(adt.ck_id) = 0) loop
+      perform pkg.p_set_error(37, 'meta:fc586c6328d047cf92fb85c145d307a9'); /* Недопустимый тип атрибута, см. С_Тип атрибута */
+    end loop;
+    pot_attr.cv_data_type_extra := pkg_meta.p_decode_data_type_extra(pot_attr.cv_data_type_extra, pot_attr.ck_d_data_type);
     /* Наименование атрибута должно быть уникально */
     if pv_action = i::varchar then
       for pcur_type in (select 1
@@ -362,7 +369,8 @@ begin
       insert into s_mt.t_attr values (pot_attr.*);
     elsif pv_action = u::varchar then
       update s_mt.t_attr set
-        (ck_id, cv_description, ck_attr_type, ck_user, ct_change) = row(pot_attr.*)
+        (cv_description, ck_attr_type, ck_d_data_type, cv_data_type_extra, ck_user, ct_change) = 
+        (pot_attr.cv_description, pot_attr.ck_attr_type, pot_attr.ck_d_data_type, pot_attr.cv_data_type_extra, pot_attr.ck_user, pot_attr.ct_change)
       where ck_id = pot_attr.ck_id;
       if not found then
         perform pkg.p_set_error(504);
@@ -372,10 +380,55 @@ begin
 end;
 $$;
 
-
 ALTER FUNCTION pkg_meta.p_modify_attr(pv_action character varying, INOUT pot_attr s_mt.t_attr) OWNER TO s_mp;
 
 COMMENT ON FUNCTION pkg_meta.p_modify_attr(pv_action character varying, INOUT pot_attr s_mt.t_attr) IS 'Создание/обновление/удаление атрибутов  t_attr';
+
+CREATE FUNCTION pkg_meta.p_decode_data_type_extra(pv_value text, vk_data_type varchar, vl_class_attr smallint DEFAULT 0::smallint) RETURNS text
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 's_mt', 'pkg_meta', 'public'
+    AS $$
+declare
+
+  -- переменные функции
+  vv_value text;
+  vl_extra smallint;
+  v_rec record;
+begin
+  vv_value := pv_value;
+
+  select cl_extra
+    into strict vl_extra
+  from s_mt.t_d_attr_data_type where ck_id = vk_data_type;
+
+  if vl_extra <> 1 then
+    RETURN NULL::text;
+  end if;
+
+  if vk_data_type = 'enum' then
+      vv_value := nullif(nullif(trim(vv_value), ''), '[]');
+      if vv_value is not null and vv_value like '%cv_data_type_extra_value%' then
+        select (json_agg(value->>'cv_data_type_extra_value'))::text
+        into vv_value
+        from jsonb_array_elements(vv_value::jsonb);
+      end if;
+      if vl_class_attr = 0 and (vv_value is null or vv_value not like '[%]') then 
+        perform pkg.p_set_error(37, 'meta:d22e05d47f7c42909a6c0086c11d4a5f');
+        return vv_value;
+      elsif vl_class_attr = 1 and vv_value is not null and vv_value not like '[%]' then
+        return NULL::text;
+      end if;
+      return vv_value;
+  end if;
+  
+  return vv_value;
+end;
+$$;
+
+ALTER FUNCTION pkg_meta.p_decode_data_type_extra(text, varchar, smallint) OWNER TO s_mp;
+
+COMMENT ON FUNCTION pkg_meta.p_decode_data_type_extra(text, varchar, smallint) IS 'Преобразование и проверка дополнительного типа';
+
 
 CREATE FUNCTION pkg_meta.p_modify_class(pv_action character varying, INOUT pot_class s_mt.t_class, pl_new_id smallint DEFAULT 1::smallint) RETURNS s_mt.t_class
     LANGUAGE plpgsql SECURITY DEFINER
@@ -455,6 +508,7 @@ declare
   gv_error sessvarstr;
 
   -- переменные функции
+  vk_d_data_type VARCHAR;
 begin
    -- инициализация/получение переменных пакета
   i = sessvarstr_declare('pkg', 'i', 'I');
@@ -479,14 +533,27 @@ begin
        pkg_util.f_check_string_is_percentage(pot_class_attr.cv_value) = 0 then
       perform pkg.p_set_error(55);
     end if;
+    
+    select ck_d_data_type
+      into vk_d_data_type
+    from s_mt.t_attr where ck_id = pot_class_attr.ck_attr;
+    
+    pot_class_attr.cv_data_type_extra := pkg_meta.p_decode_data_type_extra(pot_class_attr.cv_data_type_extra, vk_d_data_type, 1::smallint);
+
     /* значения атрибутов  decimalseparator и thousandseparator в классах Column Numeric и Field Numeric не могут совпадать */
     perform pkg_meta.p_check_separator(pv_action, null, null, pot_class_attr);    /* Сохранение/обновление данных */
-    if pv_action = i::varchar and nullif(gv_error::varchar, '') is null then
+
+    if nullif(gv_error::varchar, '') is not null then
+       return;
+    end if;
+
+    if pv_action = i::varchar then
       pot_class_attr.ck_id := sys_guid();
       insert into s_mt.t_class_attr values (pot_class_attr.*);
-    elsif pv_action = u::varchar and nullif(gv_error::varchar, '') is null then
+    elsif pv_action = u::varchar then
       update s_mt.t_class_attr set
-        (ck_id, ck_class, ck_attr, cv_value, ck_user, ct_change, cl_required) = row(pot_class_attr.*)
+        (ck_class, ck_attr, cv_data_type_extra, cv_value, ck_user, ct_change, cl_required) = 
+        (pot_class_attr.ck_class, pot_class_attr.ck_attr, pot_class_attr.cv_data_type_extra, pot_class_attr.cv_value, pot_class_attr.ck_user, pot_class_attr.ct_change, pot_class_attr.cl_required)
       where ck_id = pot_class_attr.ck_id;
       if not found then
         perform pkg.p_set_error(504);
@@ -880,6 +947,9 @@ begin
           for vcur in (select coalesce(jt.ck_attr_type, atr.ck_attr_type) as ck_attr_type,
                               coalesce(jt.cv_description, atr.cv_description) as cv_description,
                               coalesce(jt.ck_id, atr.ck_id) as ck_id,
+                              coalesce(jt.ck_d_data_type, atr.ck_d_data_type) as ck_d_data_type,
+                              coalesce(jt.ck_attr_type, atr.ck_attr_type) as ck_attr_type,
+                              coalesce(jt.cv_data_type_extra, atr.cv_data_type_extra) as cv_data_type_extra,
                               case
                                 when jt.ck_id is not null and atr.ck_id is null then
                                 'I'
@@ -890,12 +960,17 @@ begin
                               end as cv_action
                         from (select (t.dt->>'ck_attr') as ck_id, 
                                       (t.dt->>'ck_attr_type') as ck_attr_type, 
-                                      (t.dt->>'cv_description') as cv_description 
+                                      (t.dt->>'cv_description') as cv_description, 
+                                      (t.dt->>'ck_d_data_type') as ck_d_data_type, 
+                                      (t.dt->>'ck_attr_type') as ck_attr_type, 
+                                      (t.dt->>'cv_data_type_extra') as cv_data_type_extra
                                 from jsonb_array_elements(vcur_class.cj_class->'attributes') as t(dt)) jt
                         left join s_mt.t_attr atr on atr.ck_id = jt.ck_id) loop
             vot_attr.ck_id          := vcur.ck_id;
-            vot_attr.ck_attr_type   := vcur.ck_attr_type;
+            vot_attr.ck_attr_type   := coalesce(nullif(vcur.ck_attr_type, ''), 'basic');
             vot_attr.cv_description := vcur.cv_description;
+            vot_attr.cv_data_type_extra := nullif(trim(vcur.cv_data_type_extra), '');
+            vot_attr.ck_d_data_type := coalesce(nullif(vcur.ck_d_data_type, ''), 'text');
             vot_attr.ck_user        := pot_module.ck_user;
             vot_attr.ct_change      := CURRENT_TIMESTAMP;
           
@@ -921,7 +996,8 @@ begin
                               end as cv_action
                         from (select (t.dt->>'ck_attr') as ck_attr, 
                                       (t.dt->>'cv_value') as cv_value, 
-                                      (t.dt->>'cl_required') as cl_required 
+                                      (t.dt->>'cl_required') as cl_required, 
+                                      (t.dt->>'cv_data_type_extra') as cv_data_type_extra 
                                 from jsonb_array_elements(vcur_class.cj_class->'class_attributes') as t(dt)) jt
                         full join (select ca.ck_id, ca.ck_attr
                                     from s_mt.t_class c
@@ -934,6 +1010,7 @@ begin
             vot_class_attr.ck_class    := vot_class.ck_id;
             vot_class_attr.ck_user     := vot_class.ck_user;
             vot_class_attr.ct_change   := CURRENT_TIMESTAMP;
+            vot_class_attr.cv_data_type_extra := nullif(trim(vcur.cv_data_type_extra), '');
             vot_class_attr.cl_required := coalesce(nullif(vcur.cl_required, '')::bigint, 0);
             vot_class_attr.ck_attr     := vcur.ck_attr;
             vot_class_attr.cv_value    := nullif(vcur.cv_value, '');
@@ -2173,6 +2250,114 @@ $$;
 ALTER FUNCTION pkg_meta.p_modify_sys_setting(pv_action character varying, INOUT pot_sys_setting s_mt.t_sys_setting) OWNER TO s_mp;
 
 COMMENT ON FUNCTION pkg_meta.p_modify_sys_setting(pv_action character varying, INOUT pot_sys_setting s_mt.t_sys_setting) IS 'Создание/обновление/удаление глобальных настроек приложения t_sys_setting';
+
+CREATE FUNCTION pkg_meta.p_decode_attr_variable(pv_value varchar, pk_class varchar, pc_json jsonb, pk_attr varchar DEFAULT null::varchar) RETURNS varchar
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 's_mt', 'pkg_localization', 'pkg_meta', 'public'
+    AS $$
+declare
+  -- переменные пакета
+  gv_error sessvarstr;
+
+  -- переменные функции
+  vv_rec record;
+  vv_value varchar := pv_value;
+  vk_data_type varchar; 
+  vv_data_type_extra varchar;
+  vot_localization s_mt.t_localization;
+begin
+  -- инициализация/получение переменных пакета
+  gv_error = sessvarstr_declare('pkg', 'gv_error', '');
+
+  if pk_class is not null then
+    select a.ck_d_data_type, coalesce(ca.cv_data_type_extra, a.cv_data_type_extra, '[]') as cv_data_type_extra
+      into strict vk_data_type, vv_data_type_extra
+    from s_mt.t_class_attr ca 
+    join s_mt.t_attr a on ca.ck_attr = a.ck_id 
+    where ca.ck_id = pk_class;
+  elsif pk_attr is not null then
+    select a.ck_d_data_type, coalesce(a.cv_data_type_extra, '[]') as cv_data_type_extra
+      into strict vk_data_type, vv_data_type_extra
+    from s_mt.t_attr a
+    where a.ck_id = pk_attr;
+  end if;
+  
+
+  if vk_data_type = 'text' then
+    if vv_value is not null 
+      and substr(vv_value, 0, 5) = 'new:'
+      and length(vv_value) > 4 then
+      vv_value := substr(vv_value, 5);
+    end if;
+    return vv_value;
+  end if;
+  
+  vv_value := nullif(trim(pv_value), '');
+
+  if vk_data_type = 'localization' then
+    if vv_value is null then 
+      perform pkg.p_set_error(514);
+    end if;
+    if vv_value is not null 
+      and substr(vv_value, 0, 5) = 'new:'
+      and length(vv_value) > 4 then 
+        vot_localization.ck_d_lang = nullif(trim(pc_json#>>'{data,g_sys_lang}'), '');
+        vot_localization.cr_namespace = 'meta';
+        vot_localization.cv_value = substr(vot_class_attr.cv_value, 5);
+        vot_localization.ck_user = pv_user;
+        vot_localization.ct_change = CURRENT_TIMESTAMP;
+
+        vot_localization := pkg_localization.p_add_new_localization(vot_localization);
+
+        vv_value := coalesce(vot_localization.ck_id, '');
+    end if;
+    for vv_rec in (select 1 
+       where not exists (select 1 from s_mt.t_localization where ck_id = vv_value)) loop
+       perform pkg.p_set_error(514);
+    end loop;
+    return vv_value;
+  end if;
+  
+  if vk_data_type = 'date' or vk_data_type = 'integer' or vk_data_type = 'numeric' then
+    if pk_attr is not null and vv_value is null then 
+      perform pkg.p_set_error(514);
+    end if;
+    return vv_value;
+  end if;
+  
+  if vk_data_type = 'boolean' then
+    if vv_value = 'true' or vv_value = '1' then 
+      vv_value := 'true';
+    else 
+      vv_value := 'false';
+    end if;
+    return vv_value;
+  end if;
+  
+  if vk_data_type = 'enum' then
+    for vv_rec in (select 1 
+       where not exists (select value from jsonb_array_elements_text(vv_data_type_extra::jsonb) where vv_value is not null and value = vv_value)) loop
+       perform pkg.p_set_error(514);
+    end loop;
+    return vv_value;
+  end if;
+  
+  if vk_data_type = 'array' or vk_data_type = 'object' then 
+    begin 
+      perform jsonb_pretty(pv_value::jsonb);
+    exception
+      when others then
+        perform pkg.p_set_error(514);
+    end;
+    return vv_value;
+  end if;
+end;
+$$;
+
+
+ALTER FUNCTION pkg_meta.p_decode_attr_variable(varchar,varchar,jsonb,varchar) OWNER TO s_mp;
+
+COMMENT ON FUNCTION pkg_meta.p_decode_attr_variable(varchar,varchar,jsonb,varchar) IS 'Преобразование cv_value в varchar';
 
 CREATE FUNCTION pkg_meta.p_refresh_page_object(pk_page character varying) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER

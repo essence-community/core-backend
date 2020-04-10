@@ -41,15 +41,17 @@ begin
       /*Добавление динамических атрибутов из класса и обьекта*/
       coalesce(
         (select jsonb_object_agg(t.ck_attr,
-                                 coalesce(t.cv_value_poa, t.cv_value_oa, t.cv_value_ca))
+                                 pkg_json.f_decode_attr(coalesce(t.cv_value_poa, t.cv_value_oa, t.cv_value_ca), t.ck_d_data_type))
            from
            (select ca.ck_attr,
+                   a.ck_d_data_type,
                    poa.cv_value as cv_value_poa,
                    oa.cv_value as cv_value_oa,
                    ca.cv_value as cv_value_ca
               from s_mt.t_object o2
               join s_mt.t_class c on c.ck_id = o2.ck_class
               join s_mt.t_class_attr ca on c.ck_id = ca.ck_class
+              join s_mt.t_attr a on a.ck_id = ca.ck_attr
               left join s_mt.t_object_attr oa on o2.ck_id = oa.ck_object and ca.ck_id = oa.ck_class_attr
               left join s_mt.t_page_object_attr poa on  poa.ck_page_object = po.ck_id and poa.ck_class_attr = ca.ck_id
              where o2.ck_id = o.ck_id
@@ -104,3 +106,37 @@ $$;
 
 
 ALTER FUNCTION pkg_json.f_get_object(pk_start character varying) OWNER TO s_mp;
+
+
+CREATE FUNCTION pkg_json.f_decode_attr(pv_value varchar, pk_data_type varchar) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pkg_json', 'public'
+    AS $$
+begin
+
+  if pk_data_type = 'localization' or pk_data_type = 'enum' or pk_data_type = 'date' or pk_data_type = 'text' then
+    return to_jsonb(pv_value);
+  end if;
+  
+  if pk_data_type = 'integer' then
+    return to_jsonb(pv_value::bigint);
+  end if;
+
+  if pk_data_type = 'numeric' then
+    return to_jsonb(pv_value::decimal);
+  end if;
+  
+  if pk_data_type = 'boolean' then
+    if pv_value is null then 
+      return to_jsonb(false);
+    end if;
+    return to_jsonb(pv_value::bool);
+  end if;
+  
+  if pk_data_type = 'array' or pk_data_type = 'object' then 
+    return pv_value::jsonb;
+  end if;
+end;
+$$;
+
+ALTER FUNCTION pkg_json.f_decode_attr(pv_value varchar, pk_data_type varchar) OWNER TO s_mp;

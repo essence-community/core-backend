@@ -16,6 +16,12 @@ select ca.ck_id,
 
        a.ck_attr_type,
 
+       a.ck_d_data_type,
+
+       adt.cl_extra,
+
+       coalesce(ca.cv_data_type_extra, a.cv_data_type_extra) as cv_data_type_extra,
+
       /* Поля аудита */
 
       ca.ck_user,
@@ -25,6 +31,8 @@ select ca.ck_id,
  from s_mt.t_class_attr ca
 
  join s_mt.t_attr a on a.ck_id = ca.ck_attr
+
+ join s_mt.t_d_attr_data_type adt on a.ck_d_data_type = adt.ck_id
 
 where ca.ck_class = (cast(:json as jsonb)->''master''->>''ck_id'')::varchar
 
