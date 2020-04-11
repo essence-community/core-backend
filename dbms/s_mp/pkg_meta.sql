@@ -2295,7 +2295,7 @@ begin
   vv_value := nullif(trim(pv_value), '');
 
   if vk_data_type = 'localization' then
-    if vv_value is null then 
+    if pk_attr is not null and vv_value is null then 
       perform pkg.p_set_error(514);
     end if;
     if vv_value is not null 
@@ -2342,7 +2342,10 @@ begin
     return vv_value;
   end if;
   
-  if vk_data_type = 'array' or vk_data_type = 'object' then 
+  if vk_data_type = 'array' or vk_data_type = 'object' then
+    if pk_attr is not null and vv_value is null then 
+      perform pkg.p_set_error(514);
+    end if; 
     begin 
       perform jsonb_pretty(pv_value::jsonb);
     exception
