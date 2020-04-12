@@ -254,7 +254,14 @@ begin
       return;
     end if;
   elsif vv_class_id is null and pv_attr is null then
-    vv_class_id := pk_class_attr;
+    perform pkg.p_set_error(51, "Not found attr");
+    perform pkg_log.p_save('-11',
+                             null::varchar,
+                             jsonb_build_object('ck_id', pk_id, 'ck_page_object', pk_page_object, 'ck_class_attr', pk_class_attr, 'cv_value', pv_value, 'ck_user', pk_user, 'ct_change', pt_change, 'ck_attr', pv_attr),
+                             't_page_object_attr',
+                             pk_id,
+                             'u');
+    return;
   end if;
 
   
@@ -262,7 +269,7 @@ begin
     INSERT INTO s_mt.t_page_object_attr
       (ck_id, ck_page_object, ck_class_attr, cv_value, ck_user, ct_change)
       VALUES (pk_id, pk_page_object, vv_class_id, pv_value, pk_user, pt_change)
-    ON CONFLICT ON CONSTRAINT cin_r_page_object_attr_1 do update set ck_page_object = excluded.ck_page_object, ck_class_attr = excluded.ck_class_attr, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
+    ON CONFLICT ON CONSTRAINT cin_c_page_object_attr_1 do update set ck_page_object = excluded.ck_page_object, ck_class_attr = excluded.ck_class_attr, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
   exception
     when others then
       perform pkg.p_set_error(51, SQLERRM);
