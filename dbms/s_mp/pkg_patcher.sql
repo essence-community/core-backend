@@ -147,6 +147,15 @@ begin
   gv_error = sessvarstr_declare('pkg', 'gv_error', '');
   perform pkg.p_reset_response();
 
+  UPDATE s_mt.t_object_attr
+     SET (ck_object, ck_class_attr, cv_value, ck_user, ct_change) =
+         (pk_object, pk_class_attr, pv_value, pk_user, pt_change)
+   where ck_id = pk_id;
+  
+  if found then
+    return;
+  end if;
+
   select ck_id 
     into vv_class_id
   from s_mt.t_class_attr where ck_id = pk_class_attr;
@@ -155,17 +164,27 @@ begin
     select ck_id 
       into vv_class_id
     from s_mt.t_class_attr where ck_class in (select ck_class from s_mt.t_object where ck_id = pk_object) and ck_attr = pv_attr;
+  
+    UPDATE s_mt.t_object_attr
+      SET (ck_object, cv_value, ck_user, ct_change) =
+          (pk_object, pv_value, pk_user, pt_change)
+    where ck_class_attr = vv_class_id;
+  
+    if found then
+      return;
+    end if;
   elsif vv_class_id is null and pv_attr is null then
-    vv_class_id := pk_class_attr;
-  end if;
-
-  UPDATE s_mt.t_object_attr
-     SET (ck_object, ck_class_attr, cv_value, ck_user, ct_change) =
-         (pk_object, vv_class_id, pv_value, pk_user, pt_change)
-   where ck_id = pk_id or (vv_class_id is not null and ck_object = pk_object and ck_class_attr = vv_class_id);
-  if found then
+    perform pkg.p_set_error(51, "Not found attr");
+    perform pkg_log.p_save('-11',
+                             null::varchar,
+                             jsonb_build_object('ck_id', pk_id, 'ck_object', pk_object, 'ck_class_attr', pk_class_attr, 'cv_value', pv_value, 'ck_user', pk_user, 'ct_change', pt_change, 'ck_attr', pv_attr),
+                             't_object_attr',
+                             pk_id,
+                             'u');
     return;
   end if;
+
+  
   begin
     INSERT INTO s_mt.t_object_attr
       (ck_id, ck_object, ck_class_attr, cv_value, ck_user, ct_change)
@@ -201,6 +220,15 @@ begin
   gv_error = sessvarstr_declare('pkg', 'gv_error', '');
   perform pkg.p_reset_response();
 
+  UPDATE s_mt.t_page_object_attr
+     SET (ck_page_object, ck_class_attr, cv_value, ck_user, ct_change) =
+         (pk_page_object, pk_class_attr, pv_value, pk_user, pt_change)
+   where ck_id = pk_id;
+  
+  if found then
+    return;
+  end if;
+
   select ck_id 
     into vv_class_id
   from s_mt.t_class_attr where ck_id = pk_class_attr;
@@ -210,23 +238,26 @@ begin
     select ck_id 
       into vv_class_id
     from s_mt.t_class_attr 
-    where (pv_attr is not null and ck_class in (
+    where (ck_class in (
       select ob.ck_class 
       from s_mt.t_page_object p_ob
       join s_mt.t_object ob
       on p_ob.ck_object = ob.ck_id
     where p_ob.ck_id = pk_page_object) and ck_attr = pv_attr);
+
+    UPDATE s_mt.t_page_object_attr
+      SET (ck_page_object, cv_value, ck_user, ct_change) =
+          (pk_page_object, pv_value, pk_user, pt_change)
+    where ck_class_attr = vv_class_id;
+  
+    if found then
+      return;
+    end if;
   elsif vv_class_id is null and pv_attr is null then
     vv_class_id := pk_class_attr;
   end if;
 
-  UPDATE s_mt.t_page_object_attr
-     SET (ck_page_object, ck_class_attr, cv_value, ck_user, ct_change) =
-         (pk_page_object, vv_class_id, pv_value, pk_user, pt_change)
-   where ck_id = pk_id or (vv_class_id is not null and ck_page_object = pk_page_object and ck_class_attr = vv_class_id);
-  if found then
-    return;
-  end if;
+  
   begin
     INSERT INTO s_mt.t_page_object_attr
       (ck_id, ck_page_object, ck_class_attr, cv_value, ck_user, ct_change)
