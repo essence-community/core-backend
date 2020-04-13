@@ -75,6 +75,8 @@ begin
 
   pot_attr.ck_id = nullif(trim(pc_json#>>'{data,ck_id}'), '');
   pot_attr.cv_description = nullif(trim(pc_json#>>'{data,cv_description}'), '');
+  pot_attr.ck_d_data_type = nullif(trim(pc_json#>>'{data,ck_d_data_type}'), '');
+  pot_attr.cv_data_type_extra = nullif(trim(pc_json#>>'{data,cv_data_type_extra}'), '');
   pot_attr.ck_attr_type = nullif(trim(pc_json#>>'{data,ck_attr_type}'), '');
   pot_attr.ck_user = pv_user;
   pot_attr.ct_change = CURRENT_TIMESTAMP;
@@ -160,7 +162,7 @@ declare
   i sessvarstr;
   -- переменные функции
   vot_class_attr s_mt.t_class_attr;
-  vot_localization s_mt.t_localization;
+
   vv_action      varchar(1);
   vk_main        varchar(32);
 begin
@@ -174,36 +176,13 @@ begin
   vot_class_attr.ck_id = nullif(trim(pc_json#>>'{data,ck_id}'), '');
   vot_class_attr.ck_class = nullif(trim(pc_json#>>'{service,ck_main}'), '');
   vot_class_attr.ck_attr = nullif(trim(pc_json#>>'{data,ck_attr}'), '');
-  vot_class_attr.cv_value = (pc_json#>>'{data,cv_value}');
+  vot_class_attr.cv_data_type_extra = nullif(trim(pc_json#>>'{data,cv_data_type_extra}'), '');
+  vot_class_attr.cv_value = pkg_meta.p_decode_attr_variable((pc_json#>>'{data,cv_value}'), vot_class_attr.ck_id, pc_json, vot_class_attr.ck_attr);
   vot_class_attr.cl_required = trim(pc_json#>>'{data,cl_required}')::int2;
   vot_class_attr.ck_user = pv_user;
   vot_class_attr.ct_change = CURRENT_TIMESTAMP;
   vv_action = (pc_json#>>'{service,cv_action}');
   vk_main = (pc_json#>>'{service,ck_main}');
-
-  if nullif(trim(vot_class_attr.cv_value), '') is not null 
-    and substr(vot_class_attr.cv_value, 0, 5) = 'new:'
-    and length(vot_class_attr.cv_value) > 4 then 
-
-    --проверка на добавление значения в локализацию
-    if vot_class_attr.ck_attr in ('confirmquestion', 'info', 'tipmsg') then
-      vot_localization.ck_d_lang = nullif(trim(pc_json#>>'{data,g_sys_lang}'), '');
-      vot_localization.cr_namespace = 'meta';
-      vot_localization.cv_value = substr(vot_class_attr.cv_value, 5);
-      vot_localization.ck_user = pv_user;
-      vot_localization.ct_change = CURRENT_TIMESTAMP;
-
-      vot_localization := pkg_localization.p_add_new_localization(vot_localization);
-
-      if nullif(gv_error::varchar, '') is not null then
-        return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}'; --ошибка прав доступа.
-      end if;
-
-      vot_class_attr.cv_value := coalesce(vot_localization.ck_id, '');
-    else
-      vot_class_attr.cv_value := substr(vot_class_attr.cv_value, 5);
-    end if;
-  end if;
 
   --проверка прав доступа
   perform pkg_access.p_check_access(pv_user, vk_main);
@@ -411,7 +390,6 @@ declare
 
   -- переменные функции
   vot_object_attr s_mt.t_object_attr;
-  vot_localization s_mt.t_localization;
   vv_action       varchar(1);
   vv_attr         varchar(255);
   vk_main         varchar(32);
@@ -428,37 +406,13 @@ begin
   vot_object_attr.ck_id = nullif(trim(pc_json#>>'{data,ck_id}'), '');
   vot_object_attr.ck_object = nullif(trim(pc_json#>>'{service,ck_main}'), '');
   vot_object_attr.ck_class_attr = nullif(trim(pc_json#>>'{data,ck_class_attr}'), '');
-  vot_object_attr.cv_value = (pc_json#>>'{data,cv_value}');
+  vot_object_attr.cv_value = pkg_meta.p_decode_attr_variable((pc_json#>>'{data,cv_value}'), vot_object_attr.ck_class_attr, pc_json);
   vot_object_attr.ck_user = pv_user;
   vot_object_attr.ct_change = CURRENT_TIMESTAMP;
   vv_action = (pc_json#>>'{service,cv_action}');
   vv_attr = (pc_json#>>'{data,ck_attr}');
   vk_main = (pc_json#>>'{service,ck_main}');
   
-  if nullif(trim(vot_object_attr.cv_value), '') is not null 
-    and substr(vot_object_attr.cv_value, 0, 5) = 'new:'
-    and length(vot_object_attr.cv_value) > 4 then
-
-    --проверка на добавление значения в локализацию
-    if vv_attr in ('confirmquestion', 'info', 'tipmsg') then
-      vot_localization.ck_d_lang := nullif(trim(pc_json#>>'{data,g_sys_lang}'), '');
-      vot_localization.cr_namespace = 'meta';
-      vot_localization.cv_value = substr(vot_object_attr.cv_value, 5);
-      vot_localization.ck_user = pv_user;
-      vot_localization.ct_change = CURRENT_TIMESTAMP;
-
-      vot_localization := pkg_localization.p_add_new_localization(vot_localization);
-
-      if nullif(gv_error::varchar, '') is not null then
-        return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}'; --ошибка прав доступа.
-      end if;
-
-      vot_object_attr.cv_value := coalesce(vot_localization.ck_id, '');
-    else
-      vot_object_attr.cv_value := substr(vot_object_attr.cv_value, 5);
-    end if;
-
-  end if;
   --проверка прав доступа
   perform pkg_access.p_check_access(pv_user, vk_main);
   if nullif(gv_error::varchar, '') is not null then
@@ -615,7 +569,6 @@ declare
 
   -- переменные функции
   vot_page_object_attr s_mt.t_page_object_attr;
-  vot_localization s_mt.t_localization;
   vv_action            varchar(1);
   vk_main              varchar(32);
   vv_attr              varchar(255);
@@ -632,7 +585,7 @@ begin
   vot_page_object_attr.ck_id = nullif(trim(pc_json#>>'{data,ck_id}'), '');
   vot_page_object_attr.ck_page_object = nullif(trim(pc_json#>>'{service,ck_main}'), '');
   vot_page_object_attr.ck_class_attr = nullif(trim(pc_json#>>'{data,ck_class_attr}'), '');
-  vot_page_object_attr.cv_value = (pc_json#>>'{data,cv_value}');
+  vot_page_object_attr.cv_value = pkg_meta.p_decode_attr_variable((pc_json#>>'{data,cv_value}'), vot_page_object_attr.ck_class_attr, pc_json);
   vot_page_object_attr.ck_user = pv_user;
   vot_page_object_attr.ct_change = CURRENT_TIMESTAMP;
   vv_action = (pc_json#>>'{service,cv_action}');
@@ -640,28 +593,6 @@ begin
   vk_main = (pc_json#>>'{service,ck_main}');
   perform gl_warning == (pc_json#>>'{service,cl_warning}')::bigint;
 
-  if nullif(trim(vot_page_object_attr.cv_value), '') is not null 
-    and substr(vot_page_object_attr.cv_value, 0, 5) = 'new:'
-    and length(vot_page_object_attr.cv_value) > 4 then
-    --проверка на добавление значения в локализацию
-    if vv_attr in ('confirmquestion', 'info', 'tipmsg') then
-      vot_localization.ck_d_lang = nullif(trim(pc_json#>>'{data,g_sys_lang}'), '');
-      vot_localization.cr_namespace = 'meta';
-      vot_localization.cv_value = substr(vot_page_object_attr.cv_value, 5);
-      vot_localization.ck_user = pv_user;
-      vot_localization.ct_change = CURRENT_TIMESTAMP;
-
-      vot_localization := pkg_localization.p_add_new_localization(vot_localization);
-
-      if nullif(gv_error::varchar, '') is not null then
-        return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}'; --ошибка прав доступа.
-      end if;
-
-      vot_page_object_attr.cv_value := coalesce(vot_localization.ck_id, '');
-    else
-      vot_page_object_attr.cv_value := substr(vot_page_object_attr.cv_value, 5);
-    end if;
-  end if;
   --проверка прав доступа
   perform pkg_access.p_check_access(pv_user, vk_main);
   if nullif(gv_error::varchar, '') is not null then

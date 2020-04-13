@@ -14,6 +14,10 @@ select
 
   t.cv_description,
 
+  t.ck_d_data_type,
+
+  t.cv_data_type_extra,
+
   t.cv_value_attr,
 
   t.cv_value,
@@ -39,6 +43,10 @@ from (
     ca.ck_id as ck_class_attr,
 
     a.cv_description,
+
+    a.ck_d_data_type,
+
+    coalesce(ca.cv_data_type_extra, a.cv_data_type_extra) as cv_data_type_extra,
 
     ca.cv_value as cv_value_attr,
 

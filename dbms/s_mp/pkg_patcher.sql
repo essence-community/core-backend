@@ -133,7 +133,7 @@ $function$
 
 COMMENT ON FUNCTION pkg_patcher.p_merge_object(pk_id character varying, pk_class character varying, pk_parent character varying, pv_name character varying, pn_order bigint, pk_query character varying, pv_description character varying, pv_displayed character varying, pv_modify character varying, pk_provider character varying, pk_user character varying, pt_change timestamp with time zone) IS 'Обновление объектов';
 
-CREATE OR REPLACE FUNCTION pkg_patcher.p_merge_object_attr(pk_id character varying, pk_object character varying, pk_class_attr character varying, pv_value character varying, pk_user character varying, pt_change timestamp with time zone)
+CREATE OR REPLACE FUNCTION pkg_patcher.p_merge_object_attr(pk_id character varying, pk_object character varying, pk_class_attr character varying, pv_value character varying, pk_user character varying, pt_change timestamp with time zone, pv_attr character varying DEFAULT NULL::character varying)
  RETURNS void
  LANGUAGE plpgsql
  SECURITY DEFINER
@@ -142,27 +142,60 @@ AS $function$
 declare
   -- переменные пакета
   gv_error sessvarstr;
+  vv_class_id varchar;
 begin
   gv_error = sessvarstr_declare('pkg', 'gv_error', '');
   perform pkg.p_reset_response();
+
   UPDATE s_mt.t_object_attr
      SET (ck_object, ck_class_attr, cv_value, ck_user, ct_change) =
          (pk_object, pk_class_attr, pv_value, pk_user, pt_change)
-   where ck_id = pk_id or (ck_object = pk_object and ck_class_attr = pk_class_attr);
+   where ck_id = pk_id;
+  
   if found then
     return;
   end if;
+
+  select ck_id 
+    into vv_class_id
+  from s_mt.t_class_attr where ck_id = pk_class_attr;
+
+  if vv_class_id is null and pv_attr is not null then
+    select ck_id 
+      into vv_class_id
+    from s_mt.t_class_attr where ck_class in (select ck_class from s_mt.t_object where ck_id = pk_object) and ck_attr = pv_attr;
+  
+    UPDATE s_mt.t_object_attr
+      SET (ck_object, cv_value, ck_user, ct_change) =
+          (pk_object, pv_value, pk_user, pt_change)
+    where ck_class_attr = vv_class_id;
+  
+    if found then
+      return;
+    end if;
+  elsif vv_class_id is null and pv_attr is null then
+    perform pkg.p_set_error(51, "Not found attr");
+    perform pkg_log.p_save('-11',
+                             null::varchar,
+                             jsonb_build_object('ck_id', pk_id, 'ck_object', pk_object, 'ck_class_attr', pk_class_attr, 'cv_value', pv_value, 'ck_user', pk_user, 'ct_change', pt_change, 'ck_attr', pv_attr),
+                             't_object_attr',
+                             pk_id,
+                             'u');
+    return;
+  end if;
+
+  
   begin
     INSERT INTO s_mt.t_object_attr
       (ck_id, ck_object, ck_class_attr, cv_value, ck_user, ct_change)
-      VALUES (pk_id, pk_object, pk_class_attr, pv_value, pk_user, pt_change)
+      VALUES (pk_id, pk_object, vv_class_id, pv_value, pk_user, pt_change)
     ON CONFLICT ON CONSTRAINT cin_c_object_attr_1 do update set ck_object = excluded.ck_object, ck_class_attr = excluded.ck_class_attr, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
   exception
     when others then
       perform pkg.p_set_error(51, SQLERRM);
       perform pkg_log.p_save('-11',
                              null::varchar,
-                             jsonb_build_object('ck_id', pk_id, 'ck_object', pk_object, 'ck_class_attr', pk_class_attr, 'cv_value', pv_value, 'ck_user', pk_user, 'ct_change', pt_change),
+                             jsonb_build_object('ck_id', pk_id, 'ck_object', pk_object, 'ck_class_attr', pk_class_attr, 'cv_value', pv_value, 'ck_user', pk_user, 'ct_change', pt_change, 'ck_attr', pv_attr),
                              't_object_attr',
                              pk_id,
                              'u');
@@ -171,7 +204,87 @@ END;
 $function$
 ;
 
-COMMENT ON FUNCTION pkg_patcher.p_merge_object_attr(varchar,varchar,varchar,varchar,varchar,timestamptz) IS 'Обновление атрибутов объекта';
+COMMENT ON FUNCTION pkg_patcher.p_merge_object_attr(varchar,varchar,varchar,varchar,varchar,timestamptz,varchar) IS 'Обновление атрибутов объекта';
+
+CREATE OR REPLACE FUNCTION pkg_patcher.p_merge_page_object_attr(pk_id character varying, pk_page_object character varying, pk_class_attr character varying, pv_value character varying, pk_user character varying, pt_change timestamp with time zone, pv_attr character varying DEFAULT NULL::character varying)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'pkg', 'pkg_patcher', 's_mt'
+AS $function$
+declare
+  -- переменные пакета
+  gv_error sessvarstr;
+  vv_class_id varchar;
+begin
+  gv_error = sessvarstr_declare('pkg', 'gv_error', '');
+  perform pkg.p_reset_response();
+
+  UPDATE s_mt.t_page_object_attr
+     SET (ck_page_object, ck_class_attr, cv_value, ck_user, ct_change) =
+         (pk_page_object, pk_class_attr, pv_value, pk_user, pt_change)
+   where ck_id = pk_id;
+  
+  if found then
+    return;
+  end if;
+
+  select ck_id 
+    into vv_class_id
+  from s_mt.t_class_attr where ck_id = pk_class_attr;
+
+
+  if vv_class_id is null and pv_attr is not null then
+    select ck_id 
+      into vv_class_id
+    from s_mt.t_class_attr 
+    where (ck_class in (
+      select ob.ck_class 
+      from s_mt.t_page_object p_ob
+      join s_mt.t_object ob
+      on p_ob.ck_object = ob.ck_id
+    where p_ob.ck_id = pk_page_object) and ck_attr = pv_attr);
+
+    UPDATE s_mt.t_page_object_attr
+      SET (ck_page_object, cv_value, ck_user, ct_change) =
+          (pk_page_object, pv_value, pk_user, pt_change)
+    where ck_class_attr = vv_class_id;
+  
+    if found then
+      return;
+    end if;
+  elsif vv_class_id is null and pv_attr is null then
+    perform pkg.p_set_error(51, "Not found attr");
+    perform pkg_log.p_save('-11',
+                             null::varchar,
+                             jsonb_build_object('ck_id', pk_id, 'ck_page_object', pk_page_object, 'ck_class_attr', pk_class_attr, 'cv_value', pv_value, 'ck_user', pk_user, 'ct_change', pt_change, 'ck_attr', pv_attr),
+                             't_page_object_attr',
+                             pk_id,
+                             'u');
+    return;
+  end if;
+
+  
+  begin
+    INSERT INTO s_mt.t_page_object_attr
+      (ck_id, ck_page_object, ck_class_attr, cv_value, ck_user, ct_change)
+      VALUES (pk_id, pk_page_object, vv_class_id, pv_value, pk_user, pt_change)
+    ON CONFLICT ON CONSTRAINT cin_c_page_object_attr_1 do update set ck_page_object = excluded.ck_page_object, ck_class_attr = excluded.ck_class_attr, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
+  exception
+    when others then
+      perform pkg.p_set_error(51, SQLERRM);
+      perform pkg_log.p_save('-11',
+                             null::varchar,
+                             jsonb_build_object('ck_id', pk_id, 'ck_page_object', pk_page_object, 'ck_class_attr', pk_class_attr, 'cv_value', pv_value, 'ck_user', pk_user, 'ct_change', pt_change, 'ck_attr', pv_attr),
+                             't_page_object_attr',
+                             pk_id,
+                             'u');
+  end;
+END;
+$function$
+;
+
+COMMENT ON FUNCTION pkg_patcher.p_merge_page_object_attr(varchar,varchar,varchar,varchar,varchar,timestamptz,varchar) IS 'Обновление атрибутов page объекта';
 
 CREATE OR REPLACE FUNCTION pkg_patcher.p_update_localization()
  RETURNS void

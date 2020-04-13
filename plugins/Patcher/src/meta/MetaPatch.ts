@@ -24,6 +24,7 @@ import { Query } from "./Query";
 import {
     sqlDLang,
     sqlLocalization,
+    sqlLocalizationMessage,
     sqlLocalizationPage,
     sqlMessage,
     sqlObject,
@@ -38,7 +39,6 @@ import {
     sqlQuery,
     sqlQueryPage,
     sqlSysSetting,
-    sqlLocalizationMessage,
 } from "./SqlPostgres";
 import { SysSetting } from "./SysSetting";
 
