@@ -3,10 +3,10 @@
 DROP SCHEMA IF EXISTS pkg_user cascade;
 
 CREATE SCHEMA pkg_user
-    AUTHORIZATION s_ip;
+    AUTHORIZATION ${user.update};
 
 
-ALTER SCHEMA pkg_user OWNER TO s_ip;
+ALTER SCHEMA pkg_user OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_user.f_get_context(pv_attribute character varying) RETURNS character varying
     LANGUAGE plpgsql SECURITY DEFINER
@@ -22,7 +22,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_user.f_get_context(pv_attribute character varying) OWNER TO s_ip;
+ALTER FUNCTION pkg_user.f_get_context(pv_attribute character varying) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_user.p_modify_user(pct_user public.ct_user, pv_hash character varying DEFAULT NULL::character varying) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
@@ -59,9 +59,9 @@ begin
     ck_department bigint
   )on commit preserve rows;
 
-  GRANT SELECT ON TABLE tt_user TO s_ic;
-  GRANT SELECT ON TABLE tt_user_action TO s_ic;
-  GRANT SELECT ON TABLE tt_user_department TO s_ic;
+  GRANT SELECT ON TABLE tt_user TO ${user.connect};
+  GRANT SELECT ON TABLE tt_user_action TO ${user.connect};
+  GRANT SELECT ON TABLE tt_user_department TO ${user.connect};
   -- код функции
   /* очистим таблицу и связанные с ней */
   begin
@@ -89,7 +89,7 @@ begin
 end;
 $$;
 
-ALTER FUNCTION pkg_user.p_modify_user(pct_user public.ct_user, pv_hash character varying) OWNER TO s_ip;
+ALTER FUNCTION pkg_user.p_modify_user(pct_user public.ct_user, pv_hash character varying) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_user.p_modify_user_action(pct_user_action public.ct_user_action, pv_hash character varying DEFAULT NULL::character varying) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
@@ -103,7 +103,7 @@ begin
     ck_user varchar,
     cn_action bigint
   )on commit preserve rows;
-  GRANT SELECT ON TABLE tt_user_action TO s_ic;
+  GRANT SELECT ON TABLE tt_user_action TO ${user.connect};
 
   /* очистим таблицу */
   delete from tt_user_action;
@@ -120,39 +120,7 @@ begin
 end;
 $$;
 
-ALTER FUNCTION pkg_user.p_modify_user_action(pct_user_action public.ct_user_action, pv_hash character varying) OWNER TO s_ip;
-
-CREATE FUNCTION pkg_user.p_modify_user_department(pct_user_department public.ct_user_department, pv_hash character varying DEFAULT NULL::character varying) RETURNS void
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'pkg_user', 'public'
-    AS $$
-declare
-  vcur_cnt record;
-begin
-  -- создаем временные таблицы если они не были созданны ранее
- create temp table if not exists tt_user_department(
-    ck_user varchar,
-    ck_department bigint
-  )on commit preserve rows;
-  GRANT SELECT ON TABLE tt_user_department TO s_ic;
-  
-  /* очистим таблицу */
-  delete from tt_user_department;
-  perform pkg_user.p_set_context('hash_user_department', null);
-  /* зальем новые данные */
-  insert into tt_user_department
-  select t.*
-  from unnest(pct_user_department) as t;
-
-  /* выставим контекст */
-  for vcur_cnt in (select count(1) from tt_user_department) loop
-    perform pkg_user.p_set_context('hash_user_department', pv_hash);
-  end loop;
-end;
-$$;
-
-
-ALTER FUNCTION pkg_user.p_modify_user_department(pct_user_department public.ct_user_department, pv_hash character varying) OWNER TO s_ip;
+ALTER FUNCTION pkg_user.p_modify_user_action(pct_user_action public.ct_user_action, pv_hash character varying) OWNER TO ${user.update};
 
 
 CREATE FUNCTION pkg_user.p_set_context(pv_attribute character varying, pv_value character varying) RETURNS void
@@ -169,4 +137,4 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_user.p_set_context(pv_attribute character varying, pv_value character varying) OWNER TO s_ip;
+ALTER FUNCTION pkg_user.p_set_context(pv_attribute character varying, pv_value character varying) OWNER TO ${user.update};
