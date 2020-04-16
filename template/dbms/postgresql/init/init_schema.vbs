@@ -90,14 +90,15 @@ End Function
 Set fso = CreateObject("Scripting.FileSystemObject")
 currDir = fso.GetParentFolderName(Wscript.ScriptFullName)
 
+commadLiquibase = currDir & "\..\liquibase\liquibase.bat --username=#schemaConnectionAdmin# --password=#schemaConnectionAdminPw# --url=#schemaConnection# --driver=org.postgresql.Driver --changeLogFile=db.changelog.init.xml update"
+commadLiquibase = Replace(commadLiquibase, "#connectionPreBd#", connectionBd)
+commadLiquibase = Replace(commadLiquibase, "#schemaConnectionAdmin#", sUser)
+commadLiquibase = Replace(commadLiquibase, "#schemaConnectionAdminPw#", sPw)
+WshShell.Exec(commadLiquibase)
+
 ReplaceSchema(currDir & "\db.sql")
 ReplaceSchema(currDir & "\db.changelog.init.xml")
 ReplaceSchema(currDir & "\..\db.changelog.meta.xml")
 ReplaceSchema(currDir & "\..\db.changelog.schema.xml")
 ReplaceSchema(currDir & "\..\liquibase.meta.properties")
 ReplaceSchema(currDir & "\..\liquibase.schema.properties")
-commadLiquibase = currDir & "\..\liquibase\liquibase.bat --username=#schemaConnectionAdmin# --password=#schemaConnectionAdminPw# --url=#schemaConnection# --driver=org.postgresql.Driver --changeLogFile=db.changelog.init.xml update"
-commadLiquibase = Replace(commadLiquibase, "#connectionPreBd#", connectionBd)
-commadLiquibase = Replace(commadLiquibase, "#schemaConnectionAdmin#", sUser)
-commadLiquibase = Replace(commadLiquibase, "#schemaConnectionAdminPw#", sUser)
-WshShell.Exec(commadLiquibase)

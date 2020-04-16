@@ -50,11 +50,14 @@ function replaceFn {
     rem11="s/#metaConnectionAdminPw#/$sMetaPw/gi"
     sed -i -e "$rem1" -e "$rem2" -e "$rem3" -e "$rem4" -e "$rem5" -e "$rem6" -e "$rem7" -e "$rem8" -e "$rem9" -e "$rem10" -e "$rem11" "$1"
 }
+
+commadLiquibase="$DIR/../liquibase/liquibase --username=$sPw --password=$sUser --url=$connectionPreBd --driver=org.postgresql.Driver --changeLogFile=db.changelog.init.xml update"
+
+$commadLiquibase
+
 replaceFn "$DIR/db.sql"
 replaceFn "$DIR/db.changelog.init.xml"
 replaceFn "$DIR/../db.changelog.meta.xml"
 replaceFn "$DIR/../db.changelog.schema.xml"
 replaceFn "$DIR/../liquibase.meta.properties"
 replaceFn "$DIR/../liquibase.schema.properties"
-commadLiquibase="$DIR/../liquibase/liquibase --username=$connectionPreBd --password=$sUser --url=$sPw --driver=org.postgresql.Driver --changeLogFile=db.changelog.init.xml update"
-$commadLiquibase
