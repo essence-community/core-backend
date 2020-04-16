@@ -12,6 +12,4 @@
   <include file="./package/pkg_json_user.sql" />
   <include file="./package/pkg_patcher.sql" />
   <include file="./package/pkg_json_patcher.sql" />
-  <include file="./package/pkg_integr.sql" />
-  <include file="./package/pkg_json_integr.sql" />
 </databaseChangeLog>
