@@ -11,7 +11,7 @@ ALTER SCHEMA pkg_json_user OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_json_user.f_get_context(pv_attribute character varying) RETURNS character varying
     LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'pkg_json_user', 'public'
+    SET search_path TO 'pkg_json_user', 'pkg_user', 'public'
     AS $$
 begin
   return pkg_user.f_get_context(pv_attribute);
@@ -22,7 +22,7 @@ ALTER FUNCTION pkg_json_user.f_get_context(pv_attribute character varying) OWNER
 
 CREATE FUNCTION pkg_json_user.f_modify_user(pc_json jsonb, pv_hash character varying) RETURNS character varying
     LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'pkg_json_user', 'public'
+    SET search_path TO 'pkg_json_user', 'pkg_user', 'public'
     AS $$
 declare
   vct_user ct_user;
@@ -66,7 +66,7 @@ ALTER FUNCTION pkg_json_user.f_modify_user(pc_json jsonb, pv_hash character vary
 
 CREATE FUNCTION pkg_json_user.f_modify_user_action(pc_json jsonb, pv_hash character varying) RETURNS character varying
     LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'pkg_json_user', 'public'
+    SET search_path TO 'pkg_json_user', 'pkg_user', 'public'
     AS $$
 declare
   vct_user_action ct_user_action;
@@ -98,32 +98,17 @@ $$;
 
 ALTER FUNCTION pkg_json_user.f_modify_user_action(pc_json jsonb, pv_hash character varying) OWNER TO ${user.update};
 
+-- deprecated
 CREATE FUNCTION pkg_json_user.f_modify_user_department(pc_json jsonb, pv_hash character varying) RETURNS character varying
     LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'pkg_json_user', 'public'
+    SET search_path TO 'pkg_json_user', 'pkg_user', 'public'
     AS $$
-declare
-  vct_user_department ct_user_department;
 begin
   -- Обнулим глобальные переменные с перечнем ошибок/предупреждений/информационных сообщений
   perform pkg.p_reset_response();
-  -- JSON -> collection
-  select
-    array_agg(
-      (
-        trim(jt.ck_user)::varchar,
-        trim(jt.ck_department)::bigint
-      )::ot_user_department
-    )::ct_user_department
-  into vct_user_department
-  from(
-    select
-      (r.res->>'ck_user') as ck_user,
-      (r.res->>'ck_department') as ck_department
-    from jsonb_array_elements(pc_json) as r(res)
-  ) as jt;
+
   -- Проверим и сохраним данные
-  perform pkg_user.p_modify_user_department(vct_user_department, pv_hash);
+  perform pkg_user.p_set_context('hash_user_department', pv_hash);
   return '{"ck_user":null,"cv_error":' || pkg.p_form_response() || '}';
 end;
 $$;
