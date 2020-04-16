@@ -90,14 +90,23 @@ End Function
 Set fso = CreateObject("Scripting.FileSystemObject")
 currDir = fso.GetParentFolderName(Wscript.ScriptFullName)
 
-commadLiquibase = currDir & "\..\liquibase\liquibase.bat --username=#schemaConnectionAdmin# --password=#schemaConnectionAdminPw# --url=#schemaConnection# --driver=org.postgresql.Driver --changeLogFile=db.changelog.init.xml update"
+ReplaceSchema(currDir & "\db.sql")
+ReplaceSchema(currDir & "\db.changelog.init.xml")
+
+commadLiquibase = "cd " & currDir & " && " currDir & "\..\liquibase\liquibase.bat --username=#schemaConnectionAdmin# --password=#schemaConnectionAdminPw# --url=#schemaConnection# --driver=org.postgresql.Driver --changeLogFile=db.changelog.init.xml update"
 commadLiquibase = Replace(commadLiquibase, "#connectionPreBd#", connectionBd)
 commadLiquibase = Replace(commadLiquibase, "#schemaConnectionAdmin#", sUser)
 commadLiquibase = Replace(commadLiquibase, "#schemaConnectionAdminPw#", sPw)
-WshShell.Exec(commadLiquibase)
+set WshExec_1 = WshShell.Exec(commadLiquibase)
 
-ReplaceSchema(currDir & "\db.sql")
-ReplaceSchema(currDir & "\db.changelog.init.xml")
+Do
+With WScript
+if WshExec_1.Status <> 0 then
+    WScript.StdOut.Write "Error init " & newDataBase & " errorcode: " & WshExec_1.Status
+    WScript.Quit 1
+End if
+
+
 ReplaceSchema(currDir & "\..\db.changelog.meta.xml")
 ReplaceSchema(currDir & "\..\db.changelog.schema.xml")
 ReplaceSchema(currDir & "\..\liquibase.meta.properties")

@@ -1,5 +1,5 @@
 --liquibase formatted sql
---changeset artemov_i:init_#name.db# dbms:postgresql splitStatements:false stripComments:false
+--changeset artemov_i:init_db_#name.db# dbms:postgresql runInTransaction:false splitStatements:false stripComments:false
 CREATE DATABASE ${name.db}
     WITH 
     OWNER = ${user.admin}
@@ -10,6 +10,7 @@ CREATE DATABASE ${name.db}
     TABLESPACE = pg_default
     CONNECTION LIMIT = -1;
 
+--changeset artemov_i:init_role_#name.db# dbms:postgresql splitStatements:false stripComments:false
 CREATE ROLE ${user.update} WITH
   NOLOGIN
   NOSUPERUSER

@@ -11,5 +11,5 @@
   <property name="user.admin" value="#user.admin#"/>
   <property name="name.db" value="#name.db#"/>
   
-  <include file="./db.xml" />
+  <include file="./db.sql" />
 </databaseChangeLog>
