@@ -25,7 +25,8 @@ WScript.StdOut.Write "Connection(jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOC
 connectionPreBd = WScript.StdIn.ReadLine
 
 If Len(connectionPreBd) = 0 Then
-    connectionPreBd = "jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=LOCALHOST)(PORT=1521))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=NAME)))"
+    WScript.StdOut.Write "Error empty Connection"
+    WScript.Quit 1
 End if
 
 WScript.StdOut.Write "Superadmin User (s_su): "
