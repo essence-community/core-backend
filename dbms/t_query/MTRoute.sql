@@ -33,7 +33,7 @@ with recursive t1(
         p.cr_type = 2
         and p.cl_menu = 1
         and pa.cr_type = ''view''
-        and (pa.cn_action in (select tss.cv_value::bigint from s_mt.t_sys_setting tss where tss.ck_id = ''anonymous_action'') or ua.cn_action is not null)
+        and (pa.cn_action in (select tss.cv_value::bigint from s_mt.t_sys_setting tss where tss.ck_id = ''g_sys_anonymous_action'') or ua.cn_action is not null)
         and (&FILTER)
 union all /* выберем их парентов в рекурсивном запросе */
     select

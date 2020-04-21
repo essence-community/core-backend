@@ -1808,3 +1808,6 @@ ALTER TABLE s_mt.t_attr ADD CONSTRAINT cin_r_attr_2 FOREIGN KEY (ck_d_data_type)
 
 ALTER TABLE s_mt.t_class_attr ADD cv_data_type_extra text NULL;
 COMMENT ON COLUMN s_mt.t_attr.cv_data_type_extra IS 'Дополнительное описание типа';
+
+--changeset kutsenko:CORE-1709 dbms:postgresql
+UPDATE s_mt.t_sys_setting SET ck_id = 'g_sys_anonymous_action' where ck_id = 'anonymous_action'
