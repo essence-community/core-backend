@@ -65,10 +65,9 @@ begin
               join s_mt.t_class_attr pca on pca.ck_id = ch.ck_class_attr
              where po3.ck_parent = po.ck_id and pca.ck_class = c.ck_id
              group by pca.ck_attr) as t), '{}'::jsonb)
-    from s_mt.t_object o
+    from s_mt.t_page_object po 
+    join s_mt.t_object o on o.ck_id = po.ck_object
     join s_mt.t_class c on o.ck_class = c.ck_id
-    join s_mt.t_page_object po on o.ck_id = po.ck_object
-    join s_mt.t_page p on p.ck_id = po.ck_page
    where po.ck_id = pk_start
   )::varchar;
 end;
