@@ -1811,3 +1811,8 @@ COMMENT ON COLUMN s_mt.t_attr.cv_data_type_extra IS 'Дополнительно�
 
 --changeset kutsenko:CORE-1709 dbms:postgresql
 UPDATE s_mt.t_sys_setting SET ck_id = 'g_sys_anonymous_action' where ck_id = 'anonymous_action'
+
+--changeset artemov_i:CORE-1160 dbms:postgresql
+CREATE INDEX cin_i_page_object_1 ON s_mt.t_page_object USING btree (ck_master);
+CREATE INDEX cin_i_page_object_2 ON s_mt.t_page_object USING btree (ck_parent);
+CREATE INDEX cin_i_class_attr_1 ON s_mt.t_class_attr USING btree (ck_attr);
