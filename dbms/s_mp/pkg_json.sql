@@ -9,7 +9,7 @@ CREATE SCHEMA pkg_json
 ALTER SCHEMA pkg_json OWNER TO s_mp;
 
 CREATE FUNCTION pkg_json.f_get_object(pk_start character varying) RETURNS character varying
-    LANGUAGE plpgsql SECURITY DEFINER
+    LANGUAGE plpgsql SECURITY DEFINER PARALLEL SAFE
     SET search_path TO 'pkg_json', 'public'
     AS $$
 begin
@@ -37,59 +37,34 @@ begin
                                end
         )
         else '{}'::jsonb
-      end ||
-      /*Добавление динамических атрибутов из класса и обьекта*/
-      coalesce(
-        (select jsonb_object_agg(t.ck_attr,
-                                 pkg_json.f_decode_attr(coalesce(t.cv_value_poa, t.cv_value_oa, t.cv_value_ca), t.ck_d_data_type))
+        /*Добавление динамических атрибутов из класса и обьекта*/
+      end || coalesce((select jsonb_object_agg(t.ck_attr,
+                                 pkg_json.f_decode_attr(t.cv_value, t.ck_d_data_type)) as attr_po
            from
            (select ca.ck_attr,
                    a.ck_d_data_type,
-                   poa.cv_value as cv_value_poa,
-                   oa.cv_value as cv_value_oa,
-                   ca.cv_value as cv_value_ca
+                   coalesce(poa.cv_value, oa.cv_value, ca.cv_value) as cv_value
               from s_mt.t_object o2
+              join s_mt.t_page_object po2 on o2.ck_id = po2.ck_object
               join s_mt.t_class c on c.ck_id = o2.ck_class
               join s_mt.t_class_attr ca on c.ck_id = ca.ck_class
               join s_mt.t_attr a on a.ck_id = ca.ck_attr
               left join s_mt.t_object_attr oa on o2.ck_id = oa.ck_object and ca.ck_id = oa.ck_class_attr
-              left join s_mt.t_page_object_attr poa on  poa.ck_page_object = po.ck_id and poa.ck_class_attr = ca.ck_id
-             where o2.ck_id = o.ck_id
-               and not exists (select 1
-                                 from s_mt.t_class_hierarchy ch
-                                where ca.ck_id = ch.ck_class_attr)
-                                order by ca.ck_attr) t
-        ),
-        '{}'::jsonb
-      ) ||
-      /*Сборка атрибутов дочерних объектов*/
-      coalesce(
-        (select jsonb_object_agg(q.ck_attr,
-                                 q.val)
+              left join s_mt.t_page_object_attr poa on poa.ck_page_object = po2.ck_id and poa.ck_class_attr = ca.ck_id
+              left join s_mt.t_class_hierarchy ch on ca.ck_id = ch.ck_class_attr 
+             where po2.ck_id = po.ck_id and ch.ck_id is null) as t where t.cv_value is not null), '{}'::jsonb)
+        /*Сборка атрибутов дочерних объектов*/
+      || coalesce((select jsonb_object_agg(t.ck_attr, t.json_attr_ch_po::jsonb) as attr_ch_po
            from
-           (select tp.ck_attr,
-                   jsonb_agg(res.jdata::jsonb) as val
-              from
-              (select ca.ck_attr,
-                      attr_po.ck_id
-                 from s_mt.t_page_object attr_po
-                 join s_mt.t_object attr_o on attr_po.ck_object = attr_o.ck_id
-                 join s_mt.t_class attr_c on attr_c.ck_id = attr_o.ck_class
-                 join s_mt.t_class_hierarchy ch on ch.ck_class_child = attr_c.ck_id
-                 join s_mt.t_object o2 on ch.ck_class_parent = o2.ck_class
-                 join s_mt.t_page_object h on o2.ck_id = h.ck_object
-                 join s_mt.t_class_attr ca on ca.ck_id = ch.ck_class_attr
-                where attr_po.ck_parent = pk_start
-                  and h.ck_id = pk_start
-                order by ca.ck_attr,
-                      coalesce(attr_po.cn_order, attr_o.cn_order)) tp
-              left join f_get_object(tp.ck_id) as res(jdata) on 1 = 1
-             group by tp.ck_attr
-             order by tp.ck_attr
-          ) as q
-        ),
-        '{}'::jsonb
-      )
+           (select pca.ck_attr,
+                   '[' || string_agg(pkg_json.f_get_object(po3.ck_id) order by po3.cn_order ) || ']' as json_attr_ch_po
+              from s_mt.t_page_object po3 
+              join s_mt.t_object o2 on o2.ck_id = po3.ck_object
+              join s_mt.t_class c2 on c2.ck_id = o2.ck_class
+              join s_mt.t_class_hierarchy ch on c2.ck_id = ch.ck_class_child
+              join s_mt.t_class_attr pca on pca.ck_id = ch.ck_class_attr
+             where po3.ck_parent = po.ck_id and pca.ck_class = c.ck_id
+             group by pca.ck_attr) as t), '{}'::jsonb)
     from s_mt.t_object o
     join s_mt.t_class c on o.ck_class = c.ck_id
     join s_mt.t_page_object po on o.ck_id = po.ck_object
@@ -109,7 +84,7 @@ ALTER FUNCTION pkg_json.f_get_object(pk_start character varying) OWNER TO s_mp;
 
 
 CREATE FUNCTION pkg_json.f_decode_attr(pv_value varchar, pk_data_type varchar) RETURNS jsonb
-    LANGUAGE plpgsql SECURITY DEFINER
+    LANGUAGE plpgsql SECURITY DEFINER PARALLEL SAFE
     SET search_path TO 'pkg_json', 'public'
     AS $$
 begin

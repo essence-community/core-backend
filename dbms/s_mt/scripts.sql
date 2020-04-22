@@ -1808,3 +1808,9 @@ ALTER TABLE s_mt.t_attr ADD CONSTRAINT cin_r_attr_2 FOREIGN KEY (ck_d_data_type)
 
 ALTER TABLE s_mt.t_class_attr ADD cv_data_type_extra text NULL;
 COMMENT ON COLUMN s_mt.t_attr.cv_data_type_extra IS 'Дополнительное описание типа';
+
+--changeset artemov_i:CORE-1160 dbms:postgresql
+CREATE INDEX cin_i_page_object_1 ON s_mt.t_page_object USING btree (ck_master);
+CREATE INDEX cin_i_page_object_2 ON s_mt.t_page_object USING btree (ck_parent);
+CREATE INDEX cin_i_class_attr_1 ON s_mt.t_class_attr USING btree (ck_attr);
+
