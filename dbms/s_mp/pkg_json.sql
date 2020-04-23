@@ -54,7 +54,7 @@ begin
              (select ck_class_attr from s_mt.t_class_hierarchy ch where ch.ck_class_attr in 
              (select ck_id from s_mt.t_class_attr where ck_class = c.ck_id))) as t where t.cv_value is not null), '{}'::jsonb)
         /*Сборка атрибутов дочерних объектов*/
-      || coalesce((select pkg_json.f_agg_merge_jsonb(pca.ck_attr, (pkg_json.f_get_object1(po3.ck_id))::jsonb  order by po3.cn_order)
+      || coalesce((select pkg_json.f_agg_merge_jsonb(pca.ck_attr, (pkg_json.f_get_object(po3.ck_id))::jsonb  order by po3.cn_order)
               from s_mt.t_page_object po3 
               join s_mt.t_object o2 on o2.ck_id = po3.ck_object
               join s_mt.t_class c2 on c2.ck_id = o2.ck_class
