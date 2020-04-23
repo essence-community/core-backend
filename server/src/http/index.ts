@@ -44,9 +44,9 @@ if (cluster.isMaster) {
         delete workers[worker.process.pid];
         initNodeHttp(id);
     });
-
-    for (let i = 0; i < Constants.CLUSTER_NUM; i += 1) {
-        initNodeHttp(`${i + 1}`);
+    const max = Constants.CLUSTER_NUM + 1;
+    for (let i = 1; i < max; i += 1) {
+        initNodeHttp(`${i}`);
     }
 } else {
     import("./httpNode");

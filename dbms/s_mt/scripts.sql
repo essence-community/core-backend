@@ -1751,3 +1751,74 @@ UPDATE s_mt.t_localization SET cr_namespace = 'static' WHERE ck_id IN (
 
 --changeset artemov_i:CORE-989 dbms:postgresql
 ALTER TABLE s_mt.t_query ALTER COLUMN ck_provider TYPE varchar(32) USING ck_provider::varchar;
+
+--changeset kutsenko:CORE-1671 dbms:postgresql
+DELETE FROM s_mt.t_page_object_attr tpoa WHERE tpoa.ck_class_attr IN (SELECT tca.ck_class FROM s_mt.t_class_attr tca WHERE tca.ck_attr = 'reloadservice');
+DELETE FROM s_mt.t_object_attr toa WHERE toa.ck_class_attr IN (SELECT tca.ck_class FROM s_mt.t_class_attr tca WHERE tca.ck_attr = 'reloadservice');
+DELETE FROM s_mt.t_class_attr tca WHERE tca.ck_attr = 'reloadservice';
+DELETE FROM s_mt.t_attr ta WHERE ck_id = 'reloadservice';
+
+--changeset artemov_i:CORE-1137 dbms:postgresql
+INSERT INTO s_mt.t_sys_setting (ck_id,cv_value,cv_description,ck_user,ct_change)
+VALUES ('anonymous_action','99999','Действие для анонимного входа','4fd05ca9-3a9e-4d66-82df-886dfa082113','2019-08-05 10:15:50.000');
+
+--changeset artemov_i:CORE-1153 dbms:postgresql
+CREATE TABLE s_mt.t_d_attr_data_type (
+	ck_id varchar(50) NOT NULL, -- ИД типа атрибута
+	cv_description varchar(500) NULL, -- Описание
+	cl_extra smallint NOT NULL DEFAULT 0::smallint, -- Признак что есть дополнительное описание
+	ck_user varchar(150) NOT NULL, -- ИД пользователя
+	ct_change timestamptz NOT NULL, -- Дата последнего изменения
+	CONSTRAINT cin_p_d_attr_data_type PRIMARY KEY (ck_id)
+);
+COMMENT ON TABLE s_mt.t_d_attr_data_type IS 'Тип данных атрибута';
+
+-- Column comments
+
+COMMENT ON COLUMN s_mt.t_d_attr_data_type.ck_id IS 'ИД типа атрибута';
+COMMENT ON COLUMN s_mt.t_d_attr_data_type.cv_description IS 'Описание';
+COMMENT ON COLUMN s_mt.t_d_attr_data_type.cl_extra IS 'Признак что есть дополнительное описание';
+COMMENT ON COLUMN s_mt.t_d_attr_data_type.ck_user IS 'ИД пользователя';
+COMMENT ON COLUMN s_mt.t_d_attr_data_type.ct_change IS 'Дата последнего изменения';
+
+INSERT INTO s_mt.t_d_attr_data_type (ck_id,cv_description,cl_extra,ck_user,ct_change)
+	VALUES ('boolean','Логический тип данных',0,'4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-04-09 10:55:27.199');
+INSERT INTO s_mt.t_d_attr_data_type (ck_id,cv_description,cl_extra,ck_user,ct_change)
+	VALUES ('integer','Целое число',0,'4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-04-09 10:55:27.199');
+INSERT INTO s_mt.t_d_attr_data_type (ck_id,cv_description,cl_extra,ck_user,ct_change)
+	VALUES ('numeric','Число с плавующей точкой',0,'4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-04-09 10:55:27.199');
+INSERT INTO s_mt.t_d_attr_data_type (ck_id,cv_description,cl_extra,ck_user,ct_change)
+	VALUES ('array','JSON массив',0,'4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-04-09 10:55:27.199');
+INSERT INTO s_mt.t_d_attr_data_type (ck_id,cv_description,cl_extra,ck_user,ct_change)
+	VALUES ('enum','Перечисляемый тип (Хранится в формате json массива)',1,'4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-04-09 10:55:27.199');
+INSERT INTO s_mt.t_d_attr_data_type (ck_id,cv_description,cl_extra,ck_user,ct_change)
+	VALUES ('text','Строковый тип данных',0,'4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-04-09 10:55:27.199');
+INSERT INTO s_mt.t_d_attr_data_type (ck_id,cv_description,cl_extra,ck_user,ct_change)
+	VALUES ('date','Дата в ISO8601: YYYY-MM-DDThh:mm:ss 2005-08-09T18:31:42',0,'4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-04-09 10:55:27.199');
+INSERT INTO s_mt.t_d_attr_data_type (ck_id,cv_description,cl_extra,ck_user,ct_change)
+	VALUES ('localization','Поле бередся из локализации',0,'4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-04-09 10:55:27.199');
+INSERT INTO s_mt.t_d_attr_data_type (ck_id,cv_description,cl_extra,ck_user,ct_change)
+	VALUES ('object','JSON Объект',0,'4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-04-09 10:55:27.199');
+
+ALTER TABLE s_mt.t_attr ADD ck_d_data_type varchar(50) NOT NULL DEFAULT 'text'::varchar;
+COMMENT ON COLUMN s_mt.t_attr.ck_d_data_type IS 'Тип данных';
+ALTER TABLE s_mt.t_attr ADD cv_data_type_extra text NULL;
+COMMENT ON COLUMN s_mt.t_attr.cv_data_type_extra IS 'Дополнительное описание типа';
+ALTER TABLE s_mt.t_attr ADD CONSTRAINT cin_r_attr_2 FOREIGN KEY (ck_d_data_type) REFERENCES s_mt.t_d_attr_data_type(ck_id);
+
+ALTER TABLE s_mt.t_class_attr ADD cv_data_type_extra text NULL;
+COMMENT ON COLUMN s_mt.t_attr.cv_data_type_extra IS 'Дополнительное описание типа';
+
+--changeset kutsenko:CORE-1709 dbms:postgresql
+UPDATE s_mt.t_sys_setting SET ck_id = 'g_sys_anonymous_action' where ck_id = 'anonymous_action'
+
+--changeset artemov_i:CORE-1160 dbms:postgresql
+CREATE INDEX cin_i_page_object_1 ON s_mt.t_page_object USING btree (ck_master);
+CREATE INDEX cin_i_page_object_2 ON s_mt.t_page_object USING btree (ck_parent);
+CREATE INDEX cin_i_class_attr_1 ON s_mt.t_class_attr USING btree (ck_attr);
+
+--changeset artemov_i:CORE-1160_2 dbms:postgresql
+CREATE INDEX cin_i_page_object_attr_1 ON s_mt.t_page_object_attr USING btree (ck_page_object, ck_class_attr);
+CREATE INDEX cin_i_object_attr_1 ON s_mt.t_object_attr USING btree (ck_object, ck_class_attr);
+CREATE INDEX cin_i_page_object_3 ON s_mt.t_page_object USING btree (ck_id, ck_master);
+CREATE INDEX cin_i_class_attr_2 ON s_mt.t_class_attr USING btree (ck_class);

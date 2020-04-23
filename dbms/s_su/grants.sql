@@ -291,3 +291,7 @@ GRANT SELECT ON TABLE s_mt.t_localization TO s_mc;
 GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE s_mt.t_create_patch TO s_mp;
 
 GRANT SELECT ON TABLE s_mt.t_create_patch TO s_mc;
+
+GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE s_mt.t_d_attr_data_type TO s_mp;
+
+GRANT SELECT ON TABLE s_mt.t_d_attr_data_type TO s_mc;

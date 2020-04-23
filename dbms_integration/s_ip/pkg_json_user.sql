@@ -1,5 +1,5 @@
 --liquibase formatted sql
---changeset artemov_i:pkg_access dbms:postgresql runOnChange:true splitStatements:false stripComments:false
+--changeset artemov_i:pkg_json_user dbms:postgresql runOnChange:true splitStatements:false stripComments:false
 DROP SCHEMA IF EXISTS pkg_json_user cascade;
 
 CREATE SCHEMA pkg_json_user

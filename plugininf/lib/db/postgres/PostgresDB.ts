@@ -3,6 +3,7 @@ import * as pg from "pg";
 import * as QueryStream from "pg-query-stream";
 import { IRufusLogger } from "rufus";
 import { Readable, Transform, TransformCallback } from "stream";
+import * as URL from "url";
 import { IParamsInfo } from "../../ICCTParams";
 import IObjectParam from "../../IObjectParam";
 import { IResultProvider } from "../../IResult";
@@ -37,7 +38,10 @@ export interface IPostgresDBConfig {
     idleTimeoutMillis?: number;
     connectionTimeoutMillis?: number;
     poolMax?: number;
+    poolMin?: number;
     queryTimeout?: number;
+    user?: string;
+    password?: string;
 }
 interface IParams {
     [key: string]: string | boolean | number | IObjectParam;
@@ -45,11 +49,19 @@ interface IParams {
 export default class PostgresDB {
     public static getParamsInfo(): IParamsInfo {
         return {
+            /* tslint:disable:object-literal-sort-keys */
             connectString: {
-                description:
-                    "Пример: postgres://LOGIN:PASSWORD@IP:PORT/NAME_DB",
+                description: "Пример: postgres://IP:PORT/NAME_DB",
                 name: "Строка подключения к БД",
                 required: true,
+                type: "string",
+            },
+            user: {
+                name: "Наименвание учетной записи БД",
+                type: "string",
+            },
+            password: {
+                name: "Пароль учетной записи БД",
                 type: "password",
             },
             connectionTimeoutMillis: {
@@ -72,10 +84,16 @@ export default class PostgresDB {
                 name: "Максимальное колличество конектов к БД в пуле",
                 type: "integer",
             },
+            poolMin: {
+                defaultValue: 0,
+                name: "Минимальное колличество конектов к БД в пуле",
+                type: "integer",
+            },
             queryTimeout: {
                 name: "Время выполнения запроса",
                 type: "integer",
             },
+            /* tslint:enable:object-literal-sort-keys */
         };
     }
 
@@ -141,9 +159,16 @@ export default class PostgresDB {
      * @returns {Promise}
      */
     public createPool(): Promise<pg.Pool> {
+        const connectionString = URL.parse(this.connectionConfig.connectString);
+        const [user, pass] = (connectionString.auth || "").split(":");
+        /* tslint:disable:object-literal-sort-keys */
         const pool = new pg.Pool({
             application_name: this.name,
-            connectionString: this.connectionConfig.connectString,
+            host: connectionString.hostname,
+            port: parseInt(connectionString.port || "5432", 10),
+            user: this.connectionConfig.user || user,
+            password: this.connectionConfig.password || pass,
+            database: connectionString.path.substr(1),
             connectionTimeoutMillis:
                 this.connectionConfig.connectionTimeoutMillis ||
                 PostgresDB.getParamsInfo().connectionTimeoutMillis.defaultValue,
@@ -151,7 +176,9 @@ export default class PostgresDB {
                 this.connectionConfig.idleTimeoutMillis ||
                 PostgresDB.getParamsInfo().idleTimeoutMillis.defaultValue,
             max: this.connectionConfig.poolMax || 4,
+            min: this.connectionConfig.poolMin || 0,
         });
+        /* tslint:enable:object-literal-sort-keys */
         this.pool = pool;
         pool.on("error", (err) =>
             this.log.error(`PG Pool error ${err.message}`, err),

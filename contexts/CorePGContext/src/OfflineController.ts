@@ -166,14 +166,17 @@ export default class OfflineController implements ICoreController {
     }
     public findModify(gateContext: IContext): Promise<any> {
         if (!gateContext.session) {
-            return Promise.reject(CoreContext.accessDenied());
+            return Promise.reject(new ErrorException(ErrorGate.REQUIRED_AUTH));
         } else if (!gateContext.params.page_object) {
             return Promise.reject(
                 new ErrorException(-1, 'Not found require param "page_object"'),
             );
         }
         const pageObject = (gateContext.params.page_object || "").toLowerCase();
-        const caActions = gateContext.session.data.ca_actions || [];
+        const caActions = [
+            this.params.anonymousAction,
+            ...(gateContext.session?.data.ca_actions || []),
+        ];
         return this.tempTable.dbModifyAction
             .findOne(
                 {
@@ -339,7 +342,9 @@ export default class OfflineController implements ICoreController {
         );
         if (doc) {
             if (isEmpty(doc.cn_action) || !caActions.includes(doc.cn_action)) {
-                throw CoreContext.accessDenied();
+                throw gateContext.session
+                    ? CoreContext.accessDenied()
+                    : new ErrorException(ErrorGate.REQUIRED_AUTH);
             }
             if (version === "3") {
                 throw new BreakException({
@@ -382,7 +387,7 @@ export default class OfflineController implements ICoreController {
             .then(
                 (res) =>
                     new Promise((resolve, reject) => {
-                        const data = {};
+                        const data: Record<string, any> = {};
                         res.stream.on("error", (err) =>
                             reject(new Error(err.message)),
                         );
@@ -429,7 +434,7 @@ export default class OfflineController implements ICoreController {
                             Object.entries(data).some((arr) => {
                                 if (
                                     arr[0] === ckPage ||
-                                    arr[1]["cv_url"] === ckPage
+                                    arr[1].cv_url === ckPage
                                 ) {
                                     page = arr[1];
                                     return true;
@@ -458,9 +463,13 @@ export default class OfflineController implements ICoreController {
                                         isEmpty(page.cn_action) ||
                                         !caActions.includes(page.cn_action)
                                     ) {
-                                        return reject(
-                                            CoreContext.accessDenied(),
-                                        );
+                                        return gateContext.session
+                                            ? reject(CoreContext.accessDenied())
+                                            : reject(
+                                                  new ErrorException(
+                                                      ErrorGate.REQUIRED_AUTH,
+                                                  ),
+                                              );
                                     }
                                     if (version === "3") {
                                         return reject(
@@ -489,8 +498,10 @@ export default class OfflineController implements ICoreController {
             );
     }
     public async findQuery(gateContext: IContext, name: string): Promise<any> {
-        const caActions =
-            (gateContext.session && gateContext.session.data.ca_actions) || [];
+        const caActions = [
+            this.params.anonymousAction,
+            ...(gateContext.session?.data.ca_actions || []),
+        ];
         const pageObject = (gateContext.params.page_object || "").toLowerCase();
         return this.tempTable.dbQuery
             .findOne(
@@ -501,6 +512,9 @@ export default class OfflineController implements ICoreController {
             )
             .then(async (doc) => {
                 if (doc) {
+                    if (doc.cr_access !== "free" && !gateContext.session) {
+                        throw new ErrorException(ErrorGate.REQUIRED_AUTH);
+                    }
                     if (doc.cr_access === "po_session") {
                         const access = await this.tempTable.dbQueryAction.findOne(
                             {
@@ -549,16 +563,29 @@ export default class OfflineController implements ICoreController {
                         },
                     };
                 }
-                return this.onlineFindQuery(name, pageObject, caActions, true);
+                return this.onlineFindQuery({
+                    caActions,
+                    gateContext,
+                    isSave: true,
+                    name,
+                    pageObject,
+                });
             });
     }
 
-    public onlineFindQuery(
-        name: string,
-        pageObject: any,
+    public onlineFindQuery({
+        gateContext,
+        name,
+        pageObject,
         caActions,
-        isSave: boolean = false,
-    ) {
+        isSave = false,
+    }: {
+        gateContext: IContext;
+        name: string;
+        pageObject: any;
+        caActions;
+        isSave?: boolean;
+    }) {
         return this.dataSource
             .executeStmt(this.queryFindSql, null, { ck_query: name })
             .then(
@@ -588,6 +615,16 @@ export default class OfflineController implements ICoreController {
                                         .then(noop, noop);
                                 }
                                 const [doc] = data;
+                                if (
+                                    doc.cr_access !== "free" &&
+                                    !gateContext.session
+                                ) {
+                                    return reject(
+                                        new ErrorException(
+                                            ErrorGate.REQUIRED_AUTH,
+                                        ),
+                                    );
+                                }
                                 if (doc.cr_access === "po_session") {
                                     const access = await this.tempTable.dbQueryAction.findOne(
                                         {
@@ -668,6 +705,7 @@ export default class OfflineController implements ICoreController {
                           self.loadQueryAction(),
                           self.loadModifyAction(),
                           self.loadMessage(),
+                          self.loadSysSetting(),
                       ]
                     : [
                           self.loadPages(),
@@ -786,6 +824,12 @@ export default class OfflineController implements ICoreController {
                         const data = [];
                         res.stream.on("data", (row) => {
                             data.push(row);
+                            if (row.ck_id === "g_sys_anonymous_action") {
+                                this.params.anonymousAction = parseInt(
+                                    row.cv_value,
+                                    10,
+                                );
+                            }
                         });
                         res.stream.on("end", () => {
                             this.tempTable.dbSysSettings.insert(data).then(

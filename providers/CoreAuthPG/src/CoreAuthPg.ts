@@ -14,8 +14,8 @@ import NullAuthProvider, {
     IAuthProviderParam,
 } from "@ungate/plugininf/lib/NullAuthProvider";
 import { ReadStreamToArray } from "@ungate/plugininf/lib/stream/Util";
-import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
-import { debounce, noop } from "lodash";
+import { initParams, isEmpty, debounce } from "@ungate/plugininf/lib/util/Util";
+import { noop } from "lodash";
 import { isObject } from "util";
 import ISession from "@ungate/plugininf/lib/ISession";
 const Property = (global as IGlobalObject).property;
@@ -144,6 +144,10 @@ export default class CoreAuthPg extends NullAuthProvider {
         if (!this.dbUsers) {
             this.dbUsers = await Property.getUsers();
         }
+        if (this.eventConnect) {
+            await this.eventConnect.rollbackAndClose();
+            this.eventConnect = null;
+        }
         if (this.dataSource.pool) {
             await this.dataSource.resetPool();
         }
@@ -154,7 +158,7 @@ export default class CoreAuthPg extends NullAuthProvider {
         return this.initTemp();
     }
     public async destroy() {
-        if (process.env.UNGATE_HTTP_ID === "1") {
+        if (this.eventConnect) {
             this.reloadTemp.cancel();
             await this.eventConnect.rollbackAndClose();
         }
@@ -186,8 +190,8 @@ export default class CoreAuthPg extends NullAuthProvider {
         try {
             this.log.info(`Init event ${this.name}`);
             if (this.eventConnect) {
-                this.reloadTemp.cancel();
                 await this.eventConnect.rollbackAndClose();
+                this.eventConnect = null;
             }
             this.eventConnect = await this.dataSource.getConnection();
             const conn = this.eventConnect.getCurrentConnection();
@@ -206,14 +210,20 @@ export default class CoreAuthPg extends NullAuthProvider {
                 }
             });
             conn.on("error", () => {
-                return this.initEvents();
+                this.initEvents();
             });
             return conn.query("LISTEN events");
         } catch (err) {
-            setTimeout(() => this.initEvents(), MAX_WAIT_RELOAD);
+            this.log.error(err);
+            return new Promise((resolve, reject) => {
+                setTimeout(
+                    () => this.initEvents().then(resolve, reject),
+                    MAX_WAIT_RELOAD,
+                );
+            });
         }
     }
-    private async initTemp() {
+    private initTemp() {
         const users = {};
         return this.dataSource
             .executeStmt(
@@ -330,8 +340,6 @@ export default class CoreAuthPg extends NullAuthProvider {
                 ),
             )
             .then(() => this.authController.updateHashAuth())
-            .then(async () => {
-                await this.authController.updateUserInfo(this.name);
-            });
+            .then(() => this.authController.updateUserInfo(this.name));
     }
 }

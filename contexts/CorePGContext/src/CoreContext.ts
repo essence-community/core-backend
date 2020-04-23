@@ -23,6 +23,7 @@ const createTempTable = (global as IGlobalObject).createTempTable;
 
 export interface ICoreParams extends ICCTParams {
     debug: boolean;
+    anonymousAction: number;
     defaultDepartmentQueryName: string;
     disableCache: boolean;
     disableCheckAccess: boolean;
@@ -37,6 +38,7 @@ export interface ICoreParams extends ICCTParams {
 
 export default class CoreContext extends NullContext {
     public static getParamsInfo(): IParamsInfo {
+        /* tslint:disable:object-literal-sort-keys */
         return {
             ...NullContext.getParamsInfo(),
             debug: {
@@ -92,6 +94,7 @@ export default class CoreContext extends NullContext {
                 type: "string",
             },
             ...PostgresDB.getParamsInfo(),
+            /* tslint:enable:object-literal-sort-keys */
         };
     }
 
@@ -140,6 +143,7 @@ export default class CoreContext extends NullContext {
         this.params = {
             ...this.params,
             ...initParams(CoreContext.getParamsInfo(), params),
+            anonymousAction: 99999,
         };
         this.dataSource = new PostgresDB(`${this.name}_context`, {
             connectString: this.params.connectString,
@@ -163,13 +167,13 @@ export default class CoreContext extends NullContext {
             this.controller = new OnlineController(
                 name,
                 this.dataSource,
-                this.params as ICoreParams,
+                this.params,
             );
         } else {
             this.controller = new OfflineController(
                 name,
                 this.dataSource,
-                this.params as ICoreParams,
+                this.params,
             );
         }
         Mask.on("beforechange", this.beforeMask, this);
@@ -193,17 +197,15 @@ export default class CoreContext extends NullContext {
             case this.params.pageMetaQueryNameNew:
             case this.params.pageObjectsQueryName:
             case this.params.pageMetaQueryName:
-                if (!gateContext.session) {
-                    return Promise.reject(
-                        new ErrorException(ErrorGate.REQUIRED_AUTH),
-                    );
-                }
                 if (!gateContext.params.json) {
                     return Promise.reject(CoreContext.accessDenied());
                 }
                 const version = this.params.versionApi[name];
                 const json = JSON.parse(gateContext.params.json || "{}");
-                const caActions = gateContext.session.data.ca_actions || [];
+                const caActions = [
+                    this.params.anonymousAction,
+                    ...(gateContext.session?.data.ca_actions || []),
+                ];
                 if (version !== "2" && (!json.filter || !json.filter.ck_page)) {
                     return Promise.reject(CoreContext.accessDenied());
                 } else if (
@@ -360,10 +362,13 @@ export default class CoreContext extends NullContext {
                 )
                 .then(
                     (docs) =>
-                        new Promise((resolv, reject) => {
+                        new Promise((resolv) => {
                             const rows = [];
                             docs.stream.on("data", (chunk) => rows.push(chunk));
-                            docs.stream.on("error", (err) => reject(err));
+                            docs.stream.on("error", (err) => {
+                                logger.error(err);
+                                resolv();
+                            });
                             docs.stream.on("end", () => {
                                 if (rows.length && rows[0].result) {
                                     try {
@@ -371,26 +376,20 @@ export default class CoreContext extends NullContext {
                                             ? rows[0].result
                                             : JSON.parse(rows[0].result);
                                         if (result.cv_error) {
-                                            return reject(
-                                                new BreakException({
-                                                    data: ResultStream([
-                                                        result,
-                                                    ]),
-                                                    type: "success",
-                                                }),
-                                            );
+                                            logger.error(result);
+                                            return resolv();
                                         }
                                     } catch (e) {
-                                        return Promise.reject(e);
+                                        logger.error(e);
+                                        return resolv(e);
                                     }
-                                    return resolv();
                                 }
                                 return resolv();
                             });
                         }),
                     (err) => {
                         logger.error(err);
-                        return Promise.reject(err);
+                        return Promise.resolve();
                     },
                 ),
         );

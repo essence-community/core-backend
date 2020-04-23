@@ -1,6 +1,7 @@
 import PostgresDB from "@ungate/plugininf/lib/db/postgres";
 import BreakException from "@ungate/plugininf/lib/errors/BreakException";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
+import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
 import IContext from "@ungate/plugininf/lib/IContext";
 import { IContextPluginResult } from "@ungate/plugininf/lib/IContextPlugin";
 import IResult from "@ungate/plugininf/lib/IResult";
@@ -9,7 +10,7 @@ import {
     filterFilesData,
     sortFilesData,
 } from "@ungate/plugininf/lib/util/Util";
-import CoreContext, { ICoreParams } from "./CoreContext";
+import { ICoreParams } from "./CoreContext";
 import ICoreController from "./ICoreController";
 import OfflineController from "./OfflineController";
 
@@ -109,14 +110,17 @@ export default class OnlineController implements ICoreController {
     }
     public findModify(gateContext: IContext): Promise<any> {
         if (!gateContext.session) {
-            return Promise.reject(CoreContext.accessDenied());
+            return Promise.reject(new ErrorException(ErrorGate.REQUIRED_AUTH));
         } else if (!gateContext.params.page_object) {
             return Promise.reject(
                 new ErrorException(-1, 'Not found require param "page_object"'),
             );
         }
         const pageObject = (gateContext.params.page_object || "").toLowerCase();
-        const caActions = gateContext.session.data.ca_actions || [];
+        const caActions = [
+            this.params.anonymousAction,
+            ...(gateContext.session?.data.ca_actions || []),
+        ];
         return this.controller.onlineFindModify(
             gateContext,
             pageObject,
@@ -140,10 +144,17 @@ export default class OnlineController implements ICoreController {
         gateContext: IContext,
         name: string,
     ): Promise<IContextPluginResult> {
-        const caActions =
-            (gateContext.session && gateContext.session.data.ca_actions) || [];
+        const caActions = [
+            this.params.anonymousAction,
+            ...(gateContext.session?.data.ca_actions || []),
+        ];
         const pageObject = (gateContext.params.page_object || "").toLowerCase();
-        return this.controller.onlineFindQuery(name, pageObject, caActions);
+        return this.controller.onlineFindQuery({
+            caActions,
+            gateContext,
+            name,
+            pageObject,
+        });
     }
 
     public init(reload?: boolean): Promise<void> {

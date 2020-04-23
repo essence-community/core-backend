@@ -3,7 +3,6 @@
 INSERT INTO s_mt.t_query (ck_id,cc_query,ck_provider,ck_user,ct_change,cr_type,cr_access,cv_description)
 VALUES ('AuthShowAvailableAccount','/*AuthShowAvailableAccount*/
 select /*Pagination*/
-       row_number() over(order by &SORT)as jn_rownum,
        count(1) over() as jn_total_cnt,
        /*Account*/
        t.*
@@ -16,7 +15,7 @@ select
     a.cv_surname,
     a.cv_patronymic,
     a.cv_email,
-    a.cv_timezone at time zone :sess_cv_timezone as ct_change
+    a.cv_timezone
 from t_account a
 left join t_account_role ra
  on a.ck_id = ra.ck_account and ra.ck_role =

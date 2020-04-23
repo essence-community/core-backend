@@ -3,6 +3,7 @@ import Logger from "@ungate/plugininf/lib/Logger";
 import { sendProcess } from "@ungate/plugininf/lib/util/ProcessSender";
 import * as axon from "axon";
 import * as fs from "fs";
+import * as URL from "url";
 import Constants from "../core/Constants";
 const logger = Logger.getLogger("LocalDbNode");
 
@@ -16,6 +17,10 @@ class BuilderLocalDbNode {
                 Constants.NEDB_MULTI_HOST.startsWith("unix:") ||
                 Constants.NEDB_MULTI_HOST.startsWith("tcp:")
             ) {
+                const url = URL.parse(Constants.NEDB_MULTI_HOST);
+                if (url.protocol === "unix:" && fs.existsSync(url.path)) {
+                    fs.unlinkSync(url.path);
+                }
                 repSocket.bind(Constants.NEDB_MULTI_HOST);
             } else {
                 repSocket.bind(
