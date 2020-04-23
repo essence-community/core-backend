@@ -54,17 +54,14 @@ begin
              (select ck_class_attr from s_mt.t_class_hierarchy ch where ch.ck_class_attr in 
              (select ck_id from s_mt.t_class_attr where ck_class = c.ck_id))) as t where t.cv_value is not null), '{}'::jsonb)
         /*Сборка атрибутов дочерних объектов*/
-      || coalesce((select jsonb_object_agg(t.ck_attr, t.json_attr_ch_po) as attr_ch_po
-           from
-           (select pca.ck_attr,
-                   jsonb_agg((pkg_json.f_get_object(po3.ck_id))::jsonb order by po3.cn_order ) as json_attr_ch_po
+      || coalesce((select pkg_json.f_agg_merge_jsonb(pca.ck_attr, (pkg_json.f_get_object(po3.ck_id))::jsonb  order by po3.cn_order)
               from s_mt.t_page_object po3 
               join s_mt.t_object o2 on o2.ck_id = po3.ck_object
               join s_mt.t_class c2 on c2.ck_id = o2.ck_class
               join s_mt.t_class_hierarchy ch on c2.ck_id = ch.ck_class_child
               join s_mt.t_class_attr pca on pca.ck_id = ch.ck_class_attr
              where po3.ck_parent = po.ck_id and pca.ck_class = c.ck_id
-             group by pca.ck_attr) as t), '{}'::jsonb)
+             ), '{}'::jsonb)
     from s_mt.t_page_object po 
     join s_mt.t_object o on o.ck_id = po.ck_object
     join s_mt.t_class c on o.ck_class = c.ck_id
@@ -109,3 +106,18 @@ end;
 $$;
 
 ALTER FUNCTION pkg_json.f_decode_attr(pv_value varchar, pk_data_type varchar) OWNER TO s_mp;
+
+CREATE FUNCTION pkg_json.f_merge_jsonb(res jsonb, keyValue varchar, val jsonb) RETURNS jsonb
+    LANGUAGE sql SECURITY DEFINER PARALLEL SAFE
+    SET search_path TO 'pkg_json', 'public'
+    AS $$
+    select coalesce(res, '{}'::jsonb) || jsonb_build_object(keyValue, coalesce(res->keyValue,'[]'::jsonb) || val)
+$$;
+ALTER FUNCTION pkg_json.f_merge_jsonb(res jsonb, keyValue varchar, val jsonb) OWNER TO s_mp;
+
+CREATE AGGREGATE pkg_json.f_agg_merge_jsonb (varchar, jsonb)
+(
+    sfunc = pkg_json.f_merge_jsonb,
+    stype = jsonb
+);
+ALTER AGGREGATE pkg_json.f_agg_merge_jsonb(varchar, jsonb) OWNER TO s_mp;
