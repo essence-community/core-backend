@@ -3,8 +3,12 @@
 INSERT INTO s_mt.t_query (ck_id, cc_query, ck_provider, ck_user, ct_change, cr_type, cr_access, cn_action, cv_description) VALUES ('MTEnumAttr', '/*MTEnumAttr*/
 select t.*
 from (
-  select value as ck_id
-  from jsonb_array_elements_text((:json::jsonb#>>''{filter,cv_data_type_extra}'')::jsonb)
+  select
+    case
+        when value ? ''cv_data_type_extra_value'' then value->>''cv_data_type_extra_value''
+        else value::varchar end as ck_id
+    from
+        jsonb_array_elements((:json::jsonb#>>''{filter,cv_data_type_extra}'')::jsonb)
 ) as t
 where ( &FILTER )
  /*##filter.ck_id*/and t.ck_id = :json::jsonb#>>''{filter,ck_id}''/*filter.ck_id##*/
