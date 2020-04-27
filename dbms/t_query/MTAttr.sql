@@ -8,7 +8,13 @@ select t.* from (
         a.ck_attr_type,
         a.ck_d_data_type,
         adt.cl_extra,
-        a.cv_data_type_extra,
+        CASE WHEN a.ck_d_data_type = ''enum'' THEN
+          jsonb_build_object(''cv_data_type_extra'', 
+          (select jsonb_agg(jsonb_build_object(''cv_data_type_extra_value'', value)) from jsonb_array_elements_text(a.cv_data_type_extra::JSONB))
+            )
+        ELSE
+            jsonb_build_object(''cv_data_type_extra'', a.cv_data_type_extra)
+        end as json,
         /* Поля аудита */
         a.ck_user,
         a.ct_change at time zone :sess_cv_timezone as ct_change

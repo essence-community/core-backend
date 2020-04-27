@@ -19,8 +19,14 @@ select ca.ck_id,
        a.ck_d_data_type,
 
        adt.cl_extra,
-
-       coalesce(ca.cv_data_type_extra, a.cv_data_type_extra) as cv_data_type_extra,
+      
+      CASE WHEN a.ck_d_data_type = ''enum'' THEN
+       jsonb_build_object(''cv_data_type_extra'', 
+       (select jsonb_agg(jsonb_build_object(''cv_data_type_extra_value'', value)) from jsonb_array_elements_text(coalesce(ca.cv_data_type_extra, a.cv_data_type_extra)::JSONB))
+        )
+      ELSE
+          jsonb_build_object(''cv_data_type_extra'', coalesce(ca.cv_data_type_extra, a.cv_data_type_extra))
+      end as json,
 
       /* Поля аудита */
 

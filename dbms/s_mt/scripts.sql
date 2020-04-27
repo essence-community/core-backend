@@ -1822,3 +1822,10 @@ CREATE INDEX cin_i_page_object_attr_1 ON s_mt.t_page_object_attr USING btree (ck
 CREATE INDEX cin_i_object_attr_1 ON s_mt.t_object_attr USING btree (ck_object, ck_class_attr);
 CREATE INDEX cin_i_page_object_3 ON s_mt.t_page_object USING btree (ck_id, ck_master);
 CREATE INDEX cin_i_class_attr_2 ON s_mt.t_class_attr USING btree (ck_class);
+
+--changeset artemov_i:CORE-1163 dbms:postgresql
+INSERT INTO s_mt.t_message (ck_id,cr_type,cv_text,ck_user,ct_change)
+	VALUES (80,'error','0839e8d67a474065bee7e3c8fad177a6','4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-04-24 16:06:00.000');
+INSERT INTO s_mt.t_message (ck_id,cr_type,cv_text,ck_user,ct_change)
+	VALUES (81,'error','a31559869a7249539ad9d694f3305c3e','4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-04-24 16:06:00.000');
+
