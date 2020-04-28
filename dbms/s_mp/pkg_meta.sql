@@ -957,7 +957,6 @@ begin
                               coalesce(jt.cv_description, atr.cv_description) as cv_description,
                               coalesce(jt.ck_id, atr.ck_id) as ck_id,
                               coalesce(jt.ck_d_data_type, atr.ck_d_data_type) as ck_d_data_type,
-                              coalesce(jt.ck_attr_type, atr.ck_attr_type) as ck_attr_type,
                               coalesce(jt.cv_data_type_extra, atr.cv_data_type_extra) as cv_data_type_extra,
                               case
                                 when jt.ck_id is not null and atr.ck_id is null then
