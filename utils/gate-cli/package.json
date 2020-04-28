@@ -1,0 +1,23 @@
+{
+    "name": "@essence-community/gate-cli",
+    "version": "1.0.0",
+    "description": "Utils development",
+    "engines": {
+        "yarn": ">=1.13.0",
+        "node": ">=12.0.0"
+    },
+    "main": "index.js",
+    "bin": {
+        "gate-cli": "./bin/gate-cli"
+    },
+    "scripts": {
+        "start": "yarn build && ./bin/gate-cli",
+        "postinstall": "yarn build",
+        "build": "tsc --project tsconfig.json"
+    },
+    "license": "MIT",
+    "dependencies": {},
+    "devDependencies": {
+        "@essence-community/eslint-config-react": "^2.2.0"
+    }
+}
