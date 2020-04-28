@@ -3,7 +3,7 @@
 /* eslint-disable max-len */
 import * as fs from "fs";
 import * as path from "path";
-import {questionReadline, getDir, isEmpty, isTrue} from "../util";
+import { questionReadline, getDir, isEmpty, isTrue } from "../util";
 
 async function CreatePackage(dir: string) {
     let pSuffix = null;
@@ -232,7 +232,7 @@ export const cliPostgreSql = async () => {
     );
 
     if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, {recursive: true});
+        fs.mkdirSync(dir, { recursive: true });
     }
 
     switch (

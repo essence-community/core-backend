@@ -1,6 +1,6 @@
-import {questionReadline} from "./util";
-import {cliOracle} from "./package/oracle";
-import {cliPostgreSql} from "./package/postgres";
+import { questionReadline } from "./util";
+import { cliOracle } from "./package/oracle";
+import { cliPostgreSql } from "./package/postgres";
 
 (async function cli() {
     switch (
