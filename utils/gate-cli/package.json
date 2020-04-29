@@ -1,6 +1,6 @@
 {
     "name": "@essence-community/create-gate-cli",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "description": "Utils development",
     "engines": {
         "yarn": ">=1.13.0",
@@ -17,7 +17,9 @@
         "build": "tsc --project tsconfig.json"
     },
     "license": "MIT",
-    "dependencies": {},
+    "dependencies": {
+        "typescript": "^3.8.3"
+    },
     "devDependencies": {
         "@essence-community/eslint-config-react": "^2.2.0"
     }
