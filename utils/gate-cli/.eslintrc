@@ -1,0 +1,18 @@
+{
+    "extends": "@essence-community/eslint-config-react",
+    "env": {
+        "browser": true,
+        "node": true
+    },
+    "globals": {
+        "pathgate": true,
+        "pathgatedb": true,
+        "pathgatecore": true,
+        "pathgateplugins": true,
+        "flagscmd": true,
+        "pathgateactions": true,
+        "pathgateproviders": true,
+        "pathgateconfplugins": true,
+        "pathgateschedulers": true
+    }
+}

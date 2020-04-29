@@ -36,9 +36,12 @@
         "providers/*",
         "schedulers/*",
         "events/*",
-        "libs/*"
+        "libs/*",
+        "utils/*"
     ],
     "devDependencies": {
+        "@essence-community/create-gate-cli": "^1.0.0",
+        "@essence-community/eslint-config-react": "^2.2.0",
         "@types/async": "^2.0.50",
         "@types/bcrypt-nodejs": "0.0.30",
         "@types/body-parser": "^1.17.0",
@@ -64,6 +67,6 @@
         "ts-node": "^7.0.1",
         "tslint": "^5.12.1",
         "tslint-config-prettier": "^1.18.0",
-        "typescript": "^3.2.1"
+        "typescript": "^3.8.3"
     }
 }
