@@ -1,6 +1,6 @@
 {
     "name": "@essence-community/create-gate-cli",
-    "version": "1.0.0",
+    "version": "1.0.2",
     "description": "Utils development",
     "engines": {
         "yarn": ">=1.13.0",
@@ -8,6 +8,7 @@
     },
     "main": "index.js",
     "bin": {
+        "create-gate-cli": "./bin/create-gate-cli",
         "gate-cli": "./bin/gate-cli"
     },
     "scripts": {
