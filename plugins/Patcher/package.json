@@ -7,8 +7,8 @@
     "dependencies": {
         "@ungate/plugininf": "^1.0.0",
         "adm-zip": "^0.4.13",
-        "aws-sdk": "^2.585.0",
-        "uuidv4": "^6.0.0"
+        "aws-sdk": "^2.665.0",
+        "uuidv4": "^6.0.7"
     },
     "devDependencies": {
         "@types/adm-zip": "^0.4.32",
