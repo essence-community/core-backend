@@ -41,7 +41,7 @@
     ],
     "devDependencies": {
         "@essence-community/eslint-config-react": "^2.2.0",
-        "@essence-community/gate-cli": "^1.0.0",
+        "@essence-community/create-gate-cli": "^1.0.0",
         "@types/async": "^2.0.50",
         "@types/bcrypt-nodejs": "0.0.30",
         "@types/body-parser": "^1.17.0",

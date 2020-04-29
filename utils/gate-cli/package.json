@@ -1,5 +1,5 @@
 {
-    "name": "@essence-community/gate-cli",
+    "name": "@essence-community/create-gate-cli",
     "version": "1.0.0",
     "description": "Utils development",
     "engines": {
