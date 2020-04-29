@@ -75,7 +75,7 @@ async function CreateTemplateFn(dir: string, packageSuffix?: string) {
         isEmpty(packageSuffix) &&
         (!fs.existsSync(jsonFile) || !fs.existsSync(modifyFile))
     ) {
-        throw new Error(`Not fount ${jsonFile} or ${modifyFile}`);
+        throw new Error(`Not found ${jsonFile} or ${modifyFile}`);
     }
 
     let fSuffix = null;

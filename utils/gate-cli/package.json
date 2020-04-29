@@ -1,6 +1,6 @@
 {
     "name": "@essence-community/create-gate-cli",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "description": "Utils development",
     "engines": {
         "yarn": ">=1.13.0",

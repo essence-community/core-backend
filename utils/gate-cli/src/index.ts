@@ -22,7 +22,7 @@ import { cliPostgreSql } from "./package/postgres";
     },
     (err) => {
         // eslint-disable-next-line no-console
-        console.error(err);
+        console.error(err?.isNotStackTrace ? err.message : err);
         process.exit(1);
     },
 );

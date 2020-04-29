@@ -4,6 +4,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { questionReadline, getDir, isEmpty, isTrue } from "../util";
+import { UtilError } from "../UtilError";
 
 async function CreatePackage(dir: string) {
     let pSuffix = null;
@@ -91,7 +92,7 @@ async function CreateTemplateFn(dir: string, packageSuffix?: string) {
         isEmpty(packageSuffix) &&
         (!fs.existsSync(jsonFile) || !fs.existsSync(modifyFile))
     ) {
-        throw new Error(`Not fount ${jsonFile} or ${modifyFile}`);
+        throw new Error(`Not found ${jsonFile} or ${modifyFile}`);
     }
 
     let fSuffix = null;
@@ -115,7 +116,6 @@ async function CreateTemplateFn(dir: string, packageSuffix?: string) {
   function f_modify_${fSuffix}(pv_user in varchar2, pk_session in varchar2, pc_json in clob) return varchar2 is
     vo${nameTable} ${nameTable}%rowtype;
     vv_action  varchar2(1);
-    vk_main    varchar2(32);
   begin
     --reset global
     pkg.p_reset_response;
@@ -132,12 +132,12 @@ async function CreateTemplateFn(dir: string, packageSuffix?: string) {
                       '$' columns ck_id varchar2(4000 char) path '$.data.ck_id',
                       cv_action varchar2(4000 char) path '$.service.cv_action') jt;
     --check access
-    pkg_access.p_check_access(pv_user, vk_main);
+    pkg_access.p_check_access(pv_user, vo${nameTable}.ck_id);
     if pkg.gv_error is not null then
       return '{"ck_id":"","cv_error":' || pkg.p_form_response || '}';
     end if;
     --lock
-    pkg_${pSuffix}.p_lock_${fSuffix}(vk_main);
+    pkg_${pSuffix}.p_lock_${fSuffix}(vo${nameTable}.ck_id);
     --check and save
     pkg_${pSuffix}.p_modify_${fSuffix}(vv_action, vo${nameTable});
     --Log
@@ -180,7 +180,9 @@ async function CreateTemplateFn(dir: string, packageSuffix?: string) {
 `;
 
     if (isEmpty(packageSuffix)) {
-        throw new Error("Not implementation");
+        throw new UtilError(
+            "Not implemented. Ask to core team to add this feature",
+        );
     }
 
     return res;
@@ -207,6 +209,8 @@ export const cliOracle = async () => {
         case "1":
             return CreatePackage(dir);
         case "2":
-            throw new Error("Not implementation");
+            throw new UtilError(
+                "Not implemented. Ask to core team to add this feature",
+            );
     }
 };
