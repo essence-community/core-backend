@@ -969,8 +969,7 @@ begin
                         from (select (t.dt->>'ck_attr') as ck_id, 
                                       (t.dt->>'ck_attr_type') as ck_attr_type, 
                                       (t.dt->>'cv_description') as cv_description, 
-                                      (t.dt->>'ck_d_data_type') as ck_d_data_type, 
-                                      (t.dt->>'ck_attr_type') as ck_attr_type, 
+                                      (t.dt->>'ck_d_data_type') as ck_d_data_type,
                                       (t.dt->>'cv_data_type_extra') as cv_data_type_extra
                                 from jsonb_array_elements(vcur_class.cj_class->'attributes') as t(dt)) jt
                         left join s_mt.t_attr atr on atr.ck_id = jt.ck_id) loop
