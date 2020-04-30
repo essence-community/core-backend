@@ -15,6 +15,7 @@
         "pg": "^7.14.0",
         "pg-cursor": "^2.0.1",
         "pg-query-stream": "^2.0.1",
+        "request": "^2.88.2",
         "rufus": "^0.5.7",
         "soap": "^0.30.0",
         "yesql": "^3.2.2"
@@ -28,7 +29,7 @@
         "@types/pg": "^7.4.11",
         "@types/pg-query-stream": "^1.0.2",
         "@types/promise": "^7.1.30",
-        "@types/request": "^2.48.1",
+        "@types/request": "^2.48.4",
         "@types/soap": "^0.21.0",
         "@types/yesql": "^3.2.1",
         "prettier": "^1.16.4",

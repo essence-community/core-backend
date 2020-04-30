@@ -525,6 +525,13 @@ gulp.task("libs", () => {
         if (fs.existsSync(path.join(libsDir, file, "package.json"))) {
             rows.push(
                 new Promise((resolve, reject) => {
+                    if (
+                        !fs.existsSync(path.join(homeDir, "bin", "libs", file))
+                    ) {
+                        fs.mkdirSync(path.join(homeDir, "bin", "libs", file), {
+                            recursive: true,
+                        });
+                    }
                     copyDir(
                         path.join(libsDir, file),
                         path.join(homeDir, "bin", "libs", file),
