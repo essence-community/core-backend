@@ -18,13 +18,13 @@ VALUES (204,'error','Удаление невозможно, т.к. сущест�
 
 --changeset artemov_i:CORE-1035 dbms:postgresql runOnChange:true
 INSERT INTO s_mt.t_localization (ck_id,ck_d_lang,cr_namespace,cv_value,ck_user,ct_change)
-	VALUES ('c7871bbd0e855693a47185a29b2b79f1','ru_RU','static','Гостевая учетная запись','4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-03-04 20:58:14.658') on conflict (ck_id) DO NOTHING;
+	VALUES ('c7871bbd0e855693a47185a29b2b79f1','ru_RU','static','Гостевая учетная запись','4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-03-04 20:58:14.658') on conflict on constraint cin_u_localization_1 DO NOTHING;
 INSERT INTO s_mt.t_sys_setting (ck_id,cv_value,ck_user,ct_change,cv_description)
     VALUES ('g_sys_enable_guest_login','false','4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-03-04 20:58:14.658','Включаем гостевой доступ') on conflict (ck_id) DO NOTHING;
 
 --changeset artemov_i:CORE-1035-rename dbms:postgresql runOnChange:true
 INSERT INTO s_mt.t_localization (ck_id,ck_d_lang,cr_namespace,cv_value,ck_user,ct_change)
-	VALUES ('02776da507494f2f9956ba9e0f37b1f1','ru_RU','static','как гость','4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-03-04 08:00:00.000') on conflict (ck_id) DO NOTHING;
+	VALUES ('02776da507494f2f9956ba9e0f37b1f1','ru_RU','static','как гость','4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-03-04 08:00:00.000') on conflict on constraint cin_u_localization_1 DO NOTHING;
 
 --changeset artemov_i:CORE-1035-auto-connect dbms:postgresql
 INSERT INTO s_mt.t_sys_setting (ck_id,cv_value,ck_user,ct_change,cv_description)
