@@ -1,0 +1,10 @@
+{
+    "name": "@ungate-provider/core-bpmn-pg-integration",
+    "version": "1.0.0",
+    "description": "Провайдер BPMN интеграции",
+    "author": "Ivan Artemov (honyrik@gmail.com)",
+    "license": "MIT",
+    "dependencies": {
+        "@ungate/plugininf": "^1.0.0"
+    }
+}
