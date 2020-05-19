@@ -1829,3 +1829,6 @@ INSERT INTO s_mt.t_message (ck_id,cr_type,cv_text,ck_user,ct_change)
 INSERT INTO s_mt.t_message (ck_id,cr_type,cv_text,ck_user,ct_change)
 	VALUES (81,'error','a31559869a7249539ad9d694f3305c3e','4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-04-24 16:06:00.000');
 
+--changeset kutsenko:CORE-1710 dbms:postgresql
+INSERT INTO s_mt.t_sys_setting (ck_id,cv_value,ck_user,ct_change,cv_description)
+	VALUES ('g_sys_ws_gate_url','/notification','-11','2020-05-19 13:10:31.709','WS URL шлюза');
