@@ -1,6 +1,6 @@
 {
     "name": "ungate",
-    "version": "2.3.0",
+    "version": "2.4.0",
     "description": "Шлюз",
     "private": true,
     "engines": {
@@ -36,8 +36,7 @@
         "providers/*",
         "schedulers/*",
         "events/*",
-        "libs/*",
-        "utils/*"
+        "libs/*"
     ],
     "devDependencies": {
         "@essence-community/create-gate-cli": "^1.0.0",
