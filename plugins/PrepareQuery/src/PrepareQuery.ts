@@ -56,8 +56,9 @@ export default class PrepareQuery extends NullPlugin {
                 const jlSort = filter.jl_sort;
                 if (gateContext.isDebugEnabled()) {
                     gateContext.debug(
-                        `jl_filter: ${jlFilter || ""}\njl_sort: ${jlSort ||
-                            ""}`,
+                        `jl_filter: ${jlFilter || ""}\njl_sort: ${
+                            jlSort || ""
+                        }`,
                     );
                 }
 

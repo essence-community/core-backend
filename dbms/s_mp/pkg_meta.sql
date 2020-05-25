@@ -509,6 +509,7 @@ declare
 
   -- переменные функции
   vk_d_data_type VARCHAR;
+  rec record;
 begin
    -- инициализация/получение переменных пакета
   i = sessvarstr_declare('pkg', 'i', 'I');
@@ -539,6 +540,14 @@ begin
     from s_mt.t_attr where ck_id = pot_class_attr.ck_attr;
     
     pot_class_attr.cv_data_type_extra := pkg_meta.p_decode_data_type_extra(pot_class_attr.cv_data_type_extra, vk_d_data_type, 1::smallint);
+
+    for rec in (
+      select 1 
+      from s_mt.t_attr 
+      where ck_id = pot_class_attr.ck_attr and cv_data_type_extra = pot_class_attr.cv_data_type_extra
+      ) loop
+      pot_class_attr.cv_data_type_extra = NULL::text;
+    end loop;
 
     /* значения атрибутов  decimalseparator и thousandseparator в классах Column Numeric и Field Numeric не могут совпадать */
     perform pkg_meta.p_check_separator(pv_action, null, null, pot_class_attr);    /* Сохранение/обновление данных */
@@ -948,7 +957,6 @@ begin
                               coalesce(jt.cv_description, atr.cv_description) as cv_description,
                               coalesce(jt.ck_id, atr.ck_id) as ck_id,
                               coalesce(jt.ck_d_data_type, atr.ck_d_data_type) as ck_d_data_type,
-                              coalesce(jt.ck_attr_type, atr.ck_attr_type) as ck_attr_type,
                               coalesce(jt.cv_data_type_extra, atr.cv_data_type_extra) as cv_data_type_extra,
                               case
                                 when jt.ck_id is not null and atr.ck_id is null then
@@ -961,8 +969,7 @@ begin
                         from (select (t.dt->>'ck_attr') as ck_id, 
                                       (t.dt->>'ck_attr_type') as ck_attr_type, 
                                       (t.dt->>'cv_description') as cv_description, 
-                                      (t.dt->>'ck_d_data_type') as ck_d_data_type, 
-                                      (t.dt->>'ck_attr_type') as ck_attr_type, 
+                                      (t.dt->>'ck_d_data_type') as ck_d_data_type,
                                       (t.dt->>'cv_data_type_extra') as cv_data_type_extra
                                 from jsonb_array_elements(vcur_class.cj_class->'attributes') as t(dt)) jt
                         left join s_mt.t_attr atr on atr.ck_id = jt.ck_id) loop
@@ -2295,9 +2302,6 @@ begin
   vv_value := nullif(trim(pv_value), '');
 
   if vk_data_type = 'localization' then
-    if pk_attr is not null and vv_value is null then 
-      perform pkg.p_set_error(514);
-    end if;
     if vv_value is not null 
       and substr(vv_value, 0, 5) = 'new:'
       and length(vv_value) > 4 then 
@@ -2311,16 +2315,18 @@ begin
 
         vv_value := coalesce(vot_localization.ck_id, '');
     end if;
-    for vv_rec in (select 1 
-       where not exists (select 1 from s_mt.t_localization where ck_id = vv_value)) loop
-       perform pkg.p_set_error(514);
-    end loop;
+    if vv_value is not null then
+      for vv_rec in (select 1 
+        where not exists (select 1 from s_mt.t_localization where ck_id = vv_value)) loop
+        perform pkg.p_set_error(81, vk_data_type);
+      end loop;
+    end if;
     return vv_value;
   end if;
   
   if vk_data_type = 'date' or vk_data_type = 'integer' or vk_data_type = 'numeric' then
     if pk_attr is not null and vv_value is null then 
-      perform pkg.p_set_error(514);
+      perform pkg.p_set_error(80);
     end if;
     return vv_value;
   end if;
@@ -2337,20 +2343,20 @@ begin
   if vk_data_type = 'enum' then
     for vv_rec in (select 1 
        where not exists (select value from jsonb_array_elements_text(vv_data_type_extra::jsonb) where vv_value is not null and value = vv_value)) loop
-       perform pkg.p_set_error(514);
+       perform pkg.p_set_error(80);
     end loop;
     return vv_value;
   end if;
   
   if vk_data_type = 'array' or vk_data_type = 'object' then
     if pk_attr is not null and vv_value is null then 
-      perform pkg.p_set_error(514);
+      perform pkg.p_set_error(80);
     end if; 
     begin 
-      perform jsonb_pretty(pv_value::jsonb);
+      perform pv_value::jsonb;
     exception
       when others then
-        perform pkg.p_set_error(514);
+        perform pkg.p_set_error(81, vk_data_type);
     end;
     return vv_value;
   end if;
