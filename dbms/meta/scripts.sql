@@ -31,3 +31,20 @@ where toa1.ck_class_attr = toa2.ck_class_attr;
 --changeset artemov_i:CORE-847_clear_page_variable dbms:postgresql
 DELETE FROM s_mt.t_page_variable
 WHERE upper(cv_name) like 'G_SESS%' or upper(cv_name) like 'G_SYS%' or upper(cv_name) like 'GSYS%' or upper(cv_name) like 'GSESS%';
+
+--changeset artemov_i:CORE-1772_clear_edit_mode dbms:postgresql runOnChange:true
+delete from s_mt.t_page_object_attr toa1
+where toa1.ck_id in (
+select toa.ck_id from s_mt.t_page_object_attr toa
+join s_mt.t_page_object tpo
+on toa.ck_page_object = tpo.ck_id
+join s_mt.t_object to2
+on tpo.ck_object = to2.ck_id
+where toa.ck_class_attr = '632' and to2.ck_query is null);
+
+delete from s_mt.t_object_attr toa1
+where toa1.ck_id in 
+(select toa.ck_id from s_mt.t_object_attr toa   
+join s_mt.t_object to2
+on toa.ck_object = to2.ck_id
+where toa.ck_class_attr = '632' and to2.ck_query is null);
