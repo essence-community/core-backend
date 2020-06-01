@@ -203,6 +203,7 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
     }
     if (json.data.cct_page) {
         const page: { [key: string]: fs.WriteStream } = {};
+        const pageDir = path.resolve(meta, "page");
         const resPage = await conn.executeStmt(
             sqlPage,
             {
@@ -215,9 +216,16 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
             },
         );
         await new Promise((resolve, reject) => {
+            let first = true;
             resPage.stream.on("data", (row) => {
+                if (first) {
+                    if (!fs.existsSync(pageDir)) {
+                        fs.mkdirSync(pageDir);
+                    }
+                    first = false;
+                }
                 page[row.ck_id] = createWriteStream(
-                    path.resolve(meta, "page"),
+                    pageDir,
                     `Page_${row.ck_id}`,
                 );
                 if (parseInt(row.cr_type, 10) === 2) {
@@ -476,6 +484,7 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
     }
     if (json.data.cct_query) {
         const provider: { [key: string]: fs.WriteStream } = {};
+        const queryDir = path.resolve(meta, "query");
         await conn
             .executeStmt(
                 sqlProvider,
@@ -491,9 +500,16 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
             .then(
                 (res) =>
                     new Promise((resolve, reject) => {
+                        let first = true;
                         res.stream.on("data", (row) => {
+                            if (first) {
+                                if (!fs.existsSync(queryDir)) {
+                                    fs.mkdirSync(queryDir);
+                                }
+                                first = false;
+                            }
                             provider[row.ck_id] = createWriteStream(
-                                path.resolve(meta, "query"),
+                                queryDir,
                                 `Provider_${row.ck_id}`,
                             );
                             provider[row.ck_id].write(
@@ -523,7 +539,7 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
                         const rows = [];
                         res.stream.on("data", (row) => {
                             const queryStream = createWriteStream(
-                                path.resolve(meta, "query"),
+                                queryDir,
                                 `${row.ck_id}`,
                             );
                             queryStream.write(new Query(row).toRow());
