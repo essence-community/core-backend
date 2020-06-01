@@ -400,6 +400,9 @@ export async function patchAuth(dir: string, json: IJson, conn: Connection) {
     }
     return createChangeXml(
         path.join(meta, "auth.xml"),
-        include.map((str) => `        <include file="${str}.sql" relativeToChangelogFile="true" />\n`),
+        include.map(
+            (str) =>
+                `        <include file="${str}.sql" relativeToChangelogFile="true" />\n`,
+        ),
     );
 }

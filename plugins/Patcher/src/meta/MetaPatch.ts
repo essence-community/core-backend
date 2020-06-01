@@ -216,7 +216,10 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
         );
         await new Promise((resolve, reject) => {
             resPage.stream.on("data", (row) => {
-                page[row.ck_id] = createWriteStream(path.resolve(meta, "page"), `Page_${row.ck_id}`);
+                page[row.ck_id] = createWriteStream(
+                    path.resolve(meta, "page"),
+                    `Page_${row.ck_id}`,
+                );
                 if (parseInt(row.cr_type, 10) === 2) {
                     page[row.ck_id].write(
                         `select pkg_patcher.p_remove_page('${row.ck_id}');\n`,
@@ -523,14 +526,17 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
                                 path.resolve(meta, "query"),
                                 `${row.ck_id}`,
                             );
-                            queryStream.write(
-                                new Query(row).toRow(),
-                            );
+                            queryStream.write(new Query(row).toRow());
                             includeQuery.push(`${row.ck_id}`);
                             rows.push(closeFsWriteStream(queryStream));
                         });
                         res.stream.on("error", (err) => reject(err));
-                        res.stream.on("end", () => Promise.all(rows).then(() => resolve(), (err) => reject(err)));
+                        res.stream.on("end", () =>
+                            Promise.all(rows).then(
+                                () => resolve(),
+                                (err) => reject(err),
+                            ),
+                        );
                     }),
             );
         await Promise.all(
@@ -542,27 +548,32 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
         await createChangeXml(
             path.join(meta, "query", "query.xml"),
             includeQuery.map(
-                (str) => `        <include file="${str}.sql" relativeToChangelogFile="true" />\n`,
-            ),
-        );
-    }
-    
-    if (includePage.length) {
-        await createChangeXml(
-            path.join(meta, "page", "page.xml"),
-            includePage.map(
-                (str) => `        <include file="${str}.sql" relativeToChangelogFile="true" />\n`,
+                (str) =>
+                    `        <include file="${str}.sql" relativeToChangelogFile="true" />\n`,
             ),
         );
     }
 
-    return createChangeXml(
-        path.join(meta, "meta.xml"),
-        [...include.map(
-            (str) => `        <include file="${str}.sql" relativeToChangelogFile="true" />\n`,
-        ), 
-        includeQuery.length ? '        <include file="query/query.xml" relativeToChangelogFile="true" />\n' : "",
-        includePage.length ? '        <include file="page/page.xml" relativeToChangelogFile="true" />\n' : "",
-    ],
-    );
+    if (includePage.length) {
+        await createChangeXml(
+            path.join(meta, "page", "page.xml"),
+            includePage.map(
+                (str) =>
+                    `        <include file="${str}.sql" relativeToChangelogFile="true" />\n`,
+            ),
+        );
+    }
+
+    return createChangeXml(path.join(meta, "meta.xml"), [
+        ...include.map(
+            (str) =>
+                `        <include file="${str}.sql" relativeToChangelogFile="true" />\n`,
+        ),
+        includeQuery.length
+            ? '        <include file="query/query.xml" relativeToChangelogFile="true" />\n'
+            : "",
+        includePage.length
+            ? '        <include file="page/page.xml" relativeToChangelogFile="true" />\n'
+            : "",
+    ]);
 }
