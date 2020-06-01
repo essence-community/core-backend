@@ -1,12 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
-<databaseChangeLog
-  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
-         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
- <include file="./meta/Page_03D2AB0C27C348E8B0A51A1794654AC5.sql" />
- <include file="./meta/Page_F77D105EE2F2403F89BDF2005FDB5F16.sql" />
- <include file="./meta/Page_BA75FDE6C6C741599C46B9D569BA5304.sql" />
- <include file="./meta/Page_F6F6B6BC21314E6A8C793E29A1952CAA.sql" />
-</databaseChangeLog>  
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+    <include file="page/page.xml" relativeToChangelogFile="true"/>
+</databaseChangeLog>
