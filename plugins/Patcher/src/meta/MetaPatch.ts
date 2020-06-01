@@ -203,6 +203,7 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
     }
     if (json.data.cct_page) {
         const page: { [key: string]: fs.WriteStream } = {};
+        const pageDir = path.resolve(meta, "page");
         const resPage = await conn.executeStmt(
             sqlPage,
             {
@@ -215,8 +216,18 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
             },
         );
         await new Promise((resolve, reject) => {
+            let first = true;
             resPage.stream.on("data", (row) => {
-                page[row.ck_id] = createWriteStream(meta, `Page_${row.ck_id}`);
+                if (first) {
+                    if (!fs.existsSync(pageDir)) {
+                        fs.mkdirSync(pageDir);
+                    }
+                    first = false;
+                }
+                page[row.ck_id] = createWriteStream(
+                    pageDir,
+                    `Page_${row.ck_id}`,
+                );
                 if (parseInt(row.cr_type, 10) === 2) {
                     page[row.ck_id].write(
                         `select pkg_patcher.p_remove_page('${row.ck_id}');\n`,
@@ -473,6 +484,7 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
     }
     if (json.data.cct_query) {
         const provider: { [key: string]: fs.WriteStream } = {};
+        const queryDir = path.resolve(meta, "query");
         await conn
             .executeStmt(
                 sqlProvider,
@@ -488,15 +500,22 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
             .then(
                 (res) =>
                     new Promise((resolve, reject) => {
+                        let first = true;
                         res.stream.on("data", (row) => {
+                            if (first) {
+                                if (!fs.existsSync(queryDir)) {
+                                    fs.mkdirSync(queryDir);
+                                }
+                                first = false;
+                            }
                             provider[row.ck_id] = createWriteStream(
-                                meta,
-                                `Query_${row.ck_id}`,
+                                queryDir,
+                                `Provider_${row.ck_id}`,
                             );
                             provider[row.ck_id].write(
                                 new Provider(row).toRow(),
                             );
-                            includeQuery.push(`Query_${row.ck_id}`);
+                            includeQuery.push(`Provider_${row.ck_id}`);
                         });
                         res.stream.on("error", (err) => reject(err));
                         res.stream.on("end", () => resolve());
@@ -517,13 +536,23 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
             .then(
                 (res) =>
                     new Promise((resolve, reject) => {
+                        const rows = [];
                         res.stream.on("data", (row) => {
-                            provider[row.ck_provider].write(
-                                new Query(row).toRow(),
+                            const queryStream = createWriteStream(
+                                queryDir,
+                                `${row.ck_id}`,
                             );
+                            queryStream.write(new Query(row).toRow());
+                            includeQuery.push(`${row.ck_id}`);
+                            rows.push(closeFsWriteStream(queryStream));
                         });
                         res.stream.on("error", (err) => reject(err));
-                        res.stream.on("end", () => resolve());
+                        res.stream.on("end", () =>
+                            Promise.all(rows).then(
+                                () => resolve(),
+                                (err) => reject(err),
+                            ),
+                        );
                     }),
             );
         await Promise.all(
@@ -531,10 +560,36 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
         );
     }
 
-    return createChangeXml(
-        path.join(meta, "meta.xml"),
-        [...include, ...includeQuery, ...includePage].map(
-            (str) => `        <include file="./meta/${str}.sql" />\n`,
+    if (includeQuery.length) {
+        await createChangeXml(
+            path.join(meta, "query", "query.xml"),
+            includeQuery.map(
+                (str) =>
+                    `        <include file="${str}.sql" relativeToChangelogFile="true" />\n`,
+            ),
+        );
+    }
+
+    if (includePage.length) {
+        await createChangeXml(
+            path.join(meta, "page", "page.xml"),
+            includePage.map(
+                (str) =>
+                    `        <include file="${str}.sql" relativeToChangelogFile="true" />\n`,
+            ),
+        );
+    }
+
+    return createChangeXml(path.join(meta, "meta.xml"), [
+        ...include.map(
+            (str) =>
+                `        <include file="${str}.sql" relativeToChangelogFile="true" />\n`,
         ),
-    );
+        includeQuery.length
+            ? '        <include file="query/query.xml" relativeToChangelogFile="true" />\n'
+            : "",
+        includePage.length
+            ? '        <include file="page/page.xml" relativeToChangelogFile="true" />\n'
+            : "",
+    ]);
 }
