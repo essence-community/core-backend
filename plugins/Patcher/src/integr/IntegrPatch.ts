@@ -69,7 +69,7 @@ export async function patchIntegr(dir: string, json: IJson, conn: Connection) {
     return createChangeXml(
         path.join(meta, "integr.xml"),
         include.map(
-            (str) => `        <include file="./integr/${str}.sql" />\n`,
+            (str) => `        <include file="${str}.sql" relativeToChangelogFile="true" />\n`,
         ),
     );
 }
