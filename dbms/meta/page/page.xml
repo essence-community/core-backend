@@ -7,8 +7,6 @@
     <include file="Page_12127721.sql" relativeToChangelogFile="true"/>
     <include file="Page_12128581.sql" relativeToChangelogFile="true"/>
     <include file="Page_22D2F53FE7E24680917B85D9A95237BD.sql" relativeToChangelogFile="true"/>
-    <include file="Page_25887721.sql" relativeToChangelogFile="true"/>
-    <include file="Page_87C1A7620D9D4B35A9AD2460DB3A2358.sql" relativeToChangelogFile="true"/>
     <include file="Page_302.sql" relativeToChangelogFile="true"/>
     <include file="Page_268357780361.sql" relativeToChangelogFile="true"/>
     <include file="Page_652.sql" relativeToChangelogFile="true"/>
@@ -20,16 +18,9 @@
     <include file="Page_2.sql" relativeToChangelogFile="true"/>
     <include file="Page_3.sql" relativeToChangelogFile="true"/>
     <include file="Page_6695715415771.sql" relativeToChangelogFile="true"/>
-    <include file="Page_6230F0855D6648C9A0CDBE62ED1B1811.sql" relativeToChangelogFile="true"/>
-    <include file="Page_5868BCACDD034DFF9DC9B0C3170CB720.sql" relativeToChangelogFile="true"/>
-    <include file="Page_8F285F5F5D6742E7BC795751DBB9E55B.sql" relativeToChangelogFile="true"/>
-    <include file="Page_CF6B6D22EE0E4524A7FF6727BC51C0FA.sql" relativeToChangelogFile="true"/>
-    <include file="Page_D9ED58074C5F4972A5CEEED5B35FFCC7.sql" relativeToChangelogFile="true"/>
-    <include file="Page_F010FF49A7FD4F63A5E0B070B9AD2536.sql" relativeToChangelogFile="true"/>
     <include file="Page_BC4B5C748874439E9CED6E8F76933B84.sql" relativeToChangelogFile="true"/>
     <include file="Page_DDBEA79C5CBE4DC3A2CEA74DA46216A7.sql" relativeToChangelogFile="true"/>
     <include file="Page_F5CAF3CF206A4454A48FA1466932B969.sql" relativeToChangelogFile="true"/>
     <include file="Page_FA489CA01DB649ED914DC3E7C5E061F2.sql" relativeToChangelogFile="true"/>
     <include file="Page_318AD0CA3F00478B95556ADBBE58E758.sql" relativeToChangelogFile="true"/>
-    <include file="Page_5941183F81F741928470BFA1A1682A5B.sql" relativeToChangelogFile="true"/>
 </databaseChangeLog>
