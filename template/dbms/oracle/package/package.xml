@@ -5,11 +5,11 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
-  <include file="./package/types.sql" />
-  <include file="./package/sequences.sql" />
-  <include file="./package/pkg.sql" />
-  <include file="./package/pkg_log.sql" />
-  <include file="./package/pkg_access.sql" />
-  <include file="./package/pkg_user.sql" />
-  <include file="./package/pkg_json_user.sql" />
+  <include file="types.sql" relativeToChangelogFile="true" />
+  <include file="sequences.sql" relativeToChangelogFile="true" />
+  <include file="pkg.sql" relativeToChangelogFile="true" />
+  <include file="pkg_log.sql" relativeToChangelogFile="true" />
+  <include file="pkg_access.sql" relativeToChangelogFile="true" />
+  <include file="pkg_user.sql" relativeToChangelogFile="true" />
+  <include file="pkg_json_user.sql" relativeToChangelogFile="true" />
 </databaseChangeLog>
