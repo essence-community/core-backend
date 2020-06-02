@@ -1908,3 +1908,21 @@ update s_mt.t_page_object_attr set cv_value = 'hidden'
 			left join s_mt.t_page_object_attr tpoa on tpoa.ck_page_object = po.ck_id and tpoa.ck_class_attr = tca2.ck_id
 			where tca.ck_attr = 'editmode' and tpoa.cv_value = 'hidden' and (tpoa.cv_value = 'false' or toa2.cv_value = 'false' or (toa2.cv_value is null and tca2.cv_value = 'false'))
 	);
+
+--changeset kutsenko_o:CORE-1782-visibleinwindow dbms:postgresql
+-- Object: remove value for visibleinwindow
+delete from s_mt.t_object_attr where ck_id in (
+	select toa.ck_id from s_mt.t_class_attr tca
+		join s_mt.t_object_attr toa on toa.ck_class_attr = tca.ck_id
+		where tca.ck_attr = 'visibleinwindow'
+);
+
+-- Page: remove value for visibleinwindow
+delete from s_mt.t_object_attr where ck_id in (
+	select toa.ck_id from s_mt.t_class_attr tca
+		join s_mt.t_page_object_attr tpoa on tpoa.ck_class_attr = tca.ck_id
+		where tca.ck_attr = 'visibleinwindow'
+);
+
+-- Remove visibleinwindow attribute for all classes
+delete from s_mt.t_class_attr where ck_attr = 'visibleinwindow';
