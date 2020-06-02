@@ -1869,9 +1869,12 @@ update s_mt.t_object_attr set cv_value = cv_value || '-editing'
 			join s_mt.t_object_attr toa on tca.ck_id = toa.ck_class_attr 
 			join s_mt.t_object o on o.ck_id = toa.ck_object 
 			left join s_mt.t_object_attr toa2 on toa2.ck_object = o.ck_id and toa2.ck_class_attr = tca2.ck_id
-			where tca.ck_attr = 'editmode' and toa.cv_value in ('insert', 'update') and (toa2.cv_value = 'true' or (toa2.cv_value is null and tca2.cv_value = 'true'))
+            left join s_mt.t_page_object po on po.ck_object = o.ck_id
+			left join s_mt.t_page_object_attr tpoa on tpoa.ck_page_object = po.ck_id and tpoa.ck_class_attr = tca2.ck_id
+			where tca.ck_attr = 'editmode' and toa.cv_value in ('insert', 'update') 
+            and (tpoa.cv_value = 'true' or toa2.cv_value = 'true' or (tpoa.cv_value is null and toa2.cv_value is null and tca2.cv_value = 'true'))
 	);
-	
+
 -- Object disabled to hidden
 update s_mt.t_object_attr set cv_value = 'hidden'
 	where ck_id in (
@@ -1880,7 +1883,10 @@ update s_mt.t_object_attr set cv_value = 'hidden'
 			join s_mt.t_object_attr toa on tca.ck_id = toa.ck_class_attr 
 			join s_mt.t_object o on o.ck_id = toa.ck_object 
 			left join s_mt.t_object_attr toa2 on toa2.ck_object = o.ck_id and toa2.ck_class_attr = tca2.ck_id
-			where tca.ck_attr = 'editmode' and toa.cv_value = 'disabled' and (toa2.cv_value = 'false' or (toa2.cv_value is null and tca2.cv_value = 'false'))
+            left join s_mt.t_page_object po on po.ck_object = o.ck_id
+			left join s_mt.t_page_object_attr tpoa on tpoa.ck_page_object = po.ck_id and tpoa.ck_class_attr = tca2.ck_id
+			where tca.ck_attr = 'editmode' and toa.cv_value = 'disabled' 
+            and (tpoa.cv_value = 'false' or toa2.cv_value = 'false' or (tpoa.cv_value is null and toa2.cv_value is null and tca2.cv_value = 'false'))
 	);
 
 -- Page insert, update to insert-editing, update-editing
@@ -1888,12 +1894,13 @@ update s_mt.t_page_object_attr set cv_value = cv_value || '-editing'
 	where ck_id in (
 		select tpoa.ck_id from s_mt.t_class_attr tca
 			join s_mt.t_class_attr tca2 on tca.ck_class = tca2.ck_class and tca2.ck_attr = 'visibleinwindow'
-			join s_mt.t_object_attr toa on tca.ck_id = toa.ck_class_attr 
-			join s_mt.t_object o on o.ck_id = toa.ck_object 
+			join s_mt.t_page_object_attr tpoa on tca.ck_id = tpoa.ck_class_attr
+            join s_mt.t_page_object tpo on tpo.ck_id = tpoa.ck_page_object
+			join s_mt.t_object o on o.ck_id = tpo.ck_object 
 			left join s_mt.t_object_attr toa2 on toa2.ck_object = o.ck_id and toa2.ck_class_attr = tca2.ck_id
-			left join s_mt.t_page_object po on po.ck_object = o.ck_id
-			left join s_mt.t_page_object_attr tpoa on tpoa.ck_page_object = po.ck_id and tpoa.ck_class_attr = tca2.ck_id
-			where tca.ck_attr = 'editmode' and tpoa.cv_value in ('insert', 'update') and (tpoa.cv_value = 'true' or toa2.cv_value = 'true' or (toa2.cv_value is null and tca2.cv_value = 'true'))
+			left join s_mt.t_page_object_attr tpoa2 on tpoa.ck_page_object = tpo.ck_id and tpoa.ck_class_attr = tca2.ck_id
+			where tca.ck_attr = 'editmode' and tpoa.cv_value in ('insert', 'update') 
+            and (tpoa2.cv_value = 'true' or toa2.cv_value = 'true' or (tpoa2.cv_value is null and toa2.cv_value is null and tca2.cv_value = 'true'))
 	);
 
 -- Page disabled to hidden
@@ -1901,26 +1908,25 @@ update s_mt.t_page_object_attr set cv_value = 'hidden'
 	where ck_id in (
 		select tpoa.ck_id from s_mt.t_class_attr tca
 			join s_mt.t_class_attr tca2 on tca.ck_class = tca2.ck_class and tca2.ck_attr = 'visibleinwindow'
-			join s_mt.t_object_attr toa on tca.ck_id = toa.ck_class_attr 
-			join s_mt.t_object o on o.ck_id = toa.ck_object 
+			join s_mt.t_page_object_attr tpoa on tca.ck_id = tpoa.ck_class_attr
+            join s_mt.t_page_object tpo on tpo.ck_id = tpoa.ck_page_object
+			join s_mt.t_object o on o.ck_id = tpo.ck_object 
 			left join s_mt.t_object_attr toa2 on toa2.ck_object = o.ck_id and toa2.ck_class_attr = tca2.ck_id
-			left join s_mt.t_page_object po on po.ck_object = o.ck_id
-			left join s_mt.t_page_object_attr tpoa on tpoa.ck_page_object = po.ck_id and tpoa.ck_class_attr = tca2.ck_id
-			where tca.ck_attr = 'editmode' and tpoa.cv_value = 'hidden' and (tpoa.cv_value = 'false' or toa2.cv_value = 'false' or (toa2.cv_value is null and tca2.cv_value = 'false'))
+			left join s_mt.t_page_object_attr tpoa2 on tpoa.ck_page_object = tpo.ck_id and tpoa.ck_class_attr = tca2.ck_id
+			where tca.ck_attr = 'editmode' and tpoa.cv_value = 'hidden' 
+            and (tpoa2.cv_value = 'false' or toa2.cv_value = 'false' or (tpoa2.cv_value is null and toa2.cv_value is null and tca2.cv_value = 'false'))
 	);
 
 --changeset kutsenko_o:CORE-1782-visibleinwindow dbms:postgresql
 -- Object: remove value for visibleinwindow
-delete from s_mt.t_object_attr where ck_id in (
-	select toa.ck_id from s_mt.t_class_attr tca
-		join s_mt.t_object_attr toa on toa.ck_class_attr = tca.ck_id
+delete from s_mt.t_object_attr where ck_class_attr in (
+	select tca.ck_id from s_mt.t_class_attr tca
 		where tca.ck_attr = 'visibleinwindow'
 );
 
 -- Page: remove value for visibleinwindow
-delete from s_mt.t_object_attr where ck_id in (
-	select toa.ck_id from s_mt.t_class_attr tca
-		join s_mt.t_page_object_attr tpoa on tpoa.ck_class_attr = tca.ck_id
+delete from s_mt.t_page_object_attr where ck_class_attr in (
+	select tca.ck_id from s_mt.t_class_attr tca
 		where tca.ck_attr = 'visibleinwindow'
 );
 
