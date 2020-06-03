@@ -3,7 +3,6 @@
 INSERT INTO s_mt.t_query (ck_id, cc_query, ck_provider, ck_user, ct_change, cr_type, cr_access, cn_action, cv_description) VALUES ('MTAttr', '/*MTAttr*/
 select t.* from (
   select a.ck_id,
-        a.ck_attr_type,
         a.cv_description,
         a.ck_attr_type,
         a.ck_d_data_type,
