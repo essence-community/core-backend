@@ -1932,3 +1932,21 @@ delete from s_mt.t_page_object_attr where ck_class_attr in (
 
 -- Remove visibleinwindow attribute for all classes
 delete from s_mt.t_class_attr where ck_attr = 'visibleinwindow';
+
+--changeset kutsenko_o:CORE-1787 dbms:postgresql
+update s_mt.t_object_attr set cv_value = cv_value || 'px' where ck_id in (
+	select toa.ck_id from s_mt.t_class_attr tca
+		join s_mt.t_object_attr toa on tca.ck_id = toa.ck_class_attr 
+		where tca.ck_attr in ('height', 'minheight', 'maxheight', 'pickerheight', 'pickerwidth', 'tabwidth', 'contentwidth', 'width') and toa.cv_value ~ '^\d+$'
+);
+update s_mt.t_page_object_attr set cv_value = cv_value || 'px' where ck_id in (
+	select tpoa.ck_id from s_mt.t_class_attr tca
+		join s_mt.t_object_attr toa on tca.ck_id = toa.ck_class_attr 
+		join s_mt.t_object o on o.ck_id = toa.ck_object 
+		left join s_mt.t_page_object po on po.ck_object = o.ck_id
+		left join s_mt.t_page_object_attr tpoa on tpoa.ck_page_object = po.ck_id and tpoa.ck_class_attr = tca.ck_id
+		where tca.ck_attr in ('height', 'minheight', 'maxheight', 'pickerheight', 'pickerwidth', 'tabwidth', 'contentwidth', 'width') and tpoa.cv_value ~ '^\d+$'
+);
+update s_mt.t_class_attr  set cv_value = cv_value || 'px' where ck_id in (
+	select tca.ck_id from s_mt.t_class_attr tca where tca.ck_attr in ('height', 'minheight', 'maxheight', 'pickerheight', 'pickerwidth', 'tabwidth', 'contentwidth', 'width') and tca.cv_value ~ '^\d+$'
+);

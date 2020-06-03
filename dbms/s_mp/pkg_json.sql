@@ -102,6 +102,8 @@ begin
   if pk_data_type = 'array' or pk_data_type = 'object' then 
     return pv_value::jsonb;
   end if;
+
+  return to_jsonb(pv_value);
 end;
 $$;
 

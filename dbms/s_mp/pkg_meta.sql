@@ -2360,6 +2360,10 @@ begin
     end;
     return vv_value;
   end if;
+
+  -- TODO need to validate cssmeasure for consistent value: number + px/%
+
+  return vv_value;
 end;
 $$;
 
