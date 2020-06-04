@@ -12,7 +12,7 @@ select pkg_patcher.p_merge_object('7B67FE4A449B95A4E053809BA8C0EF74', '9', '7B51
 select pkg_patcher.p_merge_object('7C81353E4D1B19FAE053809BA8C08693', '9', '7B511D868B5D954CE053809BA8C098D7', 'cv_description', 30, null, 'cv_description', 'd1dd81f5338c4d85a5ffb32a0d7aab69', null, null, '20788', '2018-12-07T00:00:00.000+0000');
 select pkg_patcher.p_merge_object_attr('33681260521', '7B511D868B5D954CE053809BA8C098D7', '1643', 'false', '20788', '2018-11-25T00:00:00.000+0000', 'btndelete');
 select pkg_patcher.p_merge_object_attr('78563296821', '7B516907E04995DBE053809BA8C0143F', '179', '25%', '20788', '2018-12-07T00:00:00.000+0000', 'width');
-select pkg_patcher.p_merge_object_attr('33692472621', '7B516907E04995DBE053809BA8C0143F', '433', 'disabled', '20788', '2018-11-25T00:00:00.000+0000', 'editmode');
+select pkg_patcher.p_merge_object_attr('33692472621', '7B516907E04995DBE053809BA8C0143F', '433', 'hidden', '20788', '2018-11-25T00:00:00.000+0000', 'editmode');
 select pkg_patcher.p_merge_object_attr('22435524221', '7B516907E04995DBE053809BA8C0143F', '47', 'ck_id', '20788', '2018-11-23T00:00:00.000+0000', 'column');
 select pkg_patcher.p_merge_object_attr('22457948421', '7B511D868B5D954CE053809BA8C098D7', '852', 'ck_id', '20788', '2018-11-23T00:00:00.000+0000', 'orderproperty');
 select pkg_patcher.p_merge_object_attr('78574508921', '7B67FE4A449B95A4E053809BA8C0EF74', '179', '25%', '20788', '2018-12-07T00:00:00.000+0000', 'width');

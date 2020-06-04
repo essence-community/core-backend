@@ -1860,7 +1860,7 @@ INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_us
 INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change)VALUES('82825a8b65a84e6abf3637c9f1a3de39', 'ru_RU', 'static', 'Предыдущий век', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-05-19T13:57:00.000+0300') on conflict on constraint cin_u_localization_1 do update set ck_id = excluded.ck_id, ck_d_lang = excluded.ck_d_lang, cr_namespace = excluded.cr_namespace, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
 INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change)VALUES('9d105387e4e140f898d5abd0fd8a4db6', 'ru_RU', 'static', 'Следующий век', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-05-19T13:57:00.000+0300') on conflict on constraint cin_u_localization_1 do update set ck_id = excluded.ck_id, ck_d_lang = excluded.ck_d_lang, cr_namespace = excluded.cr_namespace, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
 
---changeset kutsenko_o:CORE-1782 dbms:postgresql
+--changeset kutsenko_o:CORE-1782 dbms:postgresql runOnChange:true
 -- Object insert, update to insert-editing, update-editing
 update s_mt.t_object_attr set cv_value = cv_value || '-editing'
 	where ck_id in (
@@ -1878,7 +1878,7 @@ update s_mt.t_object_attr set cv_value = cv_value || '-editing'
 -- Object disabled to hidden
 update s_mt.t_object_attr set cv_value = 'hidden'
 	where ck_id in (
-		select tca.ck_id from s_mt.t_class_attr tca
+		select toa.ck_id from s_mt.t_class_attr tca
 			join s_mt.t_class_attr tca2 on tca.ck_class = tca2.ck_class and tca2.ck_attr = 'visibleinwindow'
 			join s_mt.t_object_attr toa on tca.ck_id = toa.ck_class_attr 
 			join s_mt.t_object o on o.ck_id = toa.ck_object 
@@ -1913,7 +1913,7 @@ update s_mt.t_page_object_attr set cv_value = 'hidden'
 			join s_mt.t_object o on o.ck_id = tpo.ck_object 
 			left join s_mt.t_object_attr toa2 on toa2.ck_object = o.ck_id and toa2.ck_class_attr = tca2.ck_id
 			left join s_mt.t_page_object_attr tpoa2 on tpoa.ck_page_object = tpo.ck_id and tpoa.ck_class_attr = tca2.ck_id
-			where tca.ck_attr = 'editmode' and tpoa.cv_value = 'hidden' 
+			where tca.ck_attr = 'editmode' and tpoa.cv_value = 'disabled' 
             and (tpoa2.cv_value = 'false' or toa2.cv_value = 'false' or (tpoa2.cv_value is null and toa2.cv_value is null and tca2.cv_value = 'false'))
 	);
 
