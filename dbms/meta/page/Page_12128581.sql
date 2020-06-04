@@ -70,9 +70,9 @@ select pkg_patcher.p_merge_object_attr('55081', '5EF9A8D63E6C425895E7B4DD64C29FC
 select pkg_patcher.p_merge_object_attr('66081', '75378F5F394663EFE053809BA8C03200', '155', '1', '10020788', '2018-09-09T00:00:00.000+0000', 'mode');
 select pkg_patcher.p_merge_object_attr('202580334921', '75378F5F394663EFE053809BA8C03200', '992', 'fa-plus', '20780', '2019-01-13T00:00:00.000+0000', 'iconfont');
 select pkg_patcher.p_merge_object_attr('202030942021', '5EF9A8D63E6C425895E7B4DD64C29FC4', '992', 'fa-plus', '20780', '2019-01-13T00:00:00.000+0000', 'iconfont');
-select pkg_patcher.p_merge_object_attr('55076', '6863F6CAF331403DB5B356AB8282321A', '444', 'cn_order', '10020788', '2018-08-17T00:00:00.000+0000', 'column');
 select pkg_patcher.p_merge_object_attr('94120', '7881233F56D6301EE053809BA8C0193B', '444', 'ck_id', '20788', '2018-10-17T00:00:00.000+0000', 'column');
-select pkg_patcher.p_merge_object_attr('102119', '7881233F56D6301EE053809BA8C0193B', '446', 'disabled', '20788', '2018-10-31T00:00:00.000+0000', 'editmode');
+select pkg_patcher.p_merge_object_attr('55076', '6863F6CAF331403DB5B356AB8282321A', '444', 'cn_order', '10020788', '2018-08-17T00:00:00.000+0000', 'column');
+select pkg_patcher.p_merge_object_attr('102119', '7881233F56D6301EE053809BA8C0193B', '446', 'hidden', '20788', '2018-10-31T00:00:00.000+0000', 'editmode');
 select pkg_patcher.p_merge_object_attr('94121', '7881233F56D6301EE053809BA8C0193B', '451', 'false', '20788', '2018-10-17T00:00:00.000+0000', 'visible');
 select pkg_patcher.p_merge_object_attr('55077', '010E3129785E4E99A6B93DB708D423B4', '47', 'cv_name', '10020788', '2018-08-17T00:00:00.000+0000', 'column');
 select pkg_patcher.p_merge_object_attr('96118', '010E3129785E4E99A6B93DB708D423B4', '662', '50', '20848', '2018-10-21T00:00:00.000+0000', 'maxsize');
