@@ -1950,3 +1950,21 @@ update s_mt.t_page_object_attr set cv_value = cv_value || 'px' where ck_id in (
 update s_mt.t_class_attr  set cv_value = cv_value || 'px' where ck_id in (
 	select tca.ck_id from s_mt.t_class_attr tca where tca.ck_attr in ('height', 'minheight', 'maxheight', 'pickerheight', 'pickerwidth', 'tabwidth', 'contentwidth', 'width') and tca.cv_value ~ '^\d+$'
 );
+
+--changeset kutsenko_o:CORE-1791 dbms:postgresql
+-- Object: remove value for selmode
+delete from s_mt.t_object_attr where ck_id in (
+	select toa.ck_id from s_mt.t_object_attr toa
+		join s_mt.t_class_attr tca on toa.ck_class_attr = tca.ck_id
+		where tca.ck_attr = 'selmode'
+)
+
+-- Page: remove value for selmode
+delete from s_mt.t_page_object_attr where ck_id in (
+	select tpoa.ck_id from s_mt.t_page_object_attr tpoa
+		join s_mt.t_class_attr tca on tpoa.ck_class_attr = tca.ck_id
+		where tca.ck_attr = 'selmode'
+)
+
+-- Remove selmode attribute for all classes
+delete from s_mt.t_class_attr where ck_attr = 'selmode'
