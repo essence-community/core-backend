@@ -4,7 +4,7 @@ import BreakException from "@ungate/plugininf/lib/errors/BreakException";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
 import ICCTParams, { IParamsInfo } from "@ungate/plugininf/lib/ICCTParams";
-import IContext from "@ungate/plugininf/lib/IContext";
+import IContext, { TAction } from "@ungate/plugininf/lib/IContext";
 import { IContextPluginResult } from "@ungate/plugininf/lib/IContextPlugin";
 import IGlobalObject from "@ungate/plugininf/lib/IGlobalObject";
 import IResult from "@ungate/plugininf/lib/IResult";
@@ -17,6 +17,7 @@ import { isObject } from "lodash";
 import ICoreController from "./ICoreController";
 import OfflineController from "./OfflineController";
 import OnlineController from "./OnlineController";
+import { TempTable } from "./TempTable";
 const logger = Logger.getLogger("CoreContext");
 const Mask = (global as IGlobalObject).maskgate;
 const createTempTable = (global as IGlobalObject).createTempTable;
@@ -33,6 +34,7 @@ export interface ICoreParams extends ICCTParams {
     pageMetaQueryName: string;
     pageMetaQueryNameNew: string;
     pageObjectsQueryName: string;
+    pageObjectQueryName: string;
     versionApi: Record<string, "1" | "2" | "3">;
 }
 
@@ -82,6 +84,11 @@ export default class CoreContext extends NullContext {
                     "Наименование запроса на возращение сформированой страницы",
                 type: "string",
             },
+            pageObjectQueryName: {
+                defaultValue: "GetPageObject",
+                name: "Раскручивает объект страницы",
+                type: "string",
+            },
             pageMetaQueryNameNew: {
                 defaultValue: "GetMetamodelPage2.0",
                 name:
@@ -112,7 +119,7 @@ export default class CoreContext extends NullContext {
         });
     }
 
-    public static decodeType(doc: any): string {
+    public static decodeType(doc: any): TAction {
         switch (doc.cr_type) {
             case "select":
                 return "sql";
@@ -138,6 +145,7 @@ export default class CoreContext extends NullContext {
     private controller: ICoreController;
     private dataSource: PostgresDB;
     private dbUsers: ILocalDB;
+    private tempTable: TempTable;
     constructor(name: string, params: ICCTParams) {
         super(name, params);
         this.params = {
@@ -158,23 +166,34 @@ export default class CoreContext extends NullContext {
         this.params.metaResetQuery = this.params.metaResetQuery.toLowerCase();
         this.params.pageObjectsQueryName = this.params.pageObjectsQueryName.toLowerCase();
         this.params.getSysSettings = this.params.getSysSettings.toLowerCase();
+        this.params.pageObjectQueryName = this.params.pageObjectQueryName.toLowerCase();
         this.params.versionApi = {
             [this.params.pageMetaQueryName]: "1",
             [this.params.pageObjectsQueryName]: "2",
             [this.params.pageMetaQueryNameNew]: "3",
         };
+        this.tempTable = new TempTable({
+            dataSource: this.dataSource,
+            logger: this.logger,
+            name,
+            params: this.params,
+        });
         if (this.params.disableCache) {
-            this.controller = new OnlineController(
+            this.controller = new OnlineController({
+                dataSource: this.dataSource,
+                logger: this.logger,
                 name,
-                this.dataSource,
-                this.params,
-            );
+                params: this.params,
+                tempTable: this.tempTable,
+            });
         } else {
-            this.controller = new OfflineController(
+            this.controller = new OfflineController({
+                dataSource: this.dataSource,
+                logger: this.logger,
                 name,
-                this.dataSource,
-                this.params,
-            );
+                params: this.params,
+                tempTable: this.tempTable,
+            });
         }
         Mask.on("beforechange", this.beforeMask, this);
     }
@@ -190,10 +209,6 @@ export default class CoreContext extends NullContext {
         }
         const name = gateContext.queryName;
         switch (name) {
-            case this.params.getSysSettings:
-                return this.controller.getSetting(gateContext);
-            case this.params.modifyQueryName:
-                return this.controller.findModify(gateContext);
             case this.params.pageMetaQueryNameNew:
             case this.params.pageObjectsQueryName:
             case this.params.pageMetaQueryName:
@@ -227,6 +242,12 @@ export default class CoreContext extends NullContext {
                     caActions,
                     version,
                 );
+            case this.params.getSysSettings:
+                return this.controller.getSetting(gateContext);
+            case this.params.modifyQueryName:
+                return this.controller.findModify(gateContext);
+            case this.params.pageObjectQueryName:
+                return this.controller.findObjectPage(gateContext);
             case this.params.defaultDepartmentQueryName:
                 return this.modifyDefaultDepartment(gateContext);
             case this.params.metaResetQuery: {
