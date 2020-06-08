@@ -1968,3 +1968,8 @@ delete from s_mt.t_page_object_attr where ck_id in (
 
 -- Remove selmode attribute for all classes
 delete from s_mt.t_class_attr where ck_attr = 'selmode'
+
+--changeset artemov_i:CORE-1239 dbms:postgresql
+UPDATE s_mt.t_sys_setting
+	SET cv_value='EFFC1868B5804AABAAF7EE516BD24952'
+	WHERE ck_id='project_applications_page';
