@@ -6,6 +6,8 @@ import { IGateQuery } from "./IQuery";
 import IResult from "./IResult";
 import ResultStream from "./stream/ResultStream";
 import { initParams } from "./util/Util";
+import { IRufusLogger } from "rufus";
+import Logger from "./Logger";
 
 export default abstract class NullContext implements IContextPlugin {
     public static getParamsInfo(): IParamsInfo {
@@ -34,6 +36,7 @@ export default abstract class NullContext implements IContextPlugin {
     }
     public name: string;
     public params: ICCTParams;
+    public logger: IRufusLogger;
     public get maxPostSize(): number {
         return this.params.maxPostSize || 10485760;
     }
@@ -49,6 +52,7 @@ export default abstract class NullContext implements IContextPlugin {
     constructor(name: string, params: ICCTParams) {
         this.name = name;
         this.params = initParams(NullContext.getParamsInfo(), params);
+        this.logger = Logger.getLogger(`Context ${name}`);
     }
     public abstract init(reload?: boolean): Promise<void>;
     public abstract initContext(

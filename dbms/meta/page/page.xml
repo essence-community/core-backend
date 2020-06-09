@@ -6,7 +6,6 @@
     <include file="Page_4.sql" relativeToChangelogFile="true"/>
     <include file="Page_12127721.sql" relativeToChangelogFile="true"/>
     <include file="Page_12128581.sql" relativeToChangelogFile="true"/>
-    <include file="Page_22D2F53FE7E24680917B85D9A95237BD.sql" relativeToChangelogFile="true"/>
     <include file="Page_302.sql" relativeToChangelogFile="true"/>
     <include file="Page_268357780361.sql" relativeToChangelogFile="true"/>
     <include file="Page_652.sql" relativeToChangelogFile="true"/>
@@ -21,6 +20,8 @@
     <include file="Page_BC4B5C748874439E9CED6E8F76933B84.sql" relativeToChangelogFile="true"/>
     <include file="Page_DDBEA79C5CBE4DC3A2CEA74DA46216A7.sql" relativeToChangelogFile="true"/>
     <include file="Page_F5CAF3CF206A4454A48FA1466932B969.sql" relativeToChangelogFile="true"/>
+    <include file="Page_EFFC1868B5804AABAAF7EE516BD24952.sql" relativeToChangelogFile="true"/>
+    <include file="Page_22D2F53FE7E24680917B85D9A95237BD.sql" relativeToChangelogFile="true"/>
     <include file="Page_FA489CA01DB649ED914DC3E7C5E061F2.sql" relativeToChangelogFile="true"/>
     <include file="Page_318AD0CA3F00478B95556ADBBE58E758.sql" relativeToChangelogFile="true"/>
 </databaseChangeLog>
