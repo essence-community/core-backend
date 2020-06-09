@@ -1957,17 +1957,17 @@ delete from s_mt.t_object_attr where ck_id in (
 	select toa.ck_id from s_mt.t_object_attr toa
 		join s_mt.t_class_attr tca on toa.ck_class_attr = tca.ck_id
 		where tca.ck_attr = 'selmode'
-)
+);
 
 -- Page: remove value for selmode
 delete from s_mt.t_page_object_attr where ck_id in (
 	select tpoa.ck_id from s_mt.t_page_object_attr tpoa
 		join s_mt.t_class_attr tca on tpoa.ck_class_attr = tca.ck_id
 		where tca.ck_attr = 'selmode'
-)
+);
 
 -- Remove selmode attribute for all classes
-delete from s_mt.t_class_attr where ck_attr = 'selmode'
+delete from s_mt.t_class_attr where ck_attr = 'selmode';
 
 --changeset artemov_i:CORE-1239 dbms:postgresql
 UPDATE s_mt.t_sys_setting
