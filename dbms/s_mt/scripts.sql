@@ -1973,3 +1973,7 @@ delete from s_mt.t_class_attr where ck_attr = 'selmode';
 UPDATE s_mt.t_sys_setting
 	SET cv_value='EFFC1868B5804AABAAF7EE516BD24952'
 	WHERE ck_id='project_applications_page';
+
+--changeset kutsenko_o:CORE-1798 dbms:postgresql
+INSERT INTO s_mt.t_sys_setting (ck_id,cv_value,ck_user,ct_change,cv_description)
+	VALUES ('g_sys_show_promo','false','-11','2020-10-06 13:10:31.709','Включение Promo страницы');
