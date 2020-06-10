@@ -18,15 +18,20 @@ const prepareSql = (query: string) => {
     return (data: object) => {
         const values = [];
         return {
-            text: query.replace(/(::?)([a-zA-Z0-9_]+)/g, (_, prefix, key) => {
-                if (prefix !== ":") {
-                    return prefix + key;
-                } else if (key in data) {
-                    values.push(data[key]);
-                    return `$${values.length}`;
-                }
-                return prefix + key;
-            }),
+            text: query.replace(
+                /(--[^\$]+)|(\/\*[^\*\/]+\*\/)|('.*')|(".*")|(::?)([a-zA-Z0-9_]+)/g,
+                (_, ...group) => {
+                    const noReplace = group.slice(0, 4);
+                    const [prefix, key] = group.slice(4);
+                    if (prefix === ":") {
+                        values.push(data[key] || null);
+                        return `$${values.length}`;
+                    } else if (prefix && prefix !== ":") {
+                        return prefix + key;
+                    }
+                    return noReplace.find((val) => typeof val !== "undefined");
+                },
+            ),
             values,
         };
     };
