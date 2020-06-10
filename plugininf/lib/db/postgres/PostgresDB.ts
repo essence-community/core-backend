@@ -19,14 +19,14 @@ const prepareSql = (query: string) => {
         const values = [];
         return {
             text: query.replace(
-                /(--[^\$]+)|(\/\*[^\*\/]+\*\/)|('.*')|(".*")|(::?)([a-zA-Z0-9_]+)/g,
+                /(--.*?$)|(\/\*[\s\S]*?\*\/)|('[^']*?')|("[^"]*?")|(::?)([a-zA-Z0-9_]+)/g,
                 (_, ...group) => {
                     const noReplace = group.slice(0, 4);
                     const [prefix, key] = group.slice(4);
                     if (prefix === ":") {
                         values.push(data[key] || null);
                         return `$${values.length}`;
-                    } else if (prefix && prefix !== ":") {
+                    } else if (prefix && prefix.length > 1) {
                         return prefix + key;
                     }
                     return noReplace.find((val) => typeof val !== "undefined");
