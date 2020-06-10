@@ -2307,7 +2307,7 @@ begin
       and length(vv_value) > 4 then 
         vot_localization.ck_d_lang = nullif(trim(pc_json#>>'{data,g_sys_lang}'), '');
         vot_localization.cr_namespace = 'meta';
-        vot_localization.cv_value = substr(vot_class_attr.cv_value, 5);
+        vot_localization.cv_value = substr(vv_value, 5);
         vot_localization.ck_user = pv_user;
         vot_localization.ct_change = CURRENT_TIMESTAMP;
 
