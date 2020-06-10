@@ -19,7 +19,7 @@ const prepareSql = (query: string) => {
         const values = [];
         return {
             text: query.replace(
-                /(--.*?$)|(\/\*[^\*]*?\*\/)|('[^']*?')|("[^"]*?")|(::?)([a-zA-Z0-9_]+)/g,
+                /(--.*?$)|(\/\*[\s\S]*?\*\/)|('[^']*?')|("[^"]*?")|(::?)([a-zA-Z0-9_]+)/g,
                 (_, ...group) => {
                     const noReplace = group.slice(0, 4);
                     const [prefix, key] = group.slice(4);
