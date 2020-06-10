@@ -35,6 +35,29 @@ interface IParams {
     [key: string]: string | boolean | number | IObjectParam;
 }
 
+const prepareSql = (query: string) => {
+    return (data: object) => {
+        const values = [];
+        return {
+            text: query.replace(
+                /(--[^\$]+)|(\/\*[^\*\/]+\*\/)|('.*')|(".*")|(::?)([a-zA-Z0-9_]+)/g,
+                (_, ...group) => {
+                    const noReplace = group.slice(0, 4);
+                    const [prefix, key] = group.slice(4);
+                    if (prefix === ":") {
+                        values[key].push(data[key] || null);
+                        return "?";
+                    } else if (prefix && prefix !== ":") {
+                        return prefix + key;
+                    }
+                    return noReplace.find((val) => typeof val !== "undefined");
+                },
+            ),
+            values,
+        };
+    };
+};
+
 export default class OracleDB {
     public static getParamsInfo(): IParamsInfo {
         return {
@@ -545,8 +568,9 @@ export default class OracleDB {
                 this.onBreak(conn);
             }, this.queryTimeout);
         }
+        const query = prepareSql(sql)(params);
         return conn
-            .execute(sql, params, {
+            .execute(query.text, query.values, {
                 autoCommit: options.autoCommit,
                 extendedMetaData: options.extendedMetaData,
                 resultSet: options.resultSet,

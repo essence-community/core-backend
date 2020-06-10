@@ -432,6 +432,9 @@ export default class OnlineController implements ICoreController {
                         );
                         res.stream.on("data", (row) => {
                             try {
+                                const children = Array.isArray(row.children)
+                                    ? row.children
+                                    : JSON.parse(row.children, replaceNull);
                                 data[row.ck_page] = {
                                     ck_id: row.ck_page,
                                     cn_action:
@@ -439,9 +442,7 @@ export default class OnlineController implements ICoreController {
                                         parseInt(row.cn_action, 10),
                                     cv_name: row.cv_name,
                                     cv_url: row.cv_url,
-                                    children: Array.isArray(row.children)
-                                        ? row.children
-                                        : JSON.parse(row.children, replaceNull),
+                                    children,
                                     global_value: isObject(row.global_value)
                                         ? row.global_value
                                         : JSON.parse(
@@ -449,6 +450,12 @@ export default class OnlineController implements ICoreController {
                                               replaceNull,
                                           ),
                                 };
+                                if (
+                                    children.length === 1 &&
+                                    isEmpty(children[0])
+                                ) {
+                                    children.length = 0;
+                                }
                             } catch (e) {
                                 this.logger.error(
                                     `Error parse: ${row.json} ${e.message}`,
