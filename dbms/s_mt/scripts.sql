@@ -1977,3 +1977,9 @@ UPDATE s_mt.t_sys_setting
 --changeset kutsenko_o:CORE-1798 dbms:postgresql
 INSERT INTO s_mt.t_sys_setting (ck_id,cv_value,ck_user,ct_change,cv_description)
 	VALUES ('g_sys_show_promo','false','-11','2020-10-06 13:10:31.709','Включение Promo страницы');
+
+--changeset kutsenko_o:CORE-1800 dbms:postgresql
+ALTER TABLE s_mt.t_class ADD cv_manual_documentation text NULL;
+COMMENT ON COLUMN s_mt.t_class.cv_manual_documentation IS 'Документация заполненная пользователем';
+ALTER TABLE s_mt.t_class ADD cv_auto_documentation text NULL;
+COMMENT ON COLUMN s_mt.t_class.cv_auto_documentation IS 'Документация автогенерируемая';
