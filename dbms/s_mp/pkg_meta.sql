@@ -891,6 +891,8 @@ begin
                               jt.cl_dataset,
                               jt.cl_final,
                               jt.cv_description,
+                              jt.cv_manual_documentation,
+                              jt.cv_auto_documentation,
                               jt.cv_name,
                               jt.cv_type,
                               wmc.ck_class,
@@ -911,6 +913,8 @@ begin
                                       (vcur_class.cj_class#>>'{class,cl_dataset}') as cl_dataset,
                                       (vcur_class.cj_class#>>'{class,cl_final}') as cl_final,
                                       (vcur_class.cj_class#>>'{class,cv_description}') as cv_description,
+                                      (vcur_class.cj_class#>>'{class,cv_manual_documentation}') as cv_manual_documentation,
+                                      (vcur_class.cj_class#>>'{class,cv_auto_documentation}') as cv_auto_documentation,
                                       (vcur_class.cj_class#>>'{class,cv_name}') as cv_name,
                                       (vcur_class.cj_class#>>'{class,cv_type}') as cv_type,
                                       (select (t.dt->>'cv_value') as cv_value
@@ -932,6 +936,8 @@ begin
             vot_class.ck_user        := pot_module.ck_user;
             vot_class.ct_change      := CURRENT_TIMESTAMP;
             vot_class.cv_description := vcur.cv_description;
+            vot_class.cv_manual_documentation := vcur.cv_manual_documentation;
+            vot_class.cv_auto_documentation := vcur.cv_auto_documentation;
 
             if vcur.cv_action = 'I' then
               for vcheck_class in (select 1 from s_mt.t_class where ck_id = vot_class.ck_id) loop
