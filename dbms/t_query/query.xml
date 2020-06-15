@@ -127,5 +127,7 @@
     <include file="./t_query/MTGetCurrentDateTime.sql" />
     <include file="./t_query/MTAttrDataType.sql" />
     <include file="./t_query/MTEnumAttr.sql" />
+    <include file="./t_query/DTRoute.sql" />
+    <include file="./t_query/MTClassDoc.sql" />
     <include file="MTApplicationRoute.sql" relativeToChangelogFile="true"/>
 </databaseChangeLog>

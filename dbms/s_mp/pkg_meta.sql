@@ -479,9 +479,17 @@ begin
       end if;
       insert into s_mt.t_class values (pot_class.*);
     elsif pv_action = u::varchar and nullif(gv_error::varchar, '') is null then
-      update s_mt.t_class set
-        (ck_id, cv_name, cv_description, cl_final, cl_dataset, ck_user, ct_change) = row(pot_class.*)
-      where ck_id = pot_class.ck_id;
+
+      if pot_class.cv_manual_documentation is not null then
+        update s_mt.t_class set cv_manual_documentation = pot_class.cv_manual_documentation where ck_id = pot_class.ck_id;
+      elsif pot_class.cv_auto_documentation is not null then
+        update s_mt.t_class set cv_auto_documentation = pot_class.cv_auto_documentation where ck_id = pot_class.ck_id;
+      else
+        update s_mt.t_class set
+          (cv_name, cv_description, cl_final, cl_dataset, ck_user, ct_change) = (pot_class.cv_name, pot_class.cv_description, pot_class.cl_final, pot_class.cl_dataset, pot_class.ck_user, pot_class.ct_change)
+        where ck_id = pot_class.ck_id;
+      end if;
+
       if not found then
         perform pkg.p_set_error(504);
       end if;

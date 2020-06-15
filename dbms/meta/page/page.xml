@@ -23,6 +23,7 @@
     <include file="Page_EFFC1868B5804AABAAF7EE516BD24952.sql" relativeToChangelogFile="true"/>
     <include file="Page_182033F620954FD3B4052BE7CBFD4071.sql" relativeToChangelogFile="true"/>
     <include file="Page_22D2F53FE7E24680917B85D9A95237BD.sql" relativeToChangelogFile="true"/>
+    <include file="Page_AB115A267226428A9B23F1E7BE09028D.sql" relativeToChangelogFile="true"/>
     <include file="Page_FA489CA01DB649ED914DC3E7C5E061F2.sql" relativeToChangelogFile="true"/>
     <include file="Page_318AD0CA3F00478B95556ADBBE58E758.sql" relativeToChangelogFile="true"/>
 </databaseChangeLog>
