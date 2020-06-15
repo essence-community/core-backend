@@ -913,8 +913,8 @@ begin
                                       (vcur_class.cj_class#>>'{class,cl_dataset}') as cl_dataset,
                                       (vcur_class.cj_class#>>'{class,cl_final}') as cl_final,
                                       (vcur_class.cj_class#>>'{class,cv_description}') as cv_description,
-                                      (vcur_class.cj_class#>>'{class,cv_manual_documentation}') as cv_manual_documentation,
-                                      (vcur_class.cj_class#>>'{class,cv_auto_documentation}') as cv_auto_documentation,
+                                      nullif(trim(vcur_class.cj_class#>>'{class,cv_manual_documentation}'), '') as cv_manual_documentation,
+                                      nullif(trim(vcur_class.cj_class#>>'{class,cv_auto_documentation}'), '') as cv_auto_documentation,
                                       (vcur_class.cj_class#>>'{class,cv_name}') as cv_name,
                                       (vcur_class.cj_class#>>'{class,cv_type}') as cv_type,
                                       (select (t.dt->>'cv_value') as cv_value
@@ -936,9 +936,10 @@ begin
             vot_class.ck_user        := pot_module.ck_user;
             vot_class.ct_change      := CURRENT_TIMESTAMP;
             vot_class.cv_description := vcur.cv_description;
-            vot_class.cv_manual_documentation := vcur.cv_manual_documentation;
-            vot_class.cv_auto_documentation := vcur.cv_auto_documentation;
-
+            if vcur.cv_action = 'I' then
+              vot_class.cv_manual_documentation := vcur.cv_manual_documentation;
+              vot_class.cv_auto_documentation := vcur.cv_auto_documentation;
+            end if;
             if vcur.cv_action = 'I' then
               for vcheck_class in (select 1 from s_mt.t_class where ck_id = vot_class.ck_id) loop
                 vl_new_id := 1;
@@ -948,6 +949,15 @@ begin
               end if;
               vot_class := pkg_meta.p_modify_class(vcur.cv_action, vot_class, vl_new_id);
             else
+              vot_class := pkg_meta.p_modify_class(vcur.cv_action, vot_class);
+            end if;
+            if vcur.cv_action = 'U' and vcur.cv_manual_documentation is not null then
+              vot_class.cv_manual_documentation := vcur.cv_manual_documentation;
+              vot_class := pkg_meta.p_modify_class(vcur.cv_action, vot_class);
+            end if;
+            if vcur.cv_action = 'U' and vcur.cv_auto_documentation is not null then
+              vot_class.cv_manual_documentation := null;
+              vot_class.cv_auto_documentation := vcur.cv_auto_documentation;
               vot_class := pkg_meta.p_modify_class(vcur.cv_action, vot_class);
             end if;
             -- Добавляем базовый тип
