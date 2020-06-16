@@ -1983,3 +1983,7 @@ ALTER TABLE s_mt.t_class ADD cv_manual_documentation text NULL;
 COMMENT ON COLUMN s_mt.t_class.cv_manual_documentation IS 'Документация заполненная пользователем';
 ALTER TABLE s_mt.t_class ADD cv_auto_documentation text NULL;
 COMMENT ON COLUMN s_mt.t_class.cv_auto_documentation IS 'Документация автогенерируемая';
+
+--changeset kutsenko_o:CORE-1802 dbms:postgresql
+INSERT INTO s_mt.t_sys_setting (ck_id,cv_value,ck_user,ct_change,cv_description)
+	VALUES ('project_documentation_root','C8AB48295BF9484C9AAB10D8B35F0D92','-11','2020-06-15 13:10:31.709','ИД каталога-документации');

@@ -1,6 +1,10 @@
 --liquibase formatted sql
 --changeset kutsenko_o:DTRoute.sql dbms:postgresql runOnChange:true splitStatements:false stripComments:false
 INSERT INTO s_mt.t_query (ck_id, cc_query, ck_provider, ck_user, ct_change, cr_type, cr_access, cn_action, cv_description) VALUES ('DTRoute', '/*DTRoute*/
+select * from (values ((select cv_value from s_mt.t_sys_setting where ck_id = ''project_documentation_root''), null, 1, ''Документация'', 1, 0, null, null, 1, ''false'', 0)) as t (ck_id, ck_parent, cr_type, cv_name, cn_order, cl_static, cv_url, ck_icon, cl_menu, leaf, cl_noload)
+union
+select * from (values (''A732E27B938245A9A4A5047B761CD267'', (select cv_value from s_mt.t_sys_setting where ck_id = ''project_documentation_root''), 2, ''Разработка'', 1, 0, null, null, 1, ''true'', 0)) as t (ck_id, ck_parent, cr_type, cv_name, cn_order, cl_static, cv_url, ck_icon, cl_menu, leaf, cl_noload)
+union
 select * from (values (''classes'', null, 1, ''Классы'', 200, 0, null, null, 1, ''false'', 1)) as t (ck_id, ck_parent, cr_type, cv_name, cn_order, cl_static, cv_url, ck_icon, cl_menu, leaf, cl_noload)
 union
 select
