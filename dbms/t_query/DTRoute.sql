@@ -25,7 +25,7 @@ INSERT INTO s_mt.t_query (ck_id, ck_provider, ck_user, ct_change, cr_type, cr_ac
     /* сначала выберем все объекты которые могут быть отображены */
     select
         p.ck_id,
-        p.ck_parent,
+        null::varchar as ck_parent,
         p.cr_type,
         p.cv_name,
         l.cv_value as cv_name_locale,
@@ -125,11 +125,11 @@ select
     op.cv_icon_font,
     case when not exists(select 1 from t2 m where m.ck_parent = op.ck_id) then ''true'' else ''false'' end as leaf,
     op.cn_action_edit,
-    0 as cl_noload
+    0 as cl_noload,
+    op.lvl,
+    op.cv_name_locale
 from
     t3 op
-order by
-    op.lvl asc, op.cn_order asc, op.cv_name_locale asc
 )
 union
 select 
@@ -146,9 +146,11 @@ select
     null as cv_icon_font,
 	''false'' as leaf,
 	null as cn_action_edit,
-	1 as cl_noload
+	1 as cl_noload,
+	1 as lvl,
+	''Классы'' as cv_name_locale
 union
-(select
+select
 	tc.ck_id,
 	''classes'' as ck_parent,
 	2 as cr_type,
@@ -162,10 +164,12 @@ union
     null as cv_icon_font,
 	''true'' as leaf,
 	null as cn_action_edit,
-	1 as cl_noload
+	1 as cl_noload,
+	2 as lvl,
+	tc.cv_name as cv_name_locale
 from
 	s_mt.t_class tc
 order by
-	cv_name)
+    lvl asc, cn_order asc, cv_name_locale asc
 ')
  on conflict (ck_id) do update set cc_query = excluded.cc_query, ck_provider = excluded.ck_provider, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cr_type = excluded.cr_type, cr_access = excluded.cr_access, cn_action = excluded.cn_action, cv_description = excluded.cv_description;
