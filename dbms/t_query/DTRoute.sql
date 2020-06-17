@@ -64,7 +64,7 @@ union all /* выберем их дочернии элементы в рекур
         p.cl_static,
         p.cv_url,
         p.ck_icon,
-        1 as cl_menu,
+        p.cl_menu,
         op.lvl+1 as lvl,
         op.cv_name as root,
         pav.cn_action as cn_action_view,
@@ -84,6 +84,7 @@ union all /* выберем их дочернии элементы в рекур
         pae.ck_page = p.ck_id and pae.cr_type = ''edit''
     left join s_mt.t_icon i on
         i.ck_id = p.ck_icon
+	where p.cl_menu = 1
 ),
 ot_action as (
     select tss.cv_value::bigint as cn_action from s_mt.t_sys_setting tss where tss.ck_id = ''g_sys_anonymous_action''
@@ -127,7 +128,8 @@ select
     op.cn_action_edit,
     0 as cl_noload,
     op.lvl,
-    op.cv_name_locale
+    op.cv_name_locale,
+	0 as cl_example
 from
     t3 op
 )
@@ -148,7 +150,8 @@ select
 	null as cn_action_edit,
 	1 as cl_noload,
 	1 as lvl,
-	''Классы'' as cv_name_locale
+	''Классы'' as cv_name_locale,
+	0 as cl_example
 union
 select
 	tc.ck_id,
@@ -157,7 +160,7 @@ select
 	tc.cv_name,
 	999999 as cn_order,
 	1 as cl_static,
-	replace(lower(coalesce(tc.cv_name, '''')), '' '', ''-'') as cv_url,
+	''core-classes-'' || replace(lower(coalesce(tc.cv_name, '''')), '' '', ''-'') as cv_url,
 	null as ck_icon,
 	1 as cl_menu,
 	null as cv_icon_name,
@@ -166,7 +169,8 @@ select
 	null as cn_action_edit,
 	1 as cl_noload,
 	2 as lvl,
-	tc.cv_name as cv_name_locale
+	tc.cv_name as cv_name_locale,
+	(select 1 from s_mt.t_page where cv_url = ''core-classes-'' || replace(lower(coalesce(tc.cv_name, '''')), '' '', ''-'') limit 1) as cl_example
 from
 	s_mt.t_class tc
 order by
