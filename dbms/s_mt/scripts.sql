@@ -1991,3 +1991,6 @@ INSERT INTO s_mt.t_sys_setting (ck_id,cv_value,ck_user,ct_change,cv_description)
 --changeset kutsenko_o:CORE-1802-long-text dbms:postgresql
 ALTER TABLE s_mt.t_page_object_attr
     ALTER COLUMN cv_value TYPE VARCHAR;
+
+--changeset kutsenko_o:CORE-1801 dbms:postgresql
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change)VALUES('fea1eaf13fd24f25b327e76099e22495', 'ru_RU', 'static', 'Возникла ошибка при открытии страницы. Обратитесь в службу поддержки', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-06-17T17:57:00.000+0300') on conflict on constraint cin_u_localization_1 do update set ck_id = excluded.ck_id, ck_d_lang = excluded.ck_d_lang, cr_namespace = excluded.cr_namespace, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
