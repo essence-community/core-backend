@@ -145,12 +145,39 @@ INSERT INTO s_mt.t_attr(ck_id, cv_description, ck_attr_type, ck_d_data_type, cv_
 INSERT INTO s_mt.t_attr(ck_id, cv_description, ck_attr_type, ck_d_data_type, cv_data_type_extra, ck_user, ct_change)VALUES('width', 'Ширина поля. Целое число от 1% до 100%. Обязательно добавлять %.', 'view', 'cssmeasure', null, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-06-03T17:23:49.761+0000') on conflict (ck_id) do update set cv_description = excluded.cv_description, ck_attr_type = excluded.ck_attr_type, ck_d_data_type = excluded.ck_d_data_type, cv_data_type_extra = excluded.cv_data_type_extra, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
 INSERT INTO s_mt.t_attr(ck_id, cv_description, ck_attr_type, ck_d_data_type, cv_data_type_extra, ck_user, ct_change)VALUES('winreloadstores', 'Обновления связанных сторов (таблиц, панелей) при закрытии модального окна', 'basic', 'boolean', null, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-06-01T15:11:07.083+0000') on conflict (ck_id) do update set cv_description = excluded.cv_description, ck_attr_type = excluded.ck_attr_type, ck_d_data_type = excluded.ck_d_data_type, cv_data_type_extra = excluded.cv_data_type_extra, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
 INSERT INTO s_mt.t_attr(ck_id, cv_description, ck_attr_type, ck_d_data_type, cv_data_type_extra, ck_user, ct_change)VALUES('wintype', 'Тип окна (влияет на ширину окна):<br>narrow: 500px, default: 800px, wide: 1000px, xwide: 1200px, xlwide: 1600px, fullscreen', 'view', 'enum', '["narrow", "default", "wide", "xwide", "xlwide", "fullscreen"]', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-06-05T08:34:48.706+0000') on conflict (ck_id) do update set cv_description = excluded.cv_description, ck_attr_type = excluded.ck_attr_type, ck_d_data_type = excluded.ck_d_data_type, cv_data_type_extra = excluded.cv_data_type_extra, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
-INSERT INTO s_mt.t_class(ck_id, cv_name, cv_description, cv_manual_documentation, cv_auto_documentation, cl_final, cl_dataset, ck_user, ct_change) VALUES ('1807D17438814B31B75A279C4CBC6C0C', 'App Bar Panel', 'Навигационая панель страницы', '# Описание
+INSERT INTO s_mt.t_class(ck_id, cv_name, cv_description, cv_manual_documentation, cv_auto_documentation, cl_final, cl_dataset, ck_user, ct_change) VALUES ('1807D17438814B31B75A279C4CBC6C0C', 'App Bar Panel', 'Навигационая панель страницы', '## Описание
 
 1. Отрисовка панели вверху
-1. Может содержат кнопки
+1. Может содержат [кнопки](core-classes-button)
+1. Пример на [pages](redirect/pages/2)', '
 
-2', null, 1, 0, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-10-04T00:00:00.000+0000')  on conflict (ck_id) do update set cv_name = excluded.cv_name, cv_description = excluded.cv_description, cv_manual_documentation = excluded.cv_manual_documentation, cv_auto_documentation = excluded.cv_auto_documentation, cl_final = excluded.cl_final, cl_dataset = excluded.cl_dataset, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
+## StylesEssenceAppBar
+
+name: **EssenceAppBar**
+
+## root
+
+Общий root для MaterialAppBar
+
+## AppBar
+
+-   **See: [AppBar][1]
+    **
+
+Отображения навигационной панели
+
+Type: React.FC&lt;IClassProps&lt;IBuilderClassConfig>>
+
+### Parameters
+
+-   `props`  
+
+**Meta**
+
+-   **since**: 2.5
+
+[1]: https://material-ui.com/components/app-bar/#app-bar
+', 1, 0, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-10-04T00:00:00.000+0000')  on conflict (ck_id) do update set cv_name = excluded.cv_name, cv_description = excluded.cv_description, cv_manual_documentation = excluded.cv_manual_documentation, cv_auto_documentation = excluded.cv_auto_documentation, cl_final = excluded.cl_final, cl_dataset = excluded.cl_dataset, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
 INSERT INTO s_mt.t_class_attr(ck_id, ck_class, ck_attr, cv_data_type_extra, cv_value, ck_user, ct_change, cl_required) VALUES ('225864898ED0411FA0E5434CD3A85346', '1807D17438814B31B75A279C4CBC6C0C', 'childs', null, null, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-10-04T00:00:00.000+0000', 0)  on conflict (ck_id) do update set ck_class = excluded.ck_class, ck_attr = excluded.ck_attr, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cl_required = excluded.cl_required;
 INSERT INTO s_mt.t_class_attr(ck_id, ck_class, ck_attr, cv_data_type_extra, cv_value, ck_user, ct_change, cl_required) VALUES ('391E6C0F46674C26AB8CCE82F583C74E', '1807D17438814B31B75A279C4CBC6C0C', 'contentview', null, 'hbox', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-10-04T00:00:00.000+0000', 0)  on conflict (ck_id) do update set ck_class = excluded.ck_class, ck_attr = excluded.ck_attr, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cl_required = excluded.cl_required;
 INSERT INTO s_mt.t_class_attr(ck_id, ck_class, ck_attr, cv_data_type_extra, cv_value, ck_user, ct_change, cl_required) VALUES ('5F01393A5D014FF3A017C1D3F840D8E2', '1807D17438814B31B75A279C4CBC6C0C', 'height', null, '34px', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-10-04T00:00:00.000+0000', 0)  on conflict (ck_id) do update set ck_class = excluded.ck_class, ck_attr = excluded.ck_attr, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cl_required = excluded.cl_required;
@@ -159,7 +186,9 @@ INSERT INTO s_mt.t_class_attr(ck_id, ck_class, ck_attr, cv_data_type_extra, cv_v
 INSERT INTO s_mt.t_class_attr(ck_id, ck_class, ck_attr, cv_data_type_extra, cv_value, ck_user, ct_change, cl_required) VALUES ('B108CBBF73F3418893488BE4C2C05182', '1807D17438814B31B75A279C4CBC6C0C', 'uitype', '["1", "2", "3", "4"]', '1', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-06-05T11:26:11.696+0000', 0)  on conflict (ck_id) do update set ck_class = excluded.ck_class, ck_attr = excluded.ck_attr, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cl_required = excluded.cl_required;
 INSERT INTO s_mt.t_class_attr(ck_id, ck_class, ck_attr, cv_data_type_extra, cv_value, ck_user, ct_change, cl_required) VALUES ('FEC7A3E95CAC46319A542B00BE42ED79', '1807D17438814B31B75A279C4CBC6C0C', 'width', null, null, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-10-04T00:00:00.000+0000', 0)  on conflict (ck_id) do update set ck_class = excluded.ck_class, ck_attr = excluded.ck_attr, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cl_required = excluded.cl_required;
 select pkg_patcher.p_clear_attr('1807D17438814B31B75A279C4CBC6C0C'::varchar, '["childs","contentview","height","position","type","uitype","width"]'::jsonb);
-INSERT INTO s_mt.t_class(ck_id, cv_name, cv_description, cv_manual_documentation, cv_auto_documentation, cl_final, cl_dataset, ck_user, ct_change) VALUES ('1EE230968D8648419A9FEF0AAF7390E7', 'Application', 'Контейнер для приложения', 'Компонент для создания приложения', '
+INSERT INTO s_mt.t_class(ck_id, cv_name, cv_description, cv_manual_documentation, cv_auto_documentation, cl_final, cl_dataset, ck_user, ct_change) VALUES ('1EE230968D8648419A9FEF0AAF7390E7', 'Application', 'Контейнер для приложения', 'Компонент для создания приложения
+
+[Button](/redirect/docs/core-classes-button)', '
 
 ## ApplicationContainer
 
@@ -225,7 +254,7 @@ INSERT INTO s_mt.t_class_attr(ck_id, ck_class, ck_attr, cv_data_type_extra, cv_v
 INSERT INTO s_mt.t_class_attr(ck_id, ck_class, ck_attr, cv_data_type_extra, cv_value, ck_user, ct_change, cl_required) VALUES ('534', '1', 'type', null, 'BOX', '10020785', '2018-07-08T00:00:00.000+0000', 1)  on conflict (ck_id) do update set ck_class = excluded.ck_class, ck_attr = excluded.ck_attr, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cl_required = excluded.cl_required;
 INSERT INTO s_mt.t_class_attr(ck_id, ck_class, ck_attr, cv_data_type_extra, cv_value, ck_user, ct_change, cl_required) VALUES ('E359855F0DD2453682B50E28F681C865', '1', 'width', null, null, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-10-28T00:00:00.000+0000', 0)  on conflict (ck_id) do update set ck_class = excluded.ck_class, ck_attr = excluded.ck_attr, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cl_required = excluded.cl_required;
 select pkg_patcher.p_clear_attr('1'::varchar, '["align","childs","contentview","disabled","disabledrules","hidden","hiddenrules","reqsel","type","width"]'::jsonb);
-INSERT INTO s_mt.t_class(ck_id, cv_name, cv_description, cv_manual_documentation, cv_auto_documentation, cl_final, cl_dataset, ck_user, ct_change) VALUES ('19', 'Button', 'Кнопка', null, null, 0, 0, '20785', '2019-08-19T00:00:00.000+0000')  on conflict (ck_id) do update set cv_name = excluded.cv_name, cv_description = excluded.cv_description, cv_manual_documentation = excluded.cv_manual_documentation, cv_auto_documentation = excluded.cv_auto_documentation, cl_final = excluded.cl_final, cl_dataset = excluded.cl_dataset, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
+INSERT INTO s_mt.t_class(ck_id, cv_name, cv_description, cv_manual_documentation, cv_auto_documentation, cl_final, cl_dataset, ck_user, ct_change) VALUES ('19', 'Button', 'Кнопка', 'Пользовательская документация кнопки', null, 0, 0, '20785', '2019-08-19T00:00:00.000+0000')  on conflict (ck_id) do update set cv_name = excluded.cv_name, cv_description = excluded.cv_description, cv_manual_documentation = excluded.cv_manual_documentation, cv_auto_documentation = excluded.cv_auto_documentation, cl_final = excluded.cl_final, cl_dataset = excluded.cl_dataset, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
 INSERT INTO s_mt.t_class_attr(ck_id, ck_class, ck_attr, cv_data_type_extra, cv_value, ck_user, ct_change, cl_required) VALUES ('1033', '19', 'ckwindow', null, null, '10020785', '2018-07-09T00:00:00.000+0000', 0)  on conflict (ck_id) do update set ck_class = excluded.ck_class, ck_attr = excluded.ck_attr, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cl_required = excluded.cl_required;
 INSERT INTO s_mt.t_class_attr(ck_id, ck_class, ck_attr, cv_data_type_extra, cv_value, ck_user, ct_change, cl_required) VALUES ('24170', '19', 'columnsfilter', null, null, '10020785', '2018-09-26T00:00:00.000+0000', 0)  on conflict (ck_id) do update set ck_class = excluded.ck_class, ck_attr = excluded.ck_attr, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cl_required = excluded.cl_required;
 INSERT INTO s_mt.t_class_attr(ck_id, ck_class, ck_attr, cv_data_type_extra, cv_value, ck_user, ct_change, cl_required) VALUES ('1997', '19', 'confirmquestion', null, null, '10020785', '2018-07-09T00:00:00.000+0000', 0)  on conflict (ck_id) do update set ck_class = excluded.ck_class, ck_attr = excluded.ck_attr, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cl_required = excluded.cl_required;
