@@ -11,7 +11,21 @@ INSERT INTO s_mt.t_page_object (ck_id, ck_page, ck_object, cn_order, ck_parent, 
 INSERT INTO s_mt.t_page_object (ck_id, ck_page, ck_object, cn_order, ck_parent, ck_master, ck_user, ct_change) VALUES ('9232CE099B9D4123861EE78AE9A7103A', 'A732E27B938245A9A4A5047B761CD267', '00992032FD31411CA17F2961B5F5BBE7', 10, 'C531D1B87EC64A9498CF0B35A2BBD3DD', null, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-06-15T13:40:58.931+0000')  on conflict (ck_id) do update set ck_page = excluded.ck_page, ck_object = excluded.ck_object, cn_order = excluded.cn_order, ck_parent = excluded.ck_parent, ck_master = excluded.ck_master, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
 select pkg_patcher.p_merge_page_object_attr('6235DC93C1AA45C78ABC4EAB0FD362C5', '9232CE099B9D4123861EE78AE9A7103A', '77CCD76E7CD444FFAF54D6000CEF4E05', '# Принцип разработки
 
-TODO: Страница в разработке', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-06-17T07:17:31.285+0000', 'text');
+TODO: Страница в разработке
+
+## Клиентский логер
+
+Для логирования ошибок и сообщений используется npm пакет [debug](https://www.npmjs.com/package/debug)
+
+Для включения необходимо (опиcание на браузере Google Chrome):
+
+1. Открыть консоль разработчика
+1. Перейти на вкладку "Application"
+1. В группу "Storage" раскрыть "Local Storage" и выбрать соотвествующее доменное имя
+1. В конец списка добавить запись с ключем `debug` и значением `essence:constructor:*`
+1. Перезагрузить страницу
+
+После добавления найтроек дебагера, в консоле будут появляться отладочные сообщения', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-06-17T15:01:33.758+0000', 'text');
 INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change)
 select t.ck_id, t.ck_d_lang, t.cr_namespace, t.cv_value, t.ck_user, t.ct_change::timestamp from (
     select 'b539896d6a1c48f5b962a8cfc0677973' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Разработка' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2020-06-15T13:40:37.450+0000' as ct_change
