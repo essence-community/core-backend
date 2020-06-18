@@ -31,7 +31,7 @@ export interface IParamInfo {
     pagesize?: string;
     querymode?: "remote" | "local";
     queryparam?: string;
-    records?: Array<Record<string, string | number>>;
+    records?: Record<string, string | number>[];
 }
 
 export interface IParamsInfo {

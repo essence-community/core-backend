@@ -110,6 +110,7 @@ export default class CoreAuthPg extends NullAuthProvider {
         );
         const arr = await ReadStreamToArray(res.stream);
         if (isEmpty(arr) || isEmpty(arr[0].ck_id)) {
+            this.log.warn("Invalid login and password");
             throw new ErrorException(ErrorGate.AUTH_DENIED);
         }
         return {
@@ -223,8 +224,12 @@ export default class CoreAuthPg extends NullAuthProvider {
             });
         }
     }
+    /**
+     * Обновление информации по пользователям
+     */
     private initTemp() {
         const users = {};
+        this.log.trace("Cache users...");
         return this.dataSource
             .executeStmt(
                 "select json_object(array['ck_id',\n" +
@@ -315,6 +320,11 @@ export default class CoreAuthPg extends NullAuthProvider {
                                                 resAction.stream.on(
                                                     "end",
                                                     () => {
+                                                        this.log.trace(
+                                                            `Users ${JSON.stringify(
+                                                                users,
+                                                            )}`,
+                                                        );
                                                         resolveAction();
                                                     },
                                                 );
