@@ -16,6 +16,7 @@ export interface IParamsProvider extends Record<string, any> {
     needSession?: boolean;
     type?: number;
     useMacros?: boolean;
+    lvl_logger?: string;
 }
 
 export default abstract class NullProvider implements IProvider {
@@ -48,6 +49,26 @@ export default abstract class NullProvider implements IProvider {
                 name: "Разрешены ли входящие макросы",
                 type: "boolean",
             },
+            lvl_logger: {
+                displayField: "ck_id",
+                name: "Level",
+                records: [
+                    {
+                        ck_id: "NOTSET",
+                    },
+                    { ck_id: "VERBOSE" },
+                    { ck_id: "DEBUG" },
+                    { ck_id: "INFO" },
+                    { ck_id: "WARNING" },
+                    { ck_id: "ERROR" },
+                    { ck_id: "CRITICAL" },
+                    { ck_id: "WARN" },
+                    { ck_id: "TRACE" },
+                    { ck_id: "FATAL" },
+                ],
+                type: "combo",
+                valueField: "ck_id",
+            },
         };
     }
     public name: string;
@@ -57,6 +78,13 @@ export default abstract class NullProvider implements IProvider {
         this.name = name;
         this.params = initParams(NullProvider.getParamsInfo(), params);
         this.log = Logger.getLogger(`Provider ${name}`);
+        if (this.params.lvl_logger && this.params.lvl_logger !== "NOTSET") {
+            const rootLogger = Logger.getRootLogger();
+            this.log.setLevel(this.params.lvl_logger);
+            for (let handler of rootLogger._handlers) {
+                this.log.addHandler(handler);
+            }
+        }
     }
     public abstract processSql(
         context: IContext,

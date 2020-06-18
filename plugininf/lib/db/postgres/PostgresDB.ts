@@ -47,6 +47,7 @@ export interface IPostgresDBConfig {
     queryTimeout?: number;
     user?: string;
     password?: string;
+    lvl_logger?: string;
 }
 interface IParams {
     [key: string]: string | boolean | number | IObjectParam;
@@ -98,6 +99,26 @@ export default class PostgresDB {
                 name: "Время выполнения запроса",
                 type: "integer",
             },
+            lvl_logger: {
+                displayField: "ck_id",
+                name: "Level",
+                records: [
+                    {
+                        ck_id: "NOTSET",
+                    },
+                    { ck_id: "VERBOSE" },
+                    { ck_id: "DEBUG" },
+                    { ck_id: "INFO" },
+                    { ck_id: "WARNING" },
+                    { ck_id: "ERROR" },
+                    { ck_id: "CRITICAL" },
+                    { ck_id: "WARN" },
+                    { ck_id: "TRACE" },
+                    { ck_id: "FATAL" },
+                ],
+                type: "combo",
+                valueField: "ck_id",
+            },
             /* tslint:enable:object-literal-sort-keys */
         };
     }
@@ -121,6 +142,13 @@ export default class PostgresDB {
             );
         }
         this.log = Logger.getLogger(`PostgresDB ${name}`);
+        if (params.lvl_logger && params.lvl_logger !== "NOTSET") {
+            const rootLogger = Logger.getRootLogger();
+            this.log.setLevel(params.lvl_logger);
+            for (let handler of rootLogger._handlers) {
+                this.log.addHandler(handler);
+            }
+        }
         if (!isEmpty(params.queryTimeout)) {
             this.queryTimeout = params.queryTimeout * 1000;
         } else {

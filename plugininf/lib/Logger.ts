@@ -65,6 +65,10 @@ class Logger {
         }
     }
 
+    public static getRootLogger(): rufus.IRufusLogger {
+        return rufus;
+    }
+
     public static getLogger(str: string): rufus.IRufusLogger {
         const logger = rufus.getLogger(str);
         logger.isDebugEnabled = () => logger.isEnabledFor(rufus.DEBUG);

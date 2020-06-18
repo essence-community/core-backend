@@ -107,7 +107,8 @@ export default class CoreAuthOracle extends NullAuthProvider {
                 return Promise.reject(err);
             });
         const arr = await ReadStreamToArray(res.stream);
-        if (isEmpty(arr)) {
+        if (isEmpty(arr) || isEmpty(arr[0].ck_id)) {
+            this.log.warn("Invalid login and password");
             throw new ErrorException(ErrorGate.AUTH_DENIED);
         }
         return {
@@ -124,6 +125,7 @@ export default class CoreAuthOracle extends NullAuthProvider {
         }
         await this.dataSource.createPool();
         const users = {};
+        this.log.trace("Cache users...");
         return this.dataSource
             .executeStmt(
                 "select u.ck_id, u.cv_login, u.cv_name, u.cv_surname, u.cv_patronymic\n" +
@@ -187,6 +189,15 @@ export default class CoreAuthOracle extends NullAuthProvider {
                                                 resAction.stream.on(
                                                     "end",
                                                     () => {
+                                                        this.log.trace(
+                                                            `Find users ${
+                                                                users
+                                                                    ? JSON.stringify(
+                                                                          users,
+                                                                      )
+                                                                    : users
+                                                            }`,
+                                                        );
                                                         resolveAction();
                                                     },
                                                 );

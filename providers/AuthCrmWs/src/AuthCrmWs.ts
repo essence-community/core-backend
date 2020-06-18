@@ -92,13 +92,19 @@ export default class AuthCrmWs extends NullAuthProvider {
         query: IGateQuery,
     ): Promise<IAuthResult> {
         try {
-            const params = Object.assign({}, query.inParams, {
+            const params = {
+                ...query.inParams,
                 cl_audit: +this.params.clAudit,
                 cn_system: this.params.cnSystem,
-            });
+            };
             const result = await this.crmWSCaller.getData(
                 this.params.queryAuth,
                 params,
+            );
+            this.log.trace(
+                `Ответ ${this.params.queryAuth} ${
+                    result ? JSON.stringify(result) : result
+                }`,
             );
             if (!result || !result.length) {
                 throw new ErrorException(ErrorGate.AUTH_DENIED);
@@ -107,7 +113,10 @@ export default class AuthCrmWs extends NullAuthProvider {
                 ck_user: result[0].cn_user,
             };
         } catch (e) {
-            context.error("Ошибка вызова внешнего сервиса авторизации", e);
+            this.log.error(
+                `Ошибка вызова внешнего сервиса авторизации ${e.message}`,
+                e,
+            );
             throw new ErrorException(ErrorGate.AUTH_CALL_REMOTE);
         }
     }
@@ -115,28 +124,117 @@ export default class AuthCrmWs extends NullAuthProvider {
         context: IContext,
         query: IGateQuery,
     ): Promise<IResultProvider> {
-        return this[query.queryStr](context, query);
+        return this.handlers[query.queryStr](context, query);
     }
     public processDml(
         context: IContext,
         query: IGateQuery,
     ): Promise<IResultProvider> {
-        return this[query.queryStr](context, query);
+        return this.handlers[query.queryStr](context, query);
     }
-    /**
-     * Получаем ссылку на Сувк
-     * @param gateContext
-     * @returns {*|Promise.<TResult>}
-     */
-    public async getCrmUrl(gateContext: IContext): Promise<IResultProvider> {
-        const params = {
-            cn_user: gateContext.session.ck_id,
-        };
-        const res = await this.crmWSCaller.getData(
-            this.params.queryToken,
-            params,
-        );
-        if (!res.length) {
+
+    public handlers = {
+        /**
+         * Получаем ссылку на Сувк
+         * @param gateContext
+         * @returns {*|Promise.<TResult>}
+         */
+        getCrmUrl: async (gateContext: IContext): Promise<IResultProvider> => {
+            const params = {
+                cn_user: gateContext.session.ck_id,
+            };
+            const res = await this.crmWSCaller.getData(
+                this.params.queryToken,
+                params,
+            );
+            if (!res.length) {
+                return {
+                    stream: ResultStream([
+                        {
+                            ck_id: null,
+                            cv_error: {
+                                513: [],
+                            },
+                        },
+                    ]),
+                };
+            }
+            const [obj] = res;
+            return {
+                stream: ResultStream([
+                    {
+                        ck_id: null,
+                        cv_error: null,
+                        cv_url: (this.params.urlCrmTemplate || "").replace(
+                            /{([^}]+)}/g,
+                            (req, value) => obj[value],
+                        ),
+                    },
+                ]),
+            };
+        },
+        getUrlForNsi: async (
+            gateContext: IContext,
+        ): Promise<IResultProvider> => {
+            return this.handlers.getNsiUrl(gateContext, false);
+        },
+        getUrlForNsiByTable: async (
+            gateContext: IContext,
+        ): Promise<IResultProvider> => {
+            return this.handlers.getNsiUrl(gateContext, true);
+        },
+        /**
+         * Получаем ссылку на НСИ
+         * @param gateContext
+         * @returns {*|Promise.<TResult>}
+         */
+        getNsiUrl: async (
+            gateContext: IContext,
+            isTable = false,
+        ): Promise<IResultProvider> => {
+            if (isEmpty(this.params.nsiGateUrl)) {
+                throw new ErrorException(
+                    -1,
+                    "Require params(nsiGateUrl) not found",
+                );
+            }
+            const json = JSON.parse(gateContext.params.json || "{}");
+            const params = {
+                cn_user: gateContext.session.ck_id,
+            };
+            const jsonCaller = await this.nsiJsonGateCaller.callGet(
+                gateContext,
+                "sql",
+                isTable ? "GetUrlDocReqCreate" : "GetUrlDocReqList",
+                isTable
+                    ? {
+                          nm_table: json.filter.cv_table,
+                      }
+                    : undefined,
+            );
+            const respData = await ReadStreamToArray(jsonCaller.stream);
+            if (respData.length) {
+                const [urlObj] = respData;
+                const resJson = await this.crmWSCaller.getData(
+                    this.params.queryToken,
+                    params,
+                );
+                if (resJson.length) {
+                    const [obj] = resJson;
+                    return {
+                        stream: ResultStream([
+                            {
+                                ck_id: null,
+                                cv_error: null,
+                                cv_url: urlObj.nm_url.replace(
+                                    /\[token\]/g,
+                                    obj.cv_token,
+                                ),
+                            },
+                        ]),
+                    };
+                }
+            }
             return {
                 stream: ResultStream([
                     {
@@ -147,29 +245,9 @@ export default class AuthCrmWs extends NullAuthProvider {
                     },
                 ]),
             };
-        }
-        const [obj] = res;
-        return {
-            stream: ResultStream([
-                {
-                    ck_id: null,
-                    cv_error: null,
-                    cv_url: (this.params.urlCrmTemplate || "").replace(
-                        /{([^}]+)}/g,
-                        (req, value) => obj[value],
-                    ),
-                },
-            ]),
-        };
-    }
-    public async getUrlForNsi(gateContext: IContext): Promise<IResultProvider> {
-        return this.getNsiUrl(gateContext, false);
-    }
-    public async getUrlForNsiByTable(
-        gateContext: IContext,
-    ): Promise<IResultProvider> {
-        return this.getNsiUrl(gateContext, true);
-    }
+        },
+    };
+
     public async initContext(
         context: IContext,
         query: IQuery = {},
@@ -210,15 +288,25 @@ export default class AuthCrmWs extends NullAuthProvider {
             cn_system: this.params.cnSystem,
         };
         const users = {};
+        this.log.trace(
+            `Вызов сервиса ${
+                this.params.queryMetaUsers
+            }, параметры ${JSON.stringify(params)}`,
+        );
         const usersArr = await this.crmWSCaller.getData(
             this.params.queryMetaUsers,
             params,
         );
         const rows = [];
-        if (!usersArr.length) {
+        this.log.trace(
+            `Ответ ${this.params.queryMetaUsers} ${
+                usersArr ? JSON.stringify(usersArr) : usersArr
+            }`,
+        );
+        if (!usersArr || !usersArr.length) {
             throw new ErrorException(
                 -1,
-                `Данных о пользователях не вернулось, провайдер: ${this.name}`,
+                `Нет данных о пользователях, провайдер: ${this.name}`,
             );
         }
         usersArr.forEach((item) => {
@@ -230,10 +318,20 @@ export default class AuthCrmWs extends NullAuthProvider {
         });
 
         // загружаем экшены пользователей
+        this.log.trace(
+            `Вызов сервиса ${
+                this.params.queryUsersActions
+            }, параметры ${JSON.stringify(params)}`,
+        );
         rows.push(
             this.crmWSCaller
                 .getData(this.params.queryUsersActions, params)
                 .then((res) => {
+                    this.log.trace(
+                        `Ответ ${this.params.queryUsersActions} ${
+                            res ? JSON.stringify(res) : res
+                        }`,
+                    );
                     if (res && res.length) {
                         res.forEach((item) => {
                             item.cv_actions.split(",").forEach((cnAction) => {
@@ -248,15 +346,25 @@ export default class AuthCrmWs extends NullAuthProvider {
                     }
                     throw new ErrorException(
                         -1,
-                        `Данных о доступах не вернулось, провайдер: ${this.name}`,
+                        `Нет данных о доступах, провайдер: ${this.name}`,
                     );
                 }),
         );
         // загружаем департаменты пользователей
+        this.log.trace(
+            `Вызов сервиса ${
+                this.params.queryUsersDepartments
+            }, параметры ${JSON.stringify(params)}`,
+        );
         rows.push(
             this.crmWSCaller
                 .getData(this.params.queryUsersDepartments, params)
                 .then((res) => {
+                    this.log.trace(
+                        `Ответ ${this.params.queryUsersDepartments} ${
+                            res ? JSON.stringify(res) : res
+                        }`,
+                    );
                     if (res && res.length) {
                         res.forEach((item) => {
                             item.cv_departments
@@ -290,68 +398,5 @@ export default class AuthCrmWs extends NullAuthProvider {
                 this.authController.updateUserInfo(this.name);
                 return Promise.resolve();
             });
-    }
-    /**
-     * Получаем ссылку на НСИ
-     * @param gateContext
-     * @returns {*|Promise.<TResult>}
-     */
-    private async getNsiUrl(
-        gateContext: IContext,
-        isTable = false,
-    ): Promise<IResultProvider> {
-        if (isEmpty(this.params.nsiGateUrl)) {
-            throw new ErrorException(
-                -1,
-                "Require params(nsiGateUrl) not found",
-            );
-        }
-        const json = JSON.parse(gateContext.params.json || "{}");
-        const params = {
-            cn_user: gateContext.session.ck_id,
-        };
-        const jsonCaller = await this.nsiJsonGateCaller.callGet(
-            gateContext,
-            "sql",
-            isTable ? "GetUrlDocReqCreate" : "GetUrlDocReqList",
-            isTable
-                ? {
-                      nm_table: json.filter.cv_table,
-                  }
-                : undefined,
-        );
-        const respData = await ReadStreamToArray(jsonCaller.stream);
-        if (respData.length) {
-            const [urlObj] = respData;
-            const resJson = await this.crmWSCaller.getData(
-                this.params.queryToken,
-                params,
-            );
-            if (resJson.length) {
-                const [obj] = resJson;
-                return {
-                    stream: ResultStream([
-                        {
-                            ck_id: null,
-                            cv_error: null,
-                            cv_url: urlObj.nm_url.replace(
-                                /\[token\]/g,
-                                obj.cv_token,
-                            ),
-                        },
-                    ]),
-                };
-            }
-        }
-        return {
-            stream: ResultStream([
-                {
-                    ck_id: null,
-                    cv_error: {
-                        513: [],
-                    },
-                },
-            ]),
-        };
     }
 }

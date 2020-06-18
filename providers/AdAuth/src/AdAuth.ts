@@ -117,6 +117,13 @@ export default class AdAuth extends NullAuthProvider {
             username: this.params.adLogin,
         });
     }
+    /**
+     * Проверка на случай если авторизация вынесена на внешний прокси nginx
+     *
+     * @param gateContext
+     * @param sessionId
+     * @param session
+     */
     public async afterSession(
         gateContext: IContext,
         sessionId: string,
@@ -135,16 +142,20 @@ export default class AdAuth extends NullAuthProvider {
                     "base64",
                 ).toString("ascii");
                 const [username, password] = basic.split(":");
+                this.log.trace(`Проверка авторизации Basic ${username}`);
                 if (password === PASSWORD_PATTERN_NGINX_GSS) {
+                    this.log.trace(
+                        `Найдена прокси авторизация nginx_gss Basic ${username}`,
+                    );
                     this.initSession(resolve, reject, username);
                     return;
                 }
                 this.ad.authenticate(username, password, (err, isAuth) => {
                     if (err || !isAuth) {
-                        this.log.error(
+                        this.log.warn(
                             err ? err.message : "Invalid password or login",
                         );
-                        reject(new ErrorException(ErrorGate.AUTH_DENIED));
+                        resolve(session);
                         return;
                     }
                     this.initSession(resolve, reject, username);
@@ -153,6 +164,12 @@ export default class AdAuth extends NullAuthProvider {
         }
         return session;
     }
+    /**
+     * Процесс авторизации
+     *
+     * @param context
+     * @param query
+     */
     public async processAuth(
         context: IContext,
         query: IGateQuery,
@@ -182,20 +199,32 @@ export default class AdAuth extends NullAuthProvider {
             data: user,
         }));
     }
+    /**
+     * Загрузка провайдера
+     *
+     * @param reload
+     */
     public async init(reload?: boolean): Promise<void> {
         const rows = [];
         Object.keys(this.mapGroupActions).forEach((group) => {
             rows.push(
                 new Promise((resolve, reject) => {
+                    this.log.trace("Cache users...");
                     this.ad.getUsersForGroup(group, (err, users) => {
                         if (err) {
                             reject(err);
                             return;
                         }
+                        this.log.trace(
+                            `Find users ${
+                                users ? JSON.stringify(users) : users
+                            }`,
+                        );
                         if (!users || users.length) {
                             return;
                         }
                         const addUsers = [];
+
                         users.forEach((user) => {
                             const data = Object.keys(this.mapUserAttr).reduce(
                                 (obj, val) => ({
@@ -233,6 +262,12 @@ export default class AdAuth extends NullAuthProvider {
                 await this.authController.updateUserInfo(this.name);
             });
     }
+    /**
+     * Инициализация контекста
+     *
+     * @param context {IContext} Контекст вызова
+     * @param query {IQuery} Запрос
+     */
     public async initContext(
         context: IContext,
         query: IQuery = {},
@@ -324,6 +359,12 @@ export default class AdAuth extends NullAuthProvider {
                 });
         });
     }
+    /**
+     * Мапинг юзера с экшенами
+     *
+     * @param user
+     * @param actions
+     */
     private getActionUser(user: any, actions?: number[]) {
         const groups = Object.keys(this.mapGroupActions);
         if (groups.length) {

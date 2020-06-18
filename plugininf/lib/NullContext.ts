@@ -32,6 +32,26 @@ export default abstract class NullContext implements IContextPlugin {
                 name: "Размер POST в байтах",
                 type: "integer",
             },
+            lvl_logger: {
+                displayField: "ck_id",
+                name: "Level",
+                records: [
+                    {
+                        ck_id: "NOTSET",
+                    },
+                    { ck_id: "VERBOSE" },
+                    { ck_id: "DEBUG" },
+                    { ck_id: "INFO" },
+                    { ck_id: "WARNING" },
+                    { ck_id: "ERROR" },
+                    { ck_id: "CRITICAL" },
+                    { ck_id: "WARN" },
+                    { ck_id: "TRACE" },
+                    { ck_id: "FATAL" },
+                ],
+                type: "combo",
+                valueField: "ck_id",
+            },
         };
     }
     public name: string;
@@ -53,6 +73,13 @@ export default abstract class NullContext implements IContextPlugin {
         this.name = name;
         this.params = initParams(NullContext.getParamsInfo(), params);
         this.logger = Logger.getLogger(`Context ${name}`);
+        if (this.params.lvl_logger && this.params.lvl_logger !== "NOTSET") {
+            const rootLogger = Logger.getRootLogger();
+            this.logger.setLevel(this.params.lvl_logger);
+            for (let handler of rootLogger._handlers) {
+                this.logger.addHandler(handler);
+            }
+        }
     }
     public abstract init(reload?: boolean): Promise<void>;
     public abstract initContext(
