@@ -51,7 +51,7 @@ export default abstract class NullProvider implements IProvider {
             },
             lvl_logger: {
                 displayField: "ck_id",
-                name: "Level",
+                name: "Level logger",
                 records: [
                     {
                         ck_id: "NOTSET",

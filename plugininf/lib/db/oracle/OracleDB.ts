@@ -115,7 +115,7 @@ export default class OracleDB {
             },
             lvl_logger: {
                 displayField: "ck_id",
-                name: "Level",
+                name: "Level logger",
                 records: [
                     {
                         ck_id: "NOTSET",

@@ -101,7 +101,7 @@ export default class PostgresDB {
             },
             lvl_logger: {
                 displayField: "ck_id",
-                name: "Level",
+                name: "Level logger",
                 records: [
                     {
                         ck_id: "NOTSET",
