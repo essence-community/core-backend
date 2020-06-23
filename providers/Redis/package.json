@@ -1,0 +1,14 @@
+{
+    "name": "@ungate-provider/core-redis",
+    "version": "1.0.0",
+    "description": "Провайдер Redis",
+    "author": "Ivan Artemov (honyrik@gmail.com)",
+    "license": "MIT",
+    "dependencies": {
+        "@ungate/plugininf": "^1.0.0",
+        "redis": "^3.0.2"
+    },
+    "devDependencies": {
+        "@types/redis": "^2.8.22"
+    }
+}
