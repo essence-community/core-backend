@@ -1,3 +1,3 @@
-import {RedisProvider} from "./RedisProvider";
+import { RedisProvider } from "./RedisProvider";
 
 export = RedisProvider;
