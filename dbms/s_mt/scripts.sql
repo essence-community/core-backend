@@ -2013,3 +2013,15 @@ update s_mt.t_page_object_attr as attr set cv_value = tp.cv_value from (
     group by t.ck_id
 ) as tp
 where attr.ck_id = tp.ck_id;
+
+update s_mt.t_page_object_attr as attr set cv_value = tp.cv_value from (
+    select t.ck_id, jsonb_agg(jsonb_build_object('in', coalesce(t.res[1], t.res[2]), 'out', t.res[3])) as cv_value
+    from (
+        select 1 as lvl, tpoa.ck_id, regexp_matches(tpoa.cv_value, '^([\w]+)[,]?|([\w]+)=([\w]+)', 'gi') as res
+        from s_mt.t_page_object_attr tpoa
+        join s_mt.t_class_attr tca on tpoa.ck_class_attr = tca.ck_id
+        where tca.ck_attr = 'getglobaltostore' and nullif(trim(tpoa.cv_value), '') is not null and tpoa.cv_value !~ '^\['
+    ) as t
+    group by t.ck_id
+) as tp
+where attr.ck_id = tp.ck_id;
