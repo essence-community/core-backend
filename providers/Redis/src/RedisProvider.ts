@@ -212,7 +212,7 @@ export class RedisProvider extends NullProvider {
         client.end();
         return res;
     }
-    public init(reload?: boolean): Promise<void> {
+    public async init(reload?: boolean): Promise<void> {
         return;
     }
 }
