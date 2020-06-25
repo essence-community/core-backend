@@ -73,7 +73,11 @@ export default abstract class NullContext implements IContextPlugin {
         this.name = name;
         this.params = initParams(NullContext.getParamsInfo(), params);
         this.logger = Logger.getLogger(`Context ${name}`);
-        if (this.params.lvl_logger && this.params.lvl_logger !== "NOTSET") {
+        if (
+            typeof this.params === "object" &&
+            this.params.lvl_logger &&
+            this.params.lvl_logger !== "NOTSET"
+        ) {
             const rootLogger = Logger.getRootLogger();
             this.logger.setLevel(this.params.lvl_logger);
             for (let handler of rootLogger._handlers) {

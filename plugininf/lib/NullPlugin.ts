@@ -17,7 +17,11 @@ export default abstract class NullPlugin implements IPlugin {
         this.name = name;
         this.params = params;
         this.logger = Logger.getLogger(`Plugin ${name}`);
-        if (this.params.lvl_logger && this.params.lvl_logger !== "NOTSET") {
+        if (
+            typeof this.params === "object" &&
+            this.params.lvl_logger &&
+            this.params.lvl_logger !== "NOTSET"
+        ) {
             const rootLogger = Logger.getRootLogger();
             this.logger.setLevel(this.params.lvl_logger);
             for (let handler of rootLogger._handlers) {
