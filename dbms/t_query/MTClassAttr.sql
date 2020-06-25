@@ -8,7 +8,7 @@ select ca.ck_id,
 
        ca.ck_attr,
 
-       ca.cv_value,
+       pkg_json.f_decode_attr(ca.cv_value, a.ck_d_data_type) as cv_value,
 
        ca.cl_required,
 
