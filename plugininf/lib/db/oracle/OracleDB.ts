@@ -38,7 +38,7 @@ interface IParams {
 
 const prepareSql = (query: string) => {
     return (data: object) => {
-        const values = [];
+        const values = {};
         return {
             text: query.replace(
                 /(--.*?$)|(\/\*[\s\S]*?\*\/)|('[^']*?')|("[^"]*?")|(::?)([a-zA-Z0-9_]+)/g,
@@ -46,8 +46,8 @@ const prepareSql = (query: string) => {
                     const noReplace = group.slice(0, 4);
                     const [prefix, key] = group.slice(4);
                     if (prefix === ":") {
-                        values[key].push(data[key] || null);
-                        return "?";
+                        values[key] = data[key] || null;
+                        return `:${key}`;
                     } else if (prefix && prefix.length > 1) {
                         return prefix + key;
                     }
