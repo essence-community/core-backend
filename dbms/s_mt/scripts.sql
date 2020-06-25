@@ -1995,7 +1995,7 @@ ALTER TABLE s_mt.t_page_object_attr
 --changeset kutsenko_o:CORE-1801 dbms:postgresql
 INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change)VALUES('fea1eaf13fd24f25b327e76099e22495', 'ru_RU', 'static', 'Возникла ошибка при открытии страницы. Обратитесь в службу поддержки', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-06-17T17:57:00.000+0300') on conflict on constraint cin_u_localization_1 do update set ck_id = excluded.ck_id, ck_d_lang = excluded.ck_d_lang, cr_namespace = excluded.cr_namespace, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
 
---changeset kutsenko_o:CORE-1792 dbms:postgresql
+--changeset kutsenko_o:CORE-1792 dbms:postgresql runOnChange:true
 update s_mt.t_page_object_attr set cv_value = regexp_replace(cv_value, '\|\|', ' + ', 'g') where ck_id in (
 	select tpoa.ck_id from s_mt.t_page_object_attr tpoa
 	join s_mt.t_class_attr tca on tpoa.ck_class_attr = tca.ck_id
@@ -2027,12 +2027,24 @@ update s_mt.t_page_object_attr as attr set cv_value = tp.cv_value from (
 where attr.ck_id = tp.ck_id;
 
 update s_mt.t_object_attr as attr set cv_value = tp.cv_value from (
+    select t.ck_id, jsonb_agg(jsonb_build_object('in', t.res[2], 'out', coalesce(t.res[1], t.res[3]))) as cv_value
+    from (
+        select 1 as lvl, toa.ck_id, regexp_matches(toa.cv_value, '^([\w]+)[,]?|([\w]+)=([\w]+)', 'gi') as res
+        from s_mt.t_object_attr toa
+        join s_mt.t_class_attr tca on toa.ck_class_attr = tca.ck_id
+        where tca.ck_attr in ('setglobal', 'columnsfilter') and nullif(trim(toa.cv_value), '') is not null and toa.cv_value !~ '^\['
+    ) as t
+    group by t.ck_id
+) as tp
+where attr.ck_id = tp.ck_id;
+
+update s_mt.t_object_attr as attr set cv_value = tp.cv_value from (
     select t.ck_id, jsonb_agg(jsonb_build_object('in', coalesce(t.res[1], t.res[2]), 'out', t.res[3])) as cv_value
     from (
         select 1 as lvl, toa.ck_id, regexp_matches(toa.cv_value, '^([\w]+)[,]?|([\w]+)=([\w]+)', 'gi') as res
         from s_mt.t_object_attr toa
         join s_mt.t_class_attr tca on toa.ck_class_attr = tca.ck_id
-        where tca.ck_attr in ('getmastervalue', 'valuefield') and nullif(trim(toa.cv_value), '') is not null and toa.cv_value !~ '^\['
+        where tca.ck_attr in ('getglobaltostore', 'getmastervalue', 'valuefield') and nullif(trim(toa.cv_value), '') is not null and toa.cv_value !~ '^\['
     ) as t
     group by t.ck_id
 ) as tp
