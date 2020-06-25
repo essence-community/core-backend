@@ -1995,7 +1995,7 @@ ALTER TABLE s_mt.t_page_object_attr
 --changeset kutsenko_o:CORE-1801 dbms:postgresql
 INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change)VALUES('fea1eaf13fd24f25b327e76099e22495', 'ru_RU', 'static', 'Возникла ошибка при открытии страницы. Обратитесь в службу поддержки', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-06-17T17:57:00.000+0300') on conflict on constraint cin_u_localization_1 do update set ck_id = excluded.ck_id, ck_d_lang = excluded.ck_d_lang, cr_namespace = excluded.cr_namespace, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
 
---changeset kutsenko_o:CORE-1792 dbms:postgresql runOnChange:true
+--changeset kutsenko_o:CORE-1792 dbms:postgresql
 update s_mt.t_page_object_attr set cv_value = regexp_replace(cv_value, '\|\|', ' + ', 'g') where ck_id in (
 	select tpoa.ck_id from s_mt.t_page_object_attr tpoa
 	join s_mt.t_class_attr tca on tpoa.ck_class_attr = tca.ck_id
