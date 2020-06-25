@@ -16,7 +16,7 @@ select pkg_patcher.p_merge_object('5BC3300778424F4688361496AFBEBFB5', '31', 'F9B
 select pkg_patcher.p_merge_object_attr('0A3D37F5DA2F4403854A5A8D4ED23CB2', '5BC3300778424F4688361496AFBEBFB5', '120', 'cr_type', '1', '2019-08-13T00:00:00.000+0000', 'column');
 select pkg_patcher.p_merge_object_attr('C2D07E19EF47419CAA98753526D9FC55', '5BC3300778424F4688361496AFBEBFB5', '123', 'true', '1', '2019-08-13T00:00:00.000+0000', 'required');
 select pkg_patcher.p_merge_object_attr('98F6C14AE94644CAB63498A7BE7980DC', '5BC3300778424F4688361496AFBEBFB5', '125', 'ck_id', '1', '2019-08-13T00:00:00.000+0000', 'displayfield');
-select pkg_patcher.p_merge_object_attr('3B18320A1EE14E809A8628A817281A7D', '5BC3300778424F4688361496AFBEBFB5', '126', 'ck_id', '1', '2019-08-13T00:00:00.000+0000', 'valuefield');
+select pkg_patcher.p_merge_object_attr('3B18320A1EE14E809A8628A817281A7D', '5BC3300778424F4688361496AFBEBFB5', '126', '[{"in": "ck_id", "out": null}]', '1', '2019-08-13T00:00:00.000+0000', 'valuefield');
 select pkg_patcher.p_merge_object_attr('3811C912DA9F42A58FCA5D4C3F3DD3D9', '80E0095F45F147FAA4346817D61B3330', '155', '1', '1', '2019-08-13T00:00:00.000+0000', 'mode');
 select pkg_patcher.p_merge_object_attr('600814E4F5CF4AF38381F3712810B76F', '84B647F9150D49E9885516F0E42C9924', '852', 'ck_id', '1', '2019-08-13T00:00:00.000+0000', 'orderproperty');
 select pkg_patcher.p_merge_object_attr('00B1B75147B64D2799F6C0B9ECC61E6B', '84B647F9150D49E9885516F0E42C9924', '853', 'ASC', '1', '2019-08-13T00:00:00.000+0000', 'orderdirection');
