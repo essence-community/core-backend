@@ -1,4 +1,23 @@
 --liquibase formatted sql
+--changeset artemov_i:MOVE_FILE dbms:postgresql runOnChange:true splitStatements:false stripComments:false
+UPDATE public.databasechangelog
+SET filename='meta/scripts.sql'
+WHERE id='CORE-601' AND filename='./meta/scripts.sql';
+UPDATE public.databasechangelog
+SET filename='meta/scripts.sql'
+WHERE id='CORE-642' AND filename='./meta/scripts.sql';
+UPDATE public.databasechangelog
+SET filename='meta/scripts.sql'
+WHERE id='CORE-689' AND filename='./meta/scripts.sql';
+UPDATE public.databasechangelog
+SET filename='meta/scripts.sql'
+WHERE id='CORE-650-meta-to-static' AND filename='./meta/scripts.sql';
+UPDATE public.databasechangelog
+SET filename='meta/scripts.sql'
+WHERE id='CORE-847_clear_page_variable' AND filename='./meta/scripts.sql';
+UPDATE public.databasechangelog
+SET filename='meta/scripts.sql'
+WHERE id='CORE-1772_clear_edit_mode' AND filename='./meta/scripts.sql';
 --changeset artemov_i:CORE-601 dbms:postgresql runOnChange:true splitStatements:false stripComments:false
 select pkg_patcher.p_update_localization();
 --changeset artemov_i:CORE-642 dbms:postgresql runOnChange:true splitStatements:false stripComments:false
