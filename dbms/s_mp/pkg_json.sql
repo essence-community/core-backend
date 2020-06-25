@@ -102,7 +102,7 @@ begin
   --  or pk_data_type = 'global'
   if pk_data_type = 'array' or pk_data_type = 'object' or pk_data_type = 'global' then
     if pv_value ~ '^[\[\{]' then
-      return to_jsonb(pv_value::jsonb);
+      return pv_value::jsonb;
     end if;
 
     return null;
