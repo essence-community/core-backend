@@ -22,7 +22,7 @@ select
 
   t.cv_value_oa,
 
-  t.cv_value,
+  pkg_json.f_decode_attr(t.cv_value, t.ck_d_data_type) as cv_value,
 
   /* Поля аудита */
 
