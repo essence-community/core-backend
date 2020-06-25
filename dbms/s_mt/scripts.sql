@@ -2020,8 +2020,26 @@ update s_mt.t_page_object_attr as attr set cv_value = tp.cv_value from (
         select 1 as lvl, tpoa.ck_id, regexp_matches(tpoa.cv_value, '^([\w]+)[,]?|([\w]+)=([\w]+)', 'gi') as res
         from s_mt.t_page_object_attr tpoa
         join s_mt.t_class_attr tca on tpoa.ck_class_attr = tca.ck_id
-        where tca.ck_attr = 'getglobaltostore' and nullif(trim(tpoa.cv_value), '') is not null and tpoa.cv_value !~ '^\['
+        where tca.ck_attr in ('getglobaltostore', 'getmastervalue', 'valuefield') and nullif(trim(tpoa.cv_value), '') is not null and tpoa.cv_value !~ '^\['
     ) as t
     group by t.ck_id
 ) as tp
 where attr.ck_id = tp.ck_id;
+
+update s_mt.t_object_attr as attr set cv_value = tp.cv_value from (
+    select t.ck_id, jsonb_agg(jsonb_build_object('in', coalesce(t.res[1], t.res[2]), 'out', t.res[3])) as cv_value
+    from (
+        select 1 as lvl, toa.ck_id, regexp_matches(toa.cv_value, '^([\w]+)[,]?|([\w]+)=([\w]+)', 'gi') as res
+        from s_mt.t_object_attr toa
+        join s_mt.t_class_attr tca on toa.ck_class_attr = tca.ck_id
+        where tca.ck_attr in ('getmastervalue', 'valuefield') and nullif(trim(toa.cv_value), '') is not null and toa.cv_value !~ '^\['
+    ) as t
+    group by t.ck_id
+) as tp
+where attr.ck_id = tp.ck_id;
+
+--changeset kutsenko_o:CORE-1823-regexp dbms:postgresql
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change)VALUES('9c859c9dcb3245daab68a97592be3f22', 'ru_RU', 'static', 'Пример', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-06-24T17:57:00.000+0300') on conflict on constraint cin_u_localization_1 do update set ck_id = excluded.ck_id, ck_d_lang = excluded.ck_d_lang, cr_namespace = excluded.cr_namespace, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change)VALUES('780583907b4045b8923bcbcc21ccca6d', 'ru_RU', 'static', 'Глобальное сопоставление', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-06-24T17:57:00.000+0300') on conflict on constraint cin_u_localization_1 do update set ck_id = excluded.ck_id, ck_d_lang = excluded.ck_d_lang, cr_namespace = excluded.cr_namespace, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change)VALUES('45ec892b75734c0e9e70913f3e161539', 'ru_RU', 'static', 'Игнорирование регистра при сопоставлении', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-06-24T17:57:00.000+0300') on conflict on constraint cin_u_localization_1 do update set ck_id = excluded.ck_id, ck_d_lang = excluded.ck_d_lang, cr_namespace = excluded.cr_namespace, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change)VALUES('78d8c0e18d234fda8eb1fc6b56b6790c', 'ru_RU', 'static', 'Сопоставление по нескольким строкам', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-06-24T17:57:00.000+0300') on conflict on constraint cin_u_localization_1 do update set ck_id = excluded.ck_id, ck_d_lang = excluded.ck_d_lang, cr_namespace = excluded.cr_namespace, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
