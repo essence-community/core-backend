@@ -38,7 +38,7 @@ declare
    vv_pattern VARCHAR := '(?!\w|\").([g][A-z_0-9]+)|^([g][A-z_0-9]+)';
 begin
   res := '{}'::ct_varchar;
-  if pv_string is not null then
+  if pv_string is not null and pv_string !~ '^[\[\{]' then
     if pv_attr = 'setglobal' or pv_attr = 'setrecordtoglobal' then
       -- ищем глобальные переменные в правой части равенства или в начале строки
       vv_pattern := '\=([g][A-z_0-9]+)|^([g][A-z_0-9]+)$';
@@ -53,6 +53,23 @@ begin
                      regexp_matches(pv_string,
                                     vv_pattern,
                                     'gi') as res) as t;
+    exception
+    	when others then
+    		return res;
+    end;
+  elsif pv_string is not null and pv_string ~ '^[\[\{]' then
+    begin
+      if pv_attr = 'setglobal' or pv_attr = 'setrecordtoglobal' then
+        select array_agg(t->>'out') as global
+          into strict res
+        from jsonb_array_elements(pv_string::jsonb) as t
+        where t->>'out' ~ '^g';
+      elsif pv_attr = 'columnsfilter' or pv_attr = 'getmastervalue' or pv_attr = 'getglobaltostore' then
+        select array_agg(t->>'in') as global
+          into strict res
+        from jsonb_array_elements(pv_string::jsonb) as t
+        where t->>'in' ~ '^g';
+      end if;
     exception
     	when others then
     		return res;
