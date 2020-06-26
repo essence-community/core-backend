@@ -1,123 +1,136 @@
 --liquibase formatted sql
---changeset artemov_i:MTRoute.sql dbms:postgresql runOnChange:true splitStatements:false stripComments:false
-INSERT INTO s_mt.t_query (ck_id, cc_query, ck_provider, ck_user, ct_change, cr_type, cr_access, cn_action, cv_description) VALUES ('MTRoute', '/*MTRoute*/
+--changeset artemov_i:MTRoute dbms:postgresql runOnChange:true splitStatements:false stripComments:false
+INSERT INTO s_mt.t_query (ck_id, ck_provider, ck_user, ct_change, cr_type, cr_access, cn_action, cv_description, cc_query)
+ VALUES('MTRoute', 'meta', '20783', '2019-05-30T06:18:27.503+0000', 'select', 'free', null, 'Необходимо актуализировать',
+ '/*MTRoute*/
 with recursive t1(
     ck_id,
     ck_parent,
     cr_type,
     cv_name,
+    cv_name_locale,
     cn_order,
     cl_static,
     cv_url,
     ck_icon,
-    cl_menu
+    cl_menu,
+    lvl,
+    root,
+    cn_action_view,
+    cn_action_edit,
+    ck_icon_id,
+    cv_icon_name,
+    cv_icon_font
 ) as (
-    /* сначала выберем все страницы, к которым есть доступ у пользователя, и которые должны быть видны в меню */
+    /* сначала выберем все объекты которые могут быть отображены */
     select
         p.ck_id,
         p.ck_parent,
         p.cr_type,
         p.cv_name,
+        l.cv_value as cv_name_locale,
         p.cn_order,
         p.cl_static,
         p.cv_url,
         p.ck_icon,
-        p.cl_menu
+        p.cl_menu,
+        1 as lvl,
+        p.cv_name  as root,
+        pav.cn_action as cn_action_view,
+        pae.cn_action as cn_action_edit,
+        i.ck_id as ck_icon_id,
+        i.cv_name as cv_icon_name,
+        i.cv_font as cv_icon_font
     from
         s_mt.t_page p
-    join s_mt.t_page_action pa on
-        pa.ck_page = p.ck_id
-    left join (select cn_action from tt_user_action where ck_user = :sess_ck_id) as ua on
-        ua.cn_action = pa.cn_action
+    left join s_mt.t_localization l on
+        l.ck_id = p.cv_name and l.ck_d_lang in (select tdl.ck_id from s_mt.t_d_lang tdl where tdl.cl_default = 1)
+    left join s_mt.t_page_action pav on
+        pav.ck_page = p.ck_id and pav.cr_type = ''view''
+    left join s_mt.t_page_action pae on
+        pae.ck_page = p.ck_id and pae.cr_type = ''edit''
+    left join s_mt.t_icon i on
+        i.ck_id = p.ck_icon
     where
-        p.cr_type = 2
+        p.ck_parent is null
         and p.cl_menu = 1
-        and pa.cr_type = ''view''
-        and (pa.cn_action in (select tss.cv_value::bigint from s_mt.t_sys_setting tss where tss.ck_id = ''g_sys_anonymous_action'') or ua.cn_action is not null)
-        and (&FILTER)
-union all /* выберем их парентов в рекурсивном запросе */
+union all /* выберем их дочернии элементы в рекурсивном запросе */
     select
-        s.ck_id,
-        s.ck_parent,
-        s.cr_type,
-        s.cv_name,
-        s.cn_order,
-        s.cl_static,
-        s.cv_url,
-        s.ck_icon,
-        s.cl_menu
+        p.ck_id,
+        p.ck_parent,
+        p.cr_type,
+        p.cv_name,
+        l.cv_value as cv_name_locale,
+        p.cn_order,
+        p.cl_static,
+        p.cv_url,
+        p.ck_icon,
+        p.cl_menu,
+        op.lvl+1 as lvl,
+        op.cv_name as root,
+        pav.cn_action as cn_action_view,
+        pae.cn_action as cn_action_edit,
+        i.ck_id as ck_icon_id,
+        i.cv_name as cv_icon_name,
+        i.cv_font as cv_icon_font
     from
-        t1
-    join s_mt.t_page s on
-        t1.ck_parent = s.ck_id
+        t1 op
+    join s_mt.t_page p on
+        op.ck_id = p.ck_parent
+    left join s_mt.t_localization l on
+        l.ck_id = p.cv_name and l.ck_d_lang in (select tdl.ck_id from s_mt.t_d_lang tdl where tdl.cl_default = 1)
+    left join s_mt.t_page_action pav on
+        pav.ck_page = p.ck_id and pav.cr_type = ''view''
+    left join s_mt.t_page_action pae on
+        pae.ck_page = p.ck_id and pae.cr_type = ''edit''
+    left join s_mt.t_icon i on
+        i.ck_id = p.ck_icon
+    where p.cl_menu = 1
+),
+ot_action as (
+    select tss.cv_value::bigint as cn_action from s_mt.t_sys_setting tss where tss.ck_id = ''g_sys_anonymous_action''
+    union all
+    select cn_action from tt_user_action where ck_user = :sess_ck_id
 ),
 t2 as(
     select
-        distinct ck_id,
-        ck_parent,
-        cr_type,
-        cv_name,
-        cn_order,
-        cl_static,
-        cv_url,
-        ck_icon,
-        cl_menu
+        p.*
     from
-        t1
-),
-t3 as (
-    select
-        jsonb_build_object(''ck_id'', t2.ck_id, ''ck_parent'', t2.ck_parent, ''cr_type'', t2.cr_type, ''cv_name'', t2.cv_name, ''cn_order'', t2.cn_order, ''cl_static'', t2.cl_static, ''cv_url'', t2.cv_url, ''ck_icon'', t2.ck_icon, ''cv_icon_name'', i.cv_icon_name, ''cv_icon_font'', i.cv_icon_font, ''leaf'', case when not exists(select 1 from t2 m where m.ck_parent = t2.ck_id) then ''true'' else ''false'' end, ''root'', t2.cv_name, ''cn_action_edit'', pa_edit.cn_action, ''cl_menu'', t2.cl_menu) as json,
-        array[t2.cn_order] as sort
-    from
-        t2
-    left join(
-            select
-                ck_id as ck_icon_id,
-                cv_name as cv_icon_name,
-                cv_font as cv_icon_font
-            from
-                s_mt.t_icon
-        ) i on
-        i.ck_icon_id = t2.ck_icon
-    left join s_mt.t_page_action pa_edit on
-        t2.cr_type = 2
-        and pa_edit.ck_page = t2.ck_id
-        and pa_edit.cr_type = ''edit''
+        t1 p
     where
-        t2.ck_parent is null
-union all
+        p.cr_type = 2 and p.cn_action_view in (select cn_action from ot_action)
+union all /* выберем их родителей в рекурсивном запросе */
     select
-        jsonb_build_object(''ck_id'', t2.ck_id, ''ck_parent'', t2.ck_parent, ''cr_type'', t2.cr_type, ''cv_name'', t2.cv_name, ''cn_order'', t2.cn_order, ''cl_static'', t2.cl_static, ''cv_url'', t2.cv_url, ''ck_icon'', t2.ck_icon, ''cv_icon_name'', i.cv_icon_name, ''cv_icon_font'', i.cv_icon_font, ''leaf'', case when not exists(select 1 from t2 m where m.ck_parent = t2.ck_id) then ''true'' else ''false'' end, ''root'', (t3.json->>''root''), ''cn_action_edit'', pa_edit.cn_action, ''cl_menu'', t2.cl_menu) as json,
-        (
-            t3.sort || t2.cn_order
-        ) as sort
+        p.*
     from
         t2
-    left join(
-            select
-                ck_id as ck_icon_id,
-                cv_name as cv_icon_name,
-                cv_font as cv_icon_font
-            from
-                s_mt.t_icon
-        ) i on
-        i.ck_icon_id = t2.ck_icon
-    left join s_mt.t_page_action pa_edit on
-        t2.cr_type = 2
-        and pa_edit.ck_page = t2.ck_id
-        and pa_edit.cr_type = ''edit''
-    join t3 on
-        t2.ck_parent = (
-            t3.json->>''ck_id''
-        )::varchar
+    join t1 p on
+        t2.ck_parent = p.ck_id
+),
+t3 as(
+    select
+        distinct p.*
+    from
+        t2 p
 )
 select
-    t3.json
+    op.ck_id,
+    op.ck_parent,
+    op.cr_type,
+    op.cv_name,
+    op.cn_order,
+    op.cl_menu,
+    op.cl_static,
+    op.cv_url,
+    op.ck_icon,
+    op.ck_id,
+    op.cv_icon_name,
+    op.cv_icon_font,
+    case when not exists(select 1 from t2 m where m.ck_parent = op.ck_id) then ''true'' else ''false'' end as leaf,
+    op.root,
+    op.cn_action_edit
 from
-    t3
+    t3 op
 order by
-    t3.sort
-  ', 'meta', '20783', '2019-05-30 09:18:27.503811+03', 'select', 'free', NULL, 'Список доступных страниц')
-on conflict (ck_id) do update set cc_query = excluded.cc_query, ck_provider = excluded.ck_provider, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cr_type = excluded.cr_type, cr_access = excluded.cr_access;
-
+    op.lvl asc, op.cn_order asc, op.cv_name_locale asc')
+ on conflict (ck_id) do update set cc_query = excluded.cc_query, ck_provider = excluded.ck_provider, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cr_type = excluded.cr_type, cr_access = excluded.cr_access, cn_action = excluded.cn_action, cv_description = excluded.cv_description;

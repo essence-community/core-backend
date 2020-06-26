@@ -1,3 +1,0 @@
---liquibase formatted sql
---changeset patcher-core:Page_6230F0855D6648C9A0CDBE62ED1B1811 dbms:postgresql runOnChange:true splitStatements:false stripComments:false
-INSERT INTO s_mt.t_page (ck_id, ck_parent, cr_type, cv_name, cn_order, cl_static, cv_url, ck_icon, ck_user, ct_change, cl_menu)VALUES('6230F0855D6648C9A0CDBE62ED1B1811', '4', 1, 'cc069601a02c407fa5a419e5027c5a45', 3, 0, null, null, '1', '2019-07-04T00:00:00.000+0000', 1) on conflict (ck_id) do update set ck_parent = excluded.ck_parent, cr_type = excluded.cr_type, cv_name = excluded.cv_name, cn_order = excluded.cn_order, cl_static = excluded.cl_static, cv_url = excluded.cv_url, ck_icon = excluded.ck_icon, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cl_menu = excluded.cl_menu;

@@ -29,11 +29,35 @@ export interface IOracleDBConfig {
     poolMax?: number;
     queueTimeout?: number;
     queryTimeout?: number;
+    lvl_logger?: string;
 }
 
 interface IParams {
     [key: string]: string | boolean | number | IObjectParam;
 }
+
+const prepareSql = (query: string) => {
+    return (data: object) => {
+        const values = {};
+        return {
+            text: query.replace(
+                /(--.*?$)|(\/\*[\s\S]*?\*\/)|('[^']*?')|("[^"]*?")|(::?)([a-zA-Z0-9_]+)/g,
+                (_, ...group) => {
+                    const noReplace = group.slice(0, 4);
+                    const [prefix, key] = group.slice(4);
+                    if (prefix === ":") {
+                        values[key] = data[key] || null;
+                        return `:${key}`;
+                    } else if (prefix && prefix.length > 1) {
+                        return prefix + key;
+                    }
+                    return noReplace.find((val) => typeof val !== "undefined");
+                },
+            ),
+            values,
+        };
+    };
+};
 
 export default class OracleDB {
     public static getParamsInfo(): IParamsInfo {
@@ -89,6 +113,26 @@ export default class OracleDB {
                 required: true,
                 type: "string",
             },
+            lvl_logger: {
+                displayField: "ck_id",
+                name: "Level logger",
+                records: [
+                    {
+                        ck_id: "NOTSET",
+                    },
+                    { ck_id: "VERBOSE" },
+                    { ck_id: "DEBUG" },
+                    { ck_id: "INFO" },
+                    { ck_id: "WARNING" },
+                    { ck_id: "ERROR" },
+                    { ck_id: "CRITICAL" },
+                    { ck_id: "WARN" },
+                    { ck_id: "TRACE" },
+                    { ck_id: "FATAL" },
+                ],
+                type: "combo",
+                valueField: "ck_id",
+            },
         };
     }
 
@@ -106,6 +150,13 @@ export default class OracleDB {
             );
         }
         this.log = Logger.getLogger(`OracleDB ${name}`);
+        if (params.lvl_logger && params.lvl_logger !== "NOTSET") {
+            const rootLogger = Logger.getRootLogger();
+            this.log.setLevel(params.lvl_logger);
+            for (let handler of rootLogger._handlers) {
+                this.log.addHandler(handler);
+            }
+        }
         this.connectionConfig = initParams(OracleDB.getParamsInfo(), params);
         this.name = name;
         this.partRows =
@@ -545,8 +596,9 @@ export default class OracleDB {
                 this.onBreak(conn);
             }, this.queryTimeout);
         }
+        const query = prepareSql(sql)(params);
         return conn
-            .execute(sql, params, {
+            .execute(query.text, query.values, {
                 autoCommit: options.autoCommit,
                 extendedMetaData: options.extendedMetaData,
                 resultSet: options.resultSet,

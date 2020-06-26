@@ -33,10 +33,12 @@ class MainController {
         this.queryDb = await Property.getQuery();
     }
     public async execute(requestContext: RequestContext) {
+        let isLog = false;
         try {
             // 1: Проверка на установку маски
             if (Mask.masked) {
                 this.logParams(requestContext);
+                isLog = true;
                 return ResultController.responseCheck(
                     requestContext,
                     await requestContext.gateContextPlugin.maskResult(),
@@ -72,6 +74,7 @@ class MainController {
             // 3: Проверка на запрос получения данных о сессии если прошла то предаем сессию в ответе
             if (requestContext.queryName === Constants.QUERY_GETSESSIONDATA) {
                 this.logParams(requestContext);
+                isLog = true;
                 return ResultController.responseCheck(requestContext, {
                     data: ResultStream(
                         session
@@ -143,6 +146,7 @@ class MainController {
                 requestContext.setQueryName(cResult.loginQuery);
             }
             this.logParams(requestContext);
+            isLog = true;
             // 5: Загружаем провайдер данных
             const provider = await this.loadProvider(requestContext);
             requestContext.setProvider(provider);
@@ -205,9 +209,15 @@ class MainController {
                     );
                 }
             } catch (err) {
+                if (!isLog) {
+                    this.logParams(requestContext);
+                }
                 await this.checkError(err, requestContext, plugins);
             }
         } catch (err) {
+            if (!isLog) {
+                this.logParams(requestContext);
+            }
             await ResultController.responseCheck(requestContext, null, err);
         }
     }

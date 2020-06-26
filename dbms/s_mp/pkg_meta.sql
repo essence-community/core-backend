@@ -479,9 +479,17 @@ begin
       end if;
       insert into s_mt.t_class values (pot_class.*);
     elsif pv_action = u::varchar and nullif(gv_error::varchar, '') is null then
-      update s_mt.t_class set
-        (ck_id, cv_name, cv_description, cl_final, cl_dataset, ck_user, ct_change) = row(pot_class.*)
-      where ck_id = pot_class.ck_id;
+
+      if pot_class.cv_manual_documentation is not null then
+        update s_mt.t_class set cv_manual_documentation = pot_class.cv_manual_documentation where ck_id = pot_class.ck_id;
+      elsif pot_class.cv_auto_documentation is not null then
+        update s_mt.t_class set cv_auto_documentation = pot_class.cv_auto_documentation where ck_id = pot_class.ck_id;
+      else
+        update s_mt.t_class set
+          (cv_name, cv_description, cl_final, cl_dataset, ck_user, ct_change) = (pot_class.cv_name, pot_class.cv_description, pot_class.cl_final, pot_class.cl_dataset, pot_class.ck_user, pot_class.ct_change)
+        where ck_id = pot_class.ck_id;
+      end if;
+
       if not found then
         perform pkg.p_set_error(504);
       end if;
@@ -883,6 +891,8 @@ begin
                               jt.cl_dataset,
                               jt.cl_final,
                               jt.cv_description,
+                              jt.cv_manual_documentation,
+                              jt.cv_auto_documentation,
                               jt.cv_name,
                               jt.cv_type,
                               wmc.ck_class,
@@ -903,6 +913,8 @@ begin
                                       (vcur_class.cj_class#>>'{class,cl_dataset}') as cl_dataset,
                                       (vcur_class.cj_class#>>'{class,cl_final}') as cl_final,
                                       (vcur_class.cj_class#>>'{class,cv_description}') as cv_description,
+                                      nullif(trim(vcur_class.cj_class#>>'{class,cv_manual_documentation}'), '') as cv_manual_documentation,
+                                      nullif(trim(vcur_class.cj_class#>>'{class,cv_auto_documentation}'), '') as cv_auto_documentation,
                                       (vcur_class.cj_class#>>'{class,cv_name}') as cv_name,
                                       (vcur_class.cj_class#>>'{class,cv_type}') as cv_type,
                                       (select (t.dt->>'cv_value') as cv_value
@@ -924,7 +936,10 @@ begin
             vot_class.ck_user        := pot_module.ck_user;
             vot_class.ct_change      := CURRENT_TIMESTAMP;
             vot_class.cv_description := vcur.cv_description;
-
+            if vcur.cv_action = 'I' then
+              vot_class.cv_manual_documentation := vcur.cv_manual_documentation;
+              vot_class.cv_auto_documentation := vcur.cv_auto_documentation;
+            end if;
             if vcur.cv_action = 'I' then
               for vcheck_class in (select 1 from s_mt.t_class where ck_id = vot_class.ck_id) loop
                 vl_new_id := 1;
@@ -934,6 +949,15 @@ begin
               end if;
               vot_class := pkg_meta.p_modify_class(vcur.cv_action, vot_class, vl_new_id);
             else
+              vot_class := pkg_meta.p_modify_class(vcur.cv_action, vot_class);
+            end if;
+            if vcur.cv_action = 'U' and vcur.cv_manual_documentation is not null then
+              vot_class.cv_manual_documentation := vcur.cv_manual_documentation;
+              vot_class := pkg_meta.p_modify_class(vcur.cv_action, vot_class);
+            end if;
+            if vcur.cv_action = 'U' and vcur.cv_auto_documentation is not null then
+              vot_class.cv_manual_documentation := null;
+              vot_class.cv_auto_documentation := vcur.cv_auto_documentation;
               vot_class := pkg_meta.p_modify_class(vcur.cv_action, vot_class);
             end if;
             -- Добавляем базовый тип
@@ -2307,7 +2331,7 @@ begin
       and length(vv_value) > 4 then 
         vot_localization.ck_d_lang = nullif(trim(pc_json#>>'{data,g_sys_lang}'), '');
         vot_localization.cr_namespace = 'meta';
-        vot_localization.cv_value = substr(vot_class_attr.cv_value, 5);
+        vot_localization.cv_value = substr(vv_value, 5);
         vot_localization.ck_user = pv_user;
         vot_localization.ct_change = CURRENT_TIMESTAMP;
 
@@ -2347,8 +2371,8 @@ begin
     end loop;
     return vv_value;
   end if;
-  
-  if vk_data_type = 'array' or vk_data_type = 'object' then
+
+  if vk_data_type = 'array' or vk_data_type = 'object' or vk_data_type = 'global' then
     if pk_attr is not null and vv_value is null then 
       perform pkg.p_set_error(80);
     end if; 
@@ -2360,6 +2384,10 @@ begin
     end;
     return vv_value;
   end if;
+
+  -- TODO need to validate cssmeasure for consistent value: number + px/%
+
+  return vv_value;
 end;
 $$;
 

@@ -174,7 +174,7 @@ begin
       return;
     end if;
   elsif vv_class_id is null and pv_attr is null then
-    perform pkg.p_set_error(51, "Not found attr");
+    perform pkg.p_set_error(51, 'Not found attr');
     perform pkg_log.p_save('-11',
                              null::varchar,
                              jsonb_build_object('ck_id', pk_id, 'ck_object', pk_object, 'ck_class_attr', pk_class_attr, 'cv_value', pv_value, 'ck_user', pk_user, 'ct_change', pt_change, 'ck_attr', pv_attr),
@@ -254,7 +254,7 @@ begin
       return;
     end if;
   elsif vv_class_id is null and pv_attr is null then
-    perform pkg.p_set_error(51, "Not found attr");
+    perform pkg.p_set_error(51, 'Not found attr');
     perform pkg_log.p_save('-11',
                              null::varchar,
                              jsonb_build_object('ck_id', pk_id, 'ck_page_object', pk_page_object, 'ck_class_attr', pk_class_attr, 'cv_value', pv_value, 'ck_user', pk_user, 'ct_change', pt_change, 'ck_attr', pv_attr),

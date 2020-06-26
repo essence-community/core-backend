@@ -6,7 +6,7 @@ from (
   select
     case
         when value ? ''cv_data_type_extra_value'' then value->>''cv_data_type_extra_value''
-        else value::varchar end as ck_id
+        else value#>>''{}'' end as ck_id
     from
         jsonb_array_elements((:json::jsonb#>>''{filter,cv_data_type_extra}'')::jsonb)
 ) as t

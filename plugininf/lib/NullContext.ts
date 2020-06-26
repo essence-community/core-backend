@@ -6,6 +6,8 @@ import { IGateQuery } from "./IQuery";
 import IResult from "./IResult";
 import ResultStream from "./stream/ResultStream";
 import { initParams } from "./util/Util";
+import { IRufusLogger } from "rufus";
+import Logger from "./Logger";
 
 export default abstract class NullContext implements IContextPlugin {
     public static getParamsInfo(): IParamsInfo {
@@ -30,10 +32,31 @@ export default abstract class NullContext implements IContextPlugin {
                 name: "Размер POST в байтах",
                 type: "integer",
             },
+            lvl_logger: {
+                displayField: "ck_id",
+                name: "Level logger",
+                records: [
+                    {
+                        ck_id: "NOTSET",
+                    },
+                    { ck_id: "VERBOSE" },
+                    { ck_id: "DEBUG" },
+                    { ck_id: "INFO" },
+                    { ck_id: "WARNING" },
+                    { ck_id: "ERROR" },
+                    { ck_id: "CRITICAL" },
+                    { ck_id: "WARN" },
+                    { ck_id: "TRACE" },
+                    { ck_id: "FATAL" },
+                ],
+                type: "combo",
+                valueField: "ck_id",
+            },
         };
     }
     public name: string;
     public params: ICCTParams;
+    public logger: IRufusLogger;
     public get maxPostSize(): number {
         return this.params.maxPostSize || 10485760;
     }
@@ -49,6 +72,18 @@ export default abstract class NullContext implements IContextPlugin {
     constructor(name: string, params: ICCTParams) {
         this.name = name;
         this.params = initParams(NullContext.getParamsInfo(), params);
+        this.logger = Logger.getLogger(`Context ${name}`);
+        if (
+            typeof this.params === "object" &&
+            this.params.lvl_logger &&
+            this.params.lvl_logger !== "NOTSET"
+        ) {
+            const rootLogger = Logger.getRootLogger();
+            this.logger.setLevel(this.params.lvl_logger);
+            for (let handler of rootLogger._handlers) {
+                this.logger.addHandler(handler);
+            }
+        }
     }
     public abstract init(reload?: boolean): Promise<void>;
     public abstract initContext(

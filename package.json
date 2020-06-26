@@ -1,6 +1,6 @@
 {
     "name": "ungate",
-    "version": "2.4.0",
+    "version": "2.5.0",
     "description": "Шлюз",
     "private": true,
     "engines": {
@@ -39,7 +39,6 @@
         "libs/*"
     ],
     "devDependencies": {
-        "@essence-community/create-gate-cli": "^1.0.0",
         "@essence-community/eslint-config-react": "^2.2.0",
         "@types/async": "^3.2.1",
         "@types/bcrypt-nodejs": "0.0.31",

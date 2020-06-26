@@ -253,7 +253,7 @@ export class Patcher extends NullPlugin implements IStorage {
     private calcMd5(dir: string) {
         fs.readdirSync(dir).forEach((file) => {
             const f = path.join(dir, file);
-            if (fs.lstatSync(f).isFile) {
+            if (fs.lstatSync(f).isFile()) {
                 fs.writeFileSync(
                     path.join(dir, `${file}.md5`),
                     crypto
@@ -261,6 +261,9 @@ export class Patcher extends NullPlugin implements IStorage {
                         .update(fs.readFileSync(f))
                         .digest("hex"),
                 );
+            }
+            if (fs.lstatSync(f).isDirectory()) {
+                this.calcMd5(f);
             }
         });
     }

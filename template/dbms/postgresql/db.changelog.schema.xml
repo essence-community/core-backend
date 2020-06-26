@@ -10,9 +10,9 @@
   <property name="user.connect" value="#user.connect#"/>
   <property name="user.admin" value="#user.admin#"/>
 
-  <include file="./s_su/init.sql" />
-  <include file="./public/public.xml" />
-  <include file="./table/table.xml" />
-  <include file="./package/package.xml" />
-  <include file="./s_su/grants.sql" />
+  <include file="s_su/init.sql" relativeToChangelogFile="true" />
+  <include file="public/public.xml" relativeToChangelogFile="true" />
+  <include file="table/table.xml" relativeToChangelogFile="true" />
+  <include file="package/package.xml" relativeToChangelogFile="true" />
+  <include file="s_su/grants.sql" relativeToChangelogFile="true" />
 </databaseChangeLog>

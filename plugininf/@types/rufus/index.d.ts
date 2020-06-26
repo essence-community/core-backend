@@ -18,6 +18,8 @@ declare module "rufus" {
         isTraceEnabled(): boolean;
         isWarnEnabled(): boolean;
         isInfoEnabled(): boolean;
+        setLevel(lvl: string): void;
+        addHandler(handle: any): IRufusLogger;
         notset(msg: string): void;
         verbose(msg: string): void;
         debug(msg: string): void;

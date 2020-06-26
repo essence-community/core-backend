@@ -1859,3 +1859,199 @@ INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_us
 INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change)VALUES('2b4d49c7238c4c2b8084279eb406730c', 'ru_RU', 'static', 'Следущее десятилетие', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-05-19T13:57:00.000+0300') on conflict on constraint cin_u_localization_1 do update set ck_id = excluded.ck_id, ck_d_lang = excluded.ck_d_lang, cr_namespace = excluded.cr_namespace, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
 INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change)VALUES('82825a8b65a84e6abf3637c9f1a3de39', 'ru_RU', 'static', 'Предыдущий век', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-05-19T13:57:00.000+0300') on conflict on constraint cin_u_localization_1 do update set ck_id = excluded.ck_id, ck_d_lang = excluded.ck_d_lang, cr_namespace = excluded.cr_namespace, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
 INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change)VALUES('9d105387e4e140f898d5abd0fd8a4db6', 'ru_RU', 'static', 'Следующий век', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-05-19T13:57:00.000+0300') on conflict on constraint cin_u_localization_1 do update set ck_id = excluded.ck_id, ck_d_lang = excluded.ck_d_lang, cr_namespace = excluded.cr_namespace, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
+
+--changeset kutsenko_o:CORE-1782 dbms:postgresql runOnChange:true
+-- Object insert, update to insert-editing, update-editing
+update s_mt.t_object_attr set cv_value = cv_value || '-editing'
+	where ck_id in (
+		select toa.ck_id from s_mt.t_class_attr tca
+			join s_mt.t_class_attr tca2 on tca.ck_class = tca2.ck_class and tca2.ck_attr = 'visibleinwindow'
+			join s_mt.t_object_attr toa on tca.ck_id = toa.ck_class_attr 
+			join s_mt.t_object o on o.ck_id = toa.ck_object 
+			left join s_mt.t_object_attr toa2 on toa2.ck_object = o.ck_id and toa2.ck_class_attr = tca2.ck_id
+            left join s_mt.t_page_object po on po.ck_object = o.ck_id
+			left join s_mt.t_page_object_attr tpoa on tpoa.ck_page_object = po.ck_id and tpoa.ck_class_attr = tca2.ck_id
+			where tca.ck_attr = 'editmode' and toa.cv_value in ('insert', 'update') 
+            and (tpoa.cv_value = 'true' or toa2.cv_value = 'true' or (tpoa.cv_value is null and toa2.cv_value is null and tca2.cv_value = 'true'))
+	);
+
+-- Object disabled to hidden
+update s_mt.t_object_attr set cv_value = 'hidden'
+	where ck_id in (
+		select toa.ck_id from s_mt.t_class_attr tca
+			join s_mt.t_class_attr tca2 on tca.ck_class = tca2.ck_class and tca2.ck_attr = 'visibleinwindow'
+			join s_mt.t_object_attr toa on tca.ck_id = toa.ck_class_attr 
+			join s_mt.t_object o on o.ck_id = toa.ck_object 
+			left join s_mt.t_object_attr toa2 on toa2.ck_object = o.ck_id and toa2.ck_class_attr = tca2.ck_id
+            left join s_mt.t_page_object po on po.ck_object = o.ck_id
+			left join s_mt.t_page_object_attr tpoa on tpoa.ck_page_object = po.ck_id and tpoa.ck_class_attr = tca2.ck_id
+			where tca.ck_attr = 'editmode' and toa.cv_value = 'disabled' 
+            and (tpoa.cv_value = 'false' or toa2.cv_value = 'false' or (tpoa.cv_value is null and toa2.cv_value is null and tca2.cv_value = 'false'))
+	);
+
+-- Page insert, update to insert-editing, update-editing
+update s_mt.t_page_object_attr set cv_value = cv_value || '-editing'
+	where ck_id in (
+		select tpoa.ck_id from s_mt.t_class_attr tca
+			join s_mt.t_class_attr tca2 on tca.ck_class = tca2.ck_class and tca2.ck_attr = 'visibleinwindow'
+			join s_mt.t_page_object_attr tpoa on tca.ck_id = tpoa.ck_class_attr
+            join s_mt.t_page_object tpo on tpo.ck_id = tpoa.ck_page_object
+			join s_mt.t_object o on o.ck_id = tpo.ck_object 
+			left join s_mt.t_object_attr toa2 on toa2.ck_object = o.ck_id and toa2.ck_class_attr = tca2.ck_id
+			left join s_mt.t_page_object_attr tpoa2 on tpoa.ck_page_object = tpo.ck_id and tpoa.ck_class_attr = tca2.ck_id
+			where tca.ck_attr = 'editmode' and tpoa.cv_value in ('insert', 'update') 
+            and (tpoa2.cv_value = 'true' or toa2.cv_value = 'true' or (tpoa2.cv_value is null and toa2.cv_value is null and tca2.cv_value = 'true'))
+	);
+
+-- Page disabled to hidden
+update s_mt.t_page_object_attr set cv_value = 'hidden'
+	where ck_id in (
+		select tpoa.ck_id from s_mt.t_class_attr tca
+			join s_mt.t_class_attr tca2 on tca.ck_class = tca2.ck_class and tca2.ck_attr = 'visibleinwindow'
+			join s_mt.t_page_object_attr tpoa on tca.ck_id = tpoa.ck_class_attr
+            join s_mt.t_page_object tpo on tpo.ck_id = tpoa.ck_page_object
+			join s_mt.t_object o on o.ck_id = tpo.ck_object 
+			left join s_mt.t_object_attr toa2 on toa2.ck_object = o.ck_id and toa2.ck_class_attr = tca2.ck_id
+			left join s_mt.t_page_object_attr tpoa2 on tpoa.ck_page_object = tpo.ck_id and tpoa.ck_class_attr = tca2.ck_id
+			where tca.ck_attr = 'editmode' and tpoa.cv_value = 'disabled' 
+            and (tpoa2.cv_value = 'false' or toa2.cv_value = 'false' or (tpoa2.cv_value is null and toa2.cv_value is null and tca2.cv_value = 'false'))
+	);
+
+--changeset kutsenko_o:CORE-1782-visibleinwindow dbms:postgresql
+-- Object: remove value for visibleinwindow
+delete from s_mt.t_object_attr where ck_class_attr in (
+	select tca.ck_id from s_mt.t_class_attr tca
+		where tca.ck_attr = 'visibleinwindow'
+);
+
+-- Page: remove value for visibleinwindow
+delete from s_mt.t_page_object_attr where ck_class_attr in (
+	select tca.ck_id from s_mt.t_class_attr tca
+		where tca.ck_attr = 'visibleinwindow'
+);
+
+-- Remove visibleinwindow attribute for all classes
+delete from s_mt.t_class_attr where ck_attr = 'visibleinwindow';
+
+--changeset kutsenko_o:CORE-1787 dbms:postgresql
+update s_mt.t_object_attr set cv_value = cv_value || 'px' where ck_id in (
+	select toa.ck_id from s_mt.t_class_attr tca
+		join s_mt.t_object_attr toa on tca.ck_id = toa.ck_class_attr 
+		where tca.ck_attr in ('height', 'minheight', 'maxheight', 'pickerheight', 'pickerwidth', 'tabwidth', 'contentwidth', 'width') and toa.cv_value ~ '^\d+$'
+);
+update s_mt.t_page_object_attr set cv_value = cv_value || 'px' where ck_id in (
+	select tpoa.ck_id from s_mt.t_class_attr tca
+		join s_mt.t_object_attr toa on tca.ck_id = toa.ck_class_attr 
+		join s_mt.t_object o on o.ck_id = toa.ck_object 
+		left join s_mt.t_page_object po on po.ck_object = o.ck_id
+		left join s_mt.t_page_object_attr tpoa on tpoa.ck_page_object = po.ck_id and tpoa.ck_class_attr = tca.ck_id
+		where tca.ck_attr in ('height', 'minheight', 'maxheight', 'pickerheight', 'pickerwidth', 'tabwidth', 'contentwidth', 'width') and tpoa.cv_value ~ '^\d+$'
+);
+update s_mt.t_class_attr  set cv_value = cv_value || 'px' where ck_id in (
+	select tca.ck_id from s_mt.t_class_attr tca where tca.ck_attr in ('height', 'minheight', 'maxheight', 'pickerheight', 'pickerwidth', 'tabwidth', 'contentwidth', 'width') and tca.cv_value ~ '^\d+$'
+);
+
+--changeset kutsenko_o:CORE-1791 dbms:postgresql
+-- Object: remove value for selmode
+delete from s_mt.t_object_attr where ck_id in (
+	select toa.ck_id from s_mt.t_object_attr toa
+		join s_mt.t_class_attr tca on toa.ck_class_attr = tca.ck_id
+		where tca.ck_attr = 'selmode'
+);
+
+-- Page: remove value for selmode
+delete from s_mt.t_page_object_attr where ck_id in (
+	select tpoa.ck_id from s_mt.t_page_object_attr tpoa
+		join s_mt.t_class_attr tca on tpoa.ck_class_attr = tca.ck_id
+		where tca.ck_attr = 'selmode'
+);
+
+-- Remove selmode attribute for all classes
+delete from s_mt.t_class_attr where ck_attr = 'selmode';
+
+--changeset artemov_i:CORE-1239 dbms:postgresql
+UPDATE s_mt.t_sys_setting
+	SET cv_value='EFFC1868B5804AABAAF7EE516BD24952'
+	WHERE ck_id='project_applications_page';
+
+--changeset kutsenko_o:CORE-1798 dbms:postgresql
+INSERT INTO s_mt.t_sys_setting (ck_id,cv_value,ck_user,ct_change,cv_description)
+	VALUES ('g_sys_show_promo','false','-11','2020-10-06 13:10:31.709','Включение Promo страницы');
+
+--changeset kutsenko_o:CORE-1800 dbms:postgresql
+ALTER TABLE s_mt.t_class ADD cv_manual_documentation text NULL;
+COMMENT ON COLUMN s_mt.t_class.cv_manual_documentation IS 'Документация заполненная пользователем';
+ALTER TABLE s_mt.t_class ADD cv_auto_documentation text NULL;
+COMMENT ON COLUMN s_mt.t_class.cv_auto_documentation IS 'Документация автогенерируемая';
+
+--changeset kutsenko_o:CORE-1802 dbms:postgresql
+INSERT INTO s_mt.t_sys_setting (ck_id,cv_value,ck_user,ct_change,cv_description)
+	VALUES ('project_documentation_root','C8AB48295BF9484C9AAB10D8B35F0D92','-11','2020-06-15 13:10:31.709','ИД каталога-документации');
+
+--changeset kutsenko_o:CORE-1802-long-text dbms:postgresql
+ALTER TABLE s_mt.t_page_object_attr
+    ALTER COLUMN cv_value TYPE VARCHAR;
+
+--changeset kutsenko_o:CORE-1801 dbms:postgresql
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change)VALUES('fea1eaf13fd24f25b327e76099e22495', 'ru_RU', 'static', 'Возникла ошибка при открытии страницы. Обратитесь в службу поддержки', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-06-17T17:57:00.000+0300') on conflict on constraint cin_u_localization_1 do update set ck_id = excluded.ck_id, ck_d_lang = excluded.ck_d_lang, cr_namespace = excluded.cr_namespace, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
+
+--changeset kutsenko_o:CORE-1792 dbms:postgresql runOnChange:true
+update s_mt.t_page_object_attr set cv_value = regexp_replace(cv_value, '\|\|', ' + ', 'g') where ck_id in (
+	select tpoa.ck_id from s_mt.t_page_object_attr tpoa
+	join s_mt.t_class_attr tca on tpoa.ck_class_attr = tca.ck_id
+	where tca.ck_attr = 'getglobal' and tpoa.cv_value is not null
+);
+
+update s_mt.t_page_object_attr as attr set cv_value = tp.cv_value from (
+    select t.ck_id, jsonb_agg(jsonb_build_object('in', t.res[2], 'out', coalesce(t.res[1], t.res[3]))) as cv_value
+    from (
+        select 1 as lvl, tpoa.ck_id, regexp_matches(tpoa.cv_value, '^([\w]+)[,]?|([\w]+)=([\w]+)', 'gi') as res
+        from s_mt.t_page_object_attr tpoa
+        join s_mt.t_class_attr tca on tpoa.ck_class_attr = tca.ck_id
+        where tca.ck_attr in ('setglobal', 'columnsfilter') and nullif(trim(tpoa.cv_value), '') is not null and tpoa.cv_value !~ '^\['
+    ) as t
+    group by t.ck_id
+) as tp
+where attr.ck_id = tp.ck_id;
+
+update s_mt.t_page_object_attr as attr set cv_value = tp.cv_value from (
+    select t.ck_id, jsonb_agg(jsonb_build_object('in', coalesce(t.res[1], t.res[2]), 'out', t.res[3])) as cv_value
+    from (
+        select 1 as lvl, tpoa.ck_id, regexp_matches(tpoa.cv_value, '^([\w]+)[,]?|([\w]+)=([\w]+)', 'gi') as res
+        from s_mt.t_page_object_attr tpoa
+        join s_mt.t_class_attr tca on tpoa.ck_class_attr = tca.ck_id
+        where tca.ck_attr in ('getglobaltostore', 'getmastervalue', 'valuefield') and nullif(trim(tpoa.cv_value), '') is not null and tpoa.cv_value !~ '^\['
+    ) as t
+    group by t.ck_id
+) as tp
+where attr.ck_id = tp.ck_id;
+
+update s_mt.t_object_attr as attr set cv_value = tp.cv_value from (
+    select t.ck_id, jsonb_agg(jsonb_build_object('in', t.res[2], 'out', coalesce(t.res[1], t.res[3]))) as cv_value
+    from (
+        select 1 as lvl, toa.ck_id, regexp_matches(toa.cv_value, '^([\w]+)[,]?|([\w]+)=([\w]+)', 'gi') as res
+        from s_mt.t_object_attr toa
+        join s_mt.t_class_attr tca on toa.ck_class_attr = tca.ck_id
+        where tca.ck_attr in ('setglobal', 'columnsfilter') and nullif(trim(toa.cv_value), '') is not null and toa.cv_value !~ '^\['
+    ) as t
+    group by t.ck_id
+) as tp
+where attr.ck_id = tp.ck_id;
+
+update s_mt.t_object_attr as attr set cv_value = tp.cv_value from (
+    select t.ck_id, jsonb_agg(jsonb_build_object('in', coalesce(t.res[1], t.res[2]), 'out', t.res[3])) as cv_value
+    from (
+        select 1 as lvl, toa.ck_id, regexp_matches(toa.cv_value, '^([\w]+)[,]?|([\w]+)=([\w]+)', 'gi') as res
+        from s_mt.t_object_attr toa
+        join s_mt.t_class_attr tca on toa.ck_class_attr = tca.ck_id
+        where tca.ck_attr in ('getglobaltostore', 'getmastervalue', 'valuefield') and nullif(trim(toa.cv_value), '') is not null and toa.cv_value !~ '^\['
+    ) as t
+    group by t.ck_id
+) as tp
+where attr.ck_id = tp.ck_id;
+
+--changeset kutsenko_o:CORE-1823-regexp dbms:postgresql
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change)VALUES('9c859c9dcb3245daab68a97592be3f22', 'ru_RU', 'static', 'Пример', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-06-24T17:57:00.000+0300') on conflict on constraint cin_u_localization_1 do update set ck_id = excluded.ck_id, ck_d_lang = excluded.ck_d_lang, cr_namespace = excluded.cr_namespace, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change)VALUES('780583907b4045b8923bcbcc21ccca6d', 'ru_RU', 'static', 'Глобальное сопоставление', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-06-24T17:57:00.000+0300') on conflict on constraint cin_u_localization_1 do update set ck_id = excluded.ck_id, ck_d_lang = excluded.ck_d_lang, cr_namespace = excluded.cr_namespace, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change)VALUES('45ec892b75734c0e9e70913f3e161539', 'ru_RU', 'static', 'Игнорирование регистра при сопоставлении', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-06-24T17:57:00.000+0300') on conflict on constraint cin_u_localization_1 do update set ck_id = excluded.ck_id, ck_d_lang = excluded.ck_d_lang, cr_namespace = excluded.cr_namespace, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
+INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change)VALUES('78d8c0e18d234fda8eb1fc6b56b6790c', 'ru_RU', 'static', 'Сопоставление по нескольким строкам', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-06-24T17:57:00.000+0300') on conflict on constraint cin_u_localization_1 do update set ck_id = excluded.ck_id, ck_d_lang = excluded.ck_d_lang, cr_namespace = excluded.cr_namespace, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change;

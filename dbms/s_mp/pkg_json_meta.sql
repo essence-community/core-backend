@@ -127,6 +127,8 @@ begin
   pot_class.ck_id = nullif(trim(pc_json#>>'{data,ck_id}'), '');
   pot_class.cv_name = nullif(trim(pc_json#>>'{data,cv_name}'), '');
   pot_class.cv_description = nullif(trim(pc_json#>>'{data,cv_description}'), '');
+  pot_class.cv_manual_documentation = nullif(trim(pc_json#>>'{data,cv_manual_documentation}'), '');
+  pot_class.cv_auto_documentation = nullif(trim(pc_json#>>'{data,cv_auto_documentation}'), '');
   pot_class.cl_final = trim(pc_json#>>'{data,cl_final}')::int2;
   pot_class.cl_dataset = trim(pc_json#>>'{data,cl_dataset}')::int2;
   pot_class.ck_user = pv_user;

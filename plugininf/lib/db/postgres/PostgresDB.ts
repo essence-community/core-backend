@@ -18,15 +18,20 @@ const prepareSql = (query: string) => {
     return (data: object) => {
         const values = [];
         return {
-            text: query.replace(/(::?)([a-zA-Z0-9_]+)/g, (_, prefix, key) => {
-                if (prefix !== ":") {
-                    return prefix + key;
-                } else if (key in data) {
-                    values.push(data[key]);
-                    return `$${values.length}`;
-                }
-                return prefix + key;
-            }),
+            text: query.replace(
+                /(--.*?$)|(\/\*[\s\S]*?\*\/)|('[^']*?')|("[^"]*?")|(::?)([a-zA-Z0-9_]+)/g,
+                (_, ...group) => {
+                    const noReplace = group.slice(0, 4);
+                    const [prefix, key] = group.slice(4);
+                    if (prefix === ":") {
+                        values.push(data[key] || null);
+                        return `$${values.length}`;
+                    } else if (prefix && prefix.length > 1) {
+                        return prefix + key;
+                    }
+                    return noReplace.find((val) => typeof val !== "undefined");
+                },
+            ),
             values,
         };
     };
@@ -42,6 +47,7 @@ export interface IPostgresDBConfig {
     queryTimeout?: number;
     user?: string;
     password?: string;
+    lvl_logger?: string;
 }
 interface IParams {
     [key: string]: string | boolean | number | IObjectParam;
@@ -93,6 +99,26 @@ export default class PostgresDB {
                 name: "Время выполнения запроса",
                 type: "integer",
             },
+            lvl_logger: {
+                displayField: "ck_id",
+                name: "Level logger",
+                records: [
+                    {
+                        ck_id: "NOTSET",
+                    },
+                    { ck_id: "VERBOSE" },
+                    { ck_id: "DEBUG" },
+                    { ck_id: "INFO" },
+                    { ck_id: "WARNING" },
+                    { ck_id: "ERROR" },
+                    { ck_id: "CRITICAL" },
+                    { ck_id: "WARN" },
+                    { ck_id: "TRACE" },
+                    { ck_id: "FATAL" },
+                ],
+                type: "combo",
+                valueField: "ck_id",
+            },
             /* tslint:enable:object-literal-sort-keys */
         };
     }
@@ -116,6 +142,13 @@ export default class PostgresDB {
             );
         }
         this.log = Logger.getLogger(`PostgresDB ${name}`);
+        if (params.lvl_logger && params.lvl_logger !== "NOTSET") {
+            const rootLogger = Logger.getRootLogger();
+            this.log.setLevel(params.lvl_logger);
+            for (let handler of rootLogger._handlers) {
+                this.log.addHandler(handler);
+            }
+        }
         if (!isEmpty(params.queryTimeout)) {
             this.queryTimeout = params.queryTimeout * 1000;
         } else {
