@@ -38,13 +38,6 @@
   dependencies:
     regenerator-runtime "^0.13.4"
 
-"@essence-community/create-gate-cli@^1.0.0":
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/@essence-community/create-gate-cli/-/create-gate-cli-1.0.4.tgz#1243d3770dd5e052a1dab2ac34ca34b64949bb5e"
-  integrity sha512-HdM+TXiXBEjHjB08sUhr7TsIH3lCQsidN7G26ml24Ed7R3CX2AFPLPDBoLRBsDxwpXz14nGmQp3mzrwjjyTpBw==
-  dependencies:
-    typescript "^3.8.3"
-
 "@essence-community/eslint-config-react@^2.2.0":
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/@essence-community/eslint-config-react/-/eslint-config-react-2.2.0.tgz#e56bc9e7cd281e2830b833eefbf49e1e8cb05e26"
