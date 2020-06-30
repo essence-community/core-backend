@@ -67,7 +67,7 @@ export default abstract class NullProvider implements IProvider {
                     { ck_id: "FATAL" },
                 ],
                 type: "combo",
-                valueField: "ck_id",
+                valueField: [{in: "ck_id"}],
             },
         };
     }
