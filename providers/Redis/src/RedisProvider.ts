@@ -22,15 +22,26 @@ function deepFind(obj, paths) {
     return current;
 }
 
+function escapeValue(value: any): any {
+    return typeof value === "string" ? value.replace(/\\n/g, "\\n")
+               .replace(/\'/g, "\\'")
+               .replace(/\"/g, '\\"')
+               .replace(/\&/g, "\\&")
+               .replace(/\r/g, "\\r")
+               .replace(/\n/g, "\\n")
+               .replace(/\t/g, "\\t")
+               .replace(/\f/g, "\\f") : value;
+}
+
 function prepareQuery(query: IGateQuery): IQueryRedis {
     const json = JSON.parse(query.inParams.json || "{}");
     return JSON.parse(
         query.queryStr.replace(/\{([\w\.]+?)\}/gi, (_, key) => {
             if (key.indexOf(".") === -1) {
-                return query.inParams[key] || key;
+                return escapeValue(query.inParams[key] || key);
             }
 
-            return deepFind(json, key.split("."));
+            return escapeValue(deepFind(json, key.split(".")));
         }),
     );
 }
@@ -39,6 +50,7 @@ interface IQueryRedis {
     command: string;
     args: string[];
     path_res?: string;
+    result_eval?: string;
 }
 
 export class RedisProvider extends NullProvider {
@@ -159,6 +171,12 @@ export class RedisProvider extends NullProvider {
                 (err, val) => {
                     if (err) {
                         return reject(err);
+                    }
+                    if (redisQuery.result_eval) {
+                        const res = new Function('result', redisQuery.result_eval);
+                        return resolve({
+                            stream: ResultStream(res(val)),
+                        });
                     }
                     if (redisQuery.path_res) {
                         const res = deepFind(
