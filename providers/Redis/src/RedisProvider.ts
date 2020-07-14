@@ -23,12 +23,11 @@ function deepFind(obj, paths) {
 }
 
 function escapeValue(value: any): any {
-    return typeof value === "string" ? value.replace(/\\n/g, "\\n")
+    return typeof value === "string" ? value.replace(/\n/g, "\\n")
                .replace(/\'/g, "\\'")
                .replace(/\"/g, '\\"')
                .replace(/\&/g, "\\&")
                .replace(/\r/g, "\\r")
-               .replace(/\n/g, "\\n")
                .replace(/\t/g, "\\t")
                .replace(/\f/g, "\\f") : value;
 }
