@@ -300,9 +300,13 @@ export default class OnlineController implements ICoreController {
                 readableObjectMode: true,
                 writableObjectMode: true,
                 transform(chunk, encode, callback) {
-                    if (!isEmpty(chunk.cv_error)) {
+                    if (!isEmpty(chunk.cv_error) || !isEmpty(chunk.jt_form_message)) {
+                        const cvErrors = [...(isEmpty(chunk.cv_error) ? [] : Object.keys(chunk.cv_error)), 
+                        ...(isEmpty(chunk.jt_form_message) ? [] : Object.entries(chunk.jt_form_message).reduce((arr, [, values]) => {
+                                return [...arr, ...Object.keys(values)];
+                            }, []))];
                         self.tempTable
-                            .findMessage(Object.keys(chunk.cv_error), {
+                            .findMessage(cvErrors, {
                                 cr_type: "error",
                             })
                             .then((errors) => {
