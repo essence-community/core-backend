@@ -1,6 +1,6 @@
 {
     "name": "ungate",
-    "version": "2.5.2",
+    "version": "2.5.3",
     "description": "Шлюз",
     "private": true,
     "engines": {
