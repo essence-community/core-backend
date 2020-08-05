@@ -2,9 +2,7 @@ import { format } from "util";
 import { IRowPatch } from "../IRowPatch";
 
 const formatPageActionSqlPostgres =
-    "INSERT INTO s_mt.t_page_action (ck_id, ck_page, cr_type, cn_action, ck_user, ct_change)" +
-    "VALUES(%s, %s, %s, %s, %s, %s) " +
-    "on conflict (ck_id) do update set ck_page = excluded.ck_page, cr_type = excluded.cr_type, cn_action = excluded.cn_action, ck_user = excluded.ck_user, ct_change = excluded.ct_change;\n";
+    "select pkg_patcher.p_merge_page_action(%s, %s, %s, %s, %s, %s);\n";
 
 export class PageAction extends IRowPatch {
     public toRow(): string {
