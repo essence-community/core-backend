@@ -8,5 +8,6 @@
   <include file="./s_mt/schema.sql" />
   <include file="./s_mt/data.sql" />
   <include file="./s_mt/scripts.sql" />
+  <include file="./s_mt/scripts.2.6.0.sql" />
   <include file="./s_mt/version.sql" />
 </databaseChangeLog>
