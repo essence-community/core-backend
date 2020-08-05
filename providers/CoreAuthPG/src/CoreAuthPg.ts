@@ -37,7 +37,7 @@ export default class CoreAuthPg extends NullAuthProvider {
                 query: "AuthShowAccount",
                 pagesize: 10,
                 displayField: "cv_login",
-                valueField: [{in: "ck_id"}],
+                valueField: [{ in: "ck_id" }],
                 querymode: "remote",
                 queryparam: "cv_login",
             },
