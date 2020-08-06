@@ -210,10 +210,9 @@ export default class RequestContext implements IContext {
         response.once("finish", () => {
             this.info(
                 `${this.request.method}(${this.actionName},${this.queryName}` +
-                    `,${
-                        this.providerName
-                    }) time execute ${(new Date().getTime() - this.startTime) /
-                        1000}`,
+                    `,${this.providerName}) time execute ${
+                        (new Date().getTime() - this.startTime) / 1000
+                    }`,
             );
         });
         this._params = {

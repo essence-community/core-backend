@@ -2289,9 +2289,11 @@ CREATE FUNCTION pkg_meta.p_decode_attr_variable(pv_value varchar, pk_class varch
 declare
   -- переменные пакета
   gv_error sessvarstr;
+  d sessvarstr;
 
   -- переменные функции
   vv_rec record;
+  vv_action varchar(1);
   vv_value varchar := pv_value;
   vk_data_type varchar; 
   vv_data_type_extra varchar;
@@ -2299,6 +2301,13 @@ declare
 begin
   -- инициализация/получение переменных пакета
   gv_error = sessvarstr_declare('pkg', 'gv_error', '');
+  d = sessvarstr_declare('pkg', 'd', 'D');
+
+  vv_action = (pc_json#>>'{service,cv_action}');
+
+  if vv_action = d::varchar then
+    return vv_value;
+  end if;
 
   if pk_class is not null then
     select a.ck_d_data_type, coalesce(ca.cv_data_type_extra, a.cv_data_type_extra, '[]') as cv_data_type_extra

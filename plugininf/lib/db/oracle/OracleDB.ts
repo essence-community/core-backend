@@ -131,7 +131,7 @@ export default class OracleDB {
                     { ck_id: "FATAL" },
                 ],
                 type: "combo",
-                valueField: [{in: "ck_id"}],
+                valueField: [{ in: "ck_id" }],
             },
         };
     }

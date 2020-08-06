@@ -23,13 +23,16 @@ function deepFind(obj, paths) {
 }
 
 function escapeValue(value: any): any {
-    return typeof value === "string" ? value.replace(/\n/g, "\\n")
-               .replace(/\'/g, "\\'")
-               .replace(/\"/g, '\\"')
-               .replace(/\&/g, "\\&")
-               .replace(/\r/g, "\\r")
-               .replace(/\t/g, "\\t")
-               .replace(/\f/g, "\\f") : value;
+    return typeof value === "string"
+        ? value
+              .replace(/\n/g, "\\n")
+              .replace(/\'/g, "\\'")
+              .replace(/\"/g, '\\"')
+              .replace(/\&/g, "\\&")
+              .replace(/\r/g, "\\r")
+              .replace(/\t/g, "\\t")
+              .replace(/\f/g, "\\f")
+        : value;
 }
 
 function prepareQuery(query: IGateQuery): IQueryRedis {
@@ -172,7 +175,10 @@ export class RedisProvider extends NullProvider {
                         return reject(err);
                     }
                     if (redisQuery.result_eval) {
-                        const res = new Function('result', redisQuery.result_eval);
+                        const res = new Function(
+                            "result",
+                            redisQuery.result_eval,
+                        );
                         return resolve({
                             stream: ResultStream(res(val)),
                         });
