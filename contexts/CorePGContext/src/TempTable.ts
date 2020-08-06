@@ -7,7 +7,7 @@ import { IRufusLogger } from "rufus";
 import IGlobalObject from "@ungate/plugininf/lib/IGlobalObject";
 import { IPropertyContext } from "./ICoreController";
 import { isEmpty } from "@ungate/plugininf/lib/util/Util";
-const createTempTable = (global as IGlobalObject).createTempTable;
+const createTempTable = ((global as any) as IGlobalObject).createTempTable;
 
 export class TempTable {
     private sysSettings =

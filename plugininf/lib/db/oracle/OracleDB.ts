@@ -748,7 +748,7 @@ export default class OracleDB {
      * @param metaData - Данные ответа
      * @constructor
      */
-    public DatasetSerializer(metaData: oracledb.Metadata[]): Transform {
+    public DatasetSerializer(metaData: oracledb.Metadata<{}>[]): Transform {
         const column = {};
         if (metaData && metaData.length) {
             let i = 0;
@@ -811,7 +811,7 @@ export default class OracleDB {
         return trans;
     }
 
-    private extractMetaData(metaData: oracledb.Metadata[] = []) {
+    private extractMetaData(metaData: oracledb.Metadata<{}>[] = []) {
         return metaData.map((data) => {
             let datatype = "text";
             switch (data.dbType) {

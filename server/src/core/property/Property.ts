@@ -122,9 +122,9 @@ class BuildProperty {
         return loadProperty("tt_sessions", true);
     }
 }
-(global as IGlobalObject).createTempTable = (name) => {
+((global as any) as IGlobalObject).createTempTable = (name) => {
     return loadProperty(name, true);
 };
 const Property = new BuildProperty();
-(global as IGlobalObject).property = Property;
+((global as any) as IGlobalObject).property = Property;
 export default Property;

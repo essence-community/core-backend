@@ -18,7 +18,7 @@ import { initParams, isEmpty, debounce } from "@ungate/plugininf/lib/util/Util";
 import { noop } from "lodash";
 import { isObject } from "util";
 import ISession from "@ungate/plugininf/lib/ISession";
-const Property = (global as IGlobalObject).property;
+const Property = ((global as any) as IGlobalObject).property;
 
 const MAX_WAIT_RELOAD = 5000;
 

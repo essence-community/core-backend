@@ -3,7 +3,7 @@ import GateSession from "../../core/session/GateSession";
 import NotificationController from "./NotificationController";
 
 export default function () {
-    (global as IGlobalObject).authController = {
+    ((global as any) as IGlobalObject).authController = {
         addUser: GateSession.addUser.bind(GateSession),
         createSession: GateSession.createSession.bind(GateSession),
         getDataUser: GateSession.getDataUser.bind(GateSession),

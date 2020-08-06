@@ -19,7 +19,7 @@ import * as ActiveDirectory from "activedirectory";
 import { X509 } from "jsrsasign";
 import { isObject, uniq } from "lodash";
 
-const Property = (global as IGlobalObject).property;
+const Property = ((global as any) as IGlobalObject).property;
 const BASIC_PATTERN = "Basic";
 const PASSWORD_PATTERN_NGINX_GSS = "bogus_auth_gss_passwd";
 

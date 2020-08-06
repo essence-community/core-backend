@@ -13,7 +13,7 @@ import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
 import { isObject } from "lodash";
 import IOracleController from "./IOracleController";
 import { IParamOracle } from "./OracleDb.types";
-const Property = (global as IGlobalObject).property;
+const Property = ((global as any) as IGlobalObject).property;
 const wsQuerySQL =
     "select cc_query from t_query where upper(ck_id) = upper(:query)";
 
