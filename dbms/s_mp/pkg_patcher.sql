@@ -610,7 +610,12 @@ begin
     delete
     from
       s_mt.t_page_action ap
-    where ap.ck_page = ot_page.ck_id;
+    where ap.ck_page = ot_page.ck_id 
+    and not exists (select 1 
+              from jsonb_array_elements_text(coalesce(nullif((select cv_value 
+                  from s_mt.t_sys_setting 
+                  where ck_id = 'skip_update_action_page'), ''), '[]')::jsonb) as t 
+                where t.value = ot_page.ck_id);
 
     -- Clearing page variable
 
@@ -624,7 +629,12 @@ begin
     delete 
     from 
       s_mt.t_page
-    where ck_id = ot_page.ck_id;
+    where ck_id = ot_page.ck_id
+    and not exists (select 1 
+              from jsonb_array_elements_text(coalesce(nullif((select cv_value 
+                  from s_mt.t_sys_setting 
+                  where ck_id = 'skip_update_action_page'), ''), '[]')::jsonb) as t 
+                where t.value = ot_page.ck_id);
   end loop;
 END;
 $function$

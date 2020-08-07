@@ -181,6 +181,7 @@ begin
   vot_class_attr.cv_data_type_extra = nullif(trim(pc_json#>>'{data,cv_data_type_extra}'), '');
   vot_class_attr.cv_value = pkg_meta.p_decode_attr_variable((pc_json#>>'{data,cv_value}'), vot_class_attr.ck_id, pc_json, vot_class_attr.ck_attr);
   vot_class_attr.cl_required = trim(pc_json#>>'{data,cl_required}')::int2;
+  vot_class_attr.cl_empty = trim(pc_json#>>'{data,cl_empty}')::int2;
   vot_class_attr.ck_user = pv_user;
   vot_class_attr.ct_change = CURRENT_TIMESTAMP;
   vv_action = (pc_json#>>'{service,cv_action}');
