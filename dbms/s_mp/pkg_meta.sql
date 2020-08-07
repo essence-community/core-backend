@@ -569,8 +569,8 @@ begin
       insert into s_mt.t_class_attr values (pot_class_attr.*);
     elsif pv_action = u::varchar then
       update s_mt.t_class_attr set
-        (ck_class, ck_attr, cv_data_type_extra, cv_value, ck_user, ct_change, cl_required) = 
-        (pot_class_attr.ck_class, pot_class_attr.ck_attr, pot_class_attr.cv_data_type_extra, pot_class_attr.cv_value, pot_class_attr.ck_user, pot_class_attr.ct_change, pot_class_attr.cl_required)
+        (ck_class, ck_attr, cv_data_type_extra, cv_value, ck_user, ct_change, cl_required, cl_empty) = 
+        (pot_class_attr.ck_class, pot_class_attr.ck_attr, pot_class_attr.cv_data_type_extra, pot_class_attr.cv_value, pot_class_attr.ck_user, pot_class_attr.ct_change, pot_class_attr.cl_required, pot_class_attr.cl_empty)
       where ck_id = pot_class_attr.ck_id;
       if not found then
         perform pkg.p_set_error(504);
@@ -1355,6 +1355,14 @@ begin
       delete from s_mt.t_object_attr where ck_id = pot_object_attr.ck_id;
     end if;
   else
+    for vcur_check in (
+      select 1 from s_mt.t_class_attr 
+      where cl_empty = 0 
+      and ck_id = pot_object_attr.ck_class_attr 
+      and nullif(pot_object_attr.cv_value, '') is null
+    ) loop
+      perform pkg.p_set_error(51, 'eea00f8cc53e471bbf7b8306e3927b5a');
+    end loop;
     /*Проверка на то, что обьект принадлежит тому же классу, которому принадлежит аттрибут */
     for vcur_check in (
       select 1
@@ -1910,6 +1918,14 @@ begin
       delete from s_mt.t_page_object_attr where ck_id = pot_page_object_attr.ck_id;
     end if;
   else
+    for vcur_pre_check in (
+      select 1 from s_mt.t_class_attr 
+      where cl_empty = 0 
+      and ck_id = pot_page_object_attr.ck_class_attr 
+      and nullif(pot_page_object_attr.cv_value, '') is null
+    ) loop
+      perform pkg.p_set_error(51, 'eea00f8cc53e471bbf7b8306e3927b5a');
+    end loop;
     -- проверка на то, что переменная заведена в t_page_variable
     for vcur_check in (
       with
@@ -1937,7 +1953,6 @@ begin
         having count(v.cv_variable) != count(pv.cv_name)
     ) loop
       perform pkg.p_set_error(45);
-
     end loop;
     -- задаем сеттер для переменной?
     for vcur_pre_check in (
@@ -1945,7 +1960,7 @@ begin
       from s_mt.t_class_attr ca
       where ca.ck_id = pot_page_object_attr.ck_class_attr and
         ca.ck_attr in ('setrecordtoglobal', 'setglobal')
-    )loop
+    ) loop
       -- проверка на то, что одна и та же переменная не сетится несколько раз из разных мест
       for vcur_check in (
         with
