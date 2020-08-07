@@ -39,7 +39,7 @@
         "libs/*"
     ],
     "devDependencies": {
-        "@essence-community/eslint-config-react": "2.2.0",
+        "@essence-community/eslint-config-react": "^2.2.0",
         "@types/async": "^3.2.1",
         "@types/bcrypt-nodejs": "0.0.31",
         "@types/body-parser": "^1.17.0",
