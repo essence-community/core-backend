@@ -1179,6 +1179,8 @@ declare
   u        sessvarstr;
   d        sessvarstr;
   gv_error sessvarstr;
+  gl_warning sessvari;
+  gv_warning sessvarstr;
 
   -- переменные функции
   pcur_object record;
@@ -1191,6 +1193,8 @@ begin
   u = sessvarstr_declare('pkg', 'u', 'U');
   d = sessvarstr_declare('pkg', 'd', 'D');
   gv_error = sessvarstr_declare('pkg', 'gv_error', '');
+  gl_warning = sessvari_declare('pkg', 'gl_warning', 0);
+  gv_warning = sessvarstr_declare('pkg', 'gv_warning', '');
 
   -- код функции
   if pv_action = d::varchar then
@@ -1256,22 +1260,28 @@ begin
         perform pkg.p_set_error(34);
         exit;
       end loop;
+       /*если обьект добавляется как дочерний то он прописан в t_class_hierarchy*/
+      for pcur_cnt in (select 1
+                        from dual
+                        where not exists
+                        (select 1
+                                from s_mt.t_class_hierarchy t1
+                                join s_mt.t_object t2
+                                  on t2.ck_class = t1.ck_class_parent
+                                where t2.ck_id = pot_object.ck_parent
+                                  and t1.ck_class_child = pot_object.ck_class)) loop
+        perform pkg.p_set_error(13);
+        exit;
+      end loop;
+    else
+      for pcur_cnt in (
+        select 1
+        from s_mt.t_class cl
+        where cl.ck_id = pot_object.ck_class and cl.cl_final = 0
+      )loop
+        perform pkg.p_set_error(51, '6cef8d4302234753bc59aa193c7fe6bb');
+      end loop;
     end if;
-    /*если обьект добавляется как дочерний то он прописан в t_class_hierarchy*/
-    for pcur_cnt in (select 1
-                       from dual
-                      where pot_object.ck_parent is not null
-                        and not exists
-                      (select 1
-                               from s_mt.t_class_hierarchy t1
-                               join s_mt.t_object t2
-                                 on t2.ck_class = t1.ck_class_parent
-                              where t2.ck_id = pot_object.ck_parent
-                                and t1.ck_class_child = pot_object.ck_class)) loop
-      perform pkg.p_set_error(13);
-      exit;
-    end loop;
-  
     -- Проверяем, что модуль класса включен
     for vcur in (select m.cv_name
                    from s_mt.t_module m
@@ -1292,10 +1302,26 @@ begin
         exit;
       end loop;
     end if;
-    if pv_action = i::varchar and nullif(gv_error::varchar, '') is null then
+    -- Проверяем на смену родителя если объект был привязан к странице
+    if pv_action = u::varchar and nullif(gv_error::varchar, '') is null and (gl_warning::bigint) = 0 then
+      for pcur_cnt in (
+          select 1
+          from s_mt.t_object o
+          join s_mt.t_page_object po
+          on o.ck_id = po.ck_object
+          where o.ck_id = pot_object.ck_id and o.ck_parent <> pot_object.ck_parent
+      ) loop
+          perform pkg.p_set_warning(82, '7d4bdc39e17d423595affef73f4922d4');
+      end loop;
+    end if;
+
+    if nullif(gv_error::varchar, '') is not null and nullif(gv_warning::varchar, '') is not null then
+   	  return;
+    end if;
+    if pv_action = i::varchar then
       pot_object.ck_id := sys_guid();
       insert into s_mt.t_object values (pot_object.*);
-    elsif pv_action = u::varchar and nullif(gv_error::varchar, '') is null then
+    elsif pv_action = u::varchar then
       update s_mt.t_object
          set (ck_id,
               ck_class,
@@ -1531,7 +1557,7 @@ begin
       select 1
       from s_mt.t_page a
       where a.ck_id = pot_page.ck_id and
-        (a.cr_type != pot_page.cr_type or a.ck_parent != pot_page.ck_parent) and
+        (a.cr_type != pot_page.cr_type) and
         pv_action = u::varchar
     ) loop
       perform pkg.p_set_error(21);
@@ -1657,6 +1683,7 @@ declare
   vcur_hierarchy record;
   vcur_object record;
   vcur_page record;
+  vcur_check record;
 begin
   -- инициализация/получение переменных пакета
   i = sessvarstr_declare('pkg', 'i', 'I');
@@ -1761,21 +1788,17 @@ begin
          and ((pot_page_object.ck_id is not null and o.ck_id != pot_page_object.ck_id) or pot_page_object.ck_id is null))
     loop
         perform  pkg.p_set_error(34);
-        return;
     end loop;
 
     if pot_page_object.ck_page is null then 
-      perform  pkg.p_set_error(42);
-      return;    
+      perform  pkg.p_set_error(42);  
     end if;
    
     for vcur_page in (select 1 from s_mt.t_page p where p.ck_id = pot_page_object.ck_page and p.cr_type != 2) loop
       perform  pkg.p_set_error(205);
-      return;
     end loop;
 
-    if pv_action = i::varchar then
-     if nullif(pot_page_object.ck_parent, '') is not null then
+    if nullif(pot_page_object.ck_parent, '') is not null then
       /*Проверим иерархию классов*/
       for vcur_hierarchy in (
         select
@@ -1796,11 +1819,26 @@ begin
         and pot_page_object.ck_parent is not null
       )loop
         perform pkg.p_set_error(13);
-        return;
       end loop;
-     end if;
+    else
+      for vcur_hierarchy in (
+        select 1
+        from s_mt.t_class cl
+        where cl.ck_id = (
+          select ck_class
+          from s_mt.t_object
+          where ck_id = pot_page_object.ck_object
+        ) and cl.cl_final = 0
+      )loop
+        perform pkg.p_set_error(51, '6cef8d4302234753bc59aa193c7fe6bb');
+      end loop;
+    end if;
+    
+    if nullif(gv_error::varchar, '') is not null then
+   	  return;
+    end if;
 
-      if nullif(gv_error::varchar, '') is null then
+    if pv_action = i::varchar then
         /*При вставке записи берем все дочерние элементы и вставляем в той же иерархии, что и в объекте.*/
         pot_page_object.ck_id := sys_guid();
         insert into s_mt.t_page_object(ck_id, ck_parent, ck_master, ck_object, ck_page, cn_order, ck_user, ct_change)
@@ -1863,17 +1901,25 @@ begin
               order by t.cn_level
           ) as q
         );
-      end if;
     elsif pv_action = u::varchar then
-      /* Мы можем изменить только порядок и идентификатор мастер-обьекта */
+        for vcur_check in (
+          select 1
+          from s_mt.t_page_object po
+          where po.ck_id = pot_page_object.ck_id and po.ck_parent <> pot_page_object.ck_parent
+        ) loop
+          perform pkg.p_set_info(83, '52b1e236fa264ac9ab19e1cd44d18376');
+        end loop;
+      /* Мы можем изменить только порядок и идентификатор мастер-обьекта и родителя */
       update s_mt.t_page_object
          set cn_order  = pot_page_object.cn_order,
              ck_master = pot_page_object.ck_master,
+             ck_parent = pot_page_object.ck_parent,
              ck_user   = pot_page_object.ck_user,
              ct_change = pot_page_object.ct_change
        where ck_id = pot_page_object.ck_id;
       if not found then
         perform pkg.p_set_error(504);
+        RETURN;
       end if;
     end if;
   end if;

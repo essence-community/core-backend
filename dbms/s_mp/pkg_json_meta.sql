@@ -314,36 +314,54 @@ CREATE FUNCTION pkg_json_meta.f_modify_object(pv_user character varying, pk_sess
 declare
   -- переменные пакета
   gv_error sessvarstr;
+  gl_warning sessvari;
   i sessvarstr;
 
   -- переменные функции
   vot_object s_mt.t_object;
   vot_localization s_mt.t_localization;
-  vv_action  varchar(1);
+  vv_action  varchar;
   vk_main    varchar(32);
 begin
   -- инициализация/получение переменных пакета
   gv_error = sessvarstr_declare('pkg', 'gv_error', '');
+  gl_warning = sessvari_declare('pkg', 'gl_warning', 0);
   i = sessvarstr_declare('pkg', 'i', 'I');
 
   -- код функции
   --обнулим глобальные переменные с перечнем ошибок/предупреждений/информационных сообщений
   perform pkg.p_reset_response();
   --JSON -> rowtype
-  vot_object.ck_id = nullif(trim(pc_json#>>'{data,ck_id}'), '');
-  vot_object.ck_class = nullif(trim(pc_json#>>'{data,ck_class}'), '');
-  vot_object.ck_parent = nullif(trim(pc_json#>>'{data,ck_parent}'), '');
-  vot_object.cv_name = nullif(trim(pc_json#>>'{data,cv_name}'), '');
-  vot_object.cn_order = nullif(trim(pc_json#>>'{data,cn_order}'), '')::int8;
-  vot_object.ck_query = nullif(trim(pc_json#>>'{data,ck_query}'), '');
-  vot_object.cv_description = nullif(trim(pc_json#>>'{data,cv_description}'), '');
-  vot_object.cv_displayed = nullif(trim(pc_json#>>'{data,cv_displayed}'), '');
-  vot_object.cv_modify = nullif(trim(pc_json#>>'{data,cv_modify}'), '');
-  vot_object.ck_provider = nullif(trim(pc_json#>>'{data,ck_provider}'), '');
+  vv_action = (pc_json#>>'{service,cv_action}');
+  if vv_action = 'dragdrop' then
+    vv_action := 'U';
+    vot_object.ck_id = nullif(trim(pc_json#>>'{data,drag,ck_id}'), '');
+    vot_object.ck_class = nullif(trim(pc_json#>>'{data,drag,ck_class}'), '');
+    vot_object.ck_parent = nullif(trim(pc_json#>>'{data,drop,ck_id}'), '');
+    vot_object.cv_name = nullif(trim(pc_json#>>'{data,drag,cv_name}'), '');
+    vot_object.cn_order = nullif(trim(pc_json#>>'{data,drag,cn_order}'), '')::bigint;
+    vot_object.ck_query = nullif(trim(pc_json#>>'{data,drag,ck_query}'), '');
+    vot_object.cv_description = nullif(trim(pc_json#>>'{data,drag,cv_description}'), '');
+    vot_object.cv_displayed = nullif(trim(pc_json#>>'{data,drag,cv_displayed}'), '');
+    vot_object.cv_modify = nullif(trim(pc_json#>>'{data,drag,cv_modify}'), '');
+    vot_object.ck_provider = nullif(trim(pc_json#>>'{data,drag,ck_provider}'), '');
+  else
+    vot_object.ck_id = nullif(trim(pc_json#>>'{data,ck_id}'), '');
+    vot_object.ck_class = nullif(trim(pc_json#>>'{data,ck_class}'), '');
+    vot_object.ck_parent = nullif(trim(pc_json#>>'{data,ck_parent}'), '');
+    vot_object.cv_name = nullif(trim(pc_json#>>'{data,cv_name}'), '');
+    vot_object.cn_order = nullif(trim(pc_json#>>'{data,cn_order}'), '')::bigint;
+    vot_object.ck_query = nullif(trim(pc_json#>>'{data,ck_query}'), '');
+    vot_object.cv_description = nullif(trim(pc_json#>>'{data,cv_description}'), '');
+    vot_object.cv_displayed = nullif(trim(pc_json#>>'{data,cv_displayed}'), '');
+    vot_object.cv_modify = nullif(trim(pc_json#>>'{data,cv_modify}'), '');
+    vot_object.ck_provider = nullif(trim(pc_json#>>'{data,ck_provider}'), '');
+  end if;
+  
   vot_object.ck_user = pv_user;
   vot_object.ct_change = CURRENT_TIMESTAMP;
-  vv_action = (pc_json#>>'{service,cv_action}');
   vk_main = (pc_json#>>'{service,ck_main}');
+  perform gl_warning == (pc_json#>>'{service,cl_warning}')::bigint;
 
   --проверка прав доступа
   perform pkg_access.p_check_access(pv_user, vk_main);
@@ -448,7 +466,7 @@ declare
   vot_localization s_mt.t_localization;
   vn_action_view s_mt.t_page_action.cn_action%type; /* Код действия просмотра из СУВК */
   vn_action_edit s_mt.t_page_action.cn_action%type; /* Код действия модификации из СУВК */
-  vv_action varchar(1); /* pkg.i/u/d */
+  vv_action varchar;
   vk_main   varchar(32);
 begin
   -- инициализация/получение переменных пакета
@@ -459,20 +477,37 @@ begin
   --обнулим глобальные переменные с перечнем ошибок/предупреждений/информационных сообщений
   perform pkg.p_reset_response();
   --JSON -> rowtype
-  vot_page.ck_id = nullif(trim(pc_json#>>'{data,ck_id}'), '');
-  vot_page.ck_parent = nullif(trim(pc_json#>>'{data,ck_parent}'), '');
-  vot_page.cr_type = nullif(trim(pc_json#>>'{data,cr_type}'), '')::bigint;
-  vot_page.cv_name = nullif(trim(pc_json#>>'{data,cv_name}'), '');
-  vot_page.cn_order = nullif(trim(pc_json#>>'{data,cn_order}'), '')::bigint;
-  vot_page.cl_menu = nullif(trim(pc_json#>>'{data,cl_menu}'), '')::smallint;
-  vot_page.cl_static = nullif(trim(pc_json#>>'{data,cl_static}'), '')::smallint;
-  vot_page.cv_url = nullif(trim(pc_json#>>'{data,cv_url}'), '');
-  vot_page.ck_icon = nullif(trim(pc_json#>>'{data,ck_icon}'), '');
-  vn_action_view = nullif(trim(pc_json#>>'{data,cn_action_view}'), '')::bigint;
-  vn_action_edit = nullif(trim(pc_json#>>'{data,cn_action_edit}'), '')::bigint;
+  vv_action = (pc_json#>>'{service,cv_action}');
+  if vv_action = 'dragdrop' then
+    vv_action := 'U';
+    vot_page.ck_id = nullif(trim(pc_json#>>'{data,drag,ck_id}'), '');
+    vot_page.ck_parent = nullif(trim(pc_json#>>'{data,drop,ck_id}'), '');
+    vot_page.cr_type = nullif(trim(pc_json#>>'{data,drag,cr_type}'), '')::bigint;
+    vot_page.cv_name = nullif(trim(pc_json#>>'{data,drag,cv_name}'), '');
+    vot_page.cn_order = nullif(trim(pc_json#>>'{data,drag,cn_order}'), '')::bigint;
+    vot_page.cl_menu = nullif(trim(pc_json#>>'{data,drag,cl_menu}'), '')::smallint;
+    vot_page.cl_static = nullif(trim(pc_json#>>'{data,drag,cl_static}'), '')::smallint;
+    vot_page.cv_url = nullif(trim(pc_json#>>'{data,drag,cv_url}'), '');
+    vot_page.ck_icon = nullif(trim(pc_json#>>'{data,drag,ck_icon}'), '');
+    vn_action_view = nullif(trim(pc_json#>>'{data,drag,cn_action_view}'), '')::bigint;
+    vn_action_edit = nullif(trim(pc_json#>>'{data,drag,cn_action_edit}'), '')::bigint;
+  else 
+    vot_page.ck_id = nullif(trim(pc_json#>>'{data,ck_id}'), '');
+    vot_page.ck_parent = nullif(trim(pc_json#>>'{data,ck_parent}'), '');
+    vot_page.cr_type = nullif(trim(pc_json#>>'{data,cr_type}'), '')::bigint;
+    vot_page.cv_name = nullif(trim(pc_json#>>'{data,cv_name}'), '');
+    vot_page.cn_order = nullif(trim(pc_json#>>'{data,cn_order}'), '')::bigint;
+    vot_page.cl_menu = nullif(trim(pc_json#>>'{data,cl_menu}'), '')::smallint;
+    vot_page.cl_static = nullif(trim(pc_json#>>'{data,cl_static}'), '')::smallint;
+    vot_page.cv_url = nullif(trim(pc_json#>>'{data,cv_url}'), '');
+    vot_page.ck_icon = nullif(trim(pc_json#>>'{data,ck_icon}'), '');
+    vn_action_view = nullif(trim(pc_json#>>'{data,cn_action_view}'), '')::bigint;
+    vn_action_edit = nullif(trim(pc_json#>>'{data,cn_action_edit}'), '')::bigint;
+  end if;
+
   vot_page.ck_user = pv_user;
   vot_page.ct_change = CURRENT_TIMESTAMP;
-  vv_action = (pc_json#>>'{service,cv_action}');
+  
   vk_main = (pc_json#>>'{service,ck_main}');
   perform gl_warning == (pc_json#>>'{service,cl_warning}')::bigint;
 
@@ -522,7 +557,7 @@ declare
   gv_error sessvarstr;
   -- переменные функции
   pot_page_object s_mt.t_page_object;
-  vv_action       varchar(1);
+  vv_action       varchar;
   vk_main         varchar(32);
 begin
   -- инициализация/получение переменных пакета
@@ -531,15 +566,25 @@ begin
   --обнулим глобальные переменные с перечнем ошибок/предупреждений/информационных сообщений
   perform pkg.p_reset_response();
   --JSON -> rowtype
-  pot_page_object.ck_page = nullif(trim(pc_json#>>'{service,ck_main}'), '');
-  pot_page_object.ck_object = nullif(trim(pc_json#>>'{data,ck_object}'), '');
-  pot_page_object.ck_id = nullif(trim(pc_json#>>'{data,ck_id}'), '');
-  pot_page_object.cn_order = nullif(trim(pc_json#>>'{data,cn_order}'), '')::bigint;
-  pot_page_object.ck_master = nullif(trim(pc_json#>>'{data,ck_master}'), '');
-  pot_page_object.ck_parent = nullif(trim(pc_json#>>'{data,ck_parent}'), '');
+  vv_action = (pc_json#>>'{service,cv_action}');
+  if vv_action = 'dragdrop' then
+    vv_action := 'U';
+    pot_page_object.ck_page = nullif(trim(pc_json#>>'{service,ck_main}'), '');
+    pot_page_object.ck_object = nullif(trim(pc_json#>>'{data,drag,ck_object}'), '');
+    pot_page_object.ck_id = nullif(trim(pc_json#>>'{data,drag,ck_id}'), '');
+    pot_page_object.cn_order = nullif(trim(pc_json#>>'{data,drag,cn_order}'), '')::bigint;
+    pot_page_object.ck_master = nullif(trim(pc_json#>>'{data,drag,ck_master}'), '');
+    pot_page_object.ck_parent = nullif(trim(pc_json#>>'{data,drop,ck_id}'), '');
+  else
+    pot_page_object.ck_page = nullif(trim(pc_json#>>'{service,ck_main}'), '');
+    pot_page_object.ck_object = nullif(trim(pc_json#>>'{data,ck_object}'), '');
+    pot_page_object.ck_id = nullif(trim(pc_json#>>'{data,ck_id}'), '');
+    pot_page_object.cn_order = nullif(trim(pc_json#>>'{data,cn_order}'), '')::bigint;
+    pot_page_object.ck_master = nullif(trim(pc_json#>>'{data,ck_master}'), '');
+    pot_page_object.ck_parent = nullif(trim(pc_json#>>'{data,ck_parent}'), '');
+  end if;
   pot_page_object.ck_user = pv_user;
   pot_page_object.ct_change = CURRENT_TIMESTAMP;
-  vv_action = (pc_json#>>'{service,cv_action}');
   vk_main = (pc_json#>>'{service,ck_main}');
 
   --проверка прав доступа
