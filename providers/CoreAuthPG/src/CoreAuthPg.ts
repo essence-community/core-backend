@@ -65,6 +65,9 @@ export default class CoreAuthPg extends NullAuthProvider {
             idleTimeoutMillis: this.params.idleTimeoutMillis,
             partRows: this.params.partRows,
             poolMax: this.params.poolMax,
+            poolMin: this.params.poolMin,
+            user: this.params.user,
+            password: this.params.password,
             queryTimeout: this.params.queryTimeout,
         });
         if (!isEmpty(this.params.guestAccount)) {
