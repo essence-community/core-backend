@@ -43,7 +43,7 @@ export default abstract class NullAuthProvider extends NullProvider {
     public authController: IAuthController;
     constructor(name: string, params: ICCTParams) {
         super(name, params);
-        this.authController = (global as IGlobalObject).authController;
+        this.authController = ((global as any) as IGlobalObject).authController;
     }
     public async beforeSession(
         context: IContext,

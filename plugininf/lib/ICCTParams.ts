@@ -2,6 +2,11 @@ export default interface ICCTParams {
     [key: string]: any;
 }
 
+export interface IComboValueParam {
+    in: string;
+    out?: string;
+}
+
 export interface IParamInfo {
     required?: boolean;
     type:
@@ -20,15 +25,15 @@ export interface IParamInfo {
     defaultValue?: any;
     name: string;
     description?: string;
-    valueField?: string;
+    valueField?: IComboValueParam[];
     displayField?: string;
     query?: string;
-    minValue?: string;
-    maxValue?: string;
+    minValue?: number;
+    maxValue?: number;
     allownew?: string;
-    maxsize?: string;
-    minchars?: string;
-    pagesize?: string;
+    maxsize?: number;
+    minchars?: number;
+    pagesize?: number;
     querymode?: "remote" | "local";
     queryparam?: string;
     records?: Record<string, string | number>[];

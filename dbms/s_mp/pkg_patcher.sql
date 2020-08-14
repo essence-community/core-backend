@@ -610,7 +610,12 @@ begin
     delete
     from
       s_mt.t_page_action ap
-    where ap.ck_page = ot_page.ck_id;
+    where ap.ck_page = ot_page.ck_id 
+    and not exists (select 1 
+              from jsonb_array_elements_text(coalesce(nullif((select cv_value 
+                  from s_mt.t_sys_setting 
+                  where ck_id = 'skip_update_action_page'), ''), '[]')::jsonb) as t 
+                where t.value = ot_page.ck_id);
 
     -- Clearing page variable
 
@@ -624,7 +629,12 @@ begin
     delete 
     from 
       s_mt.t_page
-    where ck_id = ot_page.ck_id;
+    where ck_id = ot_page.ck_id
+    and not exists (select 1 
+              from jsonb_array_elements_text(coalesce(nullif((select cv_value 
+                  from s_mt.t_sys_setting 
+                  where ck_id = 'skip_update_action_page'), ''), '[]')::jsonb) as t 
+                where t.value = ot_page.ck_id);
   end loop;
 END;
 $function$
@@ -831,3 +841,54 @@ $function$
 ;
 
 COMMENT ON FUNCTION pkg_patcher.p_find_static_in_meta_localization() IS 'Разделяем статичные атрибуты с meta';
+
+CREATE OR REPLACE FUNCTION pkg_patcher.p_merge_page_action(pk_id character varying, pk_page character varying, pr_type character varying, pn_action bigint, pk_user character varying, pt_change timestamp with time zone)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'pkg', 'pkg_patcher', 's_mt'
+AS $function$
+declare
+  -- переменные пакета
+  gv_error sessvarstr;
+
+  rec record;
+begin
+  gv_error = sessvarstr_declare('pkg', 'gv_error', '');
+  perform pkg.p_reset_response();
+  for rec in ( select 1 
+              from jsonb_array_elements_text(coalesce(nullif((select cv_value 
+                  from s_mt.t_sys_setting 
+                  where ck_id = 'skip_update_action_page'), ''), '[]')::jsonb) as t 
+                where t.value = pk_page
+              ) loop
+    return;
+  end loop;
+  update s_mt.t_page_action
+     set (ck_page, cr_type, cn_action, ck_user, ct_change) =
+         (pk_page, pr_type, pn_action, pk_user, pt_change)
+   where ck_id = pk_id;
+  if found then
+    return;
+  end if;
+  begin
+    insert into s_mt.t_page_action
+      (ck_id, ck_page, cr_type, cn_action, ck_user, ct_change)
+    values
+      (pk_id, pk_page, pr_type, pn_action, pk_user, pt_change) on conflict
+      (ck_id) do update set ck_page = excluded.ck_page, cr_type = excluded.cr_type, cn_action = excluded.cn_action, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
+  exception
+    when others then
+      perform pkg.p_set_error(51, SQLERRM);
+      perform pkg_log.p_save('-11',
+                             null::varchar,
+                             jsonb_build_object('ck_id', pk_id, 'ck_page', pk_page, 'cr_type', pr_type, 'cn_action', pn_action, 'ck_user', pk_user, 'ct_change', pt_change),
+                             'pkg_patcher.p_merge_page_action',
+                             pk_id,
+                             'I');
+  end;
+END;
+$function$
+;
+
+COMMENT ON FUNCTION pkg_patcher.p_merge_page_action(pk_id character varying, pk_page character varying, pr_type character varying, pn_action bigint, pk_user character varying, pt_change timestamp with time zone) IS 'Обновление доступов страницы';

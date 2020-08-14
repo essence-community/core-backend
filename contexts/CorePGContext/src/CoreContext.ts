@@ -19,8 +19,8 @@ import OfflineController from "./OfflineController";
 import OnlineController from "./OnlineController";
 import { TempTable } from "./TempTable";
 const logger = Logger.getLogger("CoreContext");
-const Mask = (global as IGlobalObject).maskgate;
-const createTempTable = (global as IGlobalObject).createTempTable;
+const Mask = ((global as any) as IGlobalObject).maskgate;
+const createTempTable = ((global as any) as IGlobalObject).createTempTable;
 
 export interface ICoreParams extends ICCTParams {
     debug: boolean;

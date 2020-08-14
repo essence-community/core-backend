@@ -14,7 +14,7 @@ import NullAuthProvider, {
 import { ReadStreamToArray } from "@ungate/plugininf/lib/stream/Util";
 import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
 import * as moment from "moment";
-const Property = (global as IGlobalObject).property;
+const Property = ((global as any) as IGlobalObject).property;
 
 export default class ProjectTiiAuth extends NullAuthProvider {
     public static getParamsInfo(): IParamsInfo {

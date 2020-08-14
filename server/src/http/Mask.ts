@@ -147,6 +147,6 @@ class BMask {
 }
 
 const Mask = new BMask();
-(global as IGlobalObject).maskgate = Mask;
+((global as any) as IGlobalObject).maskgate = Mask;
 
 export default Mask;

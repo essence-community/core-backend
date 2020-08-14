@@ -18,7 +18,7 @@ import { initParams, isEmpty, debounce } from "@ungate/plugininf/lib/util/Util";
 import { noop } from "lodash";
 import { isObject } from "util";
 import ISession from "@ungate/plugininf/lib/ISession";
-const Property = (global as IGlobalObject).property;
+const Property = ((global as any) as IGlobalObject).property;
 
 const MAX_WAIT_RELOAD = 5000;
 
@@ -35,9 +35,9 @@ export default class CoreAuthPg extends NullAuthProvider {
                 type: "combo",
                 name: "static:c7871bbd0e855693a47185a29b2b79f1",
                 query: "AuthShowAccount",
-                pagesize: "10",
+                pagesize: 10,
                 displayField: "cv_login",
-                valueField: "ck_id",
+                valueField: [{ in: "ck_id" }],
                 querymode: "remote",
                 queryparam: "cv_login",
             },

@@ -50,7 +50,7 @@ export default abstract class NullContext implements IContextPlugin {
                     { ck_id: "FATAL" },
                 ],
                 type: "combo",
-                valueField: "ck_id",
+                valueField: [{ in: "ck_id" }],
             },
         };
     }

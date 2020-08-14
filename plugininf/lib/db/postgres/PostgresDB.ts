@@ -117,7 +117,7 @@ export default class PostgresDB {
                     { ck_id: "FATAL" },
                 ],
                 type: "combo",
-                valueField: "ck_id",
+                valueField: [{ in: "ck_id" }],
             },
             /* tslint:enable:object-literal-sort-keys */
         };

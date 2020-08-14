@@ -9,7 +9,7 @@ import IGlobalObject from "@ungate/plugininf/lib/IGlobalObject";
 import NullContext from "@ungate/plugininf/lib/NullContext";
 import { initParams } from "@ungate/plugininf/lib/util/Util";
 import { noop } from "lodash";
-const createTempTable = (global as IGlobalObject).createTempTable;
+const createTempTable = ((global as any) as IGlobalObject).createTempTable;
 
 const querySql = "select q.* from t_interface q";
 const queryFindSql =

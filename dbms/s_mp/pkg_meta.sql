@@ -569,8 +569,8 @@ begin
       insert into s_mt.t_class_attr values (pot_class_attr.*);
     elsif pv_action = u::varchar then
       update s_mt.t_class_attr set
-        (ck_class, ck_attr, cv_data_type_extra, cv_value, ck_user, ct_change, cl_required) = 
-        (pot_class_attr.ck_class, pot_class_attr.ck_attr, pot_class_attr.cv_data_type_extra, pot_class_attr.cv_value, pot_class_attr.ck_user, pot_class_attr.ct_change, pot_class_attr.cl_required)
+        (ck_class, ck_attr, cv_data_type_extra, cv_value, ck_user, ct_change, cl_required, cl_empty) = 
+        (pot_class_attr.ck_class, pot_class_attr.ck_attr, pot_class_attr.cv_data_type_extra, pot_class_attr.cv_value, pot_class_attr.ck_user, pot_class_attr.ct_change, pot_class_attr.cl_required, pot_class_attr.cl_empty)
       where ck_id = pot_class_attr.ck_id;
       if not found then
         perform pkg.p_set_error(504);
@@ -1179,6 +1179,8 @@ declare
   u        sessvarstr;
   d        sessvarstr;
   gv_error sessvarstr;
+  gl_warning sessvari;
+  gv_warning sessvarstr;
 
   -- переменные функции
   pcur_object record;
@@ -1191,6 +1193,8 @@ begin
   u = sessvarstr_declare('pkg', 'u', 'U');
   d = sessvarstr_declare('pkg', 'd', 'D');
   gv_error = sessvarstr_declare('pkg', 'gv_error', '');
+  gl_warning = sessvari_declare('pkg', 'gl_warning', 0);
+  gv_warning = sessvarstr_declare('pkg', 'gv_warning', '');
 
   -- код функции
   if pv_action = d::varchar then
@@ -1256,22 +1260,28 @@ begin
         perform pkg.p_set_error(34);
         exit;
       end loop;
+       /*если обьект добавляется как дочерний то он прописан в t_class_hierarchy*/
+      for pcur_cnt in (select 1
+                        from dual
+                        where not exists
+                        (select 1
+                                from s_mt.t_class_hierarchy t1
+                                join s_mt.t_object t2
+                                  on t2.ck_class = t1.ck_class_parent
+                                where t2.ck_id = pot_object.ck_parent
+                                  and t1.ck_class_child = pot_object.ck_class)) loop
+        perform pkg.p_set_error(13);
+        exit;
+      end loop;
+    else
+      for pcur_cnt in (
+        select 1
+        from s_mt.t_class cl
+        where cl.ck_id = pot_object.ck_class and cl.cl_final = 0
+      )loop
+        perform pkg.p_set_error(51, '6cef8d4302234753bc59aa193c7fe6bb');
+      end loop;
     end if;
-    /*если обьект добавляется как дочерний то он прописан в t_class_hierarchy*/
-    for pcur_cnt in (select 1
-                       from dual
-                      where pot_object.ck_parent is not null
-                        and not exists
-                      (select 1
-                               from s_mt.t_class_hierarchy t1
-                               join s_mt.t_object t2
-                                 on t2.ck_class = t1.ck_class_parent
-                              where t2.ck_id = pot_object.ck_parent
-                                and t1.ck_class_child = pot_object.ck_class)) loop
-      perform pkg.p_set_error(13);
-      exit;
-    end loop;
-  
     -- Проверяем, что модуль класса включен
     for vcur in (select m.cv_name
                    from s_mt.t_module m
@@ -1292,10 +1302,26 @@ begin
         exit;
       end loop;
     end if;
-    if pv_action = i::varchar and nullif(gv_error::varchar, '') is null then
+    -- Проверяем на смену родителя если объект был привязан к странице
+    if pv_action = u::varchar and nullif(gv_error::varchar, '') is null and (gl_warning::bigint) = 0 then
+      for pcur_cnt in (
+          select 1
+          from s_mt.t_object o
+          join s_mt.t_page_object po
+          on o.ck_id = po.ck_object
+          where o.ck_id = pot_object.ck_id and o.ck_parent <> pot_object.ck_parent
+      ) loop
+          perform pkg.p_set_warning(82, '7d4bdc39e17d423595affef73f4922d4');
+      end loop;
+    end if;
+
+    if nullif(gv_error::varchar, '') is not null and nullif(gv_warning::varchar, '') is not null then
+   	  return;
+    end if;
+    if pv_action = i::varchar then
       pot_object.ck_id := sys_guid();
       insert into s_mt.t_object values (pot_object.*);
-    elsif pv_action = u::varchar and nullif(gv_error::varchar, '') is null then
+    elsif pv_action = u::varchar then
       update s_mt.t_object
          set (ck_id,
               ck_class,
@@ -1355,6 +1381,14 @@ begin
       delete from s_mt.t_object_attr where ck_id = pot_object_attr.ck_id;
     end if;
   else
+    for vcur_check in (
+      select 1 from s_mt.t_class_attr 
+      where cl_empty = 0 
+      and ck_id = pot_object_attr.ck_class_attr 
+      and nullif(pot_object_attr.cv_value, '') is null
+    ) loop
+      perform pkg.p_set_error(51, 'eea00f8cc53e471bbf7b8306e3927b5a');
+    end loop;
     /*Проверка на то, что обьект принадлежит тому же классу, которому принадлежит аттрибут */
     for vcur_check in (
       select 1
@@ -1523,7 +1557,7 @@ begin
       select 1
       from s_mt.t_page a
       where a.ck_id = pot_page.ck_id and
-        (a.cr_type != pot_page.cr_type or a.ck_parent != pot_page.ck_parent) and
+        (a.cr_type != pot_page.cr_type) and
         pv_action = u::varchar
     ) loop
       perform pkg.p_set_error(21);
@@ -1649,6 +1683,7 @@ declare
   vcur_hierarchy record;
   vcur_object record;
   vcur_page record;
+  vcur_check record;
 begin
   -- инициализация/получение переменных пакета
   i = sessvarstr_declare('pkg', 'i', 'I');
@@ -1753,21 +1788,17 @@ begin
          and ((pot_page_object.ck_id is not null and o.ck_id != pot_page_object.ck_id) or pot_page_object.ck_id is null))
     loop
         perform  pkg.p_set_error(34);
-        return;
     end loop;
 
     if pot_page_object.ck_page is null then 
-      perform  pkg.p_set_error(42);
-      return;    
+      perform  pkg.p_set_error(42);  
     end if;
    
     for vcur_page in (select 1 from s_mt.t_page p where p.ck_id = pot_page_object.ck_page and p.cr_type != 2) loop
       perform  pkg.p_set_error(205);
-      return;
     end loop;
 
-    if pv_action = i::varchar then
-     if nullif(pot_page_object.ck_parent, '') is not null then
+    if nullif(pot_page_object.ck_parent, '') is not null then
       /*Проверим иерархию классов*/
       for vcur_hierarchy in (
         select
@@ -1788,11 +1819,26 @@ begin
         and pot_page_object.ck_parent is not null
       )loop
         perform pkg.p_set_error(13);
-        return;
       end loop;
-     end if;
+    else
+      for vcur_hierarchy in (
+        select 1
+        from s_mt.t_class cl
+        where cl.ck_id = (
+          select ck_class
+          from s_mt.t_object
+          where ck_id = pot_page_object.ck_object
+        ) and cl.cl_final = 0
+      )loop
+        perform pkg.p_set_error(51, '6cef8d4302234753bc59aa193c7fe6bb');
+      end loop;
+    end if;
+    
+    if nullif(gv_error::varchar, '') is not null then
+   	  return;
+    end if;
 
-      if nullif(gv_error::varchar, '') is null then
+    if pv_action = i::varchar then
         /*При вставке записи берем все дочерние элементы и вставляем в той же иерархии, что и в объекте.*/
         pot_page_object.ck_id := sys_guid();
         insert into s_mt.t_page_object(ck_id, ck_parent, ck_master, ck_object, ck_page, cn_order, ck_user, ct_change)
@@ -1855,17 +1901,25 @@ begin
               order by t.cn_level
           ) as q
         );
-      end if;
     elsif pv_action = u::varchar then
-      /* Мы можем изменить только порядок и идентификатор мастер-обьекта */
+        for vcur_check in (
+          select 1
+          from s_mt.t_page_object po
+          where po.ck_id = pot_page_object.ck_id and po.ck_parent <> pot_page_object.ck_parent
+        ) loop
+          perform pkg.p_set_info(83, '52b1e236fa264ac9ab19e1cd44d18376');
+        end loop;
+      /* Мы можем изменить только порядок и идентификатор мастер-обьекта и родителя */
       update s_mt.t_page_object
          set cn_order  = pot_page_object.cn_order,
              ck_master = pot_page_object.ck_master,
+             ck_parent = pot_page_object.ck_parent,
              ck_user   = pot_page_object.ck_user,
              ct_change = pot_page_object.ct_change
        where ck_id = pot_page_object.ck_id;
       if not found then
         perform pkg.p_set_error(504);
+        RETURN;
       end if;
     end if;
   end if;
@@ -1910,6 +1964,14 @@ begin
       delete from s_mt.t_page_object_attr where ck_id = pot_page_object_attr.ck_id;
     end if;
   else
+    for vcur_pre_check in (
+      select 1 from s_mt.t_class_attr 
+      where cl_empty = 0 
+      and ck_id = pot_page_object_attr.ck_class_attr 
+      and nullif(pot_page_object_attr.cv_value, '') is null
+    ) loop
+      perform pkg.p_set_error(51, 'eea00f8cc53e471bbf7b8306e3927b5a');
+    end loop;
     -- проверка на то, что переменная заведена в t_page_variable
     for vcur_check in (
       with
@@ -1937,7 +1999,6 @@ begin
         having count(v.cv_variable) != count(pv.cv_name)
     ) loop
       perform pkg.p_set_error(45);
-
     end loop;
     -- задаем сеттер для переменной?
     for vcur_pre_check in (
@@ -1945,7 +2006,7 @@ begin
       from s_mt.t_class_attr ca
       where ca.ck_id = pot_page_object_attr.ck_class_attr and
         ca.ck_attr in ('setrecordtoglobal', 'setglobal')
-    )loop
+    ) loop
       -- проверка на то, что одна и та же переменная не сетится несколько раз из разных мест
       for vcur_check in (
         with
@@ -2289,9 +2350,11 @@ CREATE FUNCTION pkg_meta.p_decode_attr_variable(pv_value varchar, pk_class varch
 declare
   -- переменные пакета
   gv_error sessvarstr;
+  d sessvarstr;
 
   -- переменные функции
   vv_rec record;
+  vv_action varchar(1);
   vv_value varchar := pv_value;
   vk_data_type varchar; 
   vv_data_type_extra varchar;
@@ -2299,6 +2362,13 @@ declare
 begin
   -- инициализация/получение переменных пакета
   gv_error = sessvarstr_declare('pkg', 'gv_error', '');
+  d = sessvarstr_declare('pkg', 'd', 'D');
+
+  vv_action = (pc_json#>>'{service,cv_action}');
+
+  if vv_action = d::varchar then
+    return vv_value;
+  end if;
 
   if pk_class is not null then
     select a.ck_d_data_type, coalesce(ca.cv_data_type_extra, a.cv_data_type_extra, '[]') as cv_data_type_extra

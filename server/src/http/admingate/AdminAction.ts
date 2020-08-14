@@ -474,7 +474,7 @@ export default class AdminAction {
             column: name,
             cv_displayed: conf.name,
             info: conf.description,
-            required: conf.required ? "true" : "false",
+            required: conf.required,
         };
         switch (conf.type) {
             case "string": {
@@ -531,13 +531,13 @@ export default class AdminAction {
                         defaultvalue: params[name] || conf.defaultValue,
                         displayfield: "ck_id",
                         type: "IFIELD",
-                        valuefield: "ck_id",
+                        valuefield: [{ in: "ck_id" }],
                     };
                 }
                 return {
                     ...defaultAttr,
                     datatype: "checkbox",
-                    defaultvalue: +(params[name] || conf.defaultValue),
+                    defaultvalue: `${+(params[name] || conf.defaultValue)}`,
                     type: "IFIELD",
                 };
             }
