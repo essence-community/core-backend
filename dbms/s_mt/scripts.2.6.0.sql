@@ -27,3 +27,7 @@ INSERT INTO s_mt.t_message (ck_id,cr_type,cv_text,ck_user,ct_change)
 	VALUES (82,'warning','37b938509c654b729dd22166ed22e927','4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-08-12 11:06:00.000') on conflict (ck_id) DO NOTHING;
 INSERT INTO s_mt.t_message (ck_id,cr_type,cv_text,ck_user,ct_change)
 	VALUES (83,'info','37b938509c654b729dd22166ed22e927','4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-08-12 11:06:00.000') on conflict (ck_id) DO NOTHING;
+
+--changeset artemov_i:CORE-1361 dbms:postgresql
+INSERT INTO s_mt.t_localization (ck_id,ck_d_lang,cr_namespace,cv_value,ck_user,ct_change)
+	VALUES ('588e2ab956f14295a82048271de5ad5a','ru_RU','message','Запрещено родителя добавлять в дочерний объект','4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-08-20 14:47:50.619') on conflict on constraint cin_u_localization_1 DO NOTHING;
