@@ -1302,6 +1302,33 @@ begin
         exit;
       end loop;
     end if;
+    -- Проверяем на смену родителя, нельзя в дочерний 
+    if pv_action = u::varchar then
+      for pcur_cnt in (
+        with recursive vt_object as (
+              select
+                  ck_id, ck_parent, 1 as lvl
+              from
+                  s_mt.t_object
+              where
+                  ck_id = pot_object.ck_id
+          union all
+              select
+                  p.ck_id, p.ck_parent, rp.lvl + 1 as lvl
+              from
+                  s_mt.t_object p
+              join vt_object rp on
+                  p.ck_parent = rp.ck_id
+          )
+          select 1
+          from s_mt.t_object o
+          where o.ck_id = pot_object.ck_id 
+          and o.ck_parent <> pot_object.ck_parent 
+          and pot_object.ck_parent in (select ck_id from vt_object)
+      ) loop
+          perform pkg.p_set_error(51, '588e2ab956f14295a82048271de5ad5a');
+      end loop;
+    end if;
     -- Проверяем на смену родителя если объект был привязан к странице
     if pv_action = u::varchar and nullif(gv_error::varchar, '') is null and (gl_warning::bigint) = 0 then
       for pcur_cnt in (
@@ -1562,6 +1589,33 @@ begin
     ) loop
       perform pkg.p_set_error(21);
     end loop;
+    -- Проверяем на смену родителя, нельзя в дочерний 
+    if pv_action = u::varchar then
+      for vcur_cnt in (
+        with recursive vt_page as (
+              select
+                  ck_id, ck_parent, 1 as lvl
+              from
+                  s_mt.t_page
+              where
+                  ck_id = pot_page.ck_id
+          union all
+              select
+                  p.ck_id, p.ck_parent, rp.lvl + 1 as lvl
+              from
+                  s_mt.t_page p
+              join vt_page rp on
+                  p.ck_parent = rp.ck_id
+          )
+          select 1
+          from s_mt.t_page p
+          where p.ck_id = pot_page.ck_id 
+          and p.ck_parent <> pot_page.ck_parent 
+          and pot_page.ck_parent in (select ck_id from vt_page)
+      ) loop
+          perform pkg.p_set_error(51, '588e2ab956f14295a82048271de5ad5a');
+      end loop;
+    end if;
    if nullif(gv_error::varchar, '') is not null or nullif(gv_warning::varchar, '') is not null then
    	return;
    end if;
@@ -1831,6 +1885,34 @@ begin
         ) and cl.cl_final = 0
       )loop
         perform pkg.p_set_error(51, '6cef8d4302234753bc59aa193c7fe6bb');
+      end loop;
+    end if;
+
+    -- Проверяем на смену родителя, нельзя в дочерний 
+    if pv_action = u::varchar then
+      for vcur_object in (
+        with recursive vt_page_object as (
+              select
+                  ck_id, ck_parent, 1 as lvl
+              from
+                  s_mt.t_page_object
+              where
+                  ck_id = pot_page_object.ck_id
+          union all
+              select
+                  p.ck_id, p.ck_parent, rp.lvl + 1 as lvl
+              from
+                  s_mt.t_page_object p
+              join vt_page_object rp on
+                  p.ck_parent = rp.ck_id
+          )
+          select 1
+          from s_mt.t_page_object po
+          where po.ck_id = pot_page_object.ck_id 
+          and po.ck_parent <> pot_page_object.ck_parent 
+          and pot_page_object.ck_parent in (select ck_id from vt_page_object)
+      ) loop
+          perform pkg.p_set_error(51, '588e2ab956f14295a82048271de5ad5a');
       end loop;
     end if;
     
