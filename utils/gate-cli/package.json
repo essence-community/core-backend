@@ -1,6 +1,6 @@
 {
     "name": "@essence-community/create-gate-cli",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "description": "Utils development",
     "engines": {
         "yarn": ">=1.13.0",
@@ -14,7 +14,8 @@
     "scripts": {
         "start": "yarn build && ./bin/gate-cli",
         "postinstall": "yarn build",
-        "build": "tsc --project tsconfig.json"
+        "build": "tsc --project tsconfig.json",
+        "build:publish": "tsc --project tsconfig.publish.json"
     },
     "license": "MIT",
     "dependencies": {
