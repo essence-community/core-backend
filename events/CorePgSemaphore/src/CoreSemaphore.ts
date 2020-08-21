@@ -17,6 +17,7 @@ export default class CoreSemaphore extends NullEvent {
                 required: true,
                 type: "string",
             },
+            ...PostgresDB.getParamsInfo(),
         };
     }
     private dataSource: PostgresDB;
@@ -26,7 +27,14 @@ export default class CoreSemaphore extends NullEvent {
         this.params = initParams(CoreSemaphore.getParamsInfo(), params);
         this.dataSource = new PostgresDB(`${this.name}_semaphore`, {
             connectString: this.params.connectString,
-            poolMax: 5,
+            connectionTimeoutMillis: this.params.connectionTimeoutMillis,
+            idleTimeoutMillis: this.params.idleTimeoutMillis,
+            partRows: this.params.partRows,
+            poolMax: this.params.poolMax || 5,
+            poolMin: this.params.poolMin || 1,
+            user: this.params.user,
+            password: this.params.password,
+            queryTimeout: this.params.queryTimeout,
         });
     }
     /**

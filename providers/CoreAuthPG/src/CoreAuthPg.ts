@@ -18,7 +18,7 @@ import { initParams, isEmpty, debounce } from "@ungate/plugininf/lib/util/Util";
 import { noop } from "lodash";
 import { isObject } from "util";
 import ISession from "@ungate/plugininf/lib/ISession";
-const Property = (global as IGlobalObject).property;
+const Property = ((global as any) as IGlobalObject).property;
 
 const MAX_WAIT_RELOAD = 5000;
 
@@ -37,7 +37,7 @@ export default class CoreAuthPg extends NullAuthProvider {
                 query: "AuthShowAccount",
                 pagesize: 10,
                 displayField: "cv_login",
-                valueField: [{in: "ck_id"}],
+                valueField: [{ in: "ck_id" }],
                 querymode: "remote",
                 queryparam: "cv_login",
             },
@@ -65,6 +65,9 @@ export default class CoreAuthPg extends NullAuthProvider {
             idleTimeoutMillis: this.params.idleTimeoutMillis,
             partRows: this.params.partRows,
             poolMax: this.params.poolMax,
+            poolMin: this.params.poolMin,
+            user: this.params.user,
+            password: this.params.password,
             queryTimeout: this.params.queryTimeout,
         });
         if (!isEmpty(this.params.guestAccount)) {

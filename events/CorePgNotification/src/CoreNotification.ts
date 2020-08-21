@@ -26,8 +26,13 @@ export default class CoreNotification extends NullEvent {
         this.params = initParams(CoreNotification.getParamsInfo(), params);
         this.dataSource = new PostgresDB(`${this.name}_events`, {
             connectString: this.params.connectString,
+            connectionTimeoutMillis: this.params.connectionTimeoutMillis,
+            idleTimeoutMillis: this.params.idleTimeoutMillis,
             partRows: this.params.partRows,
             poolMax: this.params.poolMax,
+            poolMin: this.params.poolMin,
+            user: this.params.user,
+            password: this.params.password,
             queryTimeout: this.params.queryTimeout,
         });
     }

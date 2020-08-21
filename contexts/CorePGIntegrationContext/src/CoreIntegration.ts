@@ -9,7 +9,7 @@ import IGlobalObject from "@ungate/plugininf/lib/IGlobalObject";
 import NullContext from "@ungate/plugininf/lib/NullContext";
 import { initParams } from "@ungate/plugininf/lib/util/Util";
 import { noop } from "lodash";
-const createTempTable = (global as IGlobalObject).createTempTable;
+const createTempTable = ((global as any) as IGlobalObject).createTempTable;
 
 const querySql = "select q.* from t_interface q";
 const queryFindSql =
@@ -40,8 +40,13 @@ export default class CoreIntegration extends NullContext {
         }
         this.dataSource = new PostgresDB(`${this.name}_context`, {
             connectString: this.params.connectString,
+            connectionTimeoutMillis: this.params.connectionTimeoutMillis,
+            idleTimeoutMillis: this.params.idleTimeoutMillis,
             partRows: this.params.partRows,
             poolMax: this.params.poolMax,
+            poolMin: this.params.poolMin,
+            user: this.params.user,
+            password: this.params.password,
             queryTimeout: this.params.queryTimeout,
         });
     }

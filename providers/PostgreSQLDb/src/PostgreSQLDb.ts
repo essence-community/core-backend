@@ -52,6 +52,9 @@ export default class PostgreSQLDb extends NullProvider {
             idleTimeoutMillis: this.params.idleTimeoutMillis,
             partRows: this.params.partRows,
             poolMax: this.params.poolMax,
+            poolMin: this.params.poolMin,
+            user: this.params.user,
+            password: this.params.password,
             queryTimeout: this.params.queryTimeout,
         });
         if (params.core) {

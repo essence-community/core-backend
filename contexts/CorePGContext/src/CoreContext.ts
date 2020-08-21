@@ -19,8 +19,8 @@ import OfflineController from "./OfflineController";
 import OnlineController from "./OnlineController";
 import { TempTable } from "./TempTable";
 const logger = Logger.getLogger("CoreContext");
-const Mask = (global as IGlobalObject).maskgate;
-const createTempTable = (global as IGlobalObject).createTempTable;
+const Mask = ((global as any) as IGlobalObject).maskgate;
+const createTempTable = ((global as any) as IGlobalObject).createTempTable;
 
 export interface ICoreParams extends ICCTParams {
     debug: boolean;
@@ -155,8 +155,13 @@ export default class CoreContext extends NullContext {
         };
         this.dataSource = new PostgresDB(`${this.name}_context`, {
             connectString: this.params.connectString,
+            connectionTimeoutMillis: this.params.connectionTimeoutMillis,
+            idleTimeoutMillis: this.params.idleTimeoutMillis,
             partRows: this.params.partRows,
             poolMax: this.params.poolMax,
+            poolMin: this.params.poolMin,
+            user: this.params.user,
+            password: this.params.password,
             queryTimeout: this.params.queryTimeout,
         });
         this.params.modifyQueryName = this.params.modifyQueryName.toLowerCase();

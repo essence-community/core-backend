@@ -20,7 +20,7 @@ import CoreContext from "./CoreContext";
 import { ICoreParams } from "./CoreContext";
 import ICoreController from "./ICoreController";
 const logger = Logger.getLogger("OfflineController");
-const createTempTable = (global as IGlobalObject).createTempTable;
+const createTempTable = ((global as any) as IGlobalObject).createTempTable;
 
 export interface ITempTable {
     dbPage: ILocalDB;

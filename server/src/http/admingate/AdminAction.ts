@@ -531,7 +531,7 @@ export default class AdminAction {
                         defaultvalue: params[name] || conf.defaultValue,
                         displayfield: "ck_id",
                         type: "IFIELD",
-                        valuefield: [{in: "ck_id"}],
+                        valuefield: [{ in: "ck_id" }],
                     };
                 }
                 return {
