@@ -1342,7 +1342,7 @@ begin
       end loop;
     end if;
 
-    if nullif(gv_error::varchar, '') is not null and nullif(gv_warning::varchar, '') is not null then
+    if nullif(gv_error::varchar, '') is not null or nullif(gv_warning::varchar, '') is not null then
    	  return;
     end if;
     if pv_action = i::varchar then
@@ -2194,10 +2194,13 @@ begin
     /* значения атрибутов  decimalseparator и thousandseparator в классах Column Numeric и Field Numeric не могут совпадать */
     perform p_check_separator(pv_action, pot_page_object_attr, null, null);
     /* добавление/модификация */
-    if pv_action = i::varchar and nullif(gv_error::varchar, '') is null and nullif(gv_warning::varchar, '') is null then
+    if nullif(gv_error::varchar, '') is not null or nullif(gv_warning::varchar, '') is not null then
+   	  return;
+    end if;
+    if pv_action = i::varchar then
       pot_page_object_attr.ck_id := sys_guid();
       insert into s_mt.t_page_object_attr values(pot_page_object_attr.*);
-    elsif pv_action = u::varchar and nullif(gv_error::varchar, '') is null and nullif(gv_warning::varchar, '') is null then
+    elsif pv_action = u::varchar then
       update s_mt.t_page_object_attr set
         (ck_id, ck_page_object, ck_class_attr, cv_value, ck_user, ct_change) = row(pot_page_object_attr.*)
       where ck_id = pot_page_object_attr.ck_id;
