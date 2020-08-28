@@ -407,6 +407,9 @@ export default class AdminAction {
                 return value;
             },
         );
+        if (isEmpty(json.master.ck_id)) {
+            return Promise.resolve([]);
+        }
         const PClass = method(json.master.ck_id);
         if (PClass && PClass.getParamsInfo) {
             const params = PClass.getParamsInfo();

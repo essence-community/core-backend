@@ -967,6 +967,7 @@ begin
             vot_class_attr.ct_change   := CURRENT_TIMESTAMP;
             vot_class_attr.cl_required := 1;
             vot_class_attr.ck_attr     := 'type';
+            vot_class_attr.cl_empty    := 0;
             vot_class_attr.cv_value    := vcur.cv_type;
           
             vot_class_attr := pkg_meta.p_modify_class_attr(vcur.cv_action_class_attr, vot_class_attr);
@@ -1025,9 +1026,10 @@ begin
                                 else
                                 'U'
                               end as cv_action
-                        from (select (t.dt->>'ck_attr') as ck_attr, 
+                        from (select  (t.dt->>'ck_attr') as ck_attr, 
                                       (t.dt->>'cv_value') as cv_value, 
                                       (t.dt->>'cl_required') as cl_required, 
+                                      (t.dt->>'cl_empty') as cl_empty, 
                                       (t.dt->>'cv_data_type_extra') as cv_data_type_extra 
                                 from jsonb_array_elements(vcur_class.cj_class->'class_attributes') as t(dt)) jt
                         full join (select ca.ck_id, ca.ck_attr
@@ -1043,6 +1045,7 @@ begin
             vot_class_attr.ct_change   := CURRENT_TIMESTAMP;
             vot_class_attr.cv_data_type_extra := nullif(trim(vcur.cv_data_type_extra), '');
             vot_class_attr.cl_required := coalesce(nullif(vcur.cl_required, '')::bigint, 0);
+            vot_class_attr.cl_empty    := coalesce(nullif(vcur.cl_empty, '')::bigint, 0);
             vot_class_attr.ck_attr     := vcur.ck_attr;
             vot_class_attr.cv_value    := nullif(vcur.cv_value, '');
           
