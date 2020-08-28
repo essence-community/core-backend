@@ -967,6 +967,7 @@ begin
             vot_class_attr.ct_change   := CURRENT_TIMESTAMP;
             vot_class_attr.cl_required := 1;
             vot_class_attr.ck_attr     := 'type';
+            vot_class_attr.cl_empty    := 0;
             vot_class_attr.cv_value    := vcur.cv_type;
           
             vot_class_attr := pkg_meta.p_modify_class_attr(vcur.cv_action_class_attr, vot_class_attr);
