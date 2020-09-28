@@ -1,5 +1,5 @@
 --liquibase formatted sql
---changeset artemov_i:init_schema dbms:oracle splitStatements:true stripComments:false
+--changeset artemov_i:init_schema_default dbms:oracle splitStatements:true stripComments:false
 CREATE TABLE ${user.table}."T_LOG" 
    (
     "CK_ID" NUMBER NOT NULL ENABLE, 
