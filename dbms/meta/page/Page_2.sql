@@ -43,7 +43,7 @@ select pkg_patcher.p_merge_object('A2E08196F3CF4E8494FEA91DA200D361', '32', 'E56
 select pkg_patcher.p_merge_object('4E1B4314D2834E84BCEDC56A9EF5405F', '9', '7A5F95F042574D54915061C1090C9ADC', 'Master Column', 10000, null, 'Колонка Мастер', '1eb70aef590744b6b3fb79c31a38b7eb', null, null, '-11', '2018-02-23T00:00:00.000+0000');
 select pkg_patcher.p_merge_object('84595AB4D5BD6B95E053809BA8C06D64', '32', 'A1707D6B3442425BAB77E04962EDC94D', 'Редактирование rules', 2, null, 'Редактирование rules', '49235fd8c9aa48a19d2c4925948e95fe', null, null, '1', '2019-08-29T00:00:00.000+0000');
 select pkg_patcher.p_merge_object('572C01CA51ED4C5ABA1096F885CEA511', '32', 'A1707D6B3442425BAB77E04962EDC94D', 'Window Edit Markdown', 3, null, 'Window Edit Markdown', 'a1e8e456fdd047c5ae9636993b2e06f5', null, null, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-06-15T18:57:22.325+0000');
-select pkg_patcher.p_merge_object('CA8BD99B587642D683A8FEE57397507B', '32', 'A1707D6B3442425BAB77E04962EDC94D', 'Window Edit Global', 4, null, 'Window Edit Global', 'ee4e0d5490994d1487d4f4081b901f78', null, null, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-06-18T14:56:18.393+0000');
+select pkg_patcher.p_merge_object('CA8BD99B587642D683A8FEE57397507B', '32', 'A1707D6B3442425BAB77E04962EDC94D', 'Window Edit Global', 4, null, 'Window Edit Global', '3259ab4db0234babb223045fb79357df', null, null, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-06-18T14:56:18.393+0000');
 select pkg_patcher.p_merge_object('F976D933C12248428804E879F51DC067', '19', '6B214CDC907D43328F55C63F791B91C3', 'Add Button', 10, null, 'Добавить', '122d20300ab34c02b78bd1d3945e5eeb', null, null, '10020780', '2018-07-23T00:00:00.000+0000');
 select pkg_patcher.p_merge_object('97C9499C8A5E45F5BD2CA0894A0E985F', '58', 'A1707D6B3442425BAB77E04962EDC94D', 'Filter', 10, null, 'Filter', null, null, null, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-21T00:00:00.000+0000');
 select pkg_patcher.p_merge_object('4B7F8B7BCCB549E3ACBF66B23A68227B', '16', '6B214CDC907D43328F55C63F791B91C3', 'Edit Button', 20, null, 'Редактирование', null, null, null, '10020780', '2018-07-23T00:00:00.000+0000');
@@ -574,7 +574,7 @@ select t.ck_id, t.ck_d_lang, t.cr_namespace, t.cv_value, t.ck_user, t.ct_change:
     union all
     select 'fdaa6d2e71f547e2b510bcda30528280' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Редактирование текста' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2020-06-15T19:01:16.402+0000' as ct_change
     union all
-    select 'ee4e0d5490994d1487d4f4081b901f78' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Редактирование глобальное переменной' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2020-06-18T14:56:18.393+0000' as ct_change
+    select '3259ab4db0234babb223045fb79357df' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Редактирование переменной' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2020-09-23T14:56:18.393+0000' as ct_change
     union all
     select 'ea7ebbde436043318cc0907b99e0a3d5' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Редактирование RegExp' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2020-06-24T13:19:44.744+0000' as ct_change
     union all
