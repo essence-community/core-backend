@@ -179,7 +179,7 @@ begin
   vot_class_attr.ck_class = nullif(trim(pc_json#>>'{service,ck_main}'), '');
   vot_class_attr.ck_attr = nullif(trim(pc_json#>>'{data,ck_attr}'), '');
   vot_class_attr.cv_data_type_extra = nullif(trim(pc_json#>>'{data,cv_data_type_extra}'), '');
-  vot_class_attr.cv_value = pkg_meta.p_decode_attr_variable((pc_json#>>'{data,cv_value}'), vot_class_attr.ck_id, pc_json, vot_class_attr.ck_attr);
+  vot_class_attr.cv_value = pkg_meta.p_decode_attr_variable((pc_json#>>'{data,cv_value}'), vot_class_attr.ck_id, pc_json, vot_class_attr.ck_attr, pv_user);
   vot_class_attr.cl_required = trim(pc_json#>>'{data,cl_required}')::int2;
   vot_class_attr.cl_empty = trim(pc_json#>>'{data,cl_empty}')::int2;
   vot_class_attr.ck_user = pv_user;
@@ -427,7 +427,7 @@ begin
   vot_object_attr.ck_id = nullif(trim(pc_json#>>'{data,ck_id}'), '');
   vot_object_attr.ck_object = nullif(trim(pc_json#>>'{service,ck_main}'), '');
   vot_object_attr.ck_class_attr = nullif(trim(pc_json#>>'{data,ck_class_attr}'), '');
-  vot_object_attr.cv_value = pkg_meta.p_decode_attr_variable((pc_json#>>'{data,cv_value}'), vot_object_attr.ck_class_attr, pc_json);
+  vot_object_attr.cv_value = pkg_meta.p_decode_attr_variable((pc_json#>>'{data,cv_value}'), vot_object_attr.ck_class_attr, pc_json, pv_user);
   vot_object_attr.ck_user = pv_user;
   vot_object_attr.ct_change = CURRENT_TIMESTAMP;
   vv_action = (pc_json#>>'{service,cv_action}');
@@ -633,7 +633,7 @@ begin
   vot_page_object_attr.ck_id = nullif(trim(pc_json#>>'{data,ck_id}'), '');
   vot_page_object_attr.ck_page_object = nullif(trim(pc_json#>>'{service,ck_main}'), '');
   vot_page_object_attr.ck_class_attr = nullif(trim(pc_json#>>'{data,ck_class_attr}'), '');
-  vot_page_object_attr.cv_value = pkg_meta.p_decode_attr_variable((pc_json#>>'{data,cv_value}'), vot_page_object_attr.ck_class_attr, pc_json);
+  vot_page_object_attr.cv_value = pkg_meta.p_decode_attr_variable((pc_json#>>'{data,cv_value}'), vot_page_object_attr.ck_class_attr, pc_json, pv_user);
   vot_page_object_attr.ck_user = pv_user;
   vot_page_object_attr.ct_change = CURRENT_TIMESTAMP;
   vv_action = (pc_json#>>'{service,cv_action}');
