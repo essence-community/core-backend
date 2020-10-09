@@ -2431,7 +2431,7 @@ ALTER FUNCTION pkg_meta.p_modify_sys_setting(pv_action character varying, INOUT 
 
 COMMENT ON FUNCTION pkg_meta.p_modify_sys_setting(pv_action character varying, INOUT pot_sys_setting s_mt.t_sys_setting) IS 'Создание/обновление/удаление глобальных настроек приложения t_sys_setting';
 
-CREATE FUNCTION pkg_meta.p_decode_attr_variable(pv_value varchar, pk_class varchar, pc_json jsonb, pk_attr varchar DEFAULT null::varchar) RETURNS varchar
+CREATE FUNCTION pkg_meta.p_decode_attr_variable(pv_value varchar, pk_class varchar, pc_json jsonb, pk_attr varchar DEFAULT null::varchar, pv_user varchar DEFAULT '-1'::varchar) RETURNS varchar
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 's_mt', 'pkg_localization', 'pkg_meta', 'public'
     AS $$
@@ -2550,9 +2550,9 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_meta.p_decode_attr_variable(varchar,varchar,jsonb,varchar) OWNER TO s_mp;
+ALTER FUNCTION pkg_meta.p_decode_attr_variable(varchar,varchar,jsonb,varchar,varchar) OWNER TO s_mp;
 
-COMMENT ON FUNCTION pkg_meta.p_decode_attr_variable(varchar,varchar,jsonb,varchar) IS 'Преобразование cv_value в varchar';
+COMMENT ON FUNCTION pkg_meta.p_decode_attr_variable(varchar,varchar,jsonb,varchar,varchar) IS 'Преобразование cv_value в varchar';
 
 CREATE FUNCTION pkg_meta.p_refresh_page_object(pk_page character varying) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER

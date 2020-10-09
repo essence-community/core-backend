@@ -31,7 +31,7 @@ select pkg_patcher.p_merge_object('B25593736D6549B498335251E1FB280C', '9', '5438
 select pkg_patcher.p_merge_object('16E65663C5714E269C8289281C18DCA8', '9', 'A27411E018F34D16B5ABE97BCB6DBDF0', 'Column Class', 700, null, 'Класс объекта', '6ff101333366469d82ed86732adcfeca', null, null, '-11', '2018-02-23T00:00:00.000+0000');
 select pkg_patcher.p_merge_object('781B950446EB4D519D680BAB9F87DF7E', '32', '5438D5F75E6D4CCB92CFCED7AFDA951C', 'Window edit regexp', 700, null, 'Window edit regexp', 'ea7ebbde436043318cc0907b99e0a3d5', null, null, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-06-25T06:43:14.737+0000');
 select pkg_patcher.p_merge_object('A3875FB63D7042A6B61B371720EA55BF', '9', 'A27411E018F34D16B5ABE97BCB6DBDF0', 'Column Pages', 800, null, 'Страницы где подключен объект', 'e9b53190aefe4b58951d28ced35cc639', null, null, '-11', '2018-02-23T00:00:00.000+0000');
-select pkg_patcher.p_merge_object('FA6775E9DC71464B870836E8929727F9', '32', '5438D5F75E6D4CCB92CFCED7AFDA951C', 'Window Edit Global', 800, null, 'Window Edit Global', 'ee4e0d5490994d1487d4f4081b901f78', null, null, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-06-25T06:43:38.000+0000');
+select pkg_patcher.p_merge_object('FA6775E9DC71464B870836E8929727F9', '32', '5438D5F75E6D4CCB92CFCED7AFDA951C', 'Window Edit Global', 800, null, 'Window Edit Global', '3259ab4db0234babb223045fb79357df', null, null, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-06-25T06:43:38.000+0000');
 select pkg_patcher.p_merge_object('66E12B205EC54282896B6B2498DE65A2', '9', 'A27411E018F34D16B5ABE97BCB6DBDF0', 'Column Modify Fn', 900, null, 'Колонка отображения привязки функции изменения', '80e96cb8a84a4b0291f5a70a905127d8', null, null, '-11', '2018-02-23T00:00:00.000+0000');
 select pkg_patcher.p_merge_object('04ACBA57BDB541699A459C20B4906BFD', '77', 'A27411E018F34D16B5ABE97BCB6DBDF0', 'Column cn_order', 1000, null, 'Column cn_order', '5e698beecec34866ad52783b66809a48', null, null, '10020786', '2018-04-05T00:00:00.000+0000');
 select pkg_patcher.p_merge_object('18535FD223624FB5B6F57ACE83DF8592', '8D547C621A02626CE053809BA8C0882B', 'AD92CE96A2054131B22B632935101B9E', 'AttrType Radio', 10, 'MTObjectAttrType', 'Тип атрибута', '1938adda682e4c60a26b8eccfa7daff5', null, null, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-21T00:00:00.000+0000');
@@ -370,7 +370,7 @@ select t.ck_id, t.ck_d_lang, t.cr_namespace, t.cv_value, t.ck_user, t.ct_change:
     union all
     select 'eba167f79822465cb1ac892dd7b5cb31' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Отменить?' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-26T00:00:00.000+0000' as ct_change
     union all
-    select 'ee4e0d5490994d1487d4f4081b901f78' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Редактирование глобальное переменной' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2020-06-18T14:56:18.393+0000' as ct_change
+    select '3259ab4db0234babb223045fb79357df' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Редактирование переменной' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2020-09-23T14:56:18.393+0000' as ct_change
     union all
     select 'ea7ebbde436043318cc0907b99e0a3d5' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Редактирование RegExp' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2020-06-24T13:19:44.744+0000' as ct_change
     union all

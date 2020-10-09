@@ -1,5 +1,5 @@
 --liquibase formatted sql
---changeset artemov_i:init_schema_bpmn dbms:postgresql splitStatements:false stripComments:false
+--changeset artemov_i:init_schema_default dbms:postgresql splitStatements:false stripComments:false
 CREATE SCHEMA ${user.table};
 
 CREATE TABLE ${user.table}.t_log
