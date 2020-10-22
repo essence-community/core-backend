@@ -12,6 +12,8 @@ export class S3Storage implements IStorage {
     private logger: IRufusLogger;
     private UPLOAD_DIR: string = process.env.GATE_UPLOAD_DIR || os.tmpdir();
     constructor(params: IPluginParams, logger: IRufusLogger) {
+        this.params = params;
+        this.logger = logger;
         const credentials = new AWS.Credentials({
             accessKeyId: this.params.cvS3KeyId,
             secretAccessKey: this.params.cvS3SecretKey,
