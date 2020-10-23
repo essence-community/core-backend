@@ -66,7 +66,7 @@ $$;
 ALTER FUNCTION pkg_patcher.p_lock_patch(pk_id uuid) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_patcher.p_change_role_connect_user(pv_connect_user VARCHAR, pv_table_schema VARCHAR) RETURNS void
-    LANGUAGE plpgsql SECURITY DEFINER
+    LANGUAGE plpgsql
     SET search_path TO '${user.table}', 'pkg_patcher', 'public'
     AS $$
 declare
@@ -103,7 +103,7 @@ end;
 $$;
 
 CREATE FUNCTION pkg_patcher.p_change_role_update_user(pv_update_user VARCHAR, pv_table_schema VARCHAR) RETURNS void
-    LANGUAGE plpgsql SECURITY DEFINER
+    LANGUAGE plpgsql
     SET search_path TO '${user.table}', 'pkg_patcher', 'public'
     AS $$
 declare
