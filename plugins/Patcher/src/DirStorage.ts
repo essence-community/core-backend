@@ -26,8 +26,7 @@ export class DirStorage implements IStorage {
         content: string,
         metaData: Record<string, string> = {},
         size: number = (buffer as Readable).pipe
-            ? Buffer.byteLength(buffer as Buffer)
-            : undefined,
+            ? undefined : Buffer.byteLength(buffer as Buffer),
     ): Promise<void> {
         const prePath = key.startsWith("/") ? key : `/${key}`;
         return new Promise((resolve, reject) => {

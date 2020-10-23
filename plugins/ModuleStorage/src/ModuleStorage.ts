@@ -13,6 +13,7 @@ import * as fs from "fs";
 import { forEach, isObject } from "lodash";
 import { getType } from "mime";
 import * as Path from "path";
+import { Readable } from "stream";
 
 interface File {
     /**
@@ -233,7 +234,8 @@ export default class ModuleStorage extends NullPlugin {
         path: string,
         buffer: any,
         content: string,
-        size: number = Buffer.byteLength(buffer),
+        size: number = (buffer as Readable).pipe
+            ? undefined : Buffer.byteLength(buffer as Buffer),
     ): Promise<void> {
         return new Promise((resolve, reject) => {
             this.clients.putObject(
@@ -266,7 +268,8 @@ export default class ModuleStorage extends NullPlugin {
         path: string,
         buffer: any,
         content: string,
-        size: number = Buffer.byteLength(buffer),
+        size: number = (buffer as Readable).pipe
+            ? undefined : Buffer.byteLength(buffer as Buffer),
     ): Promise<void> {
         return new Promise((resolve, reject) => {
             const param = this.params as PluginParams;

@@ -58,8 +58,7 @@ export class S3Storage implements IStorage {
         content: string,
         Metadata: Record<string, string> = {},
         size: number = (buffer as Readable).pipe
-            ? Buffer.byteLength(buffer as Buffer)
-            : undefined,
+            ? undefined : Buffer.byteLength(buffer as Buffer),
     ): Promise<void> {
         return new Promise((resolve, reject) => {
             this.clients.putObject(
