@@ -235,7 +235,8 @@ export default class ModuleStorage extends NullPlugin {
         buffer: any,
         content: string,
         size: number = (buffer as Readable).pipe
-            ? undefined : Buffer.byteLength(buffer as Buffer),
+            ? undefined
+            : Buffer.byteLength(buffer as Buffer),
     ): Promise<void> {
         return new Promise((resolve, reject) => {
             this.clients.putObject(
@@ -269,7 +270,8 @@ export default class ModuleStorage extends NullPlugin {
         buffer: any,
         content: string,
         size: number = (buffer as Readable).pipe
-            ? undefined : Buffer.byteLength(buffer as Buffer),
+            ? undefined
+            : Buffer.byteLength(buffer as Buffer),
     ): Promise<void> {
         return new Promise((resolve, reject) => {
             const param = this.params as PluginParams;
@@ -330,11 +332,16 @@ export default class ModuleStorage extends NullPlugin {
             if (!fs.existsSync(file)) {
                 return resolve();
             }
-            fs.unlink(file, (err) => {
+            fs.unlink(`${param.cvPath}${path}.meta`, (err) => {
                 if (err) {
                     return reject(err);
                 }
-                resolve();
+                fs.unlink(file, (errC) => {
+                    if (errC) {
+                        return reject(errC);
+                    }
+                    resolve();
+                });
             });
         });
     }

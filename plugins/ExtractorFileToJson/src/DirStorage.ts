@@ -27,7 +27,8 @@ export class DirStorage {
         content: string,
         metaData: Record<string, string> = {},
         size: number = (buffer as Readable).pipe
-            ? undefined : Buffer.byteLength(buffer as Buffer),
+            ? undefined
+            : Buffer.byteLength(buffer as Buffer),
     ): Promise<void> {
         const prePath = key.startsWith("/") ? key : `/${key}`;
         return new Promise((resolve, reject) => {
@@ -70,11 +71,16 @@ export class DirStorage {
             if (!fs.existsSync(file)) {
                 return resolve();
             }
-            fs.unlink(file, (err) => {
+            fs.unlink(`${this.params.cvPath}${prePath}.meta`, (err) => {
                 if (err) {
                     return reject(err);
                 }
-                resolve();
+                fs.unlink(file, (errC) => {
+                    if (errC) {
+                        return reject(errC);
+                    }
+                    resolve();
+                });
             });
         });
     }
