@@ -74,8 +74,9 @@ export class S3Storage {
                     Key: key,
                     Metadata: {
                         ...Metadata,
-                        originalFilename: Metadata &&
-                        encodeURIComponent(Metadata.originalFilename)
+                        originalFilename:
+                            Metadata &&
+                            encodeURIComponent(Metadata.originalFilename),
                     },
                 },
                 (err) => {
