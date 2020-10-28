@@ -74,8 +74,9 @@ export class S3Storage implements IStorage {
                     Key: key,
                     Metadata: {
                         ...Metadata,
-                        originalFilename: Metadata &&
-                        encodeURIComponent(Metadata.originalFilename)
+                        originalFilename:
+                            Metadata &&
+                            encodeURIComponent(Metadata.originalFilename),
                     },
                 },
                 (err) => {
