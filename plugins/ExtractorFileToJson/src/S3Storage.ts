@@ -12,6 +12,8 @@ export class S3Storage {
     private logger: IRufusLogger;
     private UPLOAD_DIR: string = process.env.GATE_UPLOAD_DIR || os.tmpdir();
     constructor(params: IPluginParams, logger: IRufusLogger) {
+        this.params = params;
+        this.logger = logger;
         const credentials = new AWS.Credentials({
             accessKeyId: this.params.cvS3KeyId,
             secretAccessKey: this.params.cvS3SecretKey,
@@ -56,8 +58,8 @@ export class S3Storage {
         content: string,
         Metadata: Record<string, string> = {},
         size: number = (buffer as Readable).pipe
-            ? Buffer.byteLength(buffer as Buffer)
-            : undefined,
+            ? undefined
+            : Buffer.byteLength(buffer as Buffer),
     ): Promise<void> {
         return new Promise((resolve, reject) => {
             this.clients.putObject(
@@ -70,7 +72,12 @@ export class S3Storage {
                     ContentLength: size,
                     ContentType: content,
                     Key: key,
-                    Metadata,
+                    Metadata: {
+                        ...Metadata,
+                        originalFilename:
+                            Metadata &&
+                            encodeURIComponent(Metadata.originalFilename),
+                    },
                 },
                 (err) => {
                     if (err) {
@@ -133,7 +140,7 @@ export class S3Storage {
                             },
                             originalFilename:
                                 response.Metadata &&
-                                response.Metadata.originalFilename,
+                                decodeURI(response.Metadata.originalFilename),
                             path: filePath,
                             size: response.ContentLength,
                         });
