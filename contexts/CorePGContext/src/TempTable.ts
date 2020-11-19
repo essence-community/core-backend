@@ -133,11 +133,19 @@ export class TempTable {
                                 );
                             }
                         });
-                        res.stream.on("end", () => {
-                            this.dbSysSettings.insert(data).then(
-                                () => resolve(),
-                                (err) => reject(err),
-                            );
+                        res.stream.on("end", async () => {
+                            try {
+                                await this.dbSysSettings.remove(
+                                    {},
+                                    { multi: true },
+                                );
+                                await this.dbSysSettings.insert(data).then(
+                                    () => resolve(),
+                                    (err) => reject(err),
+                                );
+                            } catch (e) {
+                                reject(e);
+                            }
                         });
                     }),
             );
@@ -209,11 +217,18 @@ export class TempTable {
                                 );
                             }
                         });
-                        res.stream.on("end", () => {
-                            return this.dbPage.insert(Object.values(data)).then(
-                                () => resolve(),
-                                (err) => reject(err),
-                            );
+                        res.stream.on("end", async () => {
+                            try {
+                                await this.dbPage.remove({}, { multi: true });
+                                await this.dbPage
+                                    .insert(Object.values(data))
+                                    .then(
+                                        () => resolve(),
+                                        (err) => reject(err),
+                                    );
+                            } catch (e) {
+                                reject(e);
+                            }
                         });
                     }),
             );
@@ -254,11 +269,19 @@ export class TempTable {
                                 );
                             }
                         });
-                        res.stream.on("end", () => {
-                            this.dbMessage.insert(data).then(
-                                () => resolve(),
-                                (err) => reject(err),
-                            );
+                        res.stream.on("end", async () => {
+                            try {
+                                await this.dbMessage.remove(
+                                    {},
+                                    { multi: true },
+                                );
+                                await this.dbMessage.insert(data).then(
+                                    () => resolve(),
+                                    (err) => reject(err),
+                                );
+                            } catch (e) {
+                                reject(e);
+                            }
                         });
                     }),
             );
@@ -297,11 +320,16 @@ export class TempTable {
                                 cr_type: row.cr_type,
                             });
                         });
-                        res.stream.on("end", () => {
-                            this.dbQuery.insert(data).then(
-                                () => resolve(),
-                                (err) => reject(err),
-                            );
+                        res.stream.on("end", async () => {
+                            try {
+                                await this.dbQuery.remove({}, { multi: true });
+                                await this.dbQuery.insert(data).then(
+                                    () => resolve(),
+                                    (err) => reject(err),
+                                );
+                            } catch (e) {
+                                reject(e);
+                            }
                         });
                     }),
             );
@@ -337,11 +365,19 @@ export class TempTable {
                                     parseInt(row.cn_action, 10),
                             });
                         });
-                        res.stream.on("end", () => {
-                            this.dbQueryAction.insert(data).then(
-                                () => resolve(),
-                                (err) => reject(err),
-                            );
+                        res.stream.on("end", async () => {
+                            try {
+                                await this.dbQueryAction.remove(
+                                    {},
+                                    { multi: true },
+                                );
+                                await this.dbQueryAction.insert(data).then(
+                                    () => resolve(),
+                                    (err) => reject(err),
+                                );
+                            } catch (e) {
+                                reject(e);
+                            }
                         });
                     }),
             );
@@ -375,11 +411,16 @@ export class TempTable {
                                 cv_modify: row.cv_modify,
                             });
                         });
-                        res.stream.on("end", () => {
-                            this.dbModify.insert(data).then(
-                                () => resolve(),
-                                (err) => reject(err),
-                            );
+                        res.stream.on("end", async () => {
+                            try {
+                                await this.dbModify.remove({}, { multi: true });
+                                await this.dbModify.insert(data).then(
+                                    () => resolve(),
+                                    (err) => reject(err),
+                                );
+                            } catch (e) {
+                                reject(e);
+                            }
                         });
                     }),
             );
@@ -405,18 +446,26 @@ export class TempTable {
                         const data = [];
                         res.stream.on("data", (row) => {
                             data.push({
-                                ck_id: `${row.ck_id}_${row.cn_action}`,
+                                ck_id: `${row.ck_id}:${row.cn_action}`,
                                 ck_page_object: row.ck_id.toLowerCase(),
                                 cn_action:
                                     row.cn_action &&
                                     parseInt(row.cn_action, 10),
                             });
                         });
-                        res.stream.on("end", () => {
-                            this.dbModifyAction.insert(data).then(
-                                () => resolve(),
-                                (err) => reject(err),
-                            );
+                        res.stream.on("end", async () => {
+                            try {
+                                await this.dbModifyAction.remove(
+                                    {},
+                                    { multi: true },
+                                );
+                                await this.dbModifyAction.insert(data).then(
+                                    () => resolve(),
+                                    (err) => reject(err),
+                                );
+                            } catch (e) {
+                                reject(e);
+                            }
                         });
                     }),
             );
