@@ -24,7 +24,7 @@ select pkg_patcher.p_merge_object('999DA56D0ECF45A8BC98F2265A703988', '57', null
 select pkg_patcher.p_merge_object('16D8DF6E515F4274A69908D7FA34EB30', '19', '7A5F95F042574D54915061C1090C9ADC', 'Top Btn Add Object', 120, null, 'Добавление объекта в страницу', '122d20300ab34c02b78bd1d3945e5eeb', null, null, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-04T00:00:00.000+0000');
 select pkg_patcher.p_merge_object('41FC947229F54E8EB1A5A302A69EC23F', '16', '7A5F95F042574D54915061C1090C9ADC', 'Edit Object Page', 150, null, 'Редактирование объекта страницы', null, null, null, '-11', '2018-02-23T00:00:00.000+0000');
 select pkg_patcher.p_merge_object('E0799FB264604C54973DF0B6A49BD63E', '16', 'E56A94F186CA495BAEF39DF68B68681A', 'Edit Page', 150, null, 'Редактирование страниц', null, null, null, '-11', '2018-02-23T00:00:00.000+0000');
-select pkg_patcher.p_merge_object('D94343DAF0AC4B85A29C0DA667BEE539', '19', 'E56A94F186CA495BAEF39DF68B68681A', 'Reset Meta Cache', 200, null, 'Сбросить кэш на шлюзе', '7df77ef51e9e4a2eba8e03c04cfdda93', null, null, '-11', '2018-02-23T00:00:00.000+0000');
+select pkg_patcher.p_merge_object('D94343DAF0AC4B85A29C0DA667BEE539', '19', 'E56A94F186CA495BAEF39DF68B68681A', 'Reset Meta Cache', 200, null, 'Сбросить кеш на шлюзе', '7df77ef51e9e4a2eba8e03c04cfdda93', null, null, '-11', '2018-02-23T00:00:00.000+0000');
 select pkg_patcher.p_merge_object('3DD16DB9F9D64C6CA05252512E9BCDD3', '57', 'E56A94F186CA495BAEF39DF68B68681A', 'Refresh Page', 300, null, 'Обновление объектов страницы', null, null, null, '-11', '2018-02-23T00:00:00.000+0000');
 select pkg_patcher.p_merge_object('95467F5511694BA6A9E982493356D3A1', '257', '7A5F95F042574D54915061C1090C9ADC', 'Переход на страницу', 300, null, 'Переход на страницу', 'aa60b1ca688b499885ae6dd3dc843e41', null, null, '-11', '2018-02-23T00:00:00.000+0000');
 select pkg_patcher.p_merge_object('32BC0ECB10F34E30AD727CBD97719E26', '17', '7A5F95F042574D54915061C1090C9ADC', 'Object Name', 350, null, 'Наименование объекта', '3723f896cd744f5eaf56f738c4cdd4b5', null, null, '-11', '2018-02-23T00:00:00.000+0000');
@@ -510,9 +510,9 @@ select t.ck_id, t.ck_d_lang, t.cr_namespace, t.cv_value, t.ck_user, t.ct_change:
     union all
     select '71230bdf2b1a40c9a39d67440c9517a7' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Атрибуты объекта на странице' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
     union all
-    select '7df77ef51e9e4a2eba8e03c04cfdda93' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Сбросить кэш на шлюзе' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
+    select '7df77ef51e9e4a2eba8e03c04cfdda93' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Сбросить кеш на шлюзе' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
     union all
-    select '8388dd8629c2445da53303c543936c68' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Сбросить кэш на шлюзе. <br> Кешируется следующее: <br> 1) список ошибок t_message <br> 2) Метаинформация страниц (перечень pageobject) <br> 3) Правовые доступы для запросов <br> 4) Связь запросов с методами модификаций' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
+    select '8388dd8629c2445da53303c543936c68' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Сбросить кеш на шлюзе. <br> Кешируется следующее: <br> 1) список ошибок t_message <br> 2) Метаинформация страниц (перечень pageobject) <br> 3) Правовые доступы для запросов <br> 4) Связь запросов с методами модификаций' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
     union all
     select '84f84a5449f44af0b941f0260b9b5221' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Значение, переопределенное на странице' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
     union all
@@ -548,7 +548,7 @@ select t.ck_id, t.ck_d_lang, t.cr_namespace, t.cv_value, t.ck_user, t.ct_change:
     union all
     select 'f063b3a9d44c43f8bdfa8c6abe95f58f' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Статическая страница' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
     union all
-    select 'f0a1aae300df408f93a68ebc11dc74c7' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Сбросить кэш на шлюзе?' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
+    select 'f0a1aae300df408f93a68ebc11dc74c7' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Сбросить кеш на шлюзе?' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
     union all
     select 'f2e1cb183311424389de7edc34c1ed22' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Доступные символы: [0-9],[a-z],[A-Z],[_],[-]. <br/>Запрещено использовать подряд идущие или одиночные символы "_", "-", а также их комбинации' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
     union all

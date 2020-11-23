@@ -23,8 +23,8 @@ select pkg_patcher.p_merge_object('15F103BFDB6D45FEB2C990463F8EA029', '137', '56
 select pkg_patcher.p_merge_object('A8B009C097D049B19CD4020B7A1BCAA7', '19', '77CFE9CE5FE6410396FC0C26484089F3', 'Btn Add', 100, null, 'Добавление новой строки', '122d20300ab34c02b78bd1d3945e5eeb', null, null, '10020786', '2018-03-12T00:00:00.000+0000');
 select pkg_patcher.p_merge_object('BF46E3E0411A4D2D94DA13B6DD764AE4', '8', '5658FE86CDC048D88A70BD4C6F35C7C3', 'Grid Schedulers Conf', 150, 'GTGetSchedulers', 'Список планировщиков', '96da73f39caf4737b5fa2a1140f6a73c', 'dbSchedulers', 'admingate', '10028610', '2019-03-06T00:00:00.000+0000');
 select pkg_patcher.p_merge_object('E1D836B3887142E3A8ABF74AFCDEACA1', '137', '5658FE86CDC048D88A70BD4C6F35C7C3', 'Riak CS Panel', 170, null, 'Хранилище файлов RiakCS', '52aca11950b9472e83f8a410dc998b4f', null, null, '10020786', '2018-08-30T00:00:00.000+0000');
-select pkg_patcher.p_merge_object('6945CC0B592C4A9EBB922C7C158AE57B', '19', '77CFE9CE5FE6410396FC0C26484089F3', 'Btn Restart', 200, null, 'Перезапуск сервера без сброса кэша', 'ffd7bbab8d0940e48c71d012f5b96fab', null, null, '10020786', '2018-03-12T00:00:00.000+0000');
-select pkg_patcher.p_merge_object('CB917EE58158437A93C286FEDE814EE5', '19', '77CFE9CE5FE6410396FC0C26484089F3', 'BTN Restart Full', 300, null, 'Перезапуск сервера со сбросом кэша', '36b4597ff0dc4be7a1e9636c6907c8c1', null, null, '10020786', '2018-03-12T00:00:00.000+0000');
+select pkg_patcher.p_merge_object('6945CC0B592C4A9EBB922C7C158AE57B', '19', '77CFE9CE5FE6410396FC0C26484089F3', 'Btn Restart', 200, null, 'Перезапуск сервера без сброса кеша', 'ffd7bbab8d0940e48c71d012f5b96fab', null, null, '10020786', '2018-03-12T00:00:00.000+0000');
+select pkg_patcher.p_merge_object('CB917EE58158437A93C286FEDE814EE5', '19', '77CFE9CE5FE6410396FC0C26484089F3', 'BTN Restart Full', 300, null, 'Перезапуск сервера со сбросом кеша', '36b4597ff0dc4be7a1e9636c6907c8c1', null, null, '10020786', '2018-03-12T00:00:00.000+0000');
 select pkg_patcher.p_merge_object('7CBBA232461A2E93E053809BA8C0DF29', '8', '7CBB4DF23E1C2E89E053809BA8C0AAA8', 'Grid Provider Core', 1, 'MTProvider', 'Список провайдеров CORE', '33e9559d60e349ab953fed23656856e5', 'pkg_json_meta.f_modify_provider', 'meta', '20848', '2018-12-12T00:00:00.000+0000');
 select pkg_patcher.p_merge_object('19E9A6A85E254EC4B5534ED17B1A2735', '8', 'E1D836B3887142E3A8ABF74AFCDEACA1', 'RiakCS Grid', 1, 'GTGetRiakFiles', 'Хранилище файлов RiakCS', 'c7490b3fdc164da2be086b61a0884edf', 'deleteRiakFile', 'admingate', '10020786', '2018-10-17T00:00:00.000+0000');
 select pkg_patcher.p_merge_object('1E12EF64380C4A669ECE833795EF43DF', '8', 'E1D836B3887142E3A8ABF74AFCDEACA1', 'Riak CS File Info Grid', 2, 'GTGetRiakFileInfo', 'Информация по файлу', '4dadd8c3f42f451588653cc50e3abe81', null, null, '10020786', '2018-08-30T00:00:00.000+0000');
@@ -713,7 +713,7 @@ select t.ck_id, t.ck_d_lang, t.cr_namespace, t.cv_value, t.ck_user, t.ct_change:
     union all
     select '33e9559d60e349ab953fed23656856e5' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Список провайдеров CORE (база)' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
     union all
-    select '36b4597ff0dc4be7a1e9636c6907c8c1' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Перезапуск сервера со сбросом кэша' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
+    select '36b4597ff0dc4be7a1e9636c6907c8c1' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Перезапуск сервера со сбросом кеша' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
     union all
     select '3966cd7d9b8b4513b1e9ea2c73dc601e' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Признак загрузки при инициализации' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
     union all
@@ -779,7 +779,7 @@ select t.ck_id, t.ck_d_lang, t.cr_namespace, t.cv_value, t.ck_user, t.ct_change:
     union all
     select 'fa9fc7670722485bbeb022fd20273469' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Сброс провайдера' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
     union all
-    select 'ffd7bbab8d0940e48c71d012f5b96fab' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Перезапуск сервера без сброса кэша' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
+    select 'ffd7bbab8d0940e48c71d012f5b96fab' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Перезапуск сервера без сброса кеша' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
     union all
     select '3023fed44b414e44a9ceb248513c1b48' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Добавление службы' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-16T00:00:00.000+0000' as ct_change
     union all

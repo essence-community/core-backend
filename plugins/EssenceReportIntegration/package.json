@@ -1,0 +1,14 @@
+{
+    "name": "@ungate-plugin/essencereportintegration",
+    "version": "1.0.0",
+    "description": "Плагин интеграции Essence Report",
+    "author": "Ivan Artemov (honyrik@gmail.com)",
+    "license": "MIT",
+    "dependencies": {
+        "@ungate/plugininf": "^1.0.0",
+        "lodash": "^4.17.15"
+    },
+    "devDependencies": {
+        "@types/lodash": "^4.14.150"
+    }
+}
