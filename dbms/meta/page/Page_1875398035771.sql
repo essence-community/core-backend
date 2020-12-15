@@ -2,12 +2,12 @@
 --changeset patcher-core:Page_1875398035771 dbms:postgresql runOnChange:true splitStatements:false stripComments:false
 select pkg_patcher.p_remove_page('1875398035771');
 
-INSERT INTO s_mt.t_page (ck_id, ck_parent, cr_type, cv_name, cn_order, cl_static, cv_url, ck_icon, ck_user, ct_change, cl_menu)VALUES('1875398035771', '1875130240361', 2, 'e571d8599bc8466aac42ade8b1891e44', 1, 0, null, '5', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-08-22T00:00:00.000+0000', 0) on conflict (ck_id) do update set ck_parent = excluded.ck_parent, cr_type = excluded.cr_type, cv_name = excluded.cv_name, cn_order = excluded.cn_order, cl_static = excluded.cl_static, cv_url = excluded.cv_url, ck_icon = excluded.ck_icon, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cl_menu = excluded.cl_menu;
+INSERT INTO s_mt.t_page (ck_id, ck_parent, cr_type, cv_name, cn_order, cl_static, cv_url, ck_icon, ck_view, ck_user, ct_change, cl_menu)VALUES('1875398035771', '1875130240361', 2, 'e571d8599bc8466aac42ade8b1891e44', 1, 0, null, '5', 'system', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-08-22T00:00:00.000+0000', 0) on conflict (ck_id) do update set ck_parent = excluded.ck_parent, ck_view=excluded.ck_view, cr_type = excluded.cr_type, cv_name = excluded.cv_name, cn_order = excluded.cn_order, cl_static = excluded.cl_static, cv_url = excluded.cv_url, ck_icon = excluded.ck_icon, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cl_menu = excluded.cl_menu;
 select pkg_patcher.p_merge_page_action('2739563307', '1875398035771', 'edit', 504, '20780', '2019-01-20T00:00:00.000+0000');
 select pkg_patcher.p_merge_page_action('2739221037', '1875398035771', 'view', 503, '20780', '2019-01-20T00:00:00.000+0000');
 INSERT INTO s_mt.t_page_variable (ck_id, ck_page, cv_name, cv_description, cv_value, ck_user, ct_change)VALUES('2032473', '1875398035771', 'g_cd_period', 'Период', null, '20786', '2018-12-24T00:00:00.000+0000') on conflict (ck_id) do update set ck_page = excluded.ck_page, cv_name = excluded.cv_name, cv_description = excluded.cv_description, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
 select pkg_patcher.p_merge_object('7DD501DC87595167E053809BA8C05540', '137', null, 'SYS Menu Profile', 1000950, null, 'Профиль', null, null, null, '20786', '2018-12-24T00:00:00.000+0000');
-select pkg_patcher.p_merge_object('7DD501DC875A5167E053809BA8C05540', '26', '7DD501DC87595167E053809BA8C05540', 'Field Login', 10, null, 'Логин', '21f19ef4712040719f22624b3c0f2bb5', null, null, '20786', '2018-12-24T00:00:00.000+0000');
+select pkg_patcher.p_merge_object('7DD501DC875A5167E053809BA8C05540', '26', '7DD501DC87595167E053809BA8C05540', 'Field Login', 10, null, 'Логин', '060a6513dc574996853d045276217394', null, null, '20786', '2018-12-24T00:00:00.000+0000');
 select pkg_patcher.p_merge_object('7DD51E27188751DDE053809BA8C01BB0', '26', '7DD501DC87595167E053809BA8C05540', 'Field FIO', 20, null, 'ФИО', '1740026cff1e45a9a13eeb3302428dc0', null, null, '20786', '2018-12-24T00:00:00.000+0000');
 select pkg_patcher.p_merge_object('7DD51E27188851DDE053809BA8C01BB0', '26', '7DD501DC87595167E053809BA8C05540', 'Field Email', 30, null, 'E-MAIL', 'cd78af76de0a40c7a56052936666e3e8', null, null, '20786', '2018-12-24T00:00:00.000+0000');
 select pkg_patcher.p_merge_object('09C4F5C6F0DA4681B275936B46DDEE27', '2BB74480D7E2455B97AED5B3A070FE35', '7DD501DC87595167E053809BA8C05540', 'Theme', 35, null, 'Theme', 'eb5f0456bee64d60ba3560e6f7a9f332', null, null, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-01-30T00:00:00.000+0000');
@@ -29,9 +29,9 @@ select pkg_patcher.p_merge_page_object_attr('F7E3A69B59004C609E65B512DB8C2221', 
 select pkg_patcher.p_merge_page_object_attr('6A609EDC6D25426BA00EAE7AD1D065CA', '0169F067BCEC4BECA0547ECFA211C648', '1160', 'g_sess_cv_surname + '' '' + g_sess_cv_name', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-01-23T00:00:00.000+0000', 'getglobal');
 INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change)
 select t.ck_id, t.ck_d_lang, t.cr_namespace, t.cv_value, t.ck_user, t.ct_change::timestamp from (
-    select '1740026cff1e45a9a13eeb3302428dc0' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'ФИО' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
+    select '060a6513dc574996853d045276217394' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Логин' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
     union all
-    select '21f19ef4712040719f22624b3c0f2bb5' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Логин' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
+    select '1740026cff1e45a9a13eeb3302428dc0' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'ФИО' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
     union all
     select 'cd78af76de0a40c7a56052936666e3e8' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'e-mail' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
     union all

@@ -129,6 +129,7 @@ begin
   pot_class.cv_description = nullif(trim(pc_json#>>'{data,cv_description}'), '');
   pot_class.cv_manual_documentation = nullif(trim(pc_json#>>'{data,cv_manual_documentation}'), '');
   pot_class.cv_auto_documentation = nullif(trim(pc_json#>>'{data,cv_auto_documentation}'), '');
+  pot_class.ck_view = nullif(trim(pc_json#>>'{data,ck_view}'), '');
   pot_class.cl_final = trim(pc_json#>>'{data,cl_final}')::int2;
   pot_class.cl_dataset = trim(pc_json#>>'{data,cl_dataset}')::int2;
   pot_class.ck_user = pv_user;
@@ -489,6 +490,7 @@ begin
     vot_page.cl_static = nullif(trim(pc_json#>>'{data,drag,cl_static}'), '')::smallint;
     vot_page.cv_url = nullif(trim(pc_json#>>'{data,drag,cv_url}'), '');
     vot_page.ck_icon = nullif(trim(pc_json#>>'{data,drag,ck_icon}'), '');
+    vot_page.ck_view = nullif(trim(pc_json#>>'{data,drag,ck_view}'), '');
     vn_action_view = nullif(trim(pc_json#>>'{data,drag,cn_action_view}'), '')::bigint;
     vn_action_edit = nullif(trim(pc_json#>>'{data,drag,cn_action_edit}'), '')::bigint;
   else 
@@ -501,6 +503,7 @@ begin
     vot_page.cl_static = nullif(trim(pc_json#>>'{data,cl_static}'), '')::smallint;
     vot_page.cv_url = nullif(trim(pc_json#>>'{data,cv_url}'), '');
     vot_page.ck_icon = nullif(trim(pc_json#>>'{data,ck_icon}'), '');
+    vot_page.ck_view = nullif(trim(pc_json#>>'{data,ck_view}'), '');
     vn_action_view = nullif(trim(pc_json#>>'{data,cn_action_view}'), '')::bigint;
     vn_action_edit = nullif(trim(pc_json#>>'{data,cn_action_edit}'), '')::bigint;
   end if;
@@ -547,6 +550,55 @@ $$;
 
 
 ALTER FUNCTION pkg_json_meta.f_modify_page(pv_user character varying, pk_session character varying, pc_json jsonb) OWNER TO s_mp;
+
+CREATE FUNCTION pkg_json_meta.f_modify_page_attr(pv_user character varying, pk_session character varying, pc_json jsonb) RETURNS character varying
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 's_mt', 'pkg_json_meta', 'public'
+    AS $$
+declare
+  -- переменные пакета
+  gv_error sessvarstr;
+  i sessvarstr;
+  -- переменные функции
+  vot_page_attr s_mt.t_page_attr;
+
+  vv_action      varchar(1);
+  vk_main        varchar(32);
+begin
+  -- инициализация/получение переменных пакета
+  gv_error = sessvarstr_declare('pkg', 'gv_error', '');
+  i = sessvarstr_declare('pkg', 'i', 'I');
+  -- код функции
+  --обнулим глобальные переменные с перечнем ошибок/предупреждений/информационных сообщений
+  perform pkg.p_reset_response();
+  --JSON -> rowtype
+  vot_page_attr.ck_id = nullif(trim(pc_json#>>'{data,ck_id}'), '');
+  vot_page_attr.ck_page = nullif(trim(pc_json#>>'{master,ck_id}'), '');
+  vot_page_attr.ck_attr = nullif(trim(pc_json#>>'{data,ck_attr}'), '');
+  vot_page_attr.cv_value = pkg_meta.p_decode_attr_variable((pc_json#>>'{data,cv_value}'), null, pc_json, vot_page_attr.ck_attr, pv_user);
+  vot_page_attr.ck_user = pv_user;
+  vot_page_attr.ct_change = CURRENT_TIMESTAMP;
+  vv_action = (pc_json#>>'{service,cv_action}');
+  vk_main = (pc_json#>>'{master,ck_id}');
+
+  --проверка прав доступа
+  perform pkg_access.p_check_access(pv_user, vk_main);
+  if nullif(gv_error::varchar, '') is not null then
+    return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}'; --ошибка прав доступа.
+  end if;
+  --блочим основную таблицу
+  perform pkg_meta.p_lock_page(vk_main);
+  --проверяем и сохраняем данные
+  vot_page_attr := pkg_meta.p_modify_page_attr(vv_action, vot_page_attr);
+  --логируем данные
+  perform pkg_log.p_save(pv_user, pk_session, pc_json, 'pkg_json_meta.f_modify_page_attr', vot_page_attr.ck_id, vv_action);
+  return '{"ck_id":"' || coalesce(vot_page_attr.ck_id, '') || '","cv_error":' || pkg.p_form_response() || '}';
+end;
+$$;
+
+
+ALTER FUNCTION pkg_json_meta.f_modify_page_attr(pv_user character varying, pk_session character varying, pc_json jsonb) OWNER TO s_mp;
+
 
 CREATE FUNCTION pkg_json_meta.f_modify_page_object(pv_user character varying, pk_session character varying, pc_json jsonb) RETURNS character varying
     LANGUAGE plpgsql SECURITY DEFINER
