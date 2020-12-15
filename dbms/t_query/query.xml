@@ -51,7 +51,6 @@
     <include file="./t_query/GTRestartFullGate.sql" />
     <include file="./t_query/GTGetProviderParam.sql" />
     <include file="./t_query/GTGetDepartaments.sql" />
-    <include file="./t_query/ShowUserReports.sql" />
     <include file="./t_query/MTQueryExtended.sql" />
     <include file="./t_query/MTClassAttr.sql" />
     <include file="./t_query/ATShowAction.sql" />
@@ -99,7 +98,6 @@
     <include file="./t_query/ATGetPageAtEditing.sql" />
     <include file="./t_query/GTGetRiakFiles.sql" />
     <include file="./t_query/GTGetServers.sql" />
-    <include file="./t_query/ShowReports.sql" />
     <include file="./t_query/ATGetPage.sql" />
     <include file="./t_query/GetMetamodelPage.sql" />
     <include file="./t_query/MTCopyObject.sql" />
@@ -130,4 +128,8 @@
     <include file="./t_query/DTRoute.sql" />
     <include file="./t_query/MTClassDoc.sql" />
     <include file="MTApplicationRoute.sql" relativeToChangelogFile="true"/>
+    <include file="MTView.sql" relativeToChangelogFile="true"/>
+    <include file="MTViewExtra.sql" relativeToChangelogFile="true"/>
+    <include file="MTViewOnlyConfig.sql" relativeToChangelogFile="true"/>
+    <include file="MTPageAttr.sql" relativeToChangelogFile="true"/>
 </databaseChangeLog>

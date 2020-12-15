@@ -2,7 +2,7 @@
 --changeset patcher-core:Page_F5CAF3CF206A4454A48FA1466932B969 dbms:postgresql runOnChange:true splitStatements:false stripComments:false
 select pkg_patcher.p_remove_page('F5CAF3CF206A4454A48FA1466932B969');
 
-INSERT INTO s_mt.t_page (ck_id, ck_parent, cr_type, cv_name, cn_order, cl_static, cv_url, ck_icon, ck_user, ct_change, cl_menu)VALUES('F5CAF3CF206A4454A48FA1466932B969', 'BC4B5C748874439E9CED6E8F76933B84', 2, '7e9709869e4e48ab9344e347eeadcbf2', 20, 0, null, '280', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-11T00:00:00.000+0000', 1) on conflict (ck_id) do update set ck_parent = excluded.ck_parent, cr_type = excluded.cr_type, cv_name = excluded.cv_name, cn_order = excluded.cn_order, cl_static = excluded.cl_static, cv_url = excluded.cv_url, ck_icon = excluded.ck_icon, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cl_menu = excluded.cl_menu;
+INSERT INTO s_mt.t_page (ck_id, ck_parent, cr_type, cv_name, cn_order, cl_static, cv_url, ck_icon, ck_view, ck_user, ct_change, cl_menu)VALUES('F5CAF3CF206A4454A48FA1466932B969', 'BC4B5C748874439E9CED6E8F76933B84', 2, '7e9709869e4e48ab9344e347eeadcbf2', 20, 0, null, '280', 'system', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-11T00:00:00.000+0000', 1) on conflict (ck_id) do update set ck_parent = excluded.ck_parent, ck_view=excluded.ck_view, cr_type = excluded.cr_type, cv_name = excluded.cv_name, cn_order = excluded.cn_order, cl_static = excluded.cl_static, cv_url = excluded.cv_url, ck_icon = excluded.ck_icon, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cl_menu = excluded.cl_menu;
 select pkg_patcher.p_merge_page_action('9375D16F2BF1494A9E231C5734F1D005', 'F5CAF3CF206A4454A48FA1466932B969', 'edit', 516, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-11T00:00:00.000+0000');
 select pkg_patcher.p_merge_page_action('B62D8310574C466C8E5D9C64BDC8ACF5', 'F5CAF3CF206A4454A48FA1466932B969', 'view', 515, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-11T00:00:00.000+0000');
 INSERT INTO s_mt.t_page_variable (ck_id, ck_page, cv_name, cv_description, cv_value, ck_user, ct_change)VALUES('CAEFC7FE1DA94907AE3CFF57FCD39FE5', 'F5CAF3CF206A4454A48FA1466932B969', 'g_lang_exclude', 'ID слова/фразы', null, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-12T00:00:00.000+0000') on conflict (ck_id) do update set ck_page = excluded.ck_page, cv_name = excluded.cv_name, cv_description = excluded.cv_description, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
@@ -70,7 +70,9 @@ select pkg_patcher.p_merge_page_object_attr('C6758F2F825245F5AA19218FFBCC4E1B', 
 update s_mt.t_page_object set ck_master='C8E575B2C483413CAF2884477FB6E548' where ck_id='DD14E144DFBA4DE892375B07E70EA17A';
 INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change)
 select t.ck_id, t.ck_d_lang, t.cr_namespace, t.cv_value, t.ck_user, t.ct_change::timestamp from (
-    select '356026998685486b99fc07969bd2af68' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Идентификатор' as cv_value, '-11' as ck_user, '2019-12-09T00:00:00.000+0000' as ct_change
+    select '356026998685486b99fc07969bd2af68' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Идентификатор' as cv_value, '-11' as ck_user, '2019-12-08T18:00:00.000+0000' as ct_change
+    union all
+    select 'd0ad23ef13f8493e996cfca8a98d0721' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Редактировать значение' as cv_value, '-11' as ck_user, '2019-12-09T09:00:00.000+0000' as ct_change
     union all
     select '16e495742eee4776af2456e0549b93f3' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Перевод' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
     union all
@@ -84,9 +86,7 @@ select t.ck_id, t.ck_d_lang, t.cr_namespace, t.cv_value, t.ck_user, t.ct_change:
     union all
     select '7e9709869e4e48ab9344e347eeadcbf2' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Словарь' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
     union all
-    select 'd0ad23ef13f8493e996cfca8a98d0721' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Редактировать значение' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
-    union all
-    select '122d20300ab34c02b78bd1d3945e5eeb' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Добавить' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-25T00:00:00.000+0000' as ct_change
+    select '122d20300ab34c02b78bd1d3945e5eeb' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Добавить' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-24T15:00:00.000+0000' as ct_change
     union all
     select '8ebf011fbbad4c45bd0e93d6f8f39b20' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Язык' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-26T00:00:00.000+0000' as ct_change
 ) as t 

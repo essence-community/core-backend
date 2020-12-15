@@ -2,7 +2,7 @@
 --changeset patcher-core:Page_DDBEA79C5CBE4DC3A2CEA74DA46216A7 dbms:postgresql runOnChange:true splitStatements:false stripComments:false
 select pkg_patcher.p_remove_page('DDBEA79C5CBE4DC3A2CEA74DA46216A7');
 
-INSERT INTO s_mt.t_page (ck_id, ck_parent, cr_type, cv_name, cn_order, cl_static, cv_url, ck_icon, ck_user, ct_change, cl_menu)VALUES('DDBEA79C5CBE4DC3A2CEA74DA46216A7', 'BC4B5C748874439E9CED6E8F76933B84', 2, 'ed2722b45cce4783b438d229e6d27f13', 1, 0, null, '396', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-11T00:00:00.000+0000', 1) on conflict (ck_id) do update set ck_parent = excluded.ck_parent, cr_type = excluded.cr_type, cv_name = excluded.cv_name, cn_order = excluded.cn_order, cl_static = excluded.cl_static, cv_url = excluded.cv_url, ck_icon = excluded.ck_icon, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cl_menu = excluded.cl_menu;
+INSERT INTO s_mt.t_page (ck_id, ck_parent, cr_type, cv_name, cn_order, cl_static, cv_url, ck_icon, ck_view, ck_user, ct_change, cl_menu)VALUES('DDBEA79C5CBE4DC3A2CEA74DA46216A7', 'BC4B5C748874439E9CED6E8F76933B84', 2, 'ed2722b45cce4783b438d229e6d27f13', 1, 0, null, '396', 'system', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-11T00:00:00.000+0000', 1) on conflict (ck_id) do update set ck_parent = excluded.ck_parent, ck_view=excluded.ck_view, cr_type = excluded.cr_type, cv_name = excluded.cv_name, cn_order = excluded.cn_order, cl_static = excluded.cl_static, cv_url = excluded.cv_url, ck_icon = excluded.ck_icon, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cl_menu = excluded.cl_menu;
 select pkg_patcher.p_merge_page_action('12812E3772C4402597EC80FB52204B69', 'DDBEA79C5CBE4DC3A2CEA74DA46216A7', 'edit', 516, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-11T00:00:00.000+0000');
 select pkg_patcher.p_merge_page_action('05BB5278147F43E7AB026A8204FD8A86', 'DDBEA79C5CBE4DC3A2CEA74DA46216A7', 'view', 515, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-11T00:00:00.000+0000');
 select pkg_patcher.p_merge_object('6101F84D8CCC469892BB236F6068A71F', '8', null, 'SYS Language Grid', 1004002, 'MTGetLang', 'Список языков', null, 'pkg_json_localization.f_modify_lang', 'meta', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-12T00:00:00.000+0000');
@@ -31,17 +31,17 @@ INSERT INTO s_mt.t_page_object (ck_id, ck_page, ck_object, cn_order, ck_parent, 
 INSERT INTO s_mt.t_page_object (ck_id, ck_page, ck_object, cn_order, ck_parent, ck_master, ck_user, ct_change) VALUES ('D4EB5D068C4440CCA15EB34FB0330954', 'DDBEA79C5CBE4DC3A2CEA74DA46216A7', '87EB6A9412F642C6B7BA3F0EAD5B55A3', 50, 'EB7DA66474084531B31819AF930A2506', null, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-11T00:00:00.000+0000')  on conflict (ck_id) do update set ck_page = excluded.ck_page, ck_object = excluded.ck_object, cn_order = excluded.cn_order, ck_parent = excluded.ck_parent, ck_master = excluded.ck_master, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
 INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change)
 select t.ck_id, t.ck_d_lang, t.cr_namespace, t.cv_value, t.ck_user, t.ct_change::timestamp from (
+    select 'd0ad23ef13f8493e996cfca8a98d0721' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Редактировать значение' as cv_value, '-11' as ck_user, '2019-12-09T09:00:00.000+0000' as ct_change
+    union all
     select '32d1685390d44934b3d5f71dc0084ee3' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Код языка' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
     union all
     select '7c47246c867740179cb1f2c7a3705d6d' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'По умолчанию' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
     union all
-    select 'd0ad23ef13f8493e996cfca8a98d0721' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Редактировать значение' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
-    union all
     select 'ed2722b45cce4783b438d229e6d27f13' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Список языков' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
     union all
-    select '122d20300ab34c02b78bd1d3945e5eeb' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Добавить' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-25T00:00:00.000+0000' as ct_change
+    select '122d20300ab34c02b78bd1d3945e5eeb' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Добавить' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-24T15:00:00.000+0000' as ct_change
     union all
-    select '114687c48dd3443c8bfd0f8c50c185b4' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Наименование' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-26T00:00:00.000+0000' as ct_change
+    select '114687c48dd3443c8bfd0f8c50c185b4' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Наименование' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-25T09:00:00.000+0000' as ct_change
 ) as t 
  join s_mt.t_d_lang dl
  on t.ck_d_lang = dl.ck_id

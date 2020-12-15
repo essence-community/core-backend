@@ -9,5 +9,6 @@
   <include file="./s_mt/data.sql" />
   <include file="./s_mt/scripts.sql" />
   <include file="./s_mt/scripts.2.6.0.sql" />
+  <include file="scripts.2.7.0.sql" relativeToChangelogFile="true"/>
   <include file="./s_mt/version.sql" />
 </databaseChangeLog>

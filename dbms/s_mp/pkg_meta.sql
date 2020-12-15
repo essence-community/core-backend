@@ -1532,20 +1532,43 @@ begin
     if pot_page.cv_name is null then
       perform pkg.p_set_error(2);
     end if;
-    if pot_page.cl_static is null then
+    if pot_page.cl_static is null and pot_page.cr_type <> 3 then
       perform pkg.p_set_error(7);
+    end if;
+    if pot_page.cr_type = 3 then
+      pot_page.cl_static := 1;
+      pot_page.cl_menu := 0;
     end if;
     if pot_page.cn_order is null then
       perform pkg.p_set_error(8);
     end if;
-    if pot_page.cr_type is null or pot_page.cr_type not in (0, 1, 2) then
+    if pot_page.cr_type is null or pot_page.cr_type not in (0, 1, 2, 3) then
       perform pkg.p_set_error(9);
     end if;
     if pot_page.ck_parent is not null and pot_page.cr_type = 0 then
-      perform pkg.p_set_error(10);
+      for vcur_cnt in (
+            select 1
+            from s_mt.t_page p
+              where p.ck_id = pot_page.ck_parent and p.cr_type <> 3
+          ) loop
+            perform pkg.p_set_error(10);
+      end loop;
     end if;
-    if pot_page.ck_parent is null and pot_page.cr_type in (1, 2) then
-      perform pkg.p_set_error(11);
+    if (pot_page.ck_parent is null and pot_page.cr_type <> 3) or 
+       (pot_page.ck_parent is not null and pot_page.cr_type = 3) then
+        perform pkg.p_set_error(11);
+    end if;
+    if pot_page.cr_type <> 3 then
+      for vcur_cnt in (
+            select ck_view
+            from s_mt.t_page p
+              where p.ck_id = pot_page.ck_parent
+          ) loop
+            pot_page.ck_view := vcur_cnt.ck_view;
+      end loop;
+    end if;
+    if pot_page.ck_view is null then
+        perform pkg.p_set_error(51, 'message:f9139ac6cf8046d59660b7a5a8340416');
     end if;
     -- Проверяем ссылку
     if pot_page.cl_static is not null and pot_page.cl_static = 1::smallint then
@@ -1565,6 +1588,7 @@ begin
         end loop;
       end if;
     end if;
+    
     if pot_page.cr_type = 2 then /* проверки 35 и 36 актуальны только для страниц */
       if pn_action_view is null and (gl_warning::bigint) = 0 then
         perform pkg.p_set_warning(35);
@@ -1629,8 +1653,8 @@ begin
         insert into s_mt.t_page values (pot_page.*);
       elsif pv_action = u::varchar then
         update s_mt.t_page set
-          (ck_id, ck_parent, cr_type, cv_name, cn_order, cl_menu, cl_static, cv_url, ck_icon, ck_user, ct_change) = 
-          (pot_page.ck_id, pot_page.ck_parent, pot_page.cr_type, pot_page.cv_name, pot_page.cn_order, pot_page.cl_menu, pot_page.cl_static, pot_page.cv_url, pot_page.ck_icon, pot_page.ck_user, pot_page.ct_change)
+          (ck_id, ck_parent, cr_type, cv_name, cn_order, cl_menu, cl_static, cv_url, ck_icon, ck_view, ck_user, ct_change) = 
+          (pot_page.ck_id, pot_page.ck_parent, pot_page.cr_type, pot_page.cv_name, pot_page.cn_order, pot_page.cl_menu, pot_page.cl_static, pot_page.cv_url, pot_page.ck_icon, pot_page.ck_view, pot_page.ck_user, pot_page.ct_change)
         where ck_id = pot_page.ck_id;
 
         if not found then
@@ -1723,6 +1747,64 @@ $$;
 ALTER FUNCTION pkg_meta.p_modify_page(pv_action character varying, INOUT pot_page s_mt.t_page, pn_action_view bigint, pn_action_edit bigint) OWNER TO s_mp;
 
 COMMENT ON FUNCTION pkg_meta.p_modify_page(pv_action character varying, INOUT pot_page s_mt.t_page, pn_action_view bigint, pn_action_edit bigint) IS 'Создание/обновление/удаление Страниц t_page, вместе с t_page_action';
+
+CREATE FUNCTION pkg_meta.p_modify_page_attr(pv_action character varying, INOUT pot_page_attr s_mt.t_page_attr) RETURNS s_mt.t_page_attr
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 's_mt', 'pkg_meta', 'public'
+    AS $$
+declare
+  -- переменные пакета
+  i sessvarstr;
+  u sessvarstr;
+  d sessvarstr;
+  gv_error sessvarstr;
+
+  -- переменные функции
+  vk_d_data_type VARCHAR;
+  rec record;
+begin
+   -- инициализация/получение переменных пакета
+  i = sessvarstr_declare('pkg', 'i', 'I');
+  u = sessvarstr_declare('pkg', 'u', 'U');
+  d = sessvarstr_declare('pkg', 'd', 'D');
+  gv_error = sessvarstr_declare('pkg', 'gv_error', '');
+
+  -- код функции
+  if pv_action = d::varchar then
+    /*Проверки на удаление*/
+    /*Удаление*/
+    delete from s_mt.t_page_attr where ck_id = pot_page_attr.ck_id;
+  else
+    /* Блок "Проверка переданных данных" */
+    if pot_page_attr.ck_attr is null then
+      perform pkg.p_set_error(2);
+    end if;
+
+    if nullif(gv_error::varchar, '') is not null then
+       return;
+    end if;
+
+    if pv_action = i::varchar then
+      pot_page_attr.ck_id := sys_guid();
+      insert into s_mt.t_page_attr values (pot_page_attr.*);
+    elsif pv_action = u::varchar then
+      update s_mt.t_page_attr set
+        (ck_attr, cv_value, ck_user, ct_change) = 
+        (pot_page_attr.ck_attr, pot_page_attr.cv_value, pot_page_attr.ck_user, pot_page_attr.ct_change)
+      where ck_id = pot_page_attr.ck_id;
+      if not found then
+        perform pkg.p_set_error(504);
+      end if;
+    end if;
+    null;
+  end if;
+end;
+$$;
+
+
+ALTER FUNCTION pkg_meta.p_modify_page_attr(pv_action character varying, INOUT pot_page_attr s_mt.t_page_attr) OWNER TO s_mp;
+
+COMMENT ON FUNCTION pkg_meta.p_modify_page_attr(pv_action character varying, INOUT pot_page_attr s_mt.t_page_attr) IS 'Создание/обновление/удаление настроек страницы';
 
 CREATE FUNCTION pkg_meta.p_modify_page_object(pv_action character varying, INOUT pot_page_object s_mt.t_page_object) RETURNS s_mt.t_page_object
     LANGUAGE plpgsql SECURITY DEFINER

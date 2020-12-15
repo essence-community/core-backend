@@ -14,6 +14,8 @@ with recursive t1(
     cv_url,
     ck_icon,
     cl_menu,
+    ck_view,
+    cv_app_url,
     lvl,
     root,
     cn_action_view,
@@ -25,7 +27,7 @@ with recursive t1(
     /* сначала выберем все объекты которые могут быть отображены */
     select
         p.ck_id,
-        p.ck_parent,
+        null::varchar as ck_parent,
         p.cr_type,
         p.cv_name,
         l.cv_value as cv_name_locale,
@@ -34,6 +36,8 @@ with recursive t1(
         p.cv_url,
         p.ck_icon,
         p.cl_menu,
+        p.ck_view,
+        par.cv_url as cv_app_url,
         1 as lvl,
         p.cv_name  as root,
         pav.cn_action as cn_action_view,
@@ -43,6 +47,8 @@ with recursive t1(
         i.cv_font as cv_icon_font
     from
         s_mt.t_page p
+    join s_mt.t_page par on 
+        p.ck_parent = par.ck_id
     left join s_mt.t_localization l on
         l.ck_id = p.cv_name and l.ck_d_lang in (select tdl.ck_id from s_mt.t_d_lang tdl where tdl.cl_default = 1)
     left join s_mt.t_page_action pav on
@@ -52,8 +58,9 @@ with recursive t1(
     left join s_mt.t_icon i on
         i.ck_id = p.ck_icon
     where
-        p.ck_parent is null
-        and p.cl_menu = 1
+        (lower(:json::json#>>''{filter,appUrl}'') in (''pages'', ''frame'', ''reports'', ''safe'', ''redirect'', ''preference'')
+        and p.ck_parent in (select ck_id from s_mt.t_page where ck_parent is null and cr_type = 3))
+        or (p.ck_parent in (select ck_id from s_mt.t_page where lower(cv_url)=lower(:json::json#>>''{filter,appUrl}'') and cr_type = 3))
 union all /* выберем их дочернии элементы в рекурсивном запросе */
     select
         p.ck_id,
@@ -66,6 +73,8 @@ union all /* выберем их дочернии элементы в рекур
         p.cv_url,
         p.ck_icon,
         p.cl_menu,
+        p.ck_view,
+        op.cv_app_url,
         op.lvl+1 as lvl,
         op.cv_name as root,
         pav.cn_action as cn_action_view,
@@ -85,7 +94,6 @@ union all /* выберем их дочернии элементы в рекур
         pae.ck_page = p.ck_id and pae.cr_type = ''edit''
     left join s_mt.t_icon i on
         i.ck_id = p.ck_icon
-    where p.cl_menu = 1
 ),
 ot_action as (
     select tss.cv_value::bigint as cn_action from s_mt.t_sys_setting tss where tss.ck_id = ''g_sys_anonymous_action''
@@ -124,6 +132,8 @@ select
     op.cv_url,
     op.ck_icon,
     op.ck_id,
+    op.ck_view,
+    op.cv_app_url,
     op.cv_icon_name,
     op.cv_icon_font,
     case when not exists(select 1 from t2 m where m.ck_parent = op.ck_id) then ''true'' else ''false'' end as leaf,

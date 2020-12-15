@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+    <include file="Page_1FE7D44E96374AEAB77604CF64038FF5.sql" relativeToChangelogFile="true"/>
+    <include file="Page_FF7C023ADAD940A397E46F3BBD4A5AD6.sql" relativeToChangelogFile="true"/>
     <include file="Page_1626AD0E15B446D4B478CCC5AC2B6E60.sql" relativeToChangelogFile="true"/>
     <include file="Page_483653E7F5BC481D86375F5A3C803AC2.sql" relativeToChangelogFile="true"/>
     <include file="Page_E3B71F02EC584D619DCBA77ED1CF8F4E.sql" relativeToChangelogFile="true"/>
