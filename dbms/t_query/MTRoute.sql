@@ -15,6 +15,7 @@ with recursive t1(
     ck_icon,
     cl_menu,
     ck_view,
+    cv_app_url,
     lvl,
     root,
     cn_action_view,
@@ -36,6 +37,7 @@ with recursive t1(
         p.ck_icon,
         p.cl_menu,
         p.ck_view,
+        par.cv_url as cv_app_url,
         1 as lvl,
         p.cv_name  as root,
         pav.cn_action as cn_action_view,
@@ -45,6 +47,8 @@ with recursive t1(
         i.cv_font as cv_icon_font
     from
         s_mt.t_page p
+    join s_mt.t_page par on 
+        p.ck_parent = par.ck_id
     left join s_mt.t_localization l on
         l.ck_id = p.cv_name and l.ck_d_lang in (select tdl.ck_id from s_mt.t_d_lang tdl where tdl.cl_default = 1)
     left join s_mt.t_page_action pav on
@@ -70,6 +74,7 @@ union all /* выберем их дочернии элементы в рекур
         p.ck_icon,
         p.cl_menu,
         p.ck_view,
+        op.cv_app_url,
         op.lvl+1 as lvl,
         op.cv_name as root,
         pav.cn_action as cn_action_view,
@@ -128,6 +133,7 @@ select
     op.ck_icon,
     op.ck_id,
     op.ck_view,
+    op.cv_app_url,
     op.cv_icon_name,
     op.cv_icon_font,
     case when not exists(select 1 from t2 m where m.ck_parent = op.ck_id) then ''true'' else ''false'' end as leaf,
