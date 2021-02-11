@@ -96,13 +96,21 @@ export class LocalOPARender implements IOPAEval {
                         res.result.reduce((result, value) => {
                             return [
                                 ...result,
-                                ...value.expressions.reduce(
-                                    (resExp, valExp) => [
-                                        ...resExp,
-                                        valExp.value,
-                                    ],
-                                    [],
-                                ),
+                                ...value.expressions
+                                    .filter(
+                                        (valExp) =>
+                                            typeof valExp.value === "object" ||
+                                            Array.isArray(valExp.value),
+                                    )
+                                    .reduce(
+                                        (resExp, valExp) => [
+                                            ...resExp,
+                                            ...(Array.isArray(valExp.value)
+                                                ? valExp.value
+                                                : [valExp.value]),
+                                        ],
+                                        [],
+                                    ),
                             ];
                         }, []),
                     );
