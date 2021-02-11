@@ -2,9 +2,9 @@ import { IOPAEval, IOPARenderParams } from "./OPARender.types";
 import { IRufusLogger } from "rufus";
 import path = require("path");
 import { spawn } from "child_process";
-import { uuid } from "uuidv4";
 import * as fs from "fs";
 import { IFile } from "@ungate/plugininf/lib/IContext";
+import { deleteFolderRecursive } from "@ungate/plugininf/lib/util/Util";
 
 export class LocalOPARender implements IOPAEval {
     params: IOPARenderParams;
@@ -90,6 +90,7 @@ export class LocalOPARender implements IOPAEval {
             });
             opa.on("exit", () => {
                 try {
+                    deleteFolderRecursive(temp);
                     const res = JSON.parse(rawData);
                     resolve(
                         res.result.reduce((result, value) => {

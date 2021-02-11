@@ -1,5 +1,6 @@
 import Connection from "@ungate/plugininf/lib/db/Connection";
 import IContext, {
+    IFormData,
     IHeader,
     IParam,
     IRequest,
@@ -13,8 +14,10 @@ import ISession from "@ungate/plugininf/lib/ISession";
 import Logger from "@ungate/plugininf/lib/Logger";
 import * as crypto from "crypto";
 import * as http from "http";
-import { noop } from "lodash";
+import { noop, forEach } from "lodash";
 import Constants from "../Constants";
+import * as path from "path";
+import * as fs from "fs";
 const log = Logger.getLogger("RequestContext");
 function prePareMsg(context: RequestContext, str: string): string {
     return str && str.length > context.gateContextPlugin.maxLogParamLen
@@ -214,6 +217,24 @@ export default class RequestContext implements IContext {
                         (new Date().getTime() - this.startTime) / 1000
                     }`,
             );
+            if (
+                typeof this.request.body === "object" &&
+                (this.request.body as IFormData).files
+            ) {
+                Object.entries((this.request.body as IFormData).files).forEach(
+                    ([key, files]) => {
+                        files.forEach((file) => {
+                            if (fs.existsSync(file.path)) {
+                                fs.unlink(file.path, (err) => {
+                                    if (err) {
+                                        this.error(err.message, err);
+                                    }
+                                });
+                            }
+                        });
+                    },
+                );
+            }
         });
         this._params = {
             ...request.params,
