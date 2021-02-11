@@ -162,7 +162,7 @@ export default class OPARender extends NullPlugin {
                     this.fixParam(data),
                     input,
                     queryId ? queryId : undefined,
-                )
+                );
                 if (this.params.flFinal) {
                     return {
                         type: "success",
