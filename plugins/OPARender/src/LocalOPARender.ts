@@ -100,7 +100,7 @@ export class LocalOPARender implements IOPAEval {
                                 ...value.expressions
                                     .filter(
                                         (valExp) =>
-                                            isObject(valExp.value) ||
+                                            (isObject(valExp.value) && !Array.isArray(valExp.value) && Object.keys(valExp.value).length) ||
                                             (Array.isArray(valExp.value) &&
                                                 isObject(valExp.value[0])),
                                     )
