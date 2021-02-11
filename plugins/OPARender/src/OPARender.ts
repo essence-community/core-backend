@@ -92,6 +92,11 @@ export default class OPARender extends NullPlugin {
                     "jt_inparam - искать во входных данных<br/>jt_result - искать во после обработки<br/>Пример: jt_inparam.json.filter.keyId",
                 name: "Идентификатор вызова",
             },
+            flFinal: {
+                type: "boolean",
+                name: "Результат обработки, использовать в ответе",
+                defaultValue: true,
+            },
         };
     }
     params: IOPARenderParams;
@@ -152,17 +157,26 @@ export default class OPARender extends NullPlugin {
                         const value = this.deepParam(val, inParam);
                         return value ? value : res;
                     }, "");
-                return {
-                    type: "success",
-                    data: ResultStream(
-                        await controller.eval(
-                            this.fixParam(policies),
-                            this.fixParam(data),
-                            input,
-                            queryId ? queryId : undefined,
+                const result = await controller.eval(
+                    this.fixParam(policies),
+                    this.fixParam(data),
+                    input,
+                    queryId ? queryId : undefined,
+                )
+                if (this.params.flFinal) {
+                    return {
+                        type: "success",
+                        data: ResultStream(
+                            await controller.eval(
+                                this.fixParam(policies),
+                                this.fixParam(data),
+                                input,
+                                queryId ? queryId : undefined,
+                            ),
                         ),
-                    ),
-                } as IResult;
+                    } as IResult;
+                }
+                query.inParams.jt_rego_result = JSON.stringify(result);
             };
         } else {
             this.afterQueryExecutePerform = async (

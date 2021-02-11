@@ -5,6 +5,7 @@ import { spawn } from "child_process";
 import * as fs from "fs";
 import { IFile } from "@ungate/plugininf/lib/IContext";
 import { deleteFolderRecursive } from "@ungate/plugininf/lib/util/Util";
+import { isObject } from 'lodash';
 
 export class LocalOPARender implements IOPAEval {
     params: IOPARenderParams;
@@ -99,8 +100,8 @@ export class LocalOPARender implements IOPAEval {
                                 ...value.expressions
                                     .filter(
                                         (valExp) =>
-                                            typeof valExp.value === "object" ||
-                                            Array.isArray(valExp.value),
+                                            isObject(valExp.value) ||
+                                            (Array.isArray(valExp.value) && isObject(valExp.value[0])),
                                     )
                                     .reduce(
                                         (resExp, valExp) => [

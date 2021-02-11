@@ -11,6 +11,7 @@ export interface IOPARenderParams {
     flBefore: boolean;
     flCachePolitics: boolean;
     flIdPoliticsKey?: string;
+    flFinal: boolean;
 }
 
 export interface IOPAEval {
