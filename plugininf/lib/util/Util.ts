@@ -58,7 +58,11 @@ function parseParam(conf: IParamInfo, value: any) {
  * @param param Параметры
  * @returns params Объект с параметрами
  */
-export function initParams(conf: IParamsInfo, param: ICCTParams = {}, isExcludeRequire: boolean = false): any {
+export function initParams(
+    conf: IParamsInfo,
+    param: ICCTParams = {},
+    isExcludeRequire: boolean = false,
+): any {
     const notFound = [];
     const result = { ...param };
     forEach(conf, (value, key) => {
