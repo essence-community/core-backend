@@ -1,3 +1,4 @@
+import { IFile } from "@ungate/plugininf/lib/IContext";
 import * as AWS from "aws-sdk";
 import * as fs from "fs";
 import * as os from "os";
@@ -5,7 +6,7 @@ import * as path from "path";
 import { IRufusLogger } from "rufus";
 import { Readable } from "stream";
 import { uuid } from "uuidv4";
-import { IFile, IPluginParams, IStorage } from "./Patcher.types";
+import { IPluginParams, IStorage } from "./Patcher.types";
 export class S3Storage implements IStorage {
     private clients: AWS.S3;
     private params: IPluginParams;

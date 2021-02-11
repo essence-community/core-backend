@@ -153,7 +153,7 @@ export default class OracleDB {
         if (params.lvl_logger && params.lvl_logger !== "NOTSET") {
             const rootLogger = Logger.getRootLogger();
             this.log.setLevel(params.lvl_logger);
-            for (let handler of rootLogger._handlers) {
+            for (const handler of rootLogger._handlers) {
                 this.log.addHandler(handler);
             }
         }
@@ -161,7 +161,7 @@ export default class OracleDB {
         this.name = name;
         this.partRows =
             this.connectionConfig.partRows ||
-            OracleDB.getParamsInfo().partRows.defaultValue;
+            (OracleDB.getParamsInfo().partRows.defaultValue as number);
         this.oracledb = oracledb;
         this.oracledb.outFormat = this.oracledb.OBJECT;
         this.oracledb.autoCommit = true;

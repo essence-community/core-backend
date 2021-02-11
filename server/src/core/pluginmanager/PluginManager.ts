@@ -68,7 +68,7 @@ class PluginManager {
             rows.push(
                 new Promise((resolve) => {
                     const Class = require(`${Constants.SCHEDULER_PLUGIN_DIR}/${file}`);
-                    GateSchedulersClass[name] = Class;
+                    GateSchedulersClass[name] = Class.default || Class;
                     logger.info(`Найден класс scheduler ${name}`);
                     return resolve();
                 }),
@@ -83,7 +83,12 @@ class PluginManager {
 
     public getGateSchedulerClass(key: string) {
         if (!GateSchedulersClass[key]) {
-            throw new ErrorException(ErrorGate.PLUGIN_NOT_FOUND);
+            throw new ErrorException(
+                ErrorGate.compileErrorResult(
+                    301,
+                    `Specified ${key} plugin not found`,
+                ),
+            );
         }
         return GateSchedulersClass[key];
     }
@@ -122,7 +127,7 @@ class PluginManager {
             rows.push(
                 new Promise((resolve) => {
                     const Class = require(`${Constants.EVENT_PLUGIN_DIR}/${file}`);
-                    GateEventsClass[name] = Class;
+                    GateEventsClass[name] = Class.default || Class;
                     logger.info(`Найден класс events ${name}`);
                     return resolve();
                 }),
@@ -137,7 +142,12 @@ class PluginManager {
 
     public getGateEventsClass(key: string) {
         if (!GateEventsClass[key]) {
-            throw new ErrorException(ErrorGate.PLUGIN_NOT_FOUND);
+            throw new ErrorException(
+                ErrorGate.compileErrorResult(
+                    301,
+                    `Specified ${key} plugin not found`,
+                ),
+            );
         }
         return GateEventsClass[key];
     }
@@ -180,7 +190,7 @@ class PluginManager {
             rows.push(
                 new Promise((resolve) => {
                     const Class = require(`${Constants.PROVIDER_PLUGIN_DIR}/${file}`);
-                    GateProviderClass[name] = Class;
+                    GateProviderClass[name] = Class.default || Class;
                     logger.info(`Найден класс провайдера ${name}`);
                     return resolve();
                 }),
@@ -225,7 +235,12 @@ class PluginManager {
 
     public getGateProviderClass(key: string) {
         if (!GateProviderClass[key]) {
-            throw new ErrorException(ErrorGate.PLUGIN_NOT_FOUND);
+            throw new ErrorException(
+                ErrorGate.compileErrorResult(
+                    301,
+                    `Specified ${key} plugin not found`,
+                ),
+            );
         }
         return GateProviderClass[key];
     }
@@ -287,7 +302,7 @@ class PluginManager {
             rows.push(
                 new Promise((resolve) => {
                     const Class = require(`${Constants.DATA_PLUGIN_DIR}/${file}`);
-                    GatePluginsClass[name] = Class;
+                    GatePluginsClass[name] = Class.default || Class;
                     logger.info(`Найден класс плагина ${name}`);
                     return resolve();
                 }),
@@ -305,7 +320,12 @@ class PluginManager {
 
     public getGatePluginsClass(key: string) {
         if (!GatePluginsClass[key]) {
-            throw new ErrorException(ErrorGate.PLUGIN_NOT_FOUND);
+            throw new ErrorException(
+                ErrorGate.compileErrorResult(
+                    301,
+                    `Specified ${key} plugin not found`,
+                ),
+            );
         }
         return GatePluginsClass[key];
     }
@@ -366,7 +386,7 @@ class PluginManager {
             rows.push(
                 new Promise((resolve) => {
                     const Class = require(`${Constants.CONTEXT_PLUGIN_DIR}/${file}`);
-                    GateContextClass[name] = Class;
+                    GateContextClass[name] = Class.default || Class;
                     logger.info(`Найден класс плагина контекста ${name}`);
                     return resolve();
                 }),
@@ -406,7 +426,12 @@ class PluginManager {
 
     public getGateContextClass(key: string) {
         if (!GateContextClass[key]) {
-            throw new ErrorException(ErrorGate.PLUGIN_NOT_FOUND);
+            throw new ErrorException(
+                ErrorGate.compileErrorResult(
+                    301,
+                    `Specified ${key} plugin not found`,
+                ),
+            );
         }
         return GateContextClass[key];
     }

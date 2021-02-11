@@ -2,7 +2,7 @@ import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
 import ICCTParams from "@ungate/plugininf/lib/ICCTParams";
 import IParamsInfo from "@ungate/plugininf/lib/ICCTParams";
-import IContext from "@ungate/plugininf/lib/IContext";
+import IContext, { IFile } from "@ungate/plugininf/lib/IContext";
 import { IPluginRequestContext } from "@ungate/plugininf/lib/IPlugin";
 import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
 import IResult from "@ungate/plugininf/lib/IResult";
@@ -24,7 +24,7 @@ import { patchAuth } from "./auth/AuthPatch";
 import { DirStorage } from "./DirStorage";
 import { patchIntegr } from "./integr/IntegrPatch";
 import { patchMeta } from "./meta/MetaPatch";
-import { IFile, IPluginParams, IStorage } from "./Patcher.types";
+import { IPluginParams, IStorage } from "./Patcher.types";
 import { IJson } from "./Patcher.types";
 import { S3Storage } from "./S3Storage";
 

@@ -116,7 +116,7 @@ export default function BodyParse(gateContext: IContextPlugin) {
                         return obj;
                     }, {}),
                 };
-                req.body = files;
+                req.body = { fields, files };
                 return next();
             });
             return;

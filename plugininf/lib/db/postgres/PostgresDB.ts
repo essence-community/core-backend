@@ -145,7 +145,7 @@ export default class PostgresDB {
         if (params.lvl_logger && params.lvl_logger !== "NOTSET") {
             const rootLogger = Logger.getRootLogger();
             this.log.setLevel(params.lvl_logger);
-            for (let handler of rootLogger._handlers) {
+            for (const handler of rootLogger._handlers) {
                 this.log.addHandler(handler);
             }
         }
@@ -157,7 +157,7 @@ export default class PostgresDB {
 
         this.partRows =
             this.connectionConfig.partRows ||
-            PostgresDB.getParamsInfo().partRows.defaultValue;
+            (PostgresDB.getParamsInfo().partRows.defaultValue as number);
         this.pg = pg;
     }
 
@@ -204,10 +204,12 @@ export default class PostgresDB {
             database: connectionString.path.substr(1),
             connectionTimeoutMillis:
                 this.connectionConfig.connectionTimeoutMillis ||
-                PostgresDB.getParamsInfo().connectionTimeoutMillis.defaultValue,
+                (PostgresDB.getParamsInfo().connectionTimeoutMillis
+                    .defaultValue as number),
             idleTimeoutMillis:
                 this.connectionConfig.idleTimeoutMillis ||
-                PostgresDB.getParamsInfo().idleTimeoutMillis.defaultValue,
+                (PostgresDB.getParamsInfo().idleTimeoutMillis
+                    .defaultValue as number),
             max: this.connectionConfig.poolMax || 4,
             min: this.connectionConfig.poolMin || 0,
         });

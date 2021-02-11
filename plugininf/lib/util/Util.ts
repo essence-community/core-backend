@@ -58,7 +58,7 @@ function parseParam(conf: IParamInfo, value: any) {
  * @param param Параметры
  * @returns params Объект с параметрами
  */
-export function initParams(conf: IParamsInfo, param: ICCTParams = {}): any {
+export function initParams(conf: IParamsInfo, param: ICCTParams = {}, isExcludeRequire: boolean = false): any {
     const notFound = [];
     const result = { ...param };
     forEach(conf, (value, key) => {
@@ -74,7 +74,7 @@ export function initParams(conf: IParamsInfo, param: ICCTParams = {}): any {
             result[key] = value.defaultValue;
         }
     });
-    if (notFound.length) {
+    if (!isExcludeRequire && notFound.length) {
         throw new ErrorException(
             ErrorGate.compileErrorResult(
                 -1,

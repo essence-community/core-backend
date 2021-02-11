@@ -1,6 +1,6 @@
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
-import IContext from "@ungate/plugininf/lib/IContext";
+import IContext, { IFormData } from "@ungate/plugininf/lib/IContext";
 import IProvider from "@ungate/plugininf/lib/IProvider";
 import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
 import IResult from "@ungate/plugininf/lib/IResult";
@@ -195,7 +195,15 @@ class ActionController {
     }: IActionOptions): Promise<IResult> {
         gateContext.trace("Process Upload");
         const result = [];
-        forEach(gateContext.request.body, (value, key) => {
+        if (
+            typeof gateContext.request.body !== "object" ||
+            !(gateContext.request.body as IFormData).files
+        ) {
+            return Promise.reject(
+                new ErrorException(ErrorGate.UPLOAD_FORM_ENCTYPE),
+            );
+        }
+        forEach((gateContext.request.body as IFormData).files, (value, key) => {
             if (value && value.length) {
                 result.push(
                     value.reduce(

@@ -11,7 +11,7 @@ const versionApp = fs.readFileSync("./VERSION").toString();
 delete serverJson.devDependencies;
 delete packageJson.devDependencies;
 delete packageJson.workspaces;
-packageJson.workspaces = ["libs/**", "server"];
+packageJson.workspaces = ["libs/**", "server", "server/plugins/**/**"];
 packageJson.main = "server/index.js";
 delete packageJson.husky;
 packageJson.scripts = {
@@ -31,6 +31,21 @@ packageJson.nodemonConfig = {
 function list(val) {
     return val.toUpperCase().split(",");
 }
+const copyDirAsync = (...args) =>
+    new Promise((resolve, reject) =>
+        copyDir(...args, (err) => {
+            if (err) {
+                return reject(err);
+            }
+            return resolve();
+        }),
+    );
+const filterJson = (packageSrc, packageDest) => {
+    const packageJson = JSON.parse(fs.readFileSync(packageSrc));
+    delete packageJson.devDependencies;
+    delete packageJson.workspaces;
+    fs.writeFileSync(packageDest, JSON.stringify(packageJson, null, 4));
+};
 const contextPlugins = process.env.CONTEXT_PLUGINS
     ? list(process.env.CONTEXT_PLUGINS)
     : null;
@@ -93,6 +108,18 @@ gulp.task("plugins", () => {
                                 ),
                             )
                             .on("end", () => {
+                                filterJson(
+                                    path.join(pluginsDir, file, "package.json"),
+                                    path.join(
+                                        homeDir,
+                                        "bin",
+                                        "server",
+                                        "plugins",
+                                        "datas",
+                                        file,
+                                        "package.json",
+                                    ),
+                                );
                                 if (
                                     fs.existsSync(
                                         path.join(pluginsDir, file, "assets"),
@@ -167,6 +194,18 @@ gulp.task("contexts", () => {
                                 ),
                             )
                             .on("end", () => {
+                                filterJson(
+                                    path.join(pluginsDir, file, "package.json"),
+                                    path.join(
+                                        homeDir,
+                                        "bin",
+                                        "server",
+                                        "plugins",
+                                        "contexts",
+                                        file,
+                                        "package.json",
+                                    ),
+                                );
                                 if (
                                     fs.existsSync(
                                         path.join(pluginsDir, file, "assets"),
@@ -241,6 +280,18 @@ gulp.task("events", () => {
                                 ),
                             )
                             .on("end", () => {
+                                filterJson(
+                                    path.join(pluginsDir, file, "package.json"),
+                                    path.join(
+                                        homeDir,
+                                        "bin",
+                                        "server",
+                                        "plugins",
+                                        "events",
+                                        file,
+                                        "package.json",
+                                    ),
+                                );
                                 if (
                                     fs.existsSync(
                                         path.join(pluginsDir, file, "assets"),
@@ -315,6 +366,18 @@ gulp.task("schedulers", () => {
                                 ),
                             )
                             .on("end", () => {
+                                filterJson(
+                                    path.join(pluginsDir, file, "package.json"),
+                                    path.join(
+                                        homeDir,
+                                        "bin",
+                                        "server",
+                                        "plugins",
+                                        "schedulers",
+                                        file,
+                                        "package.json",
+                                    ),
+                                );
                                 if (
                                     fs.existsSync(
                                         path.join(pluginsDir, file, "assets"),
@@ -389,6 +452,18 @@ gulp.task("providers", () => {
                                 ),
                             )
                             .on("end", () => {
+                                filterJson(
+                                    path.join(pluginsDir, file, "package.json"),
+                                    path.join(
+                                        homeDir,
+                                        "bin",
+                                        "server",
+                                        "plugins",
+                                        "providers",
+                                        file,
+                                        "package.json",
+                                    ),
+                                );
                                 if (
                                     fs.existsSync(
                                         path.join(pluginsDir, file, "assets"),
@@ -573,283 +648,15 @@ gulp.task("cert", () => {
     });
 });
 
-gulp.task("packageJson", () => {
-    const rows = [];
-    const pluginsDataDir = path.join(homeDir, "plugins");
-    fs.readdirSync(pluginsDataDir)
-        .filter((file) =>
-            dataPlugins && dataPlugins.length
-                ? dataPlugins.includes(file.toUpperCase())
-                : true,
-        )
-        .forEach((file) => {
-            if (
-                fs.existsSync(
-                    path.join(pluginsDataDir, file, "tsconfig.json"),
-                ) &&
-                fs.existsSync(path.join(pluginsDataDir, file, "package.json"))
-            ) {
-                rows.push(
-                    new Promise((resolve, reject) => {
-                        const pluginJson = JSON.parse(
-                            fs.readFileSync(
-                                path.join(pluginsDataDir, file, "package.json"),
-                            ),
-                        );
-                        if (pluginJson.dependencies) {
-                            const isError = false;
-                            Object.keys(pluginJson.dependencies).every(
-                                (key) => {
-                                    if (
-                                        Object.prototype.hasOwnProperty.call(
-                                            serverJson.dependencies,
-                                            key,
-                                        ) &&
-                                        serverJson.dependencies[key] !==
-                                            pluginJson.dependencies[key]
-                                    ) {
-                                        reject(
-                                            new Error(
-                                                `Версия пакета ${key} плагина ${pluginJson.dependencies[key]} не равна сервера ${serverJson.dependencies[key]}`,
-                                            ),
-                                        );
-                                        return false;
-                                    }
-                                    serverJson.dependencies[key] =
-                                        pluginJson.dependencies[key];
-                                    return true;
-                                },
-                            );
-                            if (isError) {
-                                return;
-                            }
-                        }
-                        resolve();
-                    }),
-                );
-            }
-        });
-    const contextsDir = path.join(homeDir, "contexts");
-    fs.readdirSync(contextsDir)
-        .filter((file) =>
-            contextPlugins && contextPlugins.length
-                ? contextPlugins.includes(file.toUpperCase())
-                : true,
-        )
-        .forEach((file) => {
-            if (
-                fs.existsSync(path.join(contextsDir, file, "tsconfig.json")) &&
-                fs.existsSync(path.join(contextsDir, file, "package.json"))
-            ) {
-                rows.push(
-                    new Promise((resolve, reject) => {
-                        const pluginJson = JSON.parse(
-                            fs.readFileSync(
-                                path.join(contextsDir, file, "package.json"),
-                            ),
-                        );
-                        if (pluginJson.dependencies) {
-                            const isError = false;
-                            Object.keys(pluginJson.dependencies).every(
-                                (key) => {
-                                    if (
-                                        Object.prototype.hasOwnProperty.call(
-                                            serverJson.dependencies,
-                                            key,
-                                        ) &&
-                                        serverJson.dependencies[key] !==
-                                            pluginJson.dependencies[key]
-                                    ) {
-                                        reject(
-                                            new Error(
-                                                `Версия пакета ${key} плагина ${pluginJson.dependencies[key]} не равна сервера ${serverJson.dependencies[key]}`,
-                                            ),
-                                        );
-                                        return false;
-                                    }
-                                    serverJson.dependencies[key] =
-                                        pluginJson.dependencies[key];
-                                    return true;
-                                },
-                            );
-                            if (isError) {
-                                return;
-                            }
-                        }
-                        resolve();
-                    }),
-                );
-            }
-        });
-    const eventsDir = path.join(homeDir, "events");
-    fs.readdirSync(eventsDir)
-        .filter((file) =>
-            eventPlugins && eventPlugins.length
-                ? eventPlugins.includes(file.toUpperCase())
-                : true,
-        )
-        .forEach((file) => {
-            if (
-                fs.existsSync(path.join(eventsDir, file, "tsconfig.json")) &&
-                fs.existsSync(path.join(eventsDir, file, "package.json"))
-            ) {
-                rows.push(
-                    new Promise((resolve, reject) => {
-                        const pluginJson = JSON.parse(
-                            fs.readFileSync(
-                                path.join(eventsDir, file, "package.json"),
-                            ),
-                        );
-                        if (pluginJson.dependencies) {
-                            const isError = false;
-                            Object.keys(pluginJson.dependencies).every(
-                                (key) => {
-                                    if (
-                                        Object.prototype.hasOwnProperty.call(
-                                            serverJson.dependencies,
-                                            key,
-                                        ) &&
-                                        serverJson.dependencies[key] !==
-                                            pluginJson.dependencies[key]
-                                    ) {
-                                        reject(
-                                            new Error(
-                                                `Версия пакета ${key} плагина ${pluginJson.dependencies[key]} не равна сервера ${serverJson.dependencies[key]}`,
-                                            ),
-                                        );
-                                        return false;
-                                    }
-                                    serverJson.dependencies[key] =
-                                        pluginJson.dependencies[key];
-                                    return true;
-                                },
-                            );
-                            if (isError) {
-                                return;
-                            }
-                        }
-                        resolve();
-                    }),
-                );
-            }
-        });
-    const schedulersDir = path.join(homeDir, "schedulers");
-    fs.readdirSync(schedulersDir)
-        .filter((file) =>
-            schedulerPlugins && schedulerPlugins.length
-                ? schedulerPlugins.includes(file.toUpperCase())
-                : true,
-        )
-        .forEach((file) => {
-            if (
-                fs.existsSync(
-                    path.join(schedulersDir, file, "tsconfig.json"),
-                ) &&
-                fs.existsSync(path.join(schedulersDir, file, "package.json"))
-            ) {
-                rows.push(
-                    new Promise((resolve, reject) => {
-                        const pluginJson = JSON.parse(
-                            fs.readFileSync(
-                                path.join(schedulersDir, file, "package.json"),
-                            ),
-                        );
-                        if (pluginJson.dependencies) {
-                            const isError = false;
-                            Object.keys(pluginJson.dependencies).every(
-                                (key) => {
-                                    if (
-                                        Object.prototype.hasOwnProperty.call(
-                                            serverJson.dependencies,
-                                            key,
-                                        ) &&
-                                        serverJson.dependencies[key] !==
-                                            pluginJson.dependencies[key]
-                                    ) {
-                                        reject(
-                                            new Error(
-                                                `Версия пакета ${key} плагина ${pluginJson.dependencies[key]} не равна сервера ${serverJson.dependencies[key]}`,
-                                            ),
-                                        );
-                                        return false;
-                                    }
-                                    serverJson.dependencies[key] =
-                                        pluginJson.dependencies[key];
-                                    return true;
-                                },
-                            );
-                            if (isError) {
-                                return;
-                            }
-                        }
-                        resolve();
-                    }),
-                );
-            }
-        });
-    const providersDir = path.join(homeDir, "providers");
-    fs.readdirSync(providersDir)
-        .filter((file) =>
-            providerPlugins && providerPlugins.length
-                ? providerPlugins.includes(file.toUpperCase())
-                : true,
-        )
-        .forEach((file) => {
-            if (
-                fs.existsSync(path.join(providersDir, file, "tsconfig.json")) &&
-                fs.existsSync(path.join(providersDir, file, "package.json"))
-            ) {
-                rows.push(
-                    new Promise((resolve, reject) => {
-                        const pluginJson = JSON.parse(
-                            fs.readFileSync(
-                                path.join(providersDir, file, "package.json"),
-                            ),
-                        );
-                        if (pluginJson.dependencies) {
-                            const isError = false;
-                            Object.keys(pluginJson.dependencies).every(
-                                (key) => {
-                                    if (
-                                        Object.prototype.hasOwnProperty.call(
-                                            serverJson.dependencies,
-                                            key,
-                                        ) &&
-                                        serverJson.dependencies[key] !==
-                                            pluginJson.dependencies[key]
-                                    ) {
-                                        reject(
-                                            new Error(
-                                                `Версия пакета ${key} плагина ${pluginJson.dependencies[key]} не равна сервера ${serverJson.dependencies[key]}`,
-                                            ),
-                                        );
-                                        return false;
-                                    }
-                                    serverJson.dependencies[key] =
-                                        pluginJson.dependencies[key];
-                                    return true;
-                                },
-                            );
-                            if (isError) {
-                                return;
-                            }
-                        }
-                        resolve();
-                    }),
-                );
-            }
-        });
-
-    return Promise.all(rows).then(() => {
-        fs.writeFileSync(
-            path.join(homeDir, "bin", "package.json"),
-            JSON.stringify(packageJson, null, 4),
-        );
-        fs.writeFileSync(
-            path.join(homeDir, "bin", "server", "package.json"),
-            JSON.stringify(serverJson, null, 4),
-        );
-    });
+gulp.task("packageJson", async () => {
+    fs.writeFileSync(
+        path.join(homeDir, "bin", "package.json"),
+        JSON.stringify(packageJson, null, 4),
+    );
+    fs.writeFileSync(
+        path.join(homeDir, "bin", "server", "package.json"),
+        JSON.stringify(serverJson, null, 4),
+    );
 });
 
 gulp.task(

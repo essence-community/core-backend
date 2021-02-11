@@ -2,7 +2,7 @@ import BreakException from "@ungate/plugininf/lib/errors/BreakException";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
 import ICCTParams, { IParamsInfo } from "@ungate/plugininf/lib/ICCTParams";
-import IContext from "@ungate/plugininf/lib/IContext";
+import IContext, { IFile, IFormData } from "@ungate/plugininf/lib/IContext";
 import { IPluginRequestContext } from "@ungate/plugininf/lib/IPlugin";
 import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
 import IResult from "@ungate/plugininf/lib/IResult";
@@ -17,12 +17,7 @@ import { uuid as uuidv4 } from "uuidv4";
 import { DirStorage } from "./DirStorage";
 import { ExtractorCsv } from "./ExtractorCsv";
 import { ExtractorDbf } from "./ExtractorDbf";
-import {
-    IFile,
-    IFiles,
-    IJson,
-    IPluginParams,
-} from "./ExtractorFileToJson.types";
+import { IJson, IPluginParams } from "./ExtractorFileToJson.types";
 import { ExtractorXlsx } from "./ExtractorXlsx";
 import { S3Storage } from "./S3Storage";
 
@@ -103,7 +98,10 @@ export default class ExtractorFileToJson extends NullPlugin {
                     ),
                 );
             }
-            if (!isObject(gateContext.request.body)) {
+            if (
+                !isObject(gateContext.request.body) ||
+                (gateContext.request.body as IFormData).files
+            ) {
                 throw new ErrorException(
                     ErrorGate.compileErrorResult(
                         -1,
@@ -113,7 +111,7 @@ export default class ExtractorFileToJson extends NullPlugin {
             }
             const rows = [];
             const json = JSON.parse(query.inParams.json) as IJson;
-            forEach(gateContext.request.body as IFiles, (val) => {
+            forEach((gateContext.request.body as IFormData).files, (val) => {
                 if (val && val.length) {
                     val.forEach((value) => {
                         rows.push(

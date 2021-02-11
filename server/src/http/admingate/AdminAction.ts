@@ -475,9 +475,11 @@ export default class AdminAction {
             hiddenrules: conf.hiddenRules,
             disabledrules: conf.disabledRules,
             column: name,
+            disabled: conf.disabled || false,
+            hidden: conf.hidden || false,
             cv_displayed: conf.name,
             info: conf.description,
-            required: conf.required,
+            required: conf.required || false,
         };
         switch (conf.type) {
             case "string": {
@@ -528,12 +530,22 @@ export default class AdminAction {
                         ...defaultAttr,
                         autoload: "true",
                         ck_page_object: child.ck_page_object,
-                        ck_query: "GTGetBoolean",
                         cl_dataset: 1,
                         datatype: "combo",
                         defaultvalue: params[name] || conf.defaultValue,
-                        displayfield: "ck_id",
+                        displayfield: "cv_name",
                         type: "IFIELD",
+                        localization: "static",
+                        records: [
+                            {
+                                ck_id: 1,
+                                cv_name: "dacf7ab025c344cb81b700cfcc50e403",
+                            },
+                            {
+                                ck_id: 0,
+                                cv_name: "f0e9877df106481eb257c2c04f8eb039",
+                            },
+                        ],
                         valuefield: [{ in: "ck_id" }],
                     };
                 }
@@ -550,6 +562,7 @@ export default class AdminAction {
                     autoload: "true",
                     ck_page_object: child.ck_page_object,
                     ck_query: conf.query,
+                    getglobaltostore: conf.getGlobalToStore,
                     cl_dataset: 1,
                     datatype: "combo",
                     defaultvalue: params[name] || conf.defaultValue,
@@ -560,6 +573,7 @@ export default class AdminAction {
                     queryparam: conf.queryparam,
                     allownew: conf.allownew,
                     pagesize: conf.pagesize,
+                    records: conf.records,
                 };
             }
             default: {

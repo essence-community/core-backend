@@ -1,7 +1,7 @@
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
 import ICCTParams, { IParamsInfo } from "@ungate/plugininf/lib/ICCTParams";
-import IContext from "@ungate/plugininf/lib/IContext";
+import IContext, { IFormData } from "@ungate/plugininf/lib/IContext";
 import { IPluginRequestContext } from "@ungate/plugininf/lib/IPlugin";
 import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
 import IResult from "@ungate/plugininf/lib/IResult";
@@ -133,7 +133,10 @@ export default class ModuleStorage extends NullPlugin {
                     ),
                 );
             }
-            if (!isObject(gateContext.request.body)) {
+            if (
+                !isObject(gateContext.request.body) ||
+                (gateContext.request.body as IFormData).files
+            ) {
                 throw new ErrorException(
                     ErrorGate.compileErrorResult(
                         -1,
@@ -143,7 +146,7 @@ export default class ModuleStorage extends NullPlugin {
             }
             const rows = [];
             const json = JSON.parse(query.inParams.json);
-            forEach(gateContext.request.body as Files, (val) => {
+            forEach((gateContext.request.body as IFormData).files, (val) => {
                 if (val && val.length) {
                     val.forEach((value) => {
                         rows.push(

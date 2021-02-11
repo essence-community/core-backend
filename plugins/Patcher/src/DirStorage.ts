@@ -1,9 +1,10 @@
+import { IFile } from "@ungate/plugininf/lib/IContext";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import { IRufusLogger } from "rufus";
 import { Readable } from "stream";
-import { IFile, IPluginParams, IStorage } from "./Patcher.types";
+import { IPluginParams, IStorage } from "./Patcher.types";
 export class DirStorage implements IStorage {
     private params: IPluginParams;
     private logger: IRufusLogger;
