@@ -39,7 +39,9 @@ export class HTTPOPARender implements IOPAEval {
     async eval(
         query: string[] | IFile[],
         dataFile: string[] | IFile[],
-        input: Record<string, any> | Record<string, any>[],
+        input: Record<string, any> | Record<string, any>[] | IFile,
+        queryString: string,
+        resultPath: string,
         queryId: string = crypto
             .createHash("md5")
             .update(JSON.stringify(query))

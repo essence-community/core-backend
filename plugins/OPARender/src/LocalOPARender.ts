@@ -5,7 +5,8 @@ import { spawn } from "child_process";
 import * as fs from "fs";
 import { IFile } from "@ungate/plugininf/lib/IContext";
 import { deleteFolderRecursive } from "@ungate/plugininf/lib/util/Util";
-import { isObject } from "lodash";
+import { isObject, isString } from "lodash";
+import { deepParam } from "./Util";
 
 export class LocalOPARender implements IOPAEval {
     params: IOPARenderParams;
@@ -18,7 +19,9 @@ export class LocalOPARender implements IOPAEval {
     async eval(
         query: string[] | IFile[],
         dataFile: string[] | IFile[],
-        input: Record<string, any> | Record<string, any>[],
+        input: string | Record<string, any> | Record<string, any>[] | IFile,
+        queryString: string,
+        resultPath: string,
     ) {
         return new Promise(async (resolve, reject) => {
             const temp = fs.mkdtempSync("opa_temp");
@@ -71,17 +74,34 @@ export class LocalOPARender implements IOPAEval {
                     param.push(namePath);
                 }),
             );
-            fs.writeFileSync(
-                path.join(temp, "input.json"),
-                JSON.stringify(input),
-            );
+            const inputName = path.join(temp, `input.json`);
+            await new Promise((resolveFile, rejectFile) => {
+                if (typeof input === "object" && (input as IFile).path) {
+                    const inFile = fs.createReadStream((input as IFile).path);
+                    inFile.pipe(fs.createWriteStream(inputName));
+                    inFile.on("error", (err) => rejectFile(err));
+                    inFile.on("end", () => resolveFile(true));
+                } else {
+                    fs.writeFile(
+                        inputName,
+                        isString(input) ? input : JSON.stringify(input),
+                        (err) => {
+                            if (err) {
+                                return rejectFile(err);
+                            }
+                            resolveFile(true);
+                        },
+                    );
+                }
+            });
             const opa = spawn(path.resolve(this.params.fvPath), [
                 "eval",
                 "-i",
-                path.join(temp, "input.json"),
+                inputName,
                 ...param,
-                `data[_]`,
+                `--stdin`,
             ]);
+            opa.stdin.end(queryString);
             let rawData = "";
             opa.stdout.on("data", (chunk) => {
                 rawData += chunk;
@@ -93,32 +113,7 @@ export class LocalOPARender implements IOPAEval {
                 try {
                     deleteFolderRecursive(temp);
                     const res = JSON.parse(rawData);
-                    resolve(
-                        res.result.reduce((result, value) => {
-                            return [
-                                ...result,
-                                ...value.expressions
-                                    .filter(
-                                        (valExp) =>
-                                            (isObject(valExp.value) &&
-                                                !Array.isArray(valExp.value) &&
-                                                Object.keys(valExp.value)
-                                                    .length) ||
-                                            (Array.isArray(valExp.value) &&
-                                                isObject(valExp.value[0])),
-                                    )
-                                    .reduce(
-                                        (resExp, valExp) => [
-                                            ...resExp,
-                                            ...(Array.isArray(valExp.value)
-                                                ? valExp.value
-                                                : [valExp.value]),
-                                        ],
-                                        [],
-                                    ),
-                            ];
-                        }, []),
-                    );
+                    resolve(deepParam(resultPath, res));
                 } catch (e) {
                     reject(e);
                 }

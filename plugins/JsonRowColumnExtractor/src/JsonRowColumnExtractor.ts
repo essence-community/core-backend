@@ -61,12 +61,18 @@ export default class JsonRowColumnExtractor extends NullPlugin {
                 const obj = isString(chunk[name])
                     ? JSON.parse(chunk[name])
                     : chunk[name];
+                delete chunk[name];
                 if (isArray(obj)) {
-                    obj.forEach((val) => stream.push(val));
+                    obj.forEach((val) =>
+                        stream.push({
+                            ...chunk,
+                            ...val,
+                        }),
+                    );
                     done();
                     return;
                 }
-                delete chunk[name];
+
                 done(null, {
                     ...chunk,
                     ...obj,
