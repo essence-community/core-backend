@@ -5,6 +5,9 @@
     "author": "Ivan Artemov (honyrik@gmail.com)",
     "license": "MIT",
     "dependencies": {
-        "@ungate/plugininf": "^1.0.0"
+        "@ungate/plugininf": "^1.0.0",
+        "fast-xml-parser": "^3.18.0",
+        "he": "^1.2.0",
+        "js-yaml": "^4.0.0"
     }
 }

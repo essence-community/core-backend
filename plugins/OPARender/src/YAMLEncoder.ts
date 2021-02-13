@@ -1,0 +1,54 @@
+import { IFile } from "@ungate/plugininf/lib/IContext";
+import { IEncoder } from "./Encoder.types";
+import * as YAML from "js-yaml";
+import * as fs from "fs";
+import { IOPARenderParams } from "./OPARender.types";
+export class YAMLEncoder implements IEncoder {
+    params: IOPARenderParams;
+    constructor(params: IOPARenderParams) {
+        this.params = params;
+    }
+    encodeStr(input: string | IFile[]): Promise<string | IFile[]> {
+        throw new Error("Method not implemented.");
+    }
+    decodeStr(input: string | IFile[]): Promise<string | IFile[]> {
+        throw new Error("Method not implemented.");
+    }
+    async encode(
+        input: Record<string, any> | Record<string, any>[] | IFile[],
+    ): Promise<string | IFile[]> {
+        if (Array.isArray(input) && input[0] && input[0].path) {
+            await Promise.all(
+                (input as IFile[]).map(async (file) => {
+                    const newFile = `${file.path}.encode_yaml`;
+                    const infile = JSON.parse(
+                        fs.readFileSync(file.path).toString(),
+                    );
+                    fs.writeFileSync(newFile, YAML.dump(infile));
+                    file.path = newFile;
+                }),
+            );
+            return input as IFile[];
+        }
+        return YAML.dump(input);
+    }
+    async decode(
+        input: string | IFile[],
+    ): Promise<Record<string, any> | Record<string, any>[] | IFile[]> {
+        if (Array.isArray(input) && input[0] && input[0].path) {
+            await Promise.all(
+                (input as IFile[]).map(async (file) => {
+                    const newFile = `${file.path}.decode_yaml`;
+                    const infile = fs.readFileSync(file.path).toString();
+                    fs.writeFileSync(
+                        newFile,
+                        JSON.stringify(YAML.load(infile)),
+                    );
+                    file.path = newFile;
+                }),
+            );
+            return input as IFile[];
+        }
+        return YAML.load(input);
+    }
+}

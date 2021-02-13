@@ -7,13 +7,21 @@ import { IFile } from "@ungate/plugininf/lib/IContext";
 import { deleteFolderRecursive } from "@ungate/plugininf/lib/util/Util";
 import { isString } from "lodash";
 import { deepParam } from "@ungate/plugininf/lib/util/deepParam";
+import { IEncoder } from "./Encoder.types";
+import { YAMLEncoder } from "./YAMLEncoder";
+import { XMLEncoder } from "./XMLEncoder";
 
 export class LocalOPARender implements IOPAEval {
     params: IOPARenderParams;
     log: IRufusLogger;
+    encoder: Record<"yaml" | "xml", IEncoder>;
     constructor(params: IOPARenderParams, log: IRufusLogger) {
         this.params = params;
         this.log = log;
+        this.encoder = {
+            yaml: new YAMLEncoder(this.params),
+            xml: new XMLEncoder(this.params),
+        };
     }
 
     async eval(
@@ -75,23 +83,51 @@ export class LocalOPARender implements IOPAEval {
                 }),
             );
             const inputName = path.join(temp, `input.json`);
-            await new Promise((resolveFile, rejectFile) => {
+            await new Promise(async (resolveFile, rejectFile) => {
                 if (typeof input === "object" && (input as IFile).path) {
+                    let fileTemp = (input as IFile).path;
+                    if (
+                        fileTemp.toLocaleLowerCase().endsWith("yaml") ||
+                        fileTemp.toLocaleLowerCase().endsWith("yml")
+                    ) {
+                        const arr = await this.encoder.yaml.decode([
+                            input as IFile,
+                        ]);
+                        fileTemp = (arr[0] as IFile).path;
+                    }
+                    if (fileTemp.toLocaleLowerCase().endsWith("xml")) {
+                        const arr = await this.encoder.xml.decode([
+                            input as IFile,
+                        ]);
+                        fileTemp = (arr[0] as IFile).path;
+                    }
                     const inFile = fs.createReadStream((input as IFile).path);
                     inFile.pipe(fs.createWriteStream(inputName));
                     inFile.on("error", (err) => rejectFile(err));
                     inFile.on("end", () => resolveFile(true));
                 } else {
-                    fs.writeFile(
-                        inputName,
-                        isString(input) ? input : JSON.stringify(input),
-                        (err) => {
-                            if (err) {
-                                return rejectFile(err);
-                            }
-                            resolveFile(true);
-                        },
-                    );
+                    let tempInput = isString(input)
+                        ? input
+                        : JSON.stringify(input);
+                    if (temp.trimLeft().startsWith("<")) {
+                        tempInput = JSON.stringify(
+                            await this.encoder.yaml.decode(tempInput),
+                        );
+                    } else if (isString(input)) {
+                        try {
+                            JSON.parse(tempInput);
+                        } catch (e) {
+                            tempInput = JSON.stringify(
+                                await this.encoder.xml.decode(tempInput),
+                            );
+                        }
+                    }
+                    fs.writeFile(inputName, tempInput, (err) => {
+                        if (err) {
+                            return rejectFile(err);
+                        }
+                        resolveFile(true);
+                    });
                 }
             });
             const opa = spawn(path.resolve(this.params.fvPath), [
