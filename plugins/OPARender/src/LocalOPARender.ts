@@ -5,8 +5,8 @@ import { spawn } from "child_process";
 import * as fs from "fs";
 import { IFile } from "@ungate/plugininf/lib/IContext";
 import { deleteFolderRecursive } from "@ungate/plugininf/lib/util/Util";
-import { isObject, isString } from "lodash";
-import { deepParam } from "./Util";
+import { isString } from "lodash";
+import { deepParam } from "@ungate/plugininf/lib/util/deepParam";
 
 export class LocalOPARender implements IOPAEval {
     params: IOPARenderParams;

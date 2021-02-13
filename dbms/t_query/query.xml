@@ -132,4 +132,5 @@
     <include file="MTViewExtra.sql" relativeToChangelogFile="true"/>
     <include file="MTViewOnlyConfig.sql" relativeToChangelogFile="true"/>
     <include file="MTPageAttr.sql" relativeToChangelogFile="true"/>
+    <include file="MTDummy.sql" relativeToChangelogFile="true"/>
 </databaseChangeLog>

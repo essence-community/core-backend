@@ -2,15 +2,9 @@
  * Created by artemov_i on 05.12.2018.
  */
 
+import BigNumberBase from "bignumber.js";
 import * as fs from "fs";
-import {
-    forEach,
-    isArray,
-    isNumber,
-    isString,
-    toNumber,
-    toString,
-} from "lodash";
+import { forEach, isArray, isString, toNumber, toString } from "lodash";
 import * as moment from "moment";
 import * as path from "path";
 import ErrorException from "../errors/ErrorException";
@@ -89,7 +83,7 @@ export function initParams(
     return result;
 }
 
-const formatStr = {
+const formatStr: Record<string, moment.unitOfTime.StartOf> = {
     1: "year",
     2: "month",
     3: "day",
@@ -98,9 +92,40 @@ const formatStr = {
     6: "second",
 };
 
-export function sortFilesData(gateContext: IContext) {
+const BigNumber = BigNumberBase.clone({
+    DECIMAL_PLACES: 20,
+    FORMAT: {
+        decimalSeparator: ",",
+        fractionGroupSeparator: " ",
+        fractionGroupSize: 0,
+        groupSeparator: "",
+        groupSize: 3,
+        secondaryGroupSize: 0,
+        suffix: "",
+    },
+    ROUNDING_MODE: 1,
+});
+const isNullAndUndefined = (val: any) =>
+    typeof val === "undefined" || val == null;
+export interface IRecordsOrder {
+    direction: string;
+    datatype?: string;
+    format?: string;
+    property: string;
+}
+
+export interface IRecordFilter {
+    datatype?: string;
+    format?: string;
+    operator: string;
+    property: string;
+    value: any;
+}
+export function sortFilesData(
+    gateContext: IContext,
+): (a: any, b: any) => number {
     if (isEmpty(gateContext.params.json)) {
-        return (obj1, obj2) => obj1 > obj2;
+        return (obj1, obj2) => +(obj1 > obj2);
     }
     const json = JSON.parse(gateContext.params.json, (key, value) => {
         if (value === null) {
@@ -108,18 +133,29 @@ export function sortFilesData(gateContext: IContext) {
         }
         return value;
     });
-    const jlSort = json.filter.jl_sort;
+    const jlSort = json.filter.jl_sort as IRecordsOrder[];
     if (!isEmpty(jlSort)) {
-        return (obj1, obj2) =>
-            jlSort.reduce((val, item) => {
+        return (obj1: any, obj2: any): number =>
+            jlSort.reduce((val: number, item) => {
                 if (isEmpty(item.property) || isEmpty(item.direction)) {
-                    return obj1 > obj2;
+                    return val;
                 }
                 const { datatype, format = "3", property } = item;
-                const nmColumn = property;
-                const direction = item.direction.toUpperCase();
+                const nmColumn = property || "";
+                const direction = item.direction?.toUpperCase();
                 const val1 = obj1[nmColumn];
                 const val2 = obj2[nmColumn];
+
+                if (isNullAndUndefined(val1) && isNullAndUndefined(val2)) {
+                    return val;
+                }
+                if (isNullAndUndefined(val1) && !isNullAndUndefined(val2)) {
+                    return val;
+                }
+                if (!isNullAndUndefined(val1) && isNullAndUndefined(val2)) {
+                    return val;
+                }
+
                 if (
                     datatype === "date" ||
                     nmColumn.startsWith("cd_") ||
@@ -127,18 +163,38 @@ export function sortFilesData(gateContext: IContext) {
                 ) {
                     return (
                         val +
-                        moment(direction === "ASC" ? val1 : val2).diff(
-                            moment(direction === "ASC" ? val2 : val1),
-                            formatStr[format],
+                        moment(
+                            direction === "ASC"
+                                ? (val1 as string)
+                                : (val2 as string),
+                        ).diff(
+                            moment(
+                                direction === "ASC"
+                                    ? (val2 as string)
+                                    : (val1 as string),
+                            ),
+                            formatStr[format] as any,
                         )
                     );
                 }
-                if (isNumber(val1) && isNumber(val2)) {
+                if (typeof val1 === "number" && typeof val2 === "number") {
                     return (
                         val + (direction === "ASC" ? val1 - val2 : val2 - val1)
                     );
                 }
-                if (isString(val1) && isString(val2)) {
+                if (datatype === "integer" || datatype === "numeric") {
+                    return (
+                        val +
+                        (direction === "ASC"
+                            ? new BigNumber(val1 as any)
+                                  .minus(new BigNumber(val2 as any))
+                                  .toNumber()
+                            : new BigNumber(val2 as any)
+                                  .minus(new BigNumber(val1 as any))
+                                  .toNumber())
+                    );
+                }
+                if (typeof val1 === "string" && typeof val2 === "string") {
                     return (
                         val +
                         (
@@ -148,13 +204,16 @@ export function sortFilesData(gateContext: IContext) {
                         )
                     );
                 }
-                return +(direction === "ASC" ? val1 > val2 : val2 > val1);
+                // @ts-ignore
+                // tslint:disable-line no-unused-expression
+                return val + +(direction === "ASC" ? val1 > val2 : val2 > val1);
             }, 0);
     }
-    return (obj1, obj2) => obj1 > obj2;
+
+    return (obj1: any, obj2: any): number => +(obj1 > obj2);
 }
 
-export function filterFilesData(gateContext: IContext) {
+export function filterFilesData(gateContext: IContext): (a: any) => boolean {
     if (isEmpty(gateContext.params.json)) {
         return () => true;
     }
@@ -164,10 +223,10 @@ export function filterFilesData(gateContext: IContext) {
         }
         return value;
     });
-    const jlFilter = json.filter.jl_filter;
+    const jlFilter = json.filter.jl_filter as IRecordFilter[];
     if (!isEmpty(jlFilter)) {
-        return (obj) =>
-            jlFilter.every((item) => {
+        return (obj: any): boolean =>
+            jlFilter.filter((item) => {
                 if (isEmpty(item.property)) {
                     return true;
                 }
@@ -177,98 +236,121 @@ export function filterFilesData(gateContext: IContext) {
                 const { datatype, format = "3", property } = item;
                 const nmColumn = property;
                 const operator = item.operator.toLowerCase();
-                let value = item.value;
-                if (isEmpty(value)) {
-                    return true;
+                const value = item.value;
+                const valueRecord = obj[nmColumn];
+
+                if (isNullAndUndefined(valueRecord)) {
+                    return false;
                 }
 
-                if (
-                    datatype === "date" ||
-                    nmColumn.startsWith("cd_") ||
-                    nmColumn.startsWith("ct_")
-                ) {
-                    value = moment(value);
+                if (isNullAndUndefined(value)) {
+                    return true;
                 }
 
                 switch (operator) {
                     case "gt":
                     case ">":
                         if (
-                            datatype === "date" ||
-                            nmColumn.startsWith("cd_") ||
-                            nmColumn.startsWith("ct_")
+                            typeof valueRecord === "string" &&
+                            typeof value === "string" &&
+                            (datatype === "date" ||
+                                nmColumn.startsWith("cd_") ||
+                                nmColumn.startsWith("ct_"))
                         ) {
-                            return moment(obj[nmColumn]).isAfter(
+                            return moment(valueRecord).isAfter(
                                 value,
                                 formatStr[format],
                             );
                         }
-                        return obj[nmColumn] > value;
+
+                        return new BigNumber(valueRecord as any).gt(
+                            new BigNumber(value as any),
+                        );
                     case "ge":
                     case ">=":
                         if (
-                            datatype === "date" ||
-                            nmColumn.startsWith("cd_") ||
-                            nmColumn.startsWith("ct_")
+                            typeof valueRecord === "string" &&
+                            typeof value === "string" &&
+                            (datatype === "date" ||
+                                nmColumn.startsWith("cd_") ||
+                                nmColumn.startsWith("ct_"))
                         ) {
-                            return moment(obj[nmColumn]).isSameOrAfter(
+                            return moment(valueRecord).isSameOrAfter(
                                 value,
                                 formatStr[format],
                             );
                         }
-                        return obj[nmColumn] >= value;
+
+                        return new BigNumber(valueRecord as any).gte(
+                            new BigNumber(value as any),
+                        );
                     case "lt":
                     case "<":
                         if (
-                            datatype === "date" ||
-                            nmColumn.startsWith("cd_") ||
-                            nmColumn.startsWith("ct_")
+                            typeof valueRecord === "string" &&
+                            typeof value === "string" &&
+                            (datatype === "date" ||
+                                nmColumn.startsWith("cd_") ||
+                                nmColumn.startsWith("ct_"))
                         ) {
-                            return moment(obj[nmColumn]).isBefore(
+                            return moment(valueRecord).isBefore(
                                 value,
                                 formatStr[format],
                             );
                         }
-                        return obj[nmColumn] < value;
+
+                        return new BigNumber(valueRecord as any).lt(
+                            new BigNumber(value as any),
+                        );
                     case "le":
                     case "<=":
                         if (
-                            datatype === "date" ||
-                            nmColumn.startsWith("cd_") ||
-                            nmColumn.startsWith("ct_")
+                            typeof valueRecord === "string" &&
+                            typeof value === "string" &&
+                            (datatype === "date" ||
+                                nmColumn.startsWith("cd_") ||
+                                nmColumn.startsWith("ct_"))
                         ) {
-                            return moment(obj[nmColumn]).isSameOrBefore(
+                            return moment(valueRecord).isSameOrBefore(
                                 value,
                                 formatStr[format],
                             );
                         }
-                        return obj[nmColumn] <= value;
+
+                        return new BigNumber(valueRecord as any).lte(
+                            new BigNumber(value as any),
+                        );
                     case "eq":
                     case "=":
                         if (
-                            datatype === "date" ||
-                            nmColumn.startsWith("cd_") ||
-                            nmColumn.startsWith("ct_")
+                            typeof valueRecord === "string" &&
+                            typeof value === "string" &&
+                            (datatype === "date" ||
+                                nmColumn.startsWith("cd_") ||
+                                nmColumn.startsWith("ct_"))
                         ) {
-                            return moment(obj[nmColumn]).isSame(
+                            return moment(valueRecord).isSame(
                                 value,
                                 formatStr[format],
                             );
                         }
-                        return `${obj[nmColumn]}` === `${value}`;
+
+                        return `${valueRecord}` === `${value}`;
                     case "like": {
-                        const reg = new RegExp(value, "gi");
-                        return reg.test(`${obj[nmColumn]}`);
+                        const reg = new RegExp(value as string, "gi");
+
+                        return reg.test(`${valueRecord}`);
                     }
                     case "in":
-                        return value.indexOf(obj[nmColumn]) > -1;
+                        return (value as any).indexOf(valueRecord) > -1;
                     case "not in":
-                        return value.indexOf(obj[nmColumn]) === -1;
+                        return (value as any).indexOf(valueRecord) === -1;
                     default:
                         return true;
                 }
-            });
+            }).length === jlFilter.length;
     }
+
     return () => true;
 }
 

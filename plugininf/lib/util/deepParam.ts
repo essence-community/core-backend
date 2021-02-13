@@ -1,4 +1,4 @@
-import { isEmpty } from "@ungate/plugininf/lib/util/Util";
+import { isEmpty } from "./Util";
 
 export function deepParam(
     path: string | string[],
@@ -23,7 +23,7 @@ export function deepParam(
         }
         if (
             val === "*" &&
-            (Array.isArray(current) || typeof current !== "object")
+            (current[val] === undefined || current[val] === null)
         ) {
             return Array.isArray(current)
                 ? current.map((obj) => deepParam(paths.slice(idx + 1), obj))
@@ -31,6 +31,7 @@ export function deepParam(
                       deepParam(paths.slice(idx + 1), obj),
                   );
         }
+
         if (current[val] === undefined || current[val] === null) {
             return current[val];
         }
@@ -40,3 +41,33 @@ export function deepParam(
 
     return current;
 }
+
+export const deepChange = (
+    obj: Record<string, any>,
+    path: string,
+    value: any,
+): boolean => {
+    if (isEmpty(path) || isEmpty(obj)) {
+        return false;
+    }
+    const paths: any[] = path.split(".");
+    const last = paths.pop();
+    let current: any = obj;
+
+    if (
+        !Array.isArray(current[paths[0]]) &&
+        typeof current[paths[0]] !== "object"
+    ) {
+        current[paths[0]] = /[0-9]+/.test(paths[0]) ? [] : {};
+    }
+    for (const val of paths) {
+        current = current[val];
+        if (!Array.isArray(current) && typeof current !== "object") {
+            current[val] = /[0-9]+/.test(val) ? [] : {};
+            current = current[val];
+        }
+    }
+    current[last] = value;
+
+    return true;
+};

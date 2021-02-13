@@ -5,13 +5,15 @@ import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
 import IResult from "@ungate/plugininf/lib/IResult";
 import NullPlugin from "@ungate/plugininf/lib/NullPlugin";
 import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
+import { deepParam } from "@ungate/plugininf/lib/util/deepParam";
 import { IOPARenderParams, IOPAEval } from "./OPARender.types";
 import { LocalOPARender } from "./LocalOPARender";
 import { HTTPOPARender } from "./HTTPOPARender";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
 import { ReadStreamToArray } from "@ungate/plugininf/lib/stream/Util";
-import { deepParam } from "./Util";
 import { isString } from "lodash";
+import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
+import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
 
 // tslint:disable: object-literal-sort-keys
 export default class OPARender extends NullPlugin {
@@ -139,11 +141,12 @@ export default class OPARender extends NullPlugin {
         }
         return Array.isArray(val) ? val : [val];
     }
+    controller: IOPAEval;
     constructor(name: string, params: ICCTParams) {
         super(name, params);
         this.params = initParams(OPARender.getParamsInfo(), params, true);
         this.logger.debug("params", this.params);
-        const controller: IOPAEval =
+        this.controller =
             this.params.fkType === "local"
                 ? new LocalOPARender(this.params, this.logger)
                 : new HTTPOPARender(this.params, this.logger);
@@ -170,105 +173,7 @@ export default class OPARender extends NullPlugin {
                             ? JSON.parse(query.queryStr)
                             : query.queryStr,
                 };
-                const policies = this.params.fvPoliticPath
-                    .split(",")
-                    .reduce((res, val) => {
-                        const value = deepParam(val, inParam);
-                        return value ? value : res;
-                    }, "");
-                const input = this.params.fvInputPath
-                    .split(",")
-                    .reduce((res, val) => {
-                        const value = deepParam(val, inParam);
-                        return value ? value : res;
-                    }, "");
-                const data =
-                    this.params.fvDataPath?.split(",").reduce((res, val) => {
-                        const value = deepParam(val, inParam);
-                        return value ? value : res;
-                    }, "") || this.params.fvDataDefault;
-                const queryString =
-                    this.params.fvQueryPath?.split(",").reduce((res, val) => {
-                        const value = deepParam(val, inParam);
-                        return value ? value : res;
-                    }, "") || this.params.fvQueryDefault;
-                const queryId = this.params.flIdPoliticsKey
-                    ?.split(",")
-                    .reduce((res, val) => {
-                        const value = deepParam(val, inParam);
-                        return value ? value : res;
-                    }, "");
-                const resultPath =
-                    this.params.fvResultKeyPath
-                        ?.split(",")
-                        .reduce((res, val) => {
-                            const value = deepParam(val, inParam);
-                            return value ? value : res;
-                        }, "") || this.params.fvResultPath;
-                let result = [];
-                this.logger.debug(
-                    "politics path: %s",
-                    this.params.fvPoliticPath,
-                    policies,
-                );
-                this.logger.debug(
-                    "data path: %s",
-                    this.params.fvDataPath || "",
-                    data,
-                );
-                this.logger.debug(
-                    "input path: %s",
-                    this.params.fvInputPath,
-                    input,
-                );
-                this.logger.debug(
-                    "queryString path: %s",
-                    this.params.fvQueryPath || "",
-                    queryString,
-                );
-                this.logger.debug(
-                    "resultPath path: %s",
-                    this.params.fvResultKeyPath || "",
-                    resultPath,
-                );
-                this.logger.debug(
-                    `${Array.isArray(input)} && ${input.length} && ${
-                        input[0].path
-                    }`,
-                );
-                if (Array.isArray(input) && input.length && input[0].path) {
-                    result = await Promise.all(
-                        (input as IFile[]).map(async (file) => {
-                            let res = await controller.eval(
-                                this.fixParam(policies),
-                                this.fixParam(data),
-                                file,
-                                queryString,
-                                resultPath,
-                                queryId ? queryId : undefined,
-                            );
-                            res = Array.isArray(res) ? res : [res];
-                            return res.map((obj) => ({
-                                ...obj,
-                                fv_file_name: file.originalFilename,
-                            }));
-                        }),
-                    ).then((values) =>
-                        values.reduce(
-                            (resInput, valInput) => [...resInput, ...valInput],
-                            [],
-                        ),
-                    );
-                } else {
-                    result = await controller.eval(
-                        this.fixParam(policies),
-                        this.fixParam(data),
-                        input,
-                        queryString,
-                        resultPath,
-                        queryId ? queryId : undefined,
-                    );
-                }
+                const result = await this.handleOpa(inParam);
 
                 if (this.params.flFinal) {
                     return {
@@ -303,83 +208,104 @@ export default class OPARender extends NullPlugin {
                             ? JSON.parse(gateContext.query.queryStr)
                             : gateContext.query.queryStr,
                 };
-                const policies =
-                    this.params.fvPoliticPath.split(",").reduce((res, val) => {
-                        const value = deepParam(val, inParam);
-                        return value ? value : res;
-                    }, "") || this.params.fvPoliticDefault;
-                const input =
-                    this.params.fvInputPath.split(",").reduce((res, val) => {
-                        const value = deepParam(val, inParam);
-                        return value ? value : res;
-                    }, "") || this.params.fvInputDefault;
-                const data =
-                    this.params.fvDataPath.split(",").reduce((res, val) => {
-                        const value = deepParam(val, inParam);
-                        return value ? value : res;
-                    }, "") || this.params.fvDataDefault;
-                const queryString =
-                    this.params.fvQueryPath.split(",").reduce((res, val) => {
-                        const value = deepParam(val, inParam);
-                        return value ? value : res;
-                    }, "") || this.params.fvQueryDefault;
-                const queryId = this.params.flIdPoliticsKey
-                    ?.split(",")
-                    .reduce((res, val) => {
-                        const value = deepParam(val, inParam);
-                        return value ? value : res;
-                    }, "");
-                const resultPath =
-                    this.params.fvResultKeyPath
-                        ?.split(",")
-                        .reduce((res, val) => {
-                            const value = deepParam(val, inParam);
-                            return value ? value : res;
-                        }, "") || this.params.fvResultPath;
-                this.logger.debug("politics", policies);
-                this.logger.debug("data", data);
-                this.logger.debug("input", input);
-                this.logger.debug("queryString", queryString);
-                this.logger.debug("resultPath", resultPath);
-                let resultOpa = [];
-                if (Array.isArray(input) && input.length && input[0].path) {
-                    resultOpa = await Promise.all(
-                        (input as IFile[]).map(async (file) => {
-                            let res = await controller.eval(
-                                this.fixParam(policies),
-                                this.fixParam(data),
-                                file,
-                                queryString,
-                                resultPath,
-                                queryId ? queryId : undefined,
-                            );
-                            res = Array.isArray(res) ? res : [res];
-                            return res.map((obj) => ({
-                                ...obj,
-                                fv_file_name: file.originalFilename,
-                            }));
-                        }),
-                    ).then((values) =>
-                        values.reduce(
-                            (resInput, valInput) => [...resInput, ...valInput],
-                            [],
-                        ),
-                    );
-                } else {
-                    resultOpa = await controller.eval(
-                        this.fixParam(policies),
-                        this.fixParam(data),
-                        input,
-                        queryString,
-                        resultPath,
-                        queryId ? queryId : undefined,
-                    );
-                }
+
                 return {
                     type: "success",
-                    data: ResultStream(resultOpa),
+                    data: ResultStream(await this.handleOpa(inParam)),
                 } as IResult;
             };
         }
     }
+
+    handleOpa = async (inParam: Record<string, any>) => {
+        const policies =
+            this.params.fvPoliticPath.split(",").reduce((res, val) => {
+                const value = deepParam(val, inParam);
+                return value ? value : res;
+            }, "") || this.params.fvPoliticDefault;
+        const input =
+            this.params.fvInputPath.split(",").reduce((res, val) => {
+                const value = deepParam(val, inParam);
+                return value ? value : res;
+            }, "") || this.params.fvInputDefault;
+        const data =
+            this.params.fvDataPath.split(",").reduce((res, val) => {
+                const value = deepParam(val, inParam);
+                return value ? value : res;
+            }, "") || this.params.fvDataDefault;
+        const queryString =
+            this.params.fvQueryPath.split(",").reduce((res, val) => {
+                const value = deepParam(val, inParam);
+                return value ? value : res;
+            }, "") || this.params.fvQueryDefault;
+        const queryId = this.params.flIdPoliticsKey
+            ?.split(",")
+            .reduce((res, val) => {
+                const value = deepParam(val, inParam);
+                return value ? value : res;
+            }, "");
+        const resultPath =
+            this.params.fvResultKeyPath?.split(",").reduce((res, val) => {
+                const value = deepParam(val, inParam);
+                return value ? value : res;
+            }, "") || this.params.fvResultPath;
+        this.logger.debug("politics", policies);
+        this.logger.debug("data", data);
+        this.logger.debug("input", input);
+        this.logger.debug("queryString", queryString);
+        this.logger.debug("resultPath", resultPath);
+        let resultOpa = [];
+        const notFoundParam = [];
+        if (isEmpty(input)) {
+            notFoundParam.push("input");
+        }
+        if (isEmpty(policies)) {
+            notFoundParam.push("politics");
+        }
+        if (isEmpty(queryString)) {
+            notFoundParam.push("queryString");
+        }
+        if (notFoundParam.length) {
+            throw new ErrorException(
+                ErrorGate.compileErrorResult(
+                    -1,
+                    `Not found require params ${notFoundParam.join(",")}`,
+                ),
+            );
+        }
+        if (Array.isArray(input) && input.length && input[0].path) {
+            resultOpa = await Promise.all(
+                (input as IFile[]).map(async (file) => {
+                    let res = await this.controller.eval(
+                        this.fixParam(policies),
+                        this.fixParam(data),
+                        file,
+                        queryString,
+                        resultPath,
+                        queryId ? queryId : undefined,
+                    );
+                    res = Array.isArray(res) ? res : [res];
+                    return res.map((obj) => ({
+                        ...obj,
+                        fv_file_name: file.originalFilename,
+                    }));
+                }),
+            ).then((values) =>
+                values.reduce(
+                    (resInput, valInput) => [...resInput, ...valInput],
+                    [],
+                ),
+            );
+        } else {
+            resultOpa = await this.controller.eval(
+                this.fixParam(policies),
+                this.fixParam(data),
+                input,
+                queryString,
+                resultPath,
+                queryId ? queryId : undefined,
+            );
+        }
+        return resultOpa;
+    };
 }
