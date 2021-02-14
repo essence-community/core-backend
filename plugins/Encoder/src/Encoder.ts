@@ -119,7 +119,10 @@ export default class Encoder extends NullPlugin {
                 if (res) {
                     if (this.params.flFinal) {
                         return {
-                            type: "success",
+                            type:
+                                gateContext.actionName === "file"
+                                    ? "attachment"
+                                    : "success",
                             data: ResultStream(res),
                         } as IResult;
                     }
@@ -165,7 +168,10 @@ export default class Encoder extends NullPlugin {
                 );
                 if (res) {
                     return {
-                        type: "success",
+                        type:
+                            gateContext.actionName === "file"
+                                ? "attachment"
+                                : "success",
                         data: ResultStream(res),
                     } as IResult;
                 }
@@ -252,7 +258,7 @@ export default class Encoder extends NullPlugin {
             if (action === "file") {
                 return [
                     {
-                        filedata: data,
+                        filedata: Buffer.from(data),
                         ...this.fileData(type),
                     },
                 ];
