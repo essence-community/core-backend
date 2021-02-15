@@ -1,6 +1,5 @@
 import { EventEmitter } from "events";
 import * as Сsv from "fast-csv";
-import { CsvParserStream } from "fast-csv/build/src/parser";
 import * as fs from "fs";
 import { isString } from "lodash";
 import { Readable } from "stream";
@@ -30,7 +29,7 @@ export interface ICsvOptions {
 }
 
 export class ExtractorCsv extends EventEmitter {
-    private csv: CsvParserStream;
+    private csv: any;
     private packRows: number;
     private pack: any[] = [];
     private isEventRead: boolean = false;

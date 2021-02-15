@@ -3,8 +3,8 @@ import { ISenderOptions } from "@ungate/plugininf/lib/util/ProcessSender";
 import * as ChildProcess from "child_process";
 import * as path from "path";
 import Constants from "../core/Constants";
-import * as fs from 'fs';
-import { deleteFolderRecursive } from '@ungate/plugininf/lib/util/Util';
+import * as fs from "fs";
+import { deleteFolderRecursive } from "@ungate/plugininf/lib/util/Util";
 const logger = Logger.getLogger("master");
 
 const checkMessage = (nodes: INode, name: string, id) => (message) => {
@@ -96,7 +96,7 @@ class BuilderProcessController {
         } else {
             fs.mkdirSync(Constants.UPLOAD_DIR, {
                 recursive: true,
-            })
+            });
         }
         if (Constants.LOCAL_DB === "nedb") {
             initNode(

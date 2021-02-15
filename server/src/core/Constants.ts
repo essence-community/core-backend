@@ -22,7 +22,10 @@ class Constants {
     /**
      * Папка куда сохраниются передаваемые файлы
      */
-    public UPLOAD_DIR: string = path.join(process.env.GATE_UPLOAD_DIR || os.tmpdir(), "upload_ungate");
+    public UPLOAD_DIR: string = path.join(
+        process.env.GATE_UPLOAD_DIR || os.tmpdir(),
+        "upload_ungate",
+    );
     /**
      * Local db of constants
      */
