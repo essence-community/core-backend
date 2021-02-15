@@ -69,6 +69,7 @@ export class XMLEncoder implements IEncoder {
                         fs.readFileSync(file.path).toString(),
                     );
                     fs.writeFileSync(newFile, this.jsonToXmlParser.parse(json));
+                    fs.unlinkSync(file.path);
                     file.path = newFile;
                 }),
             );
@@ -88,6 +89,7 @@ export class XMLEncoder implements IEncoder {
                         newFile,
                         JSON.stringify(parser.parse(xml, this.j2xoptions)),
                     );
+                    fs.unlinkSync(file.path);
                     file.path = newFile;
                 }),
             );

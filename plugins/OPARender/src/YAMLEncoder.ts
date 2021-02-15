@@ -25,6 +25,7 @@ export class YAMLEncoder implements IEncoder {
                         fs.readFileSync(file.path).toString(),
                     );
                     fs.writeFileSync(newFile, YAML.dump(infile));
+                    fs.unlinkSync(file.path);
                     file.path = newFile;
                 }),
             );
@@ -44,6 +45,7 @@ export class YAMLEncoder implements IEncoder {
                         newFile,
                         JSON.stringify(YAML.load(infile)),
                     );
+                    fs.unlinkSync(file.path);
                     file.path = newFile;
                 }),
             );

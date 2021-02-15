@@ -21,9 +21,10 @@ export class BASE64Encoder implements IEncoder {
         if (Array.isArray(input) && input[0] && input[0].path) {
             await Promise.all(
                 (input as IFile[]).map(async (file) => {
-                    const newFile = `${file.path}.encode_xml`;
+                    const newFile = `${file.path}.encode_base64`;
                     const json = fs.readFileSync(file.path).toString("base64");
                     fs.writeFileSync(newFile, json);
+                    fs.unlinkSync(file.path);
                     file.path = newFile;
                 }),
             );
@@ -35,12 +36,13 @@ export class BASE64Encoder implements IEncoder {
         if (Array.isArray(input) && input[0] && input[0].path) {
             await Promise.all(
                 (input as IFile[]).map(async (file) => {
-                    const newFile = `${file.path}.decode_xml`;
+                    const newFile = `${file.path}.decode_base64`;
                     const xml = Buffer.from(
                         fs.readFileSync(file.path).toString(),
                         "base64",
                     );
                     fs.writeFileSync(newFile, xml.toString("utf8"));
+                    fs.unlinkSync(file.path);
                     file.path = newFile;
                 }),
             );
