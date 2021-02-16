@@ -130,7 +130,7 @@ export class S3Storage {
                         return reject(err);
                     }
                     const filePath = path.join(this.UPLOAD_DIR, uuidv4());
-                    fs.writeFile(filePath, response.Body, (er) => {
+                    fs.writeFile(filePath, response.Body as Buffer, (er) => {
                         if (er) {
                             return reject(er);
                         }

@@ -21,7 +21,8 @@ export interface IBaseParamInfo {
         | "date"
         | "password"
         | "long_string"
-        | "combo";
+        | "combo"
+        | "form_nested";
     setGlobal?: ISetGlobalValueParam[];
     getGlobal?: string;
     hiddenRules?: string;
@@ -46,7 +47,7 @@ export interface IComboParamInfo extends IBaseParamInfo {
     queryparam?: string;
     query?: string;
     // tslint:disable-line array-type
-    records?: Record<string, string | number>[];
+    records?: Array<Record<string, string | number>>;
     defaultValue?: string | number;
 }
 
@@ -73,12 +74,18 @@ export interface IBooleanParamInfo extends IBaseParamInfo {
     defaultValue?: boolean;
 }
 
+export interface IFormNestedParamInfo extends IBaseParamInfo {
+    type: "form_nested";
+    childs: IParamsInfo;
+}
+
 export type IParamInfo =
     | IBooleanParamInfo
     | IDateParamInfo
     | INumberParamInfo
     | IStringAreaParamInfo
-    | IComboParamInfo;
+    | IComboParamInfo
+    | IFormNestedParamInfo;
 
 export interface IParamsInfo {
     [key: string]: IParamInfo;

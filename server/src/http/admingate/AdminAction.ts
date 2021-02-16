@@ -394,9 +394,14 @@ export default class AdminAction {
      * @param db
      * @returns
      */
-    public loadSetting(gateContext: IContext, column: string, method, db) {
+    public async loadSetting(
+        gateContext: IContext,
+        column: string,
+        method,
+        db,
+    ): Promise<Record<string, any>[]> {
         if (isEmpty(gateContext.query.inParams.json)) {
-            return Promise.reject(new ErrorException(ErrorGate.JSON_PARSE));
+            throw new ErrorException(ErrorGate.JSON_PARSE);
         }
         const json = JSON.parse(
             gateContext.query.inParams.json,
@@ -408,44 +413,94 @@ export default class AdminAction {
             },
         );
         if (isEmpty(json.master.ck_id)) {
-            return Promise.resolve([]);
+            return [];
         }
         const PClass = method(json.master.ck_id);
         if (PClass && PClass.getParamsInfo) {
             const params = PClass.getParamsInfo();
-            return (json.filter.cv_name
+            const doc = await (json.filter.cv_name
                 ? db.findOne({
                       [column]: json.filter.cv_name,
                   })
-                : Promise.resolve({})
-            ).then((doc) =>
-                Promise.resolve([
-                    {
-                        childs: Object.entries(params)
-                            .map((arr) =>
-                                this.createFields(
-                                    gateContext,
-                                    arr[0],
-                                    json.filter.ck_page,
-                                    (json.filter.ca_childs || [])[0],
-                                    arr[1] as IParamInfo,
-                                    doc.cct_params,
-                                ),
-                            )
-                            .filter((val) => !isEmpty(val)),
-                        ck_page: json.filter.ck_page,
-                        ck_page_object: uuidv4(),
-                        column: "cct_params",
-                        contentview: "vbox",
-                        datatype: "array",
-                        type: "FIELDSET",
-                    },
-                ]),
+                : Promise.resolve({}));
+            const cctParam = Object.entries(params).reduce(
+                (res, [key, obj]) => {
+                    res[key] = this.checkData(
+                        key,
+                        obj as IParamInfo,
+                        doc.cct_params || (obj as IParamInfo).defaultValue,
+                    );
+                    return res;
+                },
+                {},
             );
+            return [
+                {
+                    childs: Object.entries(params)
+                        .map((arr) =>
+                            this.createFields(
+                                gateContext,
+                                arr[0],
+                                json.filter.ck_page,
+                                (json.filter.ca_childs || [])[0],
+                                arr[1] as IParamInfo,
+                                doc.cct_params,
+                            ),
+                        )
+                        .filter((val) => !isEmpty(val)),
+                    ck_page: json.filter.ck_page,
+                    ck_page_object: uuidv4(),
+                    initvalue: cctParam,
+                    defaultvalue: cctParam,
+                    column: "cct_params",
+                    contentview: "vbox",
+                    type: "FORM_NESTED",
+                },
+            ];
         }
         return Promise.resolve([]);
     }
 
+    private checkData(name: string, conf: IParamInfo, params = {}) {
+        switch (conf.type) {
+            case "string":
+            case "long_string": {
+                return isObject(params[name])
+                    ? JSON.stringify(params[name])
+                    : params[name] || conf.defaultValue;
+            }
+            case "form_nested": {
+                return Object.entries(conf.childs).reduce((res, [key, obj]) => {
+                    res[key] = this.checkData(
+                        key,
+                        obj as IParamInfo,
+                        params[name] || conf.defaultValue,
+                    );
+                    return res;
+                }, {});
+            }
+            case "password": {
+                return isEmpty(params[name])
+                    ? ""
+                    : "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8";
+            }
+            case "integer": {
+                return isEmpty(params[name]) ? conf.defaultValue : params[name];
+            }
+            case "boolean": {
+                if (isEmpty(conf.defaultValue)) {
+                    return params[name] || conf.defaultValue;
+                }
+                return `${+(params[name] || conf.defaultValue)}`;
+            }
+            case "combo": {
+                return params[name] || conf.defaultValue;
+            }
+            default: {
+                return params[name] || conf.defaultValue;
+            }
+        }
+    }
     /**
      * Создаем поля ввода
      * @param gateContext
@@ -486,16 +541,38 @@ export default class AdminAction {
                 return {
                     ...defaultAttr,
                     datatype: "text",
+                    initvalue: isObject(params[name])
+                        ? JSON.stringify(params[name])
+                        : params[name] || conf.defaultValue,
                     defaultvalue: isObject(params[name])
                         ? JSON.stringify(params[name])
                         : params[name] || conf.defaultValue,
                     type: "IFIELD",
                 };
             }
+            case "form_nested": {
+                return {
+                    ...defaultAttr,
+                    childs: Object.entries(conf.childs).map(([key, obj]) =>
+                        this.createFields(
+                            gateContext,
+                            key,
+                            ckPage,
+                            child,
+                            obj,
+                            params[name] || {},
+                        ),
+                    ),
+                    type: "FORM_NESTED",
+                };
+            }
             case "long_string": {
                 return {
                     ...defaultAttr,
                     datatype: "textarea",
+                    initvalue: isObject(params[name])
+                        ? JSON.stringify(params[name])
+                        : params[name] || conf.defaultValue,
                     defaultvalue: isObject(params[name])
                         ? JSON.stringify(params[name])
                         : params[name] || conf.defaultValue,
@@ -506,6 +583,9 @@ export default class AdminAction {
                 return {
                     ...defaultAttr,
                     datatype: "password",
+                    initvalue: isEmpty(params[name])
+                        ? ""
+                        : "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8",
                     defaultvalue: isEmpty(params[name])
                         ? ""
                         : "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8",
@@ -518,6 +598,9 @@ export default class AdminAction {
                     datatype: "integer",
                     maxvalue: conf.maxValue,
                     minvalue: conf.minValue,
+                    initvalue: isEmpty(params[name])
+                        ? conf.defaultValue
+                        : params[name],
                     defaultvalue: isEmpty(params[name])
                         ? conf.defaultValue
                         : params[name],
@@ -532,6 +615,7 @@ export default class AdminAction {
                         ck_page_object: child.ck_page_object,
                         cl_dataset: 1,
                         datatype: "combo",
+                        initvalue: params[name] || conf.defaultValue,
                         defaultvalue: params[name] || conf.defaultValue,
                         displayfield: "cv_name",
                         type: "IFIELD",
@@ -552,6 +636,7 @@ export default class AdminAction {
                 return {
                     ...defaultAttr,
                     datatype: "checkbox",
+                    initvalue: `${+(params[name] || conf.defaultValue)}`,
                     defaultvalue: `${+(params[name] || conf.defaultValue)}`,
                     type: "IFIELD",
                 };
@@ -565,6 +650,7 @@ export default class AdminAction {
                     getglobaltostore: conf.getGlobalToStore,
                     cl_dataset: 1,
                     datatype: "combo",
+                    initvalue: params[name] || conf.defaultValue,
                     defaultvalue: params[name] || conf.defaultValue,
                     displayfield: conf.displayField,
                     type: "IFIELD",

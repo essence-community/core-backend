@@ -179,10 +179,10 @@ export default class S3Storage extends NullPlugin {
                                     this.params.cvDir,
                             )
                                 ? json.data.cv_file_guid
-                                : `${
-                                      json.data[this.params.cvDirColumn] ||
-                                      this.params.cvDir
-                                  }/${json.data.cv_file_guid}`,
+                                : `${json.data[this.params.cvDirColumn] ||
+                                      this.params.cvDir}/${
+                                      json.data.cv_file_guid
+                                  }`,
                         },
                         (err) => {
                             if (err) {
@@ -212,10 +212,8 @@ export default class S3Storage extends NullPlugin {
                                 this.params.cvDir,
                         )
                             ? json.data.cv_file_guid
-                            : `${
-                                  json.data[this.params.cvDirColumn] ||
-                                  this.params.cvDir
-                              }/${json.data.cv_file_guid}`,
+                            : `${json.data[this.params.cvDirColumn] ||
+                                  this.params.cvDir}/${json.data.cv_file_guid}`,
                     },
                     (err, response) => {
                         if (err) {
@@ -263,10 +261,8 @@ export default class S3Storage extends NullPlugin {
                             row[this.params.cvDirColumn] || this.params.cvDir,
                         )
                             ? row.cv_file_guid
-                            : `${
-                                  row[this.params.cvDirColumn] ||
-                                  this.params.cvDir
-                              }/${row.cv_file_guid}`,
+                            : `${row[this.params.cvDirColumn] ||
+                                  this.params.cvDir}/${row.cv_file_guid}`,
                     },
                     (err, response) => {
                         if (err) {
@@ -309,10 +305,8 @@ export default class S3Storage extends NullPlugin {
                         json.data[this.params.cvDirColumn] || this.params.cvDir,
                     )
                         ? cvFileUuid
-                        : `${
-                              json.data[this.params.cvDirColumn] ||
-                              this.params.cvDir
-                          }/${cvFileUuid}`,
+                        : `${json.data[this.params.cvDirColumn] ||
+                              this.params.cvDir}/${cvFileUuid}`,
                     ...(this.params.clReadPublic
                         ? {
                               ACL: "public-read",
@@ -355,12 +349,12 @@ export default class S3Storage extends NullPlugin {
                                                     ] || this.params.cvDir,
                                                 )
                                                     ? cvFileUuid
-                                                    : `${
-                                                          json.data[
-                                                              this.params
-                                                                  .cvDirColumn
-                                                          ] || this.params.cvDir
-                                                      }/${cvFileUuid}`,
+                                                    : `${json.data[
+                                                          this.params
+                                                              .cvDirColumn
+                                                      ] ||
+                                                          this.params
+                                                              .cvDir}/${cvFileUuid}`,
                                             },
                                             (errDelete) => {
                                                 if (errDelete) {

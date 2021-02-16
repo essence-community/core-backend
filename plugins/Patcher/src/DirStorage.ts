@@ -56,12 +56,16 @@ export class DirStorage implements IStorage {
                 (buffer as Readable).pipe(ws);
                 return;
             }
-            fs.writeFile(`${this.params.cvPath}${prePath}`, buffer, (err) => {
-                if (err) {
-                    reject(err);
-                }
-                resolve();
-            });
+            fs.writeFile(
+                `${this.params.cvPath}${prePath}`,
+                buffer as Buffer,
+                (err) => {
+                    if (err) {
+                        reject(err);
+                    }
+                    resolve();
+                },
+            );
         });
     }
     public deletePath(key: string): Promise<void> {

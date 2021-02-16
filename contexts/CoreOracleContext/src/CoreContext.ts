@@ -5,7 +5,10 @@ import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
 import ICCTParams, { IParamsInfo } from "@ungate/plugininf/lib/ICCTParams";
 import IContext from "@ungate/plugininf/lib/IContext";
-import { IContextPluginResult } from "@ungate/plugininf/lib/IContextPlugin";
+import {
+    IContextParams,
+    IContextPluginResult,
+} from "@ungate/plugininf/lib/IContextPlugin";
 import IGlobalObject from "@ungate/plugininf/lib/IGlobalObject";
 import IResult from "@ungate/plugininf/lib/IResult";
 import Logger from "@ungate/plugininf/lib/Logger";
@@ -19,7 +22,7 @@ const logger = Logger.getLogger("CoreContext");
 const Mask = ((global as any) as IGlobalObject).maskgate;
 const createTempTable = ((global as any) as IGlobalObject).createTempTable;
 
-export interface ICoreParams extends ICCTParams {
+export interface ICoreParams extends IContextParams {
     debug: boolean;
     defaultDepartmentQueryName: string;
     disableCache: boolean;

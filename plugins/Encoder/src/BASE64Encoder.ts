@@ -30,7 +30,7 @@ export class BASE64Encoder implements IEncoder {
             );
             return input as IFile[];
         }
-        return Buffer.from(input).toString("base64");
+        return Buffer.from(input as string).toString("base64");
     }
     async decodeStr(input: string | IFile[]): Promise<string | IFile[]> {
         if (Array.isArray(input) && input[0] && input[0].path) {

@@ -8,6 +8,7 @@ import {
     sendProcess,
 } from "@ungate/plugininf/lib/util/ProcessSender";
 import * as compression from "compression";
+import * as cors from "cors";
 import * as http from "http";
 import { noop } from "lodash";
 import * as Router from "router";
@@ -44,6 +45,9 @@ class HttpServer {
             });
             this.route.use(doc.cv_path, route);
             route.use(BodyParse(gateContext));
+            if (gateContext.params.enableCors) {
+                route.use(cors(gateContext.params.cors));
+            }
             route.all("/", (req, res) => {
                 MainController.execute(
                     new RequestContext(req as IRequest, res, gateContext),

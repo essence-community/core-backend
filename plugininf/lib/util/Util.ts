@@ -33,7 +33,7 @@ function parseParam(conf: IParamInfo, value: any) {
             return toString(value);
         case "boolean": {
             if (isString(value)) {
-                return value === "true";
+                return value === "true" || value === "1";
             }
             return !!value;
         }
@@ -42,6 +42,14 @@ function parseParam(conf: IParamInfo, value: any) {
             return toNumber(value);
         case "date":
             return moment(value).toDate();
+        case "form_nested":
+            return Object.entries(conf.childs).reduce((res, [key, obj]) => {
+                res[key] = parseParam(
+                    obj as IParamInfo,
+                    (value || conf.defaultValue || {})[key],
+                );
+                return res;
+            }, {});
         default:
             return toString(value);
     }
