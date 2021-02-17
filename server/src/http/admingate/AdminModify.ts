@@ -8,7 +8,7 @@ import IObjectParam from "@ungate/plugininf/lib/IObjectParam";
 import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
 import { isEmpty } from "@ungate/plugininf/lib/util/Util";
-import { forEach, isArray, isObject } from "lodash";
+import { forEach, isObject } from "lodash";
 import Property from "../../core/property/index";
 import RiakAction from "./RiakAction";
 
@@ -78,7 +78,7 @@ export default class AdminModify {
             if (isObject(val) || Array.isArray(val)) {
                 this.deepChange(res, val, `${keyPrefix}.${key}`);
             } else if (
-                val !=
+                val !==
                 "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
             ) {
                 res[`${keyPrefix}.${key}`] = val;
