@@ -12,6 +12,8 @@ import Logger from "./Logger";
 import ResultStream from "./stream/ResultStream";
 import { initParams } from "./util/Util";
 
+const findRegEx = /^\/([\s\S]*)\/([gimy]*)$/g;
+
 export default abstract class NullContext implements IContextPlugin {
     public static getParamsInfo(): IParamsInfo {
         return {
@@ -160,6 +162,23 @@ export default abstract class NullContext implements IContextPlugin {
                     if ((this.params.cors.origin as string).startsWith("[")) {
                         this.params.cors.origin = JSON.parse(
                             this.params.cors.origin as string,
+                        );
+                        this.params.cors.origin = (this.params.cors
+                            .origin as string[]).map((val) => {
+                            if (findRegEx.test(val)) {
+                                const matcher = findRegEx.exec(val);
+                                return new RegExp(matcher[1], matcher[2]);
+                            }
+                            return val;
+                        });
+                    }
+                    if (findRegEx.test(this.params.cors.origin as string)) {
+                        const matcher = findRegEx.exec(
+                            this.params.cors.origin as string,
+                        );
+                        this.params.cors.origin = new RegExp(
+                            matcher[1],
+                            matcher[2],
                         );
                     }
                     if (this.params.cors.origin === "true") {

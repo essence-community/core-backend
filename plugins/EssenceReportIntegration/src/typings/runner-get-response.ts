@@ -7,9 +7,9 @@ export type RunnerGetResponse<
     TContentType extends "application/json" = "application/json"
 > = TCode extends 200
     ? TContentType extends "application/json"
-        ? /**
-           * Status report
-           */
-          ResultSuccess | ResultFault
+      /**
+       * Status report
+       */
+        ? ResultSuccess | ResultFault
         : any
     : any;
