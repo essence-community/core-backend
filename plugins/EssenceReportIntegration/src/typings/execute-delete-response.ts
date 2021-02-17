@@ -7,9 +7,9 @@ export type ExecuteDeleteResponse<
     TContentType extends "application/json" = "application/json"
 > = TCode extends 200
     ? TContentType extends "application/json"
-      /**
-       * Delete report
-       */
-        ? ResultSuccess | ResultFault
+        ? /**
+           * Delete report
+           */
+          ResultSuccess | ResultFault
         : any
     : any;

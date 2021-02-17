@@ -7,14 +7,14 @@ export type StoreGetResponse<
     TContentType extends "application/json" | "*/*" = "application/json" | "*/*"
 > = TCode extends 200
     ? TContentType extends "application/json"
-      /**
-       * Files
-       */
-        ? ResultSuccess | ResultFault
-        : TContentType extends "*/*"
-          /**
+        ? /**
            * Files
            */
-        ? string
+          ResultSuccess | ResultFault
+        : TContentType extends "*/*"
+        ? /**
+           * Files
+           */
+          string
         : any
     : any;
