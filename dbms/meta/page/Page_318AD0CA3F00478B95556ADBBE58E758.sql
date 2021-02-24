@@ -29,7 +29,7 @@ select pkg_patcher.p_merge_object('CA9B416A9DB44031B8DC2C1F6B3FD2FD', '9', 'A4D4
 select pkg_patcher.p_merge_object('83C15659FE6149F7907AD6F0932318B7', '9', 'A4D45B6732CC42BF8753BBA873AF71C4', 'cv_description', 40, null, 'Описание', 'a4b1d1f3995f499a8f2bac5b57a3cbdc', null, null, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000');
 select pkg_patcher.p_merge_object('CE37E25D83104480B770A2FA4AEC6FC2', '7457', 'F1DD61A897E24EB783C05565764A636C', 'Field Group', 80, null, 'Field Group', null, null, null, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000');
 select pkg_patcher.p_merge_object('23A48BB6888D4155B7CF31859B9B85CB', '19', 'F1DD61A897E24EB783C05565764A636C', 'Save Button', 100, null, 'Save Button', 'ef1415ca80804e149ceb5356efb2df97', null, null, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000');
-select pkg_patcher.p_merge_object('3D83CA644A9041C59CE6FC750B3D8972', '19', 'F1DD61A897E24EB783C05565764A636C', 'Canсel Button', 200, null, 'Отмена', '1be4283aee71484c99f4954189e126d6', null, null, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000');
+select pkg_patcher.p_merge_object('3D83CA644A9041C59CE6FC750B3D8972', '19', 'F1DD61A897E24EB783C05565764A636C', 'Canсel Button', 200, null, 'Отмена', '8fd23a27ba224ee48cdef41f72947665', null, null, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000');
 select pkg_patcher.p_merge_object('5A302E15190F435A83EEFECB3E1D77F6', '37', 'CE37E25D83104480B770A2FA4AEC6FC2', 'Pages', 10, 'MTPage', 'Модуль/Каталоги/Страницы', 'ad5a456a8b5a4781afcc678dfb5194f3', null, null, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000');
 select pkg_patcher.p_merge_object('AE803E4555D9418294D6E12BFF64983C', '38', 'CE37E25D83104480B770A2FA4AEC6FC2', 'Query Grid', 20, 'MTQuery', 'Сервисы', 'fa5c0a601c3845f0938602d0fa7f71dc', null, null, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-24T00:00:00.000+0000');
 select pkg_patcher.p_merge_object('BBA6F5B925AC43B49EF79D345D967DBB', '38', 'CE37E25D83104480B770A2FA4AEC6FC2', 't_message', 40, 'GetMsgList', 'Ошибки', '44722d718c304ec3a87ec7955fe711f0', null, null, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-24T00:00:00.000+0000');
@@ -53,42 +53,41 @@ select pkg_patcher.p_merge_object_attr('68FDA3279E314EC78F9D06263ABFB996', '81B5
 select pkg_patcher.p_merge_object_attr('E9B14F636256485084913BBB04C60B34', '81B5BCF15D59434CA79573203795C6B8', '560', 'onUpdate', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-24T00:00:00.000+0000', 'handler');
 select pkg_patcher.p_merge_object_attr('D10A1FC224CA4593B1CE93E20825BCFA', '81B5BCF15D59434CA79573203795C6B8', '591', '7', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-24T00:00:00.000+0000', 'mode');
 select pkg_patcher.p_merge_object_attr('BB2A77E2ADBB4CC1A536D0E1F587510E', '81B5BCF15D59434CA79573203795C6B8', '592', 'Modify', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-24T00:00:00.000+0000', 'updatequery');
+select pkg_patcher.p_merge_object_attr('F53D61DFCEA24B8F94C7C2F6B19C15A1', 'E93E67C041934AB2A5635B9943938215', '03FFC6D5E3B942F088207B303A682156', '[{"property": "cv_file_name", "direction": "DESC"}]', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-01-16T00:00:00.000+0000', 'order');
+select pkg_patcher.p_merge_object_attr('7B5A942B42174D6BA0474A9D3B55F3F9', 'C93DCC32D01E45C9878FFD3EBB1292C8', '03FFC6D5E3B942F088207B303A682156', '[{"property": "ck_id", "direction": "ASC"}]', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000', 'order');
 select pkg_patcher.p_merge_object_attr('8921E5E354754E95980EFBB97B6ACED8', '97033FBBE78B444C90DA66D54820B2E4', '1033', 'ck_create', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000', 'ckwindow');
 select pkg_patcher.p_merge_object_attr('B4ABF079AE254A6AA95EC294E10837BC', 'C93DCC32D01E45C9878FFD3EBB1292C8', '1440', 'false', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000', 'btnaudit');
 select pkg_patcher.p_merge_object_attr('03D704AB7C4D401DBC99BB1823C06EA0', 'C93DCC32D01E45C9878FFD3EBB1292C8', '1643', 'false', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000', 'btndelete');
 select pkg_patcher.p_merge_object_attr('50A5534A787C4DDFB6EA61DA6FA866B7', '5A302E15190F435A83EEFECB3E1D77F6', '261', 'cct_page', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-24T00:00:00.000+0000', 'column');
-select pkg_patcher.p_merge_object_attr('615514A16BE547F4879A52399F1212D5', 'E93E67C041934AB2A5635B9943938215', '401', '10', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000', 'pagesize');
 select pkg_patcher.p_merge_object_attr('75805A836DAE4AF68BC20B75764E5012', 'C93DCC32D01E45C9878FFD3EBB1292C8', '401', '10', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000', 'pagesize');
+select pkg_patcher.p_merge_object_attr('615514A16BE547F4879A52399F1212D5', 'E93E67C041934AB2A5635B9943938215', '401', '10', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000', 'pagesize');
 select pkg_patcher.p_merge_object_attr('14B995379D3749F09139E4A84A095A16', 'E93E67C041934AB2A5635B9943938215', '407', 'modalwindow', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000', 'edittype');
 select pkg_patcher.p_merge_object_attr('57E50916B5A548A5A615A83E3081D5BD', '7A6D4AC549544C2083CC48A0EC0028C4', '444', 'ck_id', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-24T00:00:00.000+0000', 'column');
+select pkg_patcher.p_merge_object_attr('49B2C5B7D0DE411E8E94D6D111420B98', '2D97F41E2B0C407192F520127B72B266', '47', 'ck_id', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000', 'column');
 select pkg_patcher.p_merge_object_attr('D9F9F33CDF394619BB05A541FE20DEF5', 'F08323F9B6514F5ABA3334789F25FBD4', '47', 'ck_id', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-24T00:00:00.000+0000', 'column');
 select pkg_patcher.p_merge_object_attr('17738E6C31054F42AC92E984CC5D4F52', 'FB88BB21B39645788B0AB9702A245443', '47', 'cv_name', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-24T00:00:00.000+0000', 'column');
-select pkg_patcher.p_merge_object_attr('49B2C5B7D0DE411E8E94D6D111420B98', '2D97F41E2B0C407192F520127B72B266', '47', 'ck_id', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000', 'column');
 select pkg_patcher.p_merge_object_attr('0116B13D673E43FB9FF977AD9291665E', 'C93DCC32D01E45C9878FFD3EBB1292C8', '572', 'false', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-24T00:00:00.000+0000', 'autoload');
-select pkg_patcher.p_merge_object_attr('F53D61DFCEA24B8F94C7C2F6B19C15A1', 'E93E67C041934AB2A5635B9943938215', '852', 'cv_file_name', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-01-16T00:00:00.000+0000', 'orderproperty');
-select pkg_patcher.p_merge_object_attr('7B5A942B42174D6BA0474A9D3B55F3F9', 'C93DCC32D01E45C9878FFD3EBB1292C8', '852', 'ck_id', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000', 'orderproperty');
-select pkg_patcher.p_merge_object_attr('38F5ACDE0C9943DEA22CE259BE102D27', 'E93E67C041934AB2A5635B9943938215', '853', 'DESC', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-01-16T00:00:00.000+0000', 'orderdirection');
-select pkg_patcher.p_merge_object_attr('55B98FD1A32D4AD885AFAF2D570BF915', '5A302E15190F435A83EEFECB3E1D77F6', '859', 'cn_order', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-01-22T00:00:00.000+0000', 'orderproperty');
-select pkg_patcher.p_merge_object_attr('073CD35705CB431F8A53C9A6D20FB8A0', 'E93E67C041934AB2A5635B9943938215', '8D547C621A1D626CE053809BA8C0882B', 'false', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000', 'btnsettings');
 select pkg_patcher.p_merge_object_attr('6448EF444C2845799F9048E2996EA6D4', 'C93DCC32D01E45C9878FFD3EBB1292C8', '8D547C621A1D626CE053809BA8C0882B', 'false', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000', 'btnsettings');
+select pkg_patcher.p_merge_object_attr('073CD35705CB431F8A53C9A6D20FB8A0', 'E93E67C041934AB2A5635B9943938215', '8D547C621A1D626CE053809BA8C0882B', 'false', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000', 'btnsettings');
 select pkg_patcher.p_merge_object_attr('A80C40BB01AE492380C993D059BA6A3C', '97033FBBE78B444C90DA66D54820B2E4', '992', 'archive', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-01-16T00:00:00.000+0000', 'iconfont');
+select pkg_patcher.p_merge_object_attr('55B98FD1A32D4AD885AFAF2D570BF915', '5A302E15190F435A83EEFECB3E1D77F6', 'B45847E1BC93408E858A0C270A691814', '[{"property": "cn_order", "direction": "ASC"}]', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-01-22T00:00:00.000+0000', 'order');
 select pkg_patcher.p_merge_object_attr('B46F622BC5204054B22AB0005AC56833', '5A302E15190F435A83EEFECB3E1D77F6', 'DE8BD5C9509F4AFB8B1DC77ED22882DC', 'array', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-24T00:00:00.000+0000', 'collectionvalues');
 select pkg_patcher.p_merge_object_attr('BC248D003EFE434FAD352061C7FF3887', 'FB88BB21B39645788B0AB9702A245443', 'DF0F8346F83146D39CDB9C2FB62D4497', 'meta', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-24T00:00:00.000+0000', 'localization');
+select pkg_patcher.p_merge_object_attr('A8E652F5055541A18E9ED3411D4AD367', 'A4D45B6732CC42BF8753BBA873AF71C4', '03FFC6D5E3B942F088207B303A682156', '[{"property": "ck_id", "direction": "ASC"}]', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000', 'order');
 select pkg_patcher.p_merge_object_attr('EF6100FFD483433DB5CF6620E8C2C7AF', 'A4D45B6732CC42BF8753BBA873AF71C4', '1440', 'false', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000', 'btnaudit');
 select pkg_patcher.p_merge_object_attr('E16C5B68E690403C85B6C74FBF1236B0', 'A4D45B6732CC42BF8753BBA873AF71C4', '1643', 'false', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000', 'btndelete');
 select pkg_patcher.p_merge_object_attr('4B3A7F4BC5064F1BAD10FECEE7BD90BF', '85363EBEFD6A42FEA17E63BA16C0F95D', '2245E03AC24B477DA148AEC5B7DF3128', 'meta', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-24T00:00:00.000+0000', 'localization');
 select pkg_patcher.p_merge_object_attr('722FBDE689A942EA8125FE23227502CD', 'AE803E4555D9418294D6E12BFF64983C', '297', 'cct_query', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-24T00:00:00.000+0000', 'column');
 select pkg_patcher.p_merge_object_attr('E9A47CF2250C46A78F0EE87E6779FD64', 'A4D45B6732CC42BF8753BBA873AF71C4', '401', '10', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000', 'pagesize');
 select pkg_patcher.p_merge_object_attr('C8EC7C1486A9481A9E4AD570D836DBDE', '68A8CE7C23B64B9698C9559C3AA85064', '444', 'ck_id', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000', 'column');
-select pkg_patcher.p_merge_object_attr('04DD3C3ED7B64D1FA27ED7803E775EA7', '1F690D0D81174281AA7BA1E528A160BB', '47', 'cv_name', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-24T00:00:00.000+0000', 'column');
-select pkg_patcher.p_merge_object_attr('C2CA652DA840485AAB82B91F3660C47C', 'F6BB4A6A40FC474384C3C770BF0C44A1', '47', 'cv_file_name', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-24T00:00:00.000+0000', 'column');
-select pkg_patcher.p_merge_object_attr('0DEC5DB878CD4871851197D590E7561C', 'D5599DC9789642739012BAFD92AA0844', '47', 'ck_id', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000', 'column');
-select pkg_patcher.p_merge_object_attr('D98D4103E79746F7A578EC5E58FBBB1C', '472E3610672D4D6484118F1A4CC1C58E', '47', 'cv_text', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-24T00:00:00.000+0000', 'column');
 select pkg_patcher.p_merge_object_attr('DC04DFC10A9B44CB991CBD06A30974FC', '60547EDB0F1B4A2EB1744E37A8AAF93F', '47', 'ck_id', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000', 'column');
 select pkg_patcher.p_merge_object_attr('9C5FDF14F4EC41D89AD04626E617FE01', '92E8DE7F45E84FE8BD1371C72D7957DA', '47', 'ck_provider', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-01-16T00:00:00.000+0000', 'column');
+select pkg_patcher.p_merge_object_attr('0DEC5DB878CD4871851197D590E7561C', 'D5599DC9789642739012BAFD92AA0844', '47', 'ck_id', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000', 'column');
+select pkg_patcher.p_merge_object_attr('D98D4103E79746F7A578EC5E58FBBB1C', '472E3610672D4D6484118F1A4CC1C58E', '47', 'cv_text', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-24T00:00:00.000+0000', 'column');
+select pkg_patcher.p_merge_object_attr('C2CA652DA840485AAB82B91F3660C47C', 'F6BB4A6A40FC474384C3C770BF0C44A1', '47', 'cv_file_name', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-24T00:00:00.000+0000', 'column');
+select pkg_patcher.p_merge_object_attr('04DD3C3ED7B64D1FA27ED7803E775EA7', '1F690D0D81174281AA7BA1E528A160BB', '47', 'cv_name', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-24T00:00:00.000+0000', 'column');
 select pkg_patcher.p_merge_object_attr('6CA66FE6CDB8467385AB812B0B8F2AAA', 'AE803E4555D9418294D6E12BFF64983C', '5169', 'array', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000', 'collectionvalues');
 select pkg_patcher.p_merge_object_attr('B35B9DADB2734C61A2EA1D6291C53AB1', '85363EBEFD6A42FEA17E63BA16C0F95D', '52', 'cv_name', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000', 'column');
-select pkg_patcher.p_merge_object_attr('A8E652F5055541A18E9ED3411D4AD367', 'A4D45B6732CC42BF8753BBA873AF71C4', '852', 'ck_id', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000', 'orderproperty');
 select pkg_patcher.p_merge_object_attr('DB8998883B29424EBDA0E32D5431F1BB', 'A4D45B6732CC42BF8753BBA873AF71C4', '8D547C621A1D626CE053809BA8C0882B', 'false', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000', 'btnsettings');
 select pkg_patcher.p_merge_object_attr('0345729D9A9B41E28A7196D2E9B44CAC', '472E3610672D4D6484118F1A4CC1C58E', 'DF0F8346F83146D39CDB9C2FB62D4497', 'message', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-24T00:00:00.000+0000', 'localization');
 select pkg_patcher.p_merge_object_attr('D384918022FD4BFB8B142A87DCE7CF23', '5C286893F7E74B609E33AC01B6E6EB10', '444', 'cn_order', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000', 'column');
@@ -98,16 +97,17 @@ select pkg_patcher.p_merge_object_attr('FB97E0E2B32744C5A7D8E55BC45C6670', 'F64F
 select pkg_patcher.p_merge_object_attr('83156FC9EE6F4485ADCD259E079E65A4', '348C21FEC3EE479EBF91985CCB1A6FF0', '47', 'ck_provider', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000', 'column');
 select pkg_patcher.p_merge_object_attr('72856D500C464757BB8F6A48C68B9528', 'E6EEF3BE05B54AECB776EB073625E2D2', '49', 'cd_create', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-01-16T00:00:00.000+0000', 'column');
 select pkg_patcher.p_merge_object_attr('A746D20F5B0347C5873806BDB28BB480', '8F1E571033804C2481CEC66CB0BC4A76', 'DF0F8346F83146D39CDB9C2FB62D4497', 'message', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-24T00:00:00.000+0000', 'localization');
+select pkg_patcher.p_merge_object_attr('84B41FEBEA1849C69D34B710248BAA6C', 'AADE0524ED1B4D059D50A01CB5304884', '03FFC6D5E3B942F088207B303A682156', '[{"property": "ck_id", "direction": "ASC"}]', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000', 'order');
 select pkg_patcher.p_merge_object_attr('F3D97FAC9DF74757AAB58CFFFE948C07', 'AADE0524ED1B4D059D50A01CB5304884', '1440', 'false', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000', 'btnaudit');
 select pkg_patcher.p_merge_object_attr('726D9B4FD9ED4A78BF89CD6233FC9498', 'AADE0524ED1B4D059D50A01CB5304884', '1643', 'false', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000', 'btndelete');
 select pkg_patcher.p_merge_object_attr('21BEB5A67F284267B039FDFD0BD9D11C', 'BBA6F5B925AC43B49EF79D345D967DBB', '297', 'cct_message', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-24T00:00:00.000+0000', 'column');
 select pkg_patcher.p_merge_object_attr('AA021BB3CC7F4B22B11A4587305F6953', 'AADE0524ED1B4D059D50A01CB5304884', '401', '10', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000', 'pagesize');
-select pkg_patcher.p_merge_object_attr('C39167B805274E6AA34C20E0F93E2C2E', '952F0D4BDA1F42268D085F2D122A22D7', '47', 'cr_type', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000', 'column');
 select pkg_patcher.p_merge_object_attr('9855644C3B4E46489DB1FE927FE575C0', '83C15659FE6149F7907AD6F0932318B7', '47', 'cv_description', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-01-16T00:00:00.000+0000', 'column');
+select pkg_patcher.p_merge_object_attr('C39167B805274E6AA34C20E0F93E2C2E', '952F0D4BDA1F42268D085F2D122A22D7', '47', 'cr_type', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000', 'column');
 select pkg_patcher.p_merge_object_attr('491D8B539D854B5E8DE50B19D8713829', 'FACCFC58923E4C30B4E87D029C402165', '48', 'cn_size_view', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-24T00:00:00.000+0000', 'column');
 select pkg_patcher.p_merge_object_attr('223E30B8CA784F3C95ECF55FD193535E', 'BBA6F5B925AC43B49EF79D345D967DBB', '5169', 'array', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000', 'collectionvalues');
-select pkg_patcher.p_merge_object_attr('84B41FEBEA1849C69D34B710248BAA6C', 'AADE0524ED1B4D059D50A01CB5304884', '852', 'ck_id', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000', 'orderproperty');
 select pkg_patcher.p_merge_object_attr('1ADF85CCE5244D65A15EFA4C887C5713', 'AADE0524ED1B4D059D50A01CB5304884', '8D547C621A1D626CE053809BA8C0882B', 'false', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000', 'btnsettings');
+select pkg_patcher.p_merge_object_attr('F251E61E530743458F1BB53A5ABF24EA', '38683C90F0D94867B0413F2636885B90', '03FFC6D5E3B942F088207B303A682156', '[{"property": "ck_id", "direction": "ASC"}]', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000', 'order');
 select pkg_patcher.p_merge_object_attr('D93FA955C9BD479AB30D2B0D156E651F', 'F1DD61A897E24EB783C05565764A636C', '1029', 'ck_create', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000', 'ckwindow');
 select pkg_patcher.p_merge_object_attr('F779EE499C6D4086977A0DF135BFE7BF', '38683C90F0D94867B0413F2636885B90', '1440', 'false', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000', 'btnaudit');
 select pkg_patcher.p_merge_object_attr('6A503001B3D34FAEB2908ED155F8B74D', '38683C90F0D94867B0413F2636885B90', '1643', 'false', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000', 'btndelete');
@@ -115,7 +115,6 @@ select pkg_patcher.p_merge_object_attr('3C015A9C2F2B4FD3B07A292B45235023', 'EBF6
 select pkg_patcher.p_merge_object_attr('BC40F7E7B7E64EDDB3E42C250B5FF9AF', '38683C90F0D94867B0413F2636885B90', '401', '10', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000', 'pagesize');
 select pkg_patcher.p_merge_object_attr('65AB5509529D43B1AB41F5EE257B6DCC', '05FEF5FD73B6412898A6FC01414731C1', '47', 'cv_description', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-24T00:00:00.000+0000', 'column');
 select pkg_patcher.p_merge_object_attr('0E43BB24DB164CC3A02D105BA60A66DE', 'EBF68C0719D549139CD4B34BAB67D6C7', '5169', 'array', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000', 'collectionvalues');
-select pkg_patcher.p_merge_object_attr('F251E61E530743458F1BB53A5ABF24EA', '38683C90F0D94867B0413F2636885B90', '852', 'ck_id', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000', 'orderproperty');
 select pkg_patcher.p_merge_object_attr('2B8BE50FE3834855B62F15D8E5E2D753', '38683C90F0D94867B0413F2636885B90', '8D547C621A1D626CE053809BA8C0882B', 'false', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000', 'btnsettings');
 select pkg_patcher.p_merge_object_attr('9A743FE9EB8C49DCBDE76256E338AA1A', 'CE37E25D83104480B770A2FA4AEC6FC2', '37181', '1', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000', 'reqcount');
 select pkg_patcher.p_merge_object_attr('59ED9A8E253C4199BD4B2D6D82EE3689', '23A48BB6888D4155B7CF31859B9B85CB', '140', 'onSimpleSaveWindow', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-18T00:00:00.000+0000', 'handler');
@@ -177,7 +176,7 @@ update s_mt.t_page_object set ck_master='58D14C76EB904A31B0EC4FAB84F3A0C4' where
 update s_mt.t_page_object set ck_master='58D14C76EB904A31B0EC4FAB84F3A0C4' where ck_id='6AC852B3B8EB49819F853758034477C1';
 INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change)
 select t.ck_id, t.ck_d_lang, t.cr_namespace, t.cv_value, t.ck_user, t.ct_change::timestamp from (
-    select 'ef1415ca80804e149ceb5356efb2df97' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Сохранить' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-11-17T09:00:00.000+0000' as ct_change
+    select 'ef1415ca80804e149ceb5356efb2df97' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Сохранить' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-11-18T00:00:00.000+0000' as ct_change
     union all
     select '067f1f2501c64e748189aabb11897e87' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Порядок' as cv_value, '-11' as ck_user, '2019-12-08T15:00:00.000+0000' as ct_change
     union all
@@ -223,11 +222,11 @@ select t.ck_id, t.ck_d_lang, t.cr_namespace, t.cv_value, t.ck_user, t.ct_change:
     union all
     select '114687c48dd3443c8bfd0f8c50c185b4' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Наименование' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-25T09:00:00.000+0000' as ct_change
     union all
-    select 'a4b1d1f3995f499a8f2bac5b57a3cbdc' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Описание' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-25T15:00:00.000+0000' as ct_change
-    union all
-    select '1be4283aee71484c99f4954189e126d6' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Отмена' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-25T21:00:00.000+0000' as ct_change
-    union all
     select '44722d718c304ec3a87ec7955fe711f0' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Ошибки' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-26T00:00:00.000+0000' as ct_change
+    union all
+    select '8fd23a27ba224ee48cdef41f72947665' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Отмена' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-26T00:00:00.000+0000' as ct_change
+    union all
+    select 'a4b1d1f3995f499a8f2bac5b57a3cbdc' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Описание' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-26T00:00:00.000+0000' as ct_change
 ) as t 
  join s_mt.t_d_lang dl
  on t.ck_d_lang = dl.ck_id

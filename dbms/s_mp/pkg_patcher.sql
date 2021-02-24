@@ -142,14 +142,22 @@ AS $function$
 declare
   -- переменные пакета
   gv_error sessvarstr;
-  vv_class_id varchar;
+  vv_class_id varchar := pk_class_attr;
+  vv_value varchar := pv_value;
 begin
   gv_error = sessvarstr_declare('pkg', 'gv_error', '');
   perform pkg.p_reset_response();
 
+  if pv_attr = 'orderproperty' then
+    vv_value := jsonb_build_array(jsonb_build_object('property', pv_value, 'direction', 'ASC'))::text;
+    select ck_id 
+      into vv_class_id
+    from s_mt.t_class_attr where ck_class in (select ck_id from s_mt.t_class_attr where ck_id = pk_class_attr) and ck_attr = 'order';
+  end if;
+
   UPDATE s_mt.t_object_attr
      SET (ck_object, ck_class_attr, cv_value, ck_user, ct_change) =
-         (pk_object, pk_class_attr, pv_value, pk_user, pt_change)
+         (pk_object, vv_class_id, vv_value, pk_user, pt_change)
    where ck_id = pk_id;
   
   if found then
@@ -158,7 +166,7 @@ begin
 
   select ck_id 
     into vv_class_id
-  from s_mt.t_class_attr where ck_id = pk_class_attr;
+  from s_mt.t_class_attr where ck_id = vv_class_id;
 
   if vv_class_id is null and pv_attr is not null then
     select ck_id 
@@ -167,7 +175,7 @@ begin
   
     UPDATE s_mt.t_object_attr
       SET (ck_object, cv_value, ck_user, ct_change) =
-          (pk_object, pv_value, pk_user, pt_change)
+          (pk_object, vv_value, pk_user, pt_change)
     where ck_class_attr = vv_class_id;
   
     if found then
@@ -188,7 +196,7 @@ begin
   begin
     INSERT INTO s_mt.t_object_attr
       (ck_id, ck_object, ck_class_attr, cv_value, ck_user, ct_change)
-      VALUES (pk_id, pk_object, vv_class_id, pv_value, pk_user, pt_change)
+      VALUES (pk_id, pk_object, vv_class_id, vv_value, pk_user, pt_change)
     ON CONFLICT ON CONSTRAINT cin_c_object_attr_1 do update set ck_object = excluded.ck_object, ck_class_attr = excluded.ck_class_attr, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
   exception
     when others then
@@ -215,14 +223,22 @@ AS $function$
 declare
   -- переменные пакета
   gv_error sessvarstr;
-  vv_class_id varchar;
+  vv_class_id varchar := pk_class_attr;
+  vv_value varchar := pv_value;
 begin
   gv_error = sessvarstr_declare('pkg', 'gv_error', '');
   perform pkg.p_reset_response();
 
+  if pv_attr = 'orderproperty' then
+    vv_value := jsonb_build_array(jsonb_build_object('property', pv_value, 'direction', 'ASC'))::text;
+    select ck_id 
+      into vv_class_id
+    from s_mt.t_class_attr where ck_class in (select ck_class from s_mt.t_class_attr where ck_id = pk_class_attr) and ck_attr = 'order';
+  end if;
+
   UPDATE s_mt.t_page_object_attr
      SET (ck_page_object, ck_class_attr, cv_value, ck_user, ct_change) =
-         (pk_page_object, pk_class_attr, pv_value, pk_user, pt_change)
+         (vv_class_id, pk_class_attr, vv_value, pk_user, pt_change)
    where ck_id = pk_id;
   
   if found then
@@ -247,7 +263,7 @@ begin
 
     UPDATE s_mt.t_page_object_attr
       SET (ck_page_object, cv_value, ck_user, ct_change) =
-          (pk_page_object, pv_value, pk_user, pt_change)
+          (pk_page_object, vv_value, pk_user, pt_change)
     where ck_class_attr = vv_class_id;
   
     if found then
@@ -268,7 +284,7 @@ begin
   begin
     INSERT INTO s_mt.t_page_object_attr
       (ck_id, ck_page_object, ck_class_attr, cv_value, ck_user, ct_change)
-      VALUES (pk_id, pk_page_object, vv_class_id, pv_value, pk_user, pt_change)
+      VALUES (pk_id, pk_page_object, vv_class_id, vv_value, pk_user, pt_change)
     ON CONFLICT ON CONSTRAINT cin_c_page_object_attr_1 do update set ck_page_object = excluded.ck_page_object, ck_class_attr = excluded.ck_class_attr, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
   exception
     when others then

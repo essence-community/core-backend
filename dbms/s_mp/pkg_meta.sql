@@ -2612,7 +2612,7 @@ begin
     return vv_value;
   end if;
 
-  if vk_data_type = 'array' or vk_data_type = 'object' or vk_data_type = 'global' then
+  if vk_data_type = 'array' or vk_data_type = 'object' or vk_data_type = 'global' or vk_data_type = 'order' then
     if pk_attr is not null and vv_value is null then 
       perform pkg.p_set_error(80);
     end if; 

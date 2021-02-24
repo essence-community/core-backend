@@ -12,7 +12,7 @@ import Logger from "./Logger";
 import ResultStream from "./stream/ResultStream";
 import { initParams } from "./util/Util";
 
-const findRegEx = /^\/(?<reg>[\s\S]*)\/(?<key>[gimy]*)$/g;
+const findRegEx = new RegExp("^/(?<reg>[\x5cs\x5cS]*)/(?<key>[gimy]*)$");
 
 export default abstract class NullContext implements IContextPlugin {
     public static getParamsInfo(): IParamsInfo {
@@ -159,31 +159,29 @@ export default abstract class NullContext implements IContextPlugin {
         if (this.params.enableCors) {
             if (this.params.cors) {
                 if (isString(this.params.cors.origin)) {
-                    if ((this.params.cors.origin as string).startsWith("[")) {
-                        this.params.cors.origin = JSON.parse(
-                            this.params.cors.origin as string,
-                        );
-                        this.params.cors.origin = (this.params.cors
-                            .origin as string[]).map((val) => {
-                            if (findRegEx.test(val)) {
-                                const matcher = findRegEx.exec(val);
-                                const groups = matcher.groups;
-                                return new RegExp(groups.reg, groups.key);
-                            }
-                            return val;
-                        });
-                    }
-                    if (findRegEx.test(this.params.cors.origin as string)) {
-                        const matcher = findRegEx.exec(
-                            this.params.cors.origin as string,
-                        );
+                    const matcher = findRegEx.exec(
+                        this.params.cors.origin as string,
+                    );
+                    if (matcher) {
                         const groups = matcher.groups;
                         this.params.cors.origin = new RegExp(
                             groups.reg,
                             groups.key,
                         );
-                    }
-                    if (this.params.cors.origin === "true") {
+                    } else if ((this.params.cors.origin as string).startsWith("[")) {
+                        this.params.cors.origin = JSON.parse(
+                            this.params.cors.origin as string,
+                        );
+                        this.params.cors.origin = (this.params.cors
+                            .origin as string[]).map((val) => {
+                            const matcher2 = findRegEx.exec(val);
+                            if (matcher2) {
+                                const groups = matcher2.groups;
+                                return new RegExp(groups.reg, groups.key);
+                            }
+                            return val;
+                        });
+                    } else  if (this.params.cors.origin === "true") {
                         this.params.cors.origin = true;
                     }
                 }

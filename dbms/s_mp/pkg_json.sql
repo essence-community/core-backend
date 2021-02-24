@@ -100,7 +100,7 @@ begin
   end if;
   
   --  or pk_data_type = 'global'
-  if pk_data_type = 'array' or pk_data_type = 'object' or pk_data_type = 'global' then
+  if pk_data_type = 'array' or pk_data_type = 'object' or pk_data_type = 'global' or pk_data_type = 'order' then
     if pv_value ~ '^[\[\{]' then
       return pv_value::jsonb;
     end if;
