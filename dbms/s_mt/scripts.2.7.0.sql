@@ -95,6 +95,42 @@ SET cv_description='Essence Core Auth', cct_config='{"bc": {"type": "APPLICATION
 WHERE ck_id='auth';
 
 --changeset artemov_i:feature-new-order runOnChange:true dbms:postgresql
+INSERT INTO s_mt.t_d_attr_data_type(ck_id, cv_description, cl_extra, ck_user, ct_change)VALUES('order', 'Массив сортировки', 0, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2021-02-24T07:55:27.000+0000') on conflict (ck_id) do update set cv_description = excluded.cv_description, cl_extra = excluded.cl_extra, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
+INSERT INTO s_mt.t_attr(ck_id, cv_description, ck_attr_type, ck_d_data_type, cv_data_type_extra, ck_user, ct_change)VALUES('order', 'Список сортировок', 'basic', 'order', null, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2021-02-24T11:28:59.221+0000') on conflict (ck_id) do update set cv_description = excluded.cv_description, ck_attr_type = excluded.ck_attr_type, ck_d_data_type = excluded.ck_d_data_type, cv_data_type_extra = excluded.cv_data_type_extra, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
+INSERT INTO s_mt.t_class_attr
+(ck_id, ck_class, ck_attr, cv_value, ck_user, ct_change, cl_required, cv_data_type_extra, cl_empty)
+VALUES('27125FC36A9F49EBBA6D12C06E03BADD', '31', 'order', NULL, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2021-02-24 14:38:38.594', 1, NULL, 0) on conflict (ck_id) DO NOTHING;
+INSERT INTO s_mt.t_class_attr
+(ck_id, ck_class, ck_attr, cv_value, ck_user, ct_change, cl_required, cv_data_type_extra, cl_empty)
+VALUES('03FFC6D5E3B942F088207B303A682156', '8', 'order', NULL, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2021-02-24 14:38:38.594', 1, NULL, 0) on conflict (ck_id) DO NOTHING;
+INSERT INTO s_mt.t_class_attr
+(ck_id, ck_class, ck_attr, cv_value, ck_user, ct_change, cl_required, cv_data_type_extra, cl_empty)
+VALUES('44A5055717FC433288657994DCD6C959', '38', 'order', '[{"property": "1", "direction": "ASC"}]', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2021-02-24 14:38:38.594', 1, NULL, 0) on conflict (ck_id) DO NOTHING;
+INSERT INTO s_mt.t_class_attr
+(ck_id, ck_class, ck_attr, cv_value, ck_user, ct_change, cl_required, cv_data_type_extra, cl_empty)
+VALUES('3CF0F399ACAE44BCA107569978030ED5', '11', 'order', NULL, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2021-02-24 17:12:29.539', 1, NULL, 0) on conflict (ck_id) DO NOTHING;
+INSERT INTO s_mt.t_class_attr
+(ck_id, ck_class, ck_attr, cv_value, ck_user, ct_change, cl_required, cv_data_type_extra, cl_empty)
+VALUES('7FFFE17BDB674DAE982ED090F2920EA6', '77', 'order', NULL, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2021-02-24 17:12:29.539', 1, NULL, 0) on conflict (ck_id) DO NOTHING;
+INSERT INTO s_mt.t_class_attr
+(ck_id, ck_class, ck_attr, cv_value, ck_user, ct_change, cl_required, cv_data_type_extra, cl_empty)
+VALUES('A2AE5586766D42DCA61FEED2F1E446BF', '10', 'order', NULL, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2021-02-24 17:12:29.539', 1, NULL, 0) on conflict (ck_id) DO NOTHING;
+INSERT INTO s_mt.t_class_attr
+(ck_id, ck_class, ck_attr, cv_value, ck_user, ct_change, cl_required, cv_data_type_extra, cl_empty)
+VALUES('2AB537369F704B52AFDCD7A953DDA39F', '9', 'order', NULL, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2021-02-24 17:12:29.539', 1, NULL, 0) on conflict (ck_id) DO NOTHING;
+INSERT INTO s_mt.t_class_attr
+(ck_id, ck_class, ck_attr, cv_value, ck_user, ct_change, cl_required, cv_data_type_extra, cl_empty)
+VALUES('2A46DF47A5904C0694FBF101449DC2A3', '17', 'order', NULL, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2021-02-24 17:12:29.539', 1, NULL, 0) on conflict (ck_id) DO NOTHING;
+INSERT INTO s_mt.t_class_attr
+(ck_id, ck_class, ck_attr, cv_value, ck_user, ct_change, cl_required, cv_data_type_extra, cl_empty)
+VALUES('BEF3AFAE35FE4FECA4BE6FF9E52B1E8E', '36', 'order', NULL, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2021-02-24 17:12:29.539', 1, NULL, 0) on conflict (ck_id) DO NOTHING;
+INSERT INTO s_mt.t_class_attr
+(ck_id, ck_class, ck_attr, cv_value, ck_user, ct_change, cl_required, cv_data_type_extra, cl_empty)
+VALUES('B45847E1BC93408E858A0C270A691814', '37', 'order', '[{"property": "1", "direction": "ASC"}]', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2021-02-24 14:38:38.594', 1, NULL, 0) on conflict (ck_id) DO NOTHING;
+INSERT INTO s_mt.t_class_attr
+(ck_id, ck_class, ck_attr, cv_value, ck_user, ct_change, cl_required, cv_data_type_extra, cl_empty)
+VALUES('D2D45548114E43F2A738BB88EA4915CA', '18', 'order', NULL, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2021-02-24 14:38:38.594', 1, NULL, 0) on conflict (ck_id) DO NOTHING;
+
 UPDATE
     s_mt.t_class_attr tca4
 SET
