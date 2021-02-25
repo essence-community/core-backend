@@ -168,7 +168,9 @@ export function sortFilesData(
                 if (
                     datatype === "date" ||
                     nmColumn.startsWith("cd_") ||
-                    nmColumn.startsWith("ct_")
+                    nmColumn.startsWith("ct_") ||
+                    nmColumn.startsWith("fd_") ||
+                    nmColumn.startsWith("ft_")
                 ) {
                     return (
                         val +
@@ -264,7 +266,9 @@ export function filterFilesData(gateContext: IContext): (a: any) => boolean {
                             typeof value === "string" &&
                             (datatype === "date" ||
                                 nmColumn.startsWith("cd_") ||
-                                nmColumn.startsWith("ct_"))
+                                nmColumn.startsWith("ct_")) ||
+                                nmColumn.startsWith("fd_") ||
+                                nmColumn.startsWith("ft_")
                         ) {
                             return moment(valueRecord).isAfter(
                                 value,
@@ -282,7 +286,9 @@ export function filterFilesData(gateContext: IContext): (a: any) => boolean {
                             typeof value === "string" &&
                             (datatype === "date" ||
                                 nmColumn.startsWith("cd_") ||
-                                nmColumn.startsWith("ct_"))
+                                nmColumn.startsWith("ct_")) ||
+                                nmColumn.startsWith("fd_") ||
+                                nmColumn.startsWith("ft_")
                         ) {
                             return moment(valueRecord).isSameOrAfter(
                                 value,
@@ -300,7 +306,9 @@ export function filterFilesData(gateContext: IContext): (a: any) => boolean {
                             typeof value === "string" &&
                             (datatype === "date" ||
                                 nmColumn.startsWith("cd_") ||
-                                nmColumn.startsWith("ct_"))
+                                nmColumn.startsWith("ct_")) ||
+                                nmColumn.startsWith("fd_") ||
+                                nmColumn.startsWith("ft_")
                         ) {
                             return moment(valueRecord).isBefore(
                                 value,
@@ -318,7 +326,9 @@ export function filterFilesData(gateContext: IContext): (a: any) => boolean {
                             typeof value === "string" &&
                             (datatype === "date" ||
                                 nmColumn.startsWith("cd_") ||
-                                nmColumn.startsWith("ct_"))
+                                nmColumn.startsWith("ct_")) ||
+                                nmColumn.startsWith("fd_") ||
+                                nmColumn.startsWith("ft_")
                         ) {
                             return moment(valueRecord).isSameOrBefore(
                                 value,
@@ -336,7 +346,9 @@ export function filterFilesData(gateContext: IContext): (a: any) => boolean {
                             typeof value === "string" &&
                             (datatype === "date" ||
                                 nmColumn.startsWith("cd_") ||
-                                nmColumn.startsWith("ct_"))
+                                nmColumn.startsWith("ct_")) ||
+                                nmColumn.startsWith("fd_") ||
+                                nmColumn.startsWith("ft_")
                         ) {
                             return moment(valueRecord).isSame(
                                 value,
