@@ -143,14 +143,15 @@ export function sortFilesData(
     });
     const jlSort = json.filter.jl_sort as IRecordsOrder[];
     if (!isEmpty(jlSort)) {
+        const sortArr = [...jlSort].reverse();
         return (obj1: any, obj2: any): number =>
-            jlSort.reduce((val: number, item) => {
+            sortArr.reduce((val: number, item, index: number) => {
                 if (isEmpty(item.property) || isEmpty(item.direction)) {
                     return val;
                 }
                 const { datatype, format = "3", property } = item;
                 const nmColumn = property || "";
-                const direction = item.direction?.toUpperCase();
+                const direction = item.direction?.toUpperCase() || "ASC";
                 const val1 = obj1[nmColumn];
                 const val2 = obj2[nmColumn];
 
@@ -182,12 +183,12 @@ export function sortFilesData(
                                     : (val1 as string),
                             ),
                             formatStr[format] as any,
-                        )
+                        ) * (10 * index)
                     );
                 }
                 if (typeof val1 === "number" && typeof val2 === "number") {
                     return (
-                        val + (direction === "ASC" ? val1 - val2 : val2 - val1)
+                        val + (direction === "ASC" ? val1 - val2 : val2 - val1) * (10 * index)
                     );
                 }
                 if (datatype === "integer" || datatype === "numeric") {
@@ -199,7 +200,7 @@ export function sortFilesData(
                                   .toNumber()
                             : new BigNumber(val2 as any)
                                   .minus(new BigNumber(val1 as any))
-                                  .toNumber())
+                                  .toNumber()) * (10 * index)
                     );
                 }
                 if (typeof val1 === "string" && typeof val2 === "string") {
@@ -209,12 +210,12 @@ export function sortFilesData(
                             (direction === "ASC" ? val1 : val2) || ""
                         ).localeCompare(
                             (direction === "ASC" ? val2 : val1) || "",
-                        )
+                        ) * (10 * index)
                     );
                 }
                 // @ts-ignore
                 // tslint:disable-line no-unused-expression
-                return val + +(direction === "ASC" ? val1 > val2 : val2 > val1);
+                return val + +(direction === "ASC" ? val1 > val2 : val2 > val1) * (10 * index);
             }, 0);
     }
 
