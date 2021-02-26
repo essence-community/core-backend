@@ -98,12 +98,9 @@ export default class GridToExcel extends NullPlugin {
                            "{{#xlsxMerge \"xl/workbook.xml\" \"workbook.sheets[0].sheet[0]\"}}" +
                            `     <sheet name="${jsonbc.cv_displayed}"/>` +
                            "{{/xlsxMerge}}" : "") +
-                           "{{#xlsxMerge \"xl/tables/table1.xml\" \"table.autoFilter\"}}" +
+                           "{{#xlsxAdd \"xl/tables/table1.xml\" \"worksheet.autoFilter\"}}" +
                            `     <autoFilter ref="A1:${getColumnName(jsonbc.columns.length)}1"/>` +
-                           "{{/xlsxMerge}}" +
-                           "{{#xlsxMerge \"xl/tables/table1.xml\" \"table\"}}" +
-                           `     <table ref="A1:${getColumnName(jsonbc.columns.length)}${rows.length+1}"/>` +
-                           "{{/xlsxMerge}}" +
+                           "{{/xlsxAdd}}" +
                            "{{{xlsxPrint}}}",
                 "xlsx":  {  
                   "templateAsset":  {  
@@ -129,7 +126,7 @@ export default class GridToExcel extends NullPlugin {
             return {
                 type: "attachment",
                 data: ResultStream({
-                    filename: excelName,
+                    filename: `${excelName}.xlsx`,
                     filetype: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     filedata,
                 })
