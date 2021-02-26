@@ -98,7 +98,7 @@ export default class GridToExcel extends NullPlugin {
                            "{{#xlsxMerge \"xl/workbook.xml\" \"workbook.sheets[0].sheet[0]\"}}" +
                            `     <sheet name="${jsonbc.cv_displayed}"/>` +
                            "{{/xlsxMerge}}" : "") +
-                           "{{#xlsxAdd \"xl/tables/table1.xml\" \"worksheet.autoFilter\"}}" +
+                           "{{#xlsxAdd \"xl/worksheets/sheet1.xml\" \"worksheet.autoFilter\"}}" +
                            `     <autoFilter ref="A1:${getColumnName(jsonbc.columns.length)}1"/>` +
                            "{{/xlsxAdd}}" +
                            "{{{xlsxPrint}}}",
