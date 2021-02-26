@@ -45,21 +45,21 @@ INSERT INTO s_mt.t_page_object (ck_id, ck_page, ck_object, cn_order, ck_parent, 
 select pkg_patcher.p_merge_page_object_attr('4AB1482B06804A2683391F94A9F11564', '845E16D61FAA406DBAF2CBACDFF74CFB', 'AEF0F01160E347CCB07748609793643D', 'ck_id=="skip_update_action_page"', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-08-05T08:47:17.258+0000', 'activerules');
 INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change)
 select t.ck_id, t.ck_d_lang, t.cr_namespace, t.cv_value, t.ck_user, t.ct_change::timestamp from (
-    select '067f1f2501c64e748189aabb11897e87' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Порядок' as cv_value, '-11' as ck_user, '2019-12-08T15:00:00.000+0000' as ct_change
+    select '067f1f2501c64e748189aabb11897e87' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Порядок' as cv_value, '-11' as ck_user, '2019-12-08T12:00:00.000+0000' as ct_change
     union all
-    select '22bf1c823d4545c6b2c10efb1e1b3a61' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Значение' as cv_value, '-11' as ck_user, '2019-12-09T15:00:00.000+0000' as ct_change
+    select '22bf1c823d4545c6b2c10efb1e1b3a61' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Значение' as cv_value, '-11' as ck_user, '2019-12-09T12:00:00.000+0000' as ct_change
+    union all
+    select '87e9b00d960d4b3e8cdab0ba7b9abb64' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Системные настройки' as cv_value, '-11' as ck_user, '2019-12-09T21:00:00.000+0000' as ct_change
+    union all
+    select 'c3a995950b0847ab9707dfc8eea248c5' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Системные настройки экземпляра CORE' as cv_value, '-11' as ck_user, '2019-12-09T21:00:00.000+0000' as ct_change
     union all
     select '002ec63ccef84e759841e7a7e25e27f1' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Имя' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
     union all
-    select '87e9b00d960d4b3e8cdab0ba7b9abb64' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Системные настройки' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
-    union all
-    select 'c3a995950b0847ab9707dfc8eea248c5' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Системные настройки экземпляра CORE' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
-    union all
     select 'd0ad23ef13f8493e996cfca8a98d0721' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Редактировать значение' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
     union all
-    select 'ad5a456a8b5a4781afcc678dfb5194f3' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Модуль/Каталоги/Страницы' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-18T00:00:00.000+0000' as ct_change
+    select 'ad5a456a8b5a4781afcc678dfb5194f3' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Модуль/Каталоги/Страницы' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-17T21:00:00.000+0000' as ct_change
     union all
-    select '114687c48dd3443c8bfd0f8c50c185b4' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Наименование' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-25T09:00:00.000+0000' as ct_change
+    select '114687c48dd3443c8bfd0f8c50c185b4' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Наименование' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-25T06:00:00.000+0000' as ct_change
     union all
     select 'a4b1d1f3995f499a8f2bac5b57a3cbdc' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Описание' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-26T00:00:00.000+0000' as ct_change
 ) as t 

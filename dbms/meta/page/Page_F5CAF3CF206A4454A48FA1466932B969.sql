@@ -22,8 +22,8 @@ select pkg_patcher.p_merge_object('A0949123DBA248CAA93F68905BFEE127', '9', 'DBCA
 select pkg_patcher.p_merge_object('196843D6A4AA462F86AB603457CE2100', '31', 'B6512521E118405986D40EA94106B702', 'cv_lang', 10, 'MTGetLang', 'Язык', '8ebf011fbbad4c45bd0e93d6f8f39b20', null, null, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-12T00:00:00.000+0000');
 select pkg_patcher.p_merge_object('F323F8193613406E85F6962024B2EC9C', '31', 'DDAEA661457B4AA185099E7122BC131B', 'cv_type', 10, 'MTGetLocalNameSpace', 'Тип расположения', '4d1ff7c496954fd086b885c399da2831', null, null, '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-12T00:00:00.000+0000');
 select pkg_patcher.p_merge_object_attr('6F4D56EB7C894A4E9F8D1DF7C906413D', 'DBCA7FE4E17548A7AFBE21B3E1FF060C', '03FFC6D5E3B942F088207B303A682156', '[{"property": "cv_value", "direction": "ASC"}]', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-12T00:00:00.000+0000', 'order');
-select pkg_patcher.p_merge_object_attr('C2FDD150508D421A88D9A5CA4F0E2793', '196843D6A4AA462F86AB603457CE2100', '120', 'ck_d_lang', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-12T00:00:00.000+0000', 'column');
 select pkg_patcher.p_merge_object_attr('577F681A02964FAEA35A9A37758DB1CD', 'F323F8193613406E85F6962024B2EC9C', '120', 'cr_namespace', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-12T00:00:00.000+0000', 'column');
+select pkg_patcher.p_merge_object_attr('C2FDD150508D421A88D9A5CA4F0E2793', '196843D6A4AA462F86AB603457CE2100', '120', 'ck_d_lang', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-12T00:00:00.000+0000', 'column');
 select pkg_patcher.p_merge_object_attr('5993C11A04EF46ACA87EF0627C138A95', 'F323F8193613406E85F6962024B2EC9C', '125', 'ck_id', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-12T00:00:00.000+0000', 'displayfield');
 select pkg_patcher.p_merge_object_attr('C325C789DB214B268A2D6235B6F09D79', '196843D6A4AA462F86AB603457CE2100', '125', 'cv_name', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-12T00:00:00.000+0000', 'displayfield');
 select pkg_patcher.p_merge_object_attr('0A11248F02814AAC900AFD8BB4B024AF', '196843D6A4AA462F86AB603457CE2100', '126', '[{"in": "ck_id", "out": null}]', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-12T00:00:00.000+0000', 'valuefield');
@@ -31,8 +31,8 @@ select pkg_patcher.p_merge_object_attr('2437B4E2880D448CB7F8A460FB40916B', 'F323
 select pkg_patcher.p_merge_object_attr('259E71D7C79447EC90C302D16FF2CFB8', 'F0814387A1CC4C17BEAE4EB59DB3DEFF', '155', '1', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-11T00:00:00.000+0000', 'mode');
 select pkg_patcher.p_merge_object_attr('B3F482EB54D749EC997F625CB5313881', '9176BFC191804165ABDA5AB9F967BA3B', '155', '1', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-11T00:00:00.000+0000', 'mode');
 select pkg_patcher.p_merge_object_attr('0DACE209FAD04395BF1105AB690A1E40', 'DBCA7FE4E17548A7AFBE21B3E1FF060C', '401', '25', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-11T00:00:00.000+0000', 'pagesize');
-select pkg_patcher.p_merge_object_attr('CB8A4A151B56470FA19677127C3260D5', '9176BFC191804165ABDA5AB9F967BA3B', '992', 'plus', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-14T00:00:00.000+0000', 'iconfont');
 select pkg_patcher.p_merge_object_attr('77E597AD3EDE49A7A64C135BBD6F607B', 'F0814387A1CC4C17BEAE4EB59DB3DEFF', '992', 'plus', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-14T00:00:00.000+0000', 'iconfont');
+select pkg_patcher.p_merge_object_attr('CB8A4A151B56470FA19677127C3260D5', '9176BFC191804165ABDA5AB9F967BA3B', '992', 'plus', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-14T00:00:00.000+0000', 'iconfont');
 select pkg_patcher.p_merge_object_attr('BD01533E71E64F7281028A75CEE86364', '4FA67852465C4A08AF79D402DEA15054', '03FFC6D5E3B942F088207B303A682156', '[{"property": "ck_d_lang", "direction": "ASC"}]', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-12T00:00:00.000+0000', 'order');
 select pkg_patcher.p_merge_object_attr('C62398B5D473485897E3A31679D6C085', '4FA67852465C4A08AF79D402DEA15054', '572', 'false', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-12T00:00:00.000+0000', 'autoload');
 select pkg_patcher.p_merge_object_attr('E0BD2DC35C3A46338F5276A222028B3A', 'B6512521E118405986D40EA94106B702', '433', 'insert', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-12T00:00:00.000+0000', 'editmode');
@@ -68,25 +68,25 @@ select pkg_patcher.p_merge_page_object_attr('C6758F2F825245F5AA19218FFBCC4E1B', 
 update s_mt.t_page_object set ck_master='C8E575B2C483413CAF2884477FB6E548' where ck_id='DD14E144DFBA4DE892375B07E70EA17A';
 INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change)
 select t.ck_id, t.ck_d_lang, t.cr_namespace, t.cv_value, t.ck_user, t.ct_change::timestamp from (
-    select '356026998685486b99fc07969bd2af68' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Идентификатор' as cv_value, '-11' as ck_user, '2019-12-08T18:00:00.000+0000' as ct_change
+    select '356026998685486b99fc07969bd2af68' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Идентификатор' as cv_value, '-11' as ck_user, '2019-12-08T15:00:00.000+0000' as ct_change
     union all
-    select '16e495742eee4776af2456e0549b93f3' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Перевод' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
+    select '16e495742eee4776af2456e0549b93f3' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Перевод' as cv_value, '-11' as ck_user, '2019-12-09T21:00:00.000+0000' as ct_change
     union all
-    select '2544bf435d024d16920dfbd2f1b3b5e1' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Расположение' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
+    select '2544bf435d024d16920dfbd2f1b3b5e1' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Расположение' as cv_value, '-11' as ck_user, '2019-12-09T21:00:00.000+0000' as ct_change
     union all
-    select '44cb4487def44b74b32a748751d0263b' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Слово/Фраза' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
+    select '44cb4487def44b74b32a748751d0263b' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Слово/Фраза' as cv_value, '-11' as ck_user, '2019-12-09T21:00:00.000+0000' as ct_change
     union all
-    select '4d1ff7c496954fd086b885c399da2831' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Тип расположения' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
+    select '4d1ff7c496954fd086b885c399da2831' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Тип расположения' as cv_value, '-11' as ck_user, '2019-12-09T21:00:00.000+0000' as ct_change
     union all
-    select '6a6756ec59b64dcdac246cfdf6a9e28e' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Список слов/фраз' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
+    select '6a6756ec59b64dcdac246cfdf6a9e28e' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Список слов/фраз' as cv_value, '-11' as ck_user, '2019-12-09T21:00:00.000+0000' as ct_change
     union all
-    select '7e9709869e4e48ab9344e347eeadcbf2' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Словарь' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
+    select '7e9709869e4e48ab9344e347eeadcbf2' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Словарь' as cv_value, '-11' as ck_user, '2019-12-09T21:00:00.000+0000' as ct_change
     union all
     select 'd0ad23ef13f8493e996cfca8a98d0721' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Редактировать значение' as cv_value, '-11' as ck_user, '2019-12-10T00:00:00.000+0000' as ct_change
     union all
     select '122d20300ab34c02b78bd1d3945e5eeb' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Добавить' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-25T00:00:00.000+0000' as ct_change
     union all
-    select '8ebf011fbbad4c45bd0e93d6f8f39b20' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Язык' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-26T00:00:00.000+0000' as ct_change
+    select '8ebf011fbbad4c45bd0e93d6f8f39b20' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'Язык' as cv_value, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-12-25T21:00:00.000+0000' as ct_change
 ) as t 
  join s_mt.t_d_lang dl
  on t.ck_d_lang = dl.ck_id

@@ -223,3 +223,26 @@ delete from s_mt.t_object_attr toa
 where toa.ck_class_attr in (select ck_id from s_mt.t_class_attr where ck_attr in ('sortcolumn'));
 
 delete from s_mt.t_class_attr where ck_attr in ('sortcolumn');
+
+--changeset artemov_i:feature-excel-print dbms:postgresql
+UPDATE
+    s_mt.t_object_attr toa3
+SET
+     cv_value = replace(replace(toa.cv_value, 'true', 'url'), 'false', 'off')
+from
+    s_mt.t_object_attr toa
+join s_mt.t_class_attr tca 
+    on toa.ck_class_attr = tca.ck_id
+where
+     toa.cv_value is not null and tca.ck_attr = 'btnexcel' and toa3.ck_id = toa.ck_id;
+
+UPDATE
+    s_mt.t_page_object_attr toa3
+SET
+     cv_value = replace(replace(toa.cv_value, 'true', 'url'), 'false', 'off')
+from
+    s_mt.t_page_object_attr toa
+join s_mt.t_class_attr tca 
+    on toa.ck_class_attr = tca.ck_id
+where
+     toa.cv_value is not null and tca.ck_attr = 'btnexcel' and toa3.ck_id = toa.ck_id;
