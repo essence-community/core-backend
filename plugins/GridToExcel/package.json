@@ -1,10 +1,9 @@
 {
-  "name": "grid_to_excel",
+  "name": "@ungate-plugin/grid_to_excel",
   "version": "1.0.0",
   "description": "Grid table to Excel",
   "main": "index.js",
-  "repository": "https://gitlab.abr-region.ru/i.artemov/essence_report",
-  "author": "Ivan Artemov (i.artemov@abr-region.ru)",
+  "author": "Ivan Artemov (honyrik@gmail.com)",
   "license": "MIT",
   "dependencies": {
     "@ungate/plugininf": "^1.0.0",
