@@ -4,7 +4,7 @@ import path = require("path");
 import { spawn } from "child_process";
 import * as fs from "fs";
 import { IFile } from "@ungate/plugininf/lib/IContext";
-import { deleteFolderRecursive } from "@ungate/plugininf/lib/util/Util";
+import { deleteFolderRecursive, isEmpty } from "@ungate/plugininf/lib/util/Util";
 import { isString } from "lodash";
 import { deepParam } from "@ungate/plugininf/lib/util/deepParam";
 import { IEncoder } from "./Encoder.types";
@@ -105,7 +105,7 @@ export class LocalOPARender implements IOPAEval {
                         ]);
                         fileTemp = (arr[0] as IFile).path;
                     }
-                    const inFile = fs.createReadStream((input as IFile).path);
+                    const inFile = fs.createReadStream(fileTemp);
                     inFile.pipe(fs.createWriteStream(inputName));
                     inFile.on("error", (err) => rejectFile(err));
                     inFile.on("end", () => resolveFile(true));
@@ -143,13 +143,17 @@ export class LocalOPARender implements IOPAEval {
             ]);
             opa.stdin.end(queryString);
             let rawData = "";
+            let rawError = "";
             opa.stdout.on("data", (chunk) => {
                 rawData += chunk;
             });
             opa.stderr.on("data", (data) => {
-                this.log.error(data);
+                rawError += data;
             });
             opa.on("exit", () => {
+                if (!isEmpty(rawError)) {
+                    return reject(new Error(`OPA Error: \n${rawError}`));
+                }
                 try {
                     deleteFolderRecursive(temp);
                     const res = JSON.parse(rawData);
