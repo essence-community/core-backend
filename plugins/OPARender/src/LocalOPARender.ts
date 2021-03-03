@@ -86,16 +86,20 @@ export class LocalOPARender implements IOPAEval {
             await new Promise(async (resolveFile, rejectFile) => {
                 if (typeof input === "object" && (input as IFile).path) {
                     let fileTemp = (input as IFile).path;
+                    const nameFile = (input as IFile).originalFilename;
                     if (
                         fileTemp.toLocaleLowerCase().endsWith("yaml") ||
-                        fileTemp.toLocaleLowerCase().endsWith("yml")
+                        fileTemp.toLocaleLowerCase().endsWith("yml") ||
+                        nameFile.toLocaleLowerCase().endsWith("yaml") ||
+                        nameFile.toLocaleLowerCase().endsWith("yml")
                     ) {
                         const arr = await this.encoder.yaml.decode([
                             input as IFile,
                         ]);
                         fileTemp = (arr[0] as IFile).path;
                     }
-                    if (fileTemp.toLocaleLowerCase().endsWith("xml")) {
+                    if (fileTemp.toLocaleLowerCase().endsWith("xml") ||
+                        nameFile.toLocaleLowerCase().endsWith("xml")) {
                         const arr = await this.encoder.xml.decode([
                             input as IFile,
                         ]);
