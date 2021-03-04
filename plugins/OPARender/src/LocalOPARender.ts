@@ -141,7 +141,6 @@ export class LocalOPARender implements IOPAEval {
                 ...param,
                 `--stdin`,
             ]);
-            opa.stdin.end(queryString);
             let rawData = "";
             let rawError = "";
             opa.stdout.on("data", (chunk) => {
@@ -162,6 +161,7 @@ export class LocalOPARender implements IOPAEval {
                     reject(e);
                 }
             });
+            opa.stdin.end(queryString);
         });
     }
 }
