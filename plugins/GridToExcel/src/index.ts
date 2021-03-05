@@ -1,3 +1,3 @@
-import GridToExcel from './GridToExcel';
+import GridToExcel from "./GridToExcel";
 
 export = GridToExcel;

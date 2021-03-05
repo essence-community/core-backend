@@ -208,7 +208,7 @@ export class Patcher extends NullPlugin implements IStorage {
                 )
                 .then(
                     (res) =>
-                        new Promise((resolve, reject) => {
+                        new Promise<void>((resolve, reject) => {
                             res.stream.on("data", (row) => {
                                 this.logger.debug(row);
                             });

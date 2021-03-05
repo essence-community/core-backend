@@ -129,7 +129,7 @@ export default class CoreNotification extends NullEvent {
                 .executeStmt(sqlNotification, params)
                 .then(
                     (data) =>
-                        new Promise((resolve, reject) => {
+                        new Promise<void>((resolve, reject) => {
                             const rows = [];
                             data.stream.on("data", (chunk) => rows.push(chunk));
                             data.stream.on("error", (err) => reject(err));
@@ -201,7 +201,7 @@ export default class CoreNotification extends NullEvent {
      * @returns {Promise}
      */
     private sendNotification(user, row) {
-        return new Promise((resolve) => {
+        return new Promise<void | Record<string, any>>((resolve) => {
             try {
                 const msg = JSON.parse(row.cv_message);
                 const text = JSON.stringify([

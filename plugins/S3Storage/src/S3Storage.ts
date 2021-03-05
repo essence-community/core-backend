@@ -15,33 +15,6 @@ import * as fs from "fs";
 import { forEach, isObject } from "lodash";
 import { uuid as uuidv4 } from "uuidv4";
 
-interface File {
-    /**
-     * same as name - the field name for this file
-     */
-    fieldName: string;
-    /**
-     * the filename that the user reports for the file
-     */
-    originalFilename: string;
-    /**
-     * the absolute path of the uploaded file on disk
-     */
-    path: string;
-    /**
-     * the HTTP headers that were sent along with this file
-     */
-    headers: any;
-    /**
-     * size of the file in bytes
-     */
-    size: number;
-}
-
-interface Files {
-    [key: string]: File[];
-}
-
 export default class S3Storage extends NullPlugin {
     public static getParamsInfo(): IParamsInfo {
         return {
@@ -138,18 +111,15 @@ export default class S3Storage extends NullPlugin {
             }
             const rows = [];
             const json = JSON.parse(query.inParams.json);
-            forEach(
-                (gateContext.request.body as IFormData).files as Files,
-                (val) => {
-                    if (val && val.length) {
-                        val.forEach((value) => {
-                            rows.push(
-                                this.saveFile(gateContext, json, value, query),
-                            );
-                        });
-                    }
-                },
-            );
+            forEach((gateContext.request.body as IFormData).files, (val) => {
+                if (val && val.length) {
+                    val.forEach((value) => {
+                        rows.push(
+                            this.saveFile(gateContext, json, value, query),
+                        );
+                    });
+                }
+            });
             return Promise.all(rows).then(
                 async (values) =>
                     ({
@@ -179,10 +149,10 @@ export default class S3Storage extends NullPlugin {
                                     this.params.cvDir,
                             )
                                 ? json.data.cv_file_guid
-                                : `${json.data[this.params.cvDirColumn] ||
-                                      this.params.cvDir}/${
-                                      json.data.cv_file_guid
-                                  }`,
+                                : `${
+                                      json.data[this.params.cvDirColumn] ||
+                                      this.params.cvDir
+                                  }/${json.data.cv_file_guid}`,
                         },
                         (err) => {
                             if (err) {
@@ -212,8 +182,10 @@ export default class S3Storage extends NullPlugin {
                                 this.params.cvDir,
                         )
                             ? json.data.cv_file_guid
-                            : `${json.data[this.params.cvDirColumn] ||
-                                  this.params.cvDir}/${json.data.cv_file_guid}`,
+                            : `${
+                                  json.data[this.params.cvDirColumn] ||
+                                  this.params.cvDir
+                              }/${json.data.cv_file_guid}`,
                     },
                     (err, response) => {
                         if (err) {
@@ -261,8 +233,10 @@ export default class S3Storage extends NullPlugin {
                             row[this.params.cvDirColumn] || this.params.cvDir,
                         )
                             ? row.cv_file_guid
-                            : `${row[this.params.cvDirColumn] ||
-                                  this.params.cvDir}/${row.cv_file_guid}`,
+                            : `${
+                                  row[this.params.cvDirColumn] ||
+                                  this.params.cvDir
+                              }/${row.cv_file_guid}`,
                     },
                     (err, response) => {
                         if (err) {
@@ -305,8 +279,10 @@ export default class S3Storage extends NullPlugin {
                         json.data[this.params.cvDirColumn] || this.params.cvDir,
                     )
                         ? cvFileUuid
-                        : `${json.data[this.params.cvDirColumn] ||
-                              this.params.cvDir}/${cvFileUuid}`,
+                        : `${
+                              json.data[this.params.cvDirColumn] ||
+                              this.params.cvDir
+                          }/${cvFileUuid}`,
                     ...(this.params.clReadPublic
                         ? {
                               ACL: "public-read",
@@ -349,12 +325,12 @@ export default class S3Storage extends NullPlugin {
                                                     ] || this.params.cvDir,
                                                 )
                                                     ? cvFileUuid
-                                                    : `${json.data[
-                                                          this.params
-                                                              .cvDirColumn
-                                                      ] ||
-                                                          this.params
-                                                              .cvDir}/${cvFileUuid}`,
+                                                    : `${
+                                                          json.data[
+                                                              this.params
+                                                                  .cvDirColumn
+                                                          ] || this.params.cvDir
+                                                      }/${cvFileUuid}`,
                                             },
                                             (errDelete) => {
                                                 if (errDelete) {

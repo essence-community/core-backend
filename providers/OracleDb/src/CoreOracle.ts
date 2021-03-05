@@ -130,7 +130,7 @@ export default class CoreOracle implements IOracleController {
                 "pkg_json_user.f_get_context('hash_user_department') as hash_user_department from dual",
             connection,
         );
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
             const data = [];
             res.stream.on("error", (err) => reject(err));
             res.stream.on("data", (chunk) => data.push(chunk));
@@ -319,7 +319,7 @@ export default class CoreOracle implements IOracleController {
             .then((res) => {
                 const rows = [];
                 res.stream.on("data", (chunk) => rows.push(chunk));
-                return new Promise((resolve, reject) => {
+                return new Promise<void>((resolve, reject) => {
                     res.stream.on("error", (err) => reject(err));
                     res.stream.on("end", () => {
                         if (rows.length && rows[0].result) {

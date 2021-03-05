@@ -1,7 +1,7 @@
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
 import ICCTParams, { IParamsInfo } from "@ungate/plugininf/lib/ICCTParams";
-import IContext, { IFormData } from "@ungate/plugininf/lib/IContext";
+import IContext, { IFile, IFormData } from "@ungate/plugininf/lib/IContext";
 import { IPluginRequestContext } from "@ungate/plugininf/lib/IPlugin";
 import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
 import IResult from "@ungate/plugininf/lib/IResult";
@@ -14,34 +14,7 @@ import { forEach, isObject } from "lodash";
 import { getType } from "mime";
 import * as Path from "path";
 import { Readable } from "stream";
-
-interface File {
-    /**
-     * same as name - the field name for this file
-     */
-    fieldName: string;
-    /**
-     * the filename that the user reports for the file
-     */
-    originalFilename: string;
-    /**
-     * the absolute path of the uploaded file on disk
-     */
-    path: string;
-    /**
-     * the HTTP headers that were sent along with this file
-     */
-    headers: any;
-    /**
-     * size of the file in bytes
-     */
-    size: number;
-}
-
-interface Files {
-    [key: string]: File[];
-}
-interface PluginParams extends ICCTParams {
+interface PluginParams {
     cvTypeStorage: "riak" | "aws" | "dir";
     cvPath: string;
     cvS3Bucket?: string;
@@ -54,8 +27,16 @@ export default class ModuleStorage extends NullPlugin {
         return {
             cvTypeStorage: {
                 defaultValue: "riak",
-                name: "Тип хранилища: dir|aws|riak",
-                type: "string",
+                name: "Тип хранилища",
+                type: "combo",
+                setGlobal: [{ out: "g_store_module" }],
+                displayField: "ck_id",
+                valueField: [{ in: "ck_id" }],
+                records: [
+                    { ck_id: "dir" },
+                    { ck_id: "aws" },
+                    { ck_id: "riak" },
+                ],
                 required: true,
             },
             cvPath: {
@@ -65,14 +46,17 @@ export default class ModuleStorage extends NullPlugin {
             },
             cvS3Bucket: {
                 name: "Наименование корзины s3",
+                hiddenRules: "g_store_module=='dir'",
                 type: "string",
             },
             cvS3KeyId: {
                 name: "Id key S3 Storage",
+                hiddenRules: "g_store_module=='dir'",
                 type: "string",
             },
             cvS3SecretKey: {
                 name: "Id key S3 Storage",
+                hiddenRules: "g_store_module=='dir'",
                 type: "password",
             },
         };
@@ -184,7 +168,7 @@ export default class ModuleStorage extends NullPlugin {
     public async extractZip(
         gateContext: IContext,
         json: any,
-        file: File,
+        file: IFile,
         query: IGateQuery,
     ) {
         const fileZip = new zip(file.path);

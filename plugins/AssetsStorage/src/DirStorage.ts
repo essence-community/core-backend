@@ -5,14 +5,20 @@ import * as path from "path";
 import { IRufusLogger } from "rufus";
 import { Readable } from "stream";
 import { uuid as uuidv4 } from "uuidv4";
-import { IPluginParams } from "./ExtractorFileToJson.types";
-export class DirStorage {
+import { IPluginParams, IStorage } from "./AssetsStorage.types";
+
+export class DirStorage implements IStorage {
     private params: IPluginParams;
     private logger: IRufusLogger;
     private UPLOAD_DIR: string = process.env.GATE_UPLOAD_DIR || os.tmpdir();
     constructor(params: IPluginParams, logger: IRufusLogger) {
         this.params = params;
         this.logger = logger;
+        if (!fs.existsSync(this.params.dirPath)) {
+            fs.mkdirSync(this.params.dirPath, {
+                recursive: true,
+            });
+        }
     }
     /**
      * Сохраняем в папку
@@ -24,59 +30,43 @@ export class DirStorage {
      */
     public saveFile(
         key: string,
-        buffer: Buffer | Readable,
-        content: string,
+        file: IFile,
         metaData: Record<string, string> = {},
-        size: number = (buffer as Readable).pipe
-            ? undefined
-            : Buffer.byteLength(buffer as Buffer),
     ): Promise<void> {
         const prePath = key.startsWith("/") ? key : `/${key}`;
         return new Promise((resolve, reject) => {
-            const dir = path.dirname(`${this.params.cvPath}${prePath}`);
+            const dir = path.dirname(`${this.params.dirPath}${prePath}`);
             if (!fs.existsSync(dir)) {
                 fs.mkdirSync(dir, {
                     recursive: true,
                 });
             }
             fs.writeFileSync(
-                `${this.params.cvPath}${prePath}.meta`,
+                `${this.params.dirPath}${prePath}.meta`,
                 JSON.stringify({
                     ...metaData,
-                    ContentLength: size,
-                    ContentType: content,
+                    ...file,
+                    ContentLength: file.size,
+                    ContentType: file.headers["content-type"],
                 }),
             );
-            if ((buffer as Readable).pipe) {
-                const ws = fs.createWriteStream(
-                    `${this.params.cvPath}${prePath}`,
-                );
-                ws.on("error", (err) => reject(err));
-                (buffer as Readable).on("error", (err) => reject(err));
-                (buffer as Readable).on("end", () => resolve());
-                (buffer as Readable).pipe(ws);
-                return;
-            }
-            fs.writeFile(
-                `${this.params.cvPath}${prePath}`,
-                buffer as Buffer,
-                (err) => {
-                    if (err) {
-                        reject(err);
-                    }
-                    resolve();
-                },
-            );
+            const ws = fs.createWriteStream(`${this.params.dirPath}${prePath}`);
+            ws.on("error", (err) => reject(err));
+            const buffer = fs.createReadStream(file.path);
+            buffer.on("error", (err) => reject(err));
+            buffer.on("end", () => resolve());
+            buffer.pipe(ws);
+            return;
         });
     }
     public deletePath(key: string): Promise<void> {
         const prePath = key.startsWith("/") ? key : `/${key}`;
         return new Promise((resolve, reject) => {
-            const file = `${this.params.cvPath}${prePath}`;
+            const file = `${this.params.dirPath}${prePath}`;
             if (!fs.existsSync(file)) {
                 return resolve();
             }
-            fs.unlink(`${this.params.cvPath}${prePath}.meta`, (err) => {
+            fs.unlink(`${this.params.dirPath}${prePath}.meta`, (err) => {
                 if (err) {
                     return reject(err);
                 }
@@ -94,12 +84,12 @@ export class DirStorage {
         const prePath = key.startsWith("/") ? key : `/${key}`;
         return new Promise((resolve, reject) => {
             const readFile = fs.createReadStream(
-                `${this.params.cvPath}${prePath}`,
+                `${this.params.dirPath}${prePath}`,
             );
             const filePath = path.join(this.UPLOAD_DIR, uuidv4());
             const readMetaData = JSON.parse(
                 fs
-                    .readFileSync(`${this.params.cvPath}${prePath}.meta`)
+                    .readFileSync(`${this.params.dirPath}${prePath}.meta`)
                     .toString(),
             );
             readFile.on("error", (err) => reject(err));

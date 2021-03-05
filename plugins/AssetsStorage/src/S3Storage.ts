@@ -6,8 +6,9 @@ import * as path from "path";
 import { IRufusLogger } from "rufus";
 import { Readable } from "stream";
 import { uuid as uuidv4 } from "uuidv4";
-import { IPluginParams } from "./ExtractorFileToJson.types";
-export class S3Storage {
+import { IStorage, IPluginParams } from "./AssetsStorage.types";
+
+export class S3Storage implements IStorage {
     private clients: AWS.S3;
     private params: IPluginParams;
     private logger: IRufusLogger;
@@ -16,17 +17,17 @@ export class S3Storage {
         this.params = params;
         this.logger = logger;
         const credentials = new AWS.Credentials({
-            accessKeyId: this.params.cvS3KeyId,
-            secretAccessKey: this.params.cvS3SecretKey,
+            accessKeyId: this.params.s3KeyId,
+            secretAccessKey: this.params.s3SecretKey,
         });
-        if (this.params.cvTypeStorage === "riak") {
+        if (this.params.typeStorage === "riak") {
             const endpoint = new AWS.Endpoint("http://s3.amazonaws.com");
             const config = {
                 apiVersion: "2006-03-01",
                 credentials,
                 endpoint,
                 httpOptions: {
-                    proxy: this.params.cvPath,
+                    proxy: this.params.s3Url,
                 },
                 region: "us-east-1",
                 s3DisableBodySigning: true,
@@ -36,7 +37,7 @@ export class S3Storage {
             };
             this.clients = new AWS.S3(new AWS.Config(config));
         } else {
-            const endpoint = new AWS.Endpoint(this.params.cvPath);
+            const endpoint = new AWS.Endpoint(this.params.s3Url);
             const config = {
                 credentials,
                 endpoint,
@@ -55,29 +56,23 @@ export class S3Storage {
      */
     public saveFile(
         key: string,
-        buffer: Buffer | Readable,
-        content: string,
-        Metadata: Record<string, string> = {},
-        size: number = (buffer as Readable).pipe
-            ? undefined
-            : Buffer.byteLength(buffer as Buffer),
+        file: IFile,
+        metaData: Record<string, string> = {},
     ): Promise<void> {
         return new Promise((resolve, reject) => {
             this.clients.putObject(
                 {
-                    ...(this.params.clS3ReadPublic
-                        ? { ACL: "public-read" }
-                        : {}),
-                    Body: buffer,
-                    Bucket: this.params.cvS3Bucket,
-                    ContentLength: size,
-                    ContentType: content,
+                    ...(this.params.s3ReadPublic ? { ACL: "public-read" } : {}),
+                    Body: fs.createReadStream(file.path),
+                    Bucket: this.params.s3Bucket,
+                    ContentLength: file.size,
+                    ContentType: file.headers["content-type"],
                     Key: key,
                     Metadata: {
-                        ...Metadata,
+                        ...metaData,
                         originalFilename:
-                            Metadata &&
-                            encodeURIComponent(Metadata.originalFilename),
+                            file.originalFilename &&
+                            encodeURIComponent(file.originalFilename),
                     },
                 },
                 (err) => {
@@ -93,7 +88,7 @@ export class S3Storage {
         return new Promise((resolve, reject) => {
             this.clients.headObject(
                 {
-                    Bucket: this.params.cvS3Bucket,
+                    Bucket: this.params.s3Bucket,
                     Key: key,
                 },
                 (er) => {
@@ -103,7 +98,7 @@ export class S3Storage {
                     }
                     this.clients.deleteObject(
                         {
-                            Bucket: this.params.cvS3Bucket,
+                            Bucket: this.params.s3Bucket,
                             Key: key,
                         },
                         (err) => {
@@ -122,7 +117,7 @@ export class S3Storage {
         return new Promise((resolve, reject) => {
             this.clients.getObject(
                 {
-                    Bucket: this.params.cvS3Bucket,
+                    Bucket: this.params.s3Bucket,
                     Key: key,
                 },
                 (err, response) => {
@@ -135,7 +130,7 @@ export class S3Storage {
                             return reject(er);
                         }
                         resolve({
-                            fieldName: "upload",
+                            fieldName: "upload_file",
                             headers: {
                                 "content-type": response.ContentType,
                             },

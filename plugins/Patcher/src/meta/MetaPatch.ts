@@ -67,7 +67,7 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
             )
             .then(
                 (res) =>
-                    new Promise((resolve, reject) => {
+                    new Promise<void>((resolve, reject) => {
                         res.stream.on("data", (row) => {
                             sysSetting.write(new SysSetting(row).toRow());
                         });
@@ -94,7 +94,7 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
             )
             .then(
                 (res) =>
-                    new Promise((resolve, reject) => {
+                    new Promise<void>((resolve, reject) => {
                         res.stream.on("data", (row) => {
                             message.write(new Message(row).toRow());
                         });
@@ -114,7 +114,7 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
             )
             .then(
                 (res) =>
-                    new Promise((resolve, reject) => {
+                    new Promise<void>((resolve, reject) => {
                         let isNotFirst = false;
                         res.stream.on("data", (row) => {
                             if (isNotFirst) {
@@ -160,7 +160,7 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
             )
             .then(
                 (res) =>
-                    new Promise((resolve, reject) => {
+                    new Promise<void>((resolve, reject) => {
                         res.stream.on("data", (row) => {
                             lang[row.ck_id] = createWriteStream(
                                 meta,
@@ -187,7 +187,7 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
             )
             .then(
                 (res) =>
-                    new Promise((resolve, reject) => {
+                    new Promise<void>((resolve, reject) => {
                         res.stream.on("data", (row) => {
                             lang[row.ck_d_lang].write(
                                 new Localization(row).toRow(),
@@ -215,7 +215,7 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
                 resultSet: true,
             },
         );
-        await new Promise((resolve, reject) => {
+        await new Promise<void>((resolve, reject) => {
             let first = true;
             resPage.stream.on("data", (row) => {
                 if (first) {
@@ -253,7 +253,7 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
             )
             .then(
                 (res) =>
-                    new Promise((resolve, reject) => {
+                    new Promise<void>((resolve, reject) => {
                         res.stream.on("data", (row) => {
                             page[row.ck_page].write(
                                 new PageAction(row).toRow(),
@@ -277,7 +277,7 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
             )
             .then(
                 (res) =>
-                    new Promise((resolve, reject) => {
+                    new Promise<void>((resolve, reject) => {
                         res.stream.on("data", (row) => {
                             page[row.ck_page].write(
                                 new PageVariable(row).toRow(),
@@ -301,7 +301,7 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
             )
             .then(
                 (res) =>
-                    new Promise((resolve, reject) => {
+                    new Promise<void>((resolve, reject) => {
                         res.stream.on("data", (row) => {
                             page[row.ck_page].write(new MObject(row).toRow());
                         });
@@ -323,7 +323,7 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
             )
             .then(
                 (res) =>
-                    new Promise((resolve, reject) => {
+                    new Promise<void>((resolve, reject) => {
                         res.stream.on("data", (row) => {
                             page[row.ck_page].write(
                                 new ObjectAttr(row).toRow(),
@@ -347,7 +347,7 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
             )
             .then(
                 (res) =>
-                    new Promise((resolve, reject) => {
+                    new Promise<void>((resolve, reject) => {
                         res.stream.on("data", (row) => {
                             page[row.ck_page].write(
                                 new PageObject(row).toRow(),
@@ -371,7 +371,7 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
             )
             .then(
                 (res) =>
-                    new Promise((resolve, reject) => {
+                    new Promise<void>((resolve, reject) => {
                         res.stream.on("data", (row) => {
                             page[row.ck_page].write(
                                 new PageObjectAttr(row).toRow(),
@@ -395,7 +395,7 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
             )
             .then(
                 (res) =>
-                    new Promise((resolve, reject) => {
+                    new Promise<void>((resolve, reject) => {
                         res.stream.on("data", (row) => {
                             page[row.ck_page].write(
                                 new PageObjectMaster(row).toRow(),
@@ -419,7 +419,7 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
             )
             .then(
                 (res) =>
-                    new Promise((resolve, reject) => {
+                    new Promise<void>((resolve, reject) => {
                         const ckPages: Record<string, boolean> = {};
                         res.stream.on("data", (row) => {
                             if (ckPages[row.ck_page]) {
@@ -463,7 +463,7 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
             )
             .then(
                 (res) =>
-                    new Promise((resolve, reject) => {
+                    new Promise<void>((resolve, reject) => {
                         const query: string[] = [];
                         res.stream.on("data", (row) => {
                             query.push(row.ck_query);
@@ -499,7 +499,7 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
             )
             .then(
                 (res) =>
-                    new Promise((resolve, reject) => {
+                    new Promise<void>((resolve, reject) => {
                         let first = true;
                         res.stream.on("data", (row) => {
                             if (first) {
@@ -535,7 +535,7 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
             )
             .then(
                 (res) =>
-                    new Promise((resolve, reject) => {
+                    new Promise<void>((resolve, reject) => {
                         const rows = [];
                         res.stream.on("data", (row) => {
                             const queryStream = createWriteStream(

@@ -165,7 +165,7 @@ export default class OldOracle implements IOracleController {
                 return context.connection
                     .executeStmt(sql)
                     .then((res) => {
-                        return new Promise((resolve, reject) => {
+                        return new Promise<void>((resolve, reject) => {
                             res.stream.on("data", noop);
                             res.stream.on("err", (err) => reject(err));
                             res.stream.on("end", () => resolve());

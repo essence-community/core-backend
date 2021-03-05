@@ -66,7 +66,7 @@ class PluginManager {
             }
             const name = file.replace(".js", "").toLowerCase();
             rows.push(
-                new Promise((resolve) => {
+                new Promise<void>((resolve) => {
                     const Class = require(`${Constants.SCHEDULER_PLUGIN_DIR}/${file}`);
                     GateSchedulersClass[name] = Class.default || Class;
                     logger.info(`Найден класс scheduler ${name}`);
@@ -125,7 +125,7 @@ class PluginManager {
             }
             const name = file.replace(".js", "").toLowerCase();
             rows.push(
-                new Promise((resolve) => {
+                new Promise<void>((resolve) => {
                     const Class = require(`${Constants.EVENT_PLUGIN_DIR}/${file}`);
                     GateEventsClass[name] = Class.default || Class;
                     logger.info(`Найден класс events ${name}`);
@@ -188,7 +188,7 @@ class PluginManager {
             }
             const name = file.replace(".js", "").toLowerCase();
             rows.push(
-                new Promise((resolve) => {
+                new Promise<void>((resolve) => {
                     const Class = require(`${Constants.PROVIDER_PLUGIN_DIR}/${file}`);
                     GateProviderClass[name] = Class.default || Class;
                     logger.info(`Найден класс провайдера ${name}`);
@@ -300,7 +300,7 @@ class PluginManager {
             }
             const name = file.replace(".js", "").toLowerCase();
             rows.push(
-                new Promise((resolve) => {
+                new Promise<void>((resolve) => {
                     const Class = require(`${Constants.DATA_PLUGIN_DIR}/${file}`);
                     GatePluginsClass[name] = Class.default || Class;
                     logger.info(`Найден класс плагина ${name}`);
@@ -384,7 +384,7 @@ class PluginManager {
             }
             const name = file.replace(".js", "").toLowerCase();
             rows.push(
-                new Promise((resolve) => {
+                new Promise<void>((resolve) => {
                     const Class = require(`${Constants.CONTEXT_PLUGIN_DIR}/${file}`);
                     GateContextClass[name] = Class.default || Class;
                     logger.info(`Найден класс плагина контекста ${name}`);

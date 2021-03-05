@@ -29,7 +29,7 @@ class ResultController {
         let first = true;
         let total = 0;
         const ResultTransform = through(
-            function(data) {
+            function (data) {
                 let resultData = data;
                 if (first) {
                     resultData = `{"success":${
@@ -40,7 +40,7 @@ class ResultController {
                 total += 1;
                 this.queue(resultData);
             },
-            function() {
+            function () {
                 this.queue(
                     `,"metaData": ${JSON.stringify({
                         ...metaData,
@@ -95,7 +95,7 @@ class ResultController {
         let first = true;
         const self = this;
         const ResultTransform = through(
-            function(data) {
+            function (data) {
                 let xml = js2xmlparser.parse(
                     "data",
                     Object.entries(data).reduce(
@@ -138,7 +138,7 @@ class ResultController {
                 }
                 this.queue(xml);
             },
-            function() {
+            function () {
                 const metaData = js2xmlparser.parse(
                     "metaData",
                     {
@@ -214,8 +214,10 @@ class ResultController {
                     gateContext.debug(
                         `Ответ: FileName: ${
                             data[Constants.FILE_NAME_COLUMN]
-                        }, FileMimeType: ${data[Constants.FILE_MIME_COLUMN] ||
-                            Constants.FILE_CONTENT_TYPE}`,
+                        }, FileMimeType: ${
+                            data[Constants.FILE_MIME_COLUMN] ||
+                            Constants.FILE_CONTENT_TYPE
+                        }`,
                     );
                 }
             } else {
@@ -379,11 +381,9 @@ class ResultController {
         if (result && result.type === "break") {
             gateContext.info(
                 `${gateContext.request.method}(${gateContext.actionName},${gateContext.queryName}` +
-                    `,${
-                        gateContext.providerName
-                    }) time execute ${(new Date().getTime() -
-                        gateContext.startTime) /
-                        1000}`,
+                    `,${gateContext.providerName}) time execute ${
+                        (new Date().getTime() - gateContext.startTime) / 1000
+                    }`,
             );
             return;
         }
@@ -441,7 +441,7 @@ class ResultController {
                 };
             }
         }
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
             switch (
                 result.type // Разбираем по типу ответа
             ) {

@@ -1,6 +1,6 @@
 import ICCTParams from "@ungate/plugininf/lib/ICCTParams";
-export interface IPluginParams extends ICCTParams {
-    cvTypeStorage?: "riak" | "aws" | "dir";
+export interface IPluginParams {
+    cvTypeStorage: "riak" | "aws" | "dir";
     cvPath?: string;
     cvS3Bucket?: string;
     cvS3KeyId?: string;
@@ -9,6 +9,8 @@ export interface IPluginParams extends ICCTParams {
     clS3ReadPublic: boolean;
     cvDir: string;
     cvDirColumn: string;
+    cnRowSize: number;
+    cvCsvDelimiter?: string;
 }
 
 export interface IJson {

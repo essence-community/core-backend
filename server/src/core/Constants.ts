@@ -166,7 +166,7 @@ class Constants {
     }
 }
 const constants = new Constants();
-Date.prototype.toJSON = function() {
+Date.prototype.toJSON = function () {
     return moment(this)
         .clone()
         .tz("Etc/GMT-3")

@@ -163,7 +163,7 @@ export default class CoreAuthOracle extends NullAuthProvider {
                                 )
                                 .then(
                                     (resAction) =>
-                                        new Promise(
+                                        new Promise<void>(
                                             (resolveAction, rejectAction) => {
                                                 resAction.stream.on(
                                                     "error",

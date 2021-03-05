@@ -94,7 +94,7 @@ export default class OracleDBPlugin extends NullProvider {
                     query.inParams,
                     query.outParams,
                 );
-                await new Promise((resolve, reject) => {
+                await new Promise<void>((resolve, reject) => {
                     res.stream.on("error", (err) => reject(err));
                     res.stream.on("data", noop);
                     res.stream.on("end", () => resolve());
@@ -108,7 +108,7 @@ export default class OracleDBPlugin extends NullProvider {
                     query.inParams,
                     query.outParams,
                 );
-                await new Promise((resolve, reject) => {
+                await new Promise<void>((resolve, reject) => {
                     res.stream.on("error", (err) => reject(err));
                     res.stream.on("data", noop);
                     res.stream.on("end", () => resolve());
@@ -129,7 +129,7 @@ export default class OracleDBPlugin extends NullProvider {
                         )
                         .then(
                             (resPost) =>
-                                new Promise((resolve, reject) => {
+                                new Promise<void>((resolve, reject) => {
                                     resPost.stream.on("error", (err) =>
                                         reject(err),
                                     );
@@ -160,7 +160,7 @@ export default class OracleDBPlugin extends NullProvider {
                         )
                         .then(
                             (resPost) =>
-                                new Promise((resolve, reject) => {
+                                new Promise<void>((resolve, reject) => {
                                     resPost.stream.on("error", (err) =>
                                         reject(err),
                                     );

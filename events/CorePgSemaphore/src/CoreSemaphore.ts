@@ -98,7 +98,7 @@ export default class CoreSemaphore extends NullEvent {
                 )
                 .then(
                     (data) =>
-                        new Promise((resolve, reject) => {
+                        new Promise<void>((resolve, reject) => {
                             const rows = [];
                             data.stream.on("data", (chunk) => rows.push(chunk));
                             data.stream.on("error", (error) => reject(error));

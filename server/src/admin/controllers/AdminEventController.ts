@@ -63,7 +63,7 @@ class AdminEventController {
             encoding: "UTF-8",
             flag: "r",
         });
-        await new Promise((resolve, reject) => {
+        await new Promise<void>((resolve, reject) => {
             const server = https.createServer(
                 {
                     ca: this.ca,

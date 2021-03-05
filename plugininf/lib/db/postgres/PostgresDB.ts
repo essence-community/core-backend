@@ -264,7 +264,7 @@ export default class PostgresDB {
     public onClose(conn?: pg.Client | pg.PoolClient): Promise<void> {
         if (conn) {
             return (conn as pg.PoolClient).release
-                ? new Promise((resolve) => {
+                ? new Promise<void>((resolve) => {
                       (conn as pg.PoolClient).release();
                       resolve();
                   })
@@ -434,7 +434,7 @@ export default class PostgresDB {
                     ),
                     stream,
                 };
-                await new Promise((resolve, reject) => {
+                await new Promise<void>((resolve, reject) => {
                     let isData = false;
                     stream.once("end", () => {
                         if (isData) {

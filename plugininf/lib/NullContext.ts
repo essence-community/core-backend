@@ -168,7 +168,9 @@ export default abstract class NullContext implements IContextPlugin {
                             groups.reg,
                             groups.key,
                         );
-                    } else if ((this.params.cors.origin as string).startsWith("[")) {
+                    } else if (
+                        (this.params.cors.origin as string).startsWith("[")
+                    ) {
                         this.params.cors.origin = JSON.parse(
                             this.params.cors.origin as string,
                         );
@@ -181,7 +183,7 @@ export default abstract class NullContext implements IContextPlugin {
                             }
                             return val;
                         });
-                    } else  if (this.params.cors.origin === "true") {
+                    } else if (this.params.cors.origin === "true") {
                         this.params.cors.origin = true;
                     }
                 }

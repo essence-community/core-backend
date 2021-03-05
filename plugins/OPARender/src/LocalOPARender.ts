@@ -4,7 +4,10 @@ import path = require("path");
 import { spawn } from "child_process";
 import * as fs from "fs";
 import { IFile } from "@ungate/plugininf/lib/IContext";
-import { deleteFolderRecursive, isEmpty } from "@ungate/plugininf/lib/util/Util";
+import {
+    deleteFolderRecursive,
+    isEmpty,
+} from "@ungate/plugininf/lib/util/Util";
 import { isString } from "lodash";
 import { deepParam } from "@ungate/plugininf/lib/util/deepParam";
 import { IEncoder } from "./Encoder.types";
@@ -98,8 +101,10 @@ export class LocalOPARender implements IOPAEval {
                         ]);
                         fileTemp = (arr[0] as IFile).path;
                     }
-                    if (fileTemp.toLocaleLowerCase().endsWith("xml") ||
-                        nameFile.toLocaleLowerCase().endsWith("xml")) {
+                    if (
+                        fileTemp.toLocaleLowerCase().endsWith("xml") ||
+                        nameFile.toLocaleLowerCase().endsWith("xml")
+                    ) {
                         const arr = await this.encoder.xml.decode([
                             input as IFile,
                         ]);

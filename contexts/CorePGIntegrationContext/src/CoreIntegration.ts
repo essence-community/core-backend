@@ -100,7 +100,7 @@ export default class CoreIntegration extends NullContext {
                 },
             )
             .then((res) => {
-                return new Promise((resolve, reject) => {
+                return new Promise<void>((resolve, reject) => {
                     const data = [];
                     res.stream.on("error", (err) =>
                         reject(new Error(err.message)),

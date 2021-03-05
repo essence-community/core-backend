@@ -1,4 +1,4 @@
-import { isEmpty } from '@ungate/plugininf/lib/util/Util';
+import { isEmpty } from "@ungate/plugininf/lib/util/Util";
 const ENGLISH_ALPHABET_LENGTH = 26;
 const NUM_AND_ENGLISH_ALPHABET_LENGTH = 36;
 /**

@@ -742,7 +742,7 @@ export default class OfflineController implements ICoreController {
             )
             .then(
                 (res) =>
-                    new Promise((resolve, reject) => {
+                    new Promise<void>((resolve, reject) => {
                         const data = {};
                         res.stream.on("error", (err) =>
                             reject(new Error(err.message)),
@@ -807,7 +807,7 @@ export default class OfflineController implements ICoreController {
             )
             .then(
                 (res) =>
-                    new Promise((resolve, reject) => {
+                    new Promise<void>((resolve, reject) => {
                         const data = [];
                         res.stream.on("error", (err) =>
                             reject(new Error(err.message)),
@@ -852,7 +852,7 @@ export default class OfflineController implements ICoreController {
             )
             .then(
                 (res) =>
-                    new Promise((resolve, reject) => {
+                    new Promise<void>((resolve, reject) => {
                         const data = [];
                         res.stream.on("error", (err) =>
                             reject(new Error(err.message)),
@@ -898,7 +898,7 @@ export default class OfflineController implements ICoreController {
             )
             .then(
                 (res) =>
-                    new Promise((resolve, reject) => {
+                    new Promise<void>((resolve, reject) => {
                         const data = [];
                         res.stream.on("error", (err) =>
                             reject(new Error(err.message)),
@@ -938,7 +938,7 @@ export default class OfflineController implements ICoreController {
             )
             .then(
                 (res) =>
-                    new Promise((resolve, reject) => {
+                    new Promise<void>((resolve, reject) => {
                         const data = [];
                         res.stream.on("error", (err) =>
                             reject(new Error(err.message)),
@@ -976,7 +976,7 @@ export default class OfflineController implements ICoreController {
             )
             .then(
                 (res) =>
-                    new Promise((resolve, reject) => {
+                    new Promise<void>((resolve, reject) => {
                         const data = [];
                         res.stream.on("data", (row) => {
                             data.push({
@@ -1010,7 +1010,7 @@ export default class OfflineController implements ICoreController {
             )
             .then(
                 (res) =>
-                    new Promise((resolve, reject) => {
+                    new Promise<void>((resolve, reject) => {
                         const data = [];
                         res.stream.on("data", (row) => {
                             data.push(row);

@@ -369,7 +369,7 @@ export default class CoreContext extends NullContext {
                 )
                 .then(
                     (docs) =>
-                        new Promise((resolv, reject) => {
+                        new Promise<void>((resolv, reject) => {
                             const rows = [];
                             docs.stream.on("data", (chunk) => rows.push(chunk));
                             docs.stream.on("error", (err) => reject(err));

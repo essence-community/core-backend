@@ -34,7 +34,7 @@ export async function patchIntegr(dir: string, json: IJson, conn: Connection) {
             )
             .then(
                 (res) =>
-                    new Promise((resolve, reject) => {
+                    new Promise<void>((resolve, reject) => {
                         res.stream.on("data", (row) => {
                             integr.write(new Provider(row).toRow());
                         });
@@ -56,7 +56,7 @@ export async function patchIntegr(dir: string, json: IJson, conn: Connection) {
             )
             .then(
                 (res) =>
-                    new Promise((resolve, reject) => {
+                    new Promise<void>((resolve, reject) => {
                         res.stream.on("data", (row) => {
                             integr.write(new Interface(row).toRow());
                         });

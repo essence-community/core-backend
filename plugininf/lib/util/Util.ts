@@ -185,12 +185,15 @@ export function sortFilesData(
                                     : (val1 as string),
                             ),
                             formatStr[format] as any,
-                        ) * (10 * index)
+                        ) *
+                            (10 * index)
                     );
                 }
                 if (typeof val1 === "number" && typeof val2 === "number") {
                     return (
-                        val + (direction === "ASC" ? val1 - val2 : val2 - val1) * (10 * index)
+                        val +
+                        (direction === "ASC" ? val1 - val2 : val2 - val1) *
+                            (10 * index)
                     );
                 }
                 if (datatype === "integer" || datatype === "numeric") {
@@ -202,7 +205,8 @@ export function sortFilesData(
                                   .toNumber()
                             : new BigNumber(val2 as any)
                                   .minus(new BigNumber(val1 as any))
-                                  .toNumber()) * (10 * index)
+                                  .toNumber()) *
+                            (10 * index)
                     );
                 }
                 if (typeof val1 === "string" && typeof val2 === "string") {
@@ -212,12 +216,17 @@ export function sortFilesData(
                             (direction === "ASC" ? val1 : val2) || ""
                         ).localeCompare(
                             (direction === "ASC" ? val2 : val1) || "",
-                        ) * (10 * index)
+                        ) *
+                            (10 * index)
                     );
                 }
                 // @ts-ignore
                 // tslint:disable-line no-unused-expression
-                return val + +(direction === "ASC" ? val1 > val2 : val2 > val1) * (10 * index);
+                return (
+                    val +
+                    +(direction === "ASC" ? val1 > val2 : val2 > val1) *
+                        (10 * index)
+                );
             }, 0);
     }
 
@@ -262,13 +271,13 @@ export function filterFilesData(gateContext: IContext): (a: any) => boolean {
                     case "gt":
                     case ">":
                         if (
-                            typeof valueRecord === "string" &&
-                            typeof value === "string" &&
-                            (datatype === "date" ||
-                                nmColumn.startsWith("cd_") ||
-                                nmColumn.startsWith("ct_")) ||
-                                nmColumn.startsWith("fd_") ||
-                                nmColumn.startsWith("ft_")
+                            (typeof valueRecord === "string" &&
+                                typeof value === "string" &&
+                                (datatype === "date" ||
+                                    nmColumn.startsWith("cd_") ||
+                                    nmColumn.startsWith("ct_"))) ||
+                            nmColumn.startsWith("fd_") ||
+                            nmColumn.startsWith("ft_")
                         ) {
                             return moment(valueRecord).isAfter(
                                 value,
@@ -282,13 +291,13 @@ export function filterFilesData(gateContext: IContext): (a: any) => boolean {
                     case "ge":
                     case ">=":
                         if (
-                            typeof valueRecord === "string" &&
-                            typeof value === "string" &&
-                            (datatype === "date" ||
-                                nmColumn.startsWith("cd_") ||
-                                nmColumn.startsWith("ct_")) ||
-                                nmColumn.startsWith("fd_") ||
-                                nmColumn.startsWith("ft_")
+                            (typeof valueRecord === "string" &&
+                                typeof value === "string" &&
+                                (datatype === "date" ||
+                                    nmColumn.startsWith("cd_") ||
+                                    nmColumn.startsWith("ct_"))) ||
+                            nmColumn.startsWith("fd_") ||
+                            nmColumn.startsWith("ft_")
                         ) {
                             return moment(valueRecord).isSameOrAfter(
                                 value,
@@ -302,13 +311,13 @@ export function filterFilesData(gateContext: IContext): (a: any) => boolean {
                     case "lt":
                     case "<":
                         if (
-                            typeof valueRecord === "string" &&
-                            typeof value === "string" &&
-                            (datatype === "date" ||
-                                nmColumn.startsWith("cd_") ||
-                                nmColumn.startsWith("ct_")) ||
-                                nmColumn.startsWith("fd_") ||
-                                nmColumn.startsWith("ft_")
+                            (typeof valueRecord === "string" &&
+                                typeof value === "string" &&
+                                (datatype === "date" ||
+                                    nmColumn.startsWith("cd_") ||
+                                    nmColumn.startsWith("ct_"))) ||
+                            nmColumn.startsWith("fd_") ||
+                            nmColumn.startsWith("ft_")
                         ) {
                             return moment(valueRecord).isBefore(
                                 value,
@@ -322,13 +331,13 @@ export function filterFilesData(gateContext: IContext): (a: any) => boolean {
                     case "le":
                     case "<=":
                         if (
-                            typeof valueRecord === "string" &&
-                            typeof value === "string" &&
-                            (datatype === "date" ||
-                                nmColumn.startsWith("cd_") ||
-                                nmColumn.startsWith("ct_")) ||
-                                nmColumn.startsWith("fd_") ||
-                                nmColumn.startsWith("ft_")
+                            (typeof valueRecord === "string" &&
+                                typeof value === "string" &&
+                                (datatype === "date" ||
+                                    nmColumn.startsWith("cd_") ||
+                                    nmColumn.startsWith("ct_"))) ||
+                            nmColumn.startsWith("fd_") ||
+                            nmColumn.startsWith("ft_")
                         ) {
                             return moment(valueRecord).isSameOrBefore(
                                 value,
@@ -342,13 +351,13 @@ export function filterFilesData(gateContext: IContext): (a: any) => boolean {
                     case "eq":
                     case "=":
                         if (
-                            typeof valueRecord === "string" &&
-                            typeof value === "string" &&
-                            (datatype === "date" ||
-                                nmColumn.startsWith("cd_") ||
-                                nmColumn.startsWith("ct_")) ||
-                                nmColumn.startsWith("fd_") ||
-                                nmColumn.startsWith("ft_")
+                            (typeof valueRecord === "string" &&
+                                typeof value === "string" &&
+                                (datatype === "date" ||
+                                    nmColumn.startsWith("cd_") ||
+                                    nmColumn.startsWith("ct_"))) ||
+                            nmColumn.startsWith("fd_") ||
+                            nmColumn.startsWith("ft_")
                         ) {
                             return moment(valueRecord).isSame(
                                 value,

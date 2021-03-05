@@ -11,7 +11,7 @@ export function createWriteStream(dir: string, name: string) {
 }
 
 export function closeFsWriteStream(stream: fs.WriteStream): Promise<void> {
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
         stream.end((err) => {
             if (err) {
                 return reject(err);
@@ -23,7 +23,7 @@ export function closeFsWriteStream(stream: fs.WriteStream): Promise<void> {
 }
 
 export function createChangeXml(pathFile: string, include: string[]) {
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
         fs.writeFile(
             pathFile,
             '<?xml version="1.0" encoding="UTF-8"?>\n' +

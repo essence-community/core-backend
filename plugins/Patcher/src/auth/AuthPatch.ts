@@ -49,7 +49,7 @@ export async function patchAuth(dir: string, json: IJson, conn: Connection) {
             )
             .then(
                 (res) =>
-                    new Promise((resolve, reject) => {
+                    new Promise<void>((resolve, reject) => {
                         res.stream.on("data", (row) => {
                             info.write(new Info(row).toRow());
                         });
@@ -71,7 +71,7 @@ export async function patchAuth(dir: string, json: IJson, conn: Connection) {
             )
             .then(
                 (res) =>
-                    new Promise((resolve, reject) => {
+                    new Promise<void>((resolve, reject) => {
                         let isNotFirst = false;
 
                         res.stream.on("data", (row) => {
@@ -119,7 +119,7 @@ export async function patchAuth(dir: string, json: IJson, conn: Connection) {
             )
             .then(
                 (res) =>
-                    new Promise((resolve, reject) => {
+                    new Promise<void>((resolve, reject) => {
                         res.stream.on("data", (row) => {
                             action.write(new Action(row).toRow());
                         });
@@ -141,7 +141,7 @@ export async function patchAuth(dir: string, json: IJson, conn: Connection) {
             )
             .then(
                 (res) =>
-                    new Promise((resolve, reject) => {
+                    new Promise<void>((resolve, reject) => {
                         let isNotFirst = false;
 
                         res.stream.on("data", (row) => {
@@ -189,7 +189,7 @@ export async function patchAuth(dir: string, json: IJson, conn: Connection) {
             )
             .then(
                 (res) =>
-                    new Promise((resolve, reject) => {
+                    new Promise<void>((resolve, reject) => {
                         res.stream.on("data", (row) => {
                             role.write(new Role(row).toRow());
                         });
@@ -211,7 +211,7 @@ export async function patchAuth(dir: string, json: IJson, conn: Connection) {
             )
             .then(
                 (res) =>
-                    new Promise((resolve, reject) => {
+                    new Promise<void>((resolve, reject) => {
                         let isNotFirst = false;
 
                         res.stream.on("data", (row) => {
@@ -254,7 +254,7 @@ export async function patchAuth(dir: string, json: IJson, conn: Connection) {
             )
             .then(
                 (res) =>
-                    new Promise((resolve, reject) => {
+                    new Promise<void>((resolve, reject) => {
                         let isNotFirst = false;
 
                         res.stream.on("data", (row) => {
@@ -302,7 +302,7 @@ export async function patchAuth(dir: string, json: IJson, conn: Connection) {
             )
             .then(
                 (res) =>
-                    new Promise((resolve, reject) => {
+                    new Promise<void>((resolve, reject) => {
                         res.stream.on("data", (row) => {
                             account.write(new Account(row).toRow());
                         });
@@ -324,7 +324,7 @@ export async function patchAuth(dir: string, json: IJson, conn: Connection) {
             )
             .then(
                 (res) =>
-                    new Promise((resolve, reject) => {
+                    new Promise<void>((resolve, reject) => {
                         let isNotFirst = false;
 
                         res.stream.on("data", (row) => {
@@ -367,7 +367,7 @@ export async function patchAuth(dir: string, json: IJson, conn: Connection) {
             )
             .then(
                 (res) =>
-                    new Promise((resolve, reject) => {
+                    new Promise<void>((resolve, reject) => {
                         let isNotFirst = false;
 
                         res.stream.on("data", (row) => {
