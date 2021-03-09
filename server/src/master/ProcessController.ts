@@ -93,11 +93,10 @@ class BuilderProcessController {
     public init() {
         if (fs.existsSync(Constants.UPLOAD_DIR)) {
             deleteFolderRecursive(Constants.UPLOAD_DIR);
-        } else {
-            fs.mkdirSync(Constants.UPLOAD_DIR, {
-                recursive: true,
-            });
         }
+        fs.mkdirSync(Constants.UPLOAD_DIR, {
+            recursive: true,
+        });
         if (Constants.LOCAL_DB === "nedb") {
             initNode(
                 this.nodes,
