@@ -119,7 +119,7 @@ export default class ModuleStorage extends NullPlugin {
             }
             if (
                 !isObject(gateContext.request.body) ||
-                (gateContext.request.body as IFormData).files
+                !(gateContext.request.body as IFormData).files
             ) {
                 throw new ErrorException(
                     ErrorGate.compileErrorResult(

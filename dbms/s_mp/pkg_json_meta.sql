@@ -246,7 +246,7 @@ begin
   --проверяем и сохраняем данные
   pot_class_hierarchy := pkg_meta.p_modify_class_hierarchy(vv_action, pot_class_hierarchy);
   --логируем данные
-  perform pkg_log.p_save(pv_user, pk_session, pc_json, 't_class_hierarchy', pot_class_hierarchy.ck_id::varchar, vv_action);
+  perform pkg_log.p_save(pv_user, pk_session, pc_json, 'pkg_json_meta.f_modify_class_hierarchy', pot_class_hierarchy.ck_id::varchar, vv_action);
   return '{"ck_id":"' || coalesce(pot_class_hierarchy.ck_id, '') || '","cv_error":' || pkg.p_form_response() || '}';
 end;
 $$;
@@ -275,6 +275,7 @@ begin
   --JSON -> rowtype
   vot_module.ck_id = nullif(trim(pc_json#>>'{data,ck_id}'), '');
   vot_module.cv_name = nullif(trim(pc_json#>>'{data,cv_name}'), '');
+  vot_module.ck_view = coalesce(nullif(trim(pc_json#>>'{data,ck_view}'), ''), nullif(trim(pc_json#>>'{data,g_ck_view}'), ''));
   vot_module.ck_user = pv_user;
   vot_module.ct_change = CURRENT_TIMESTAMP;
   vot_module.cv_version = nullif(trim(pc_json#>>'{data,cv_version}'), '');
