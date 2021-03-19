@@ -24,7 +24,7 @@ export default abstract class NullPlugin implements IPlugin {
         ) {
             const rootLogger = Logger.getRootLogger();
             this.logger.setLevel(this.params.lvl_logger);
-            for (let handler of rootLogger._handlers) {
+            for (const handler of rootLogger._handlers) {
                 this.logger.addHandler(handler);
             }
         }

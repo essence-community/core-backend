@@ -47,7 +47,7 @@ export interface IComboParamInfo extends IBaseParamInfo {
     queryparam?: string;
     query?: string;
     // tslint:disable-line array-type
-    records?: Array<Record<string, string | number>>;
+    records?: Record<string, string | number>[];
     defaultValue?: string | number;
 }
 

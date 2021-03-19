@@ -55,7 +55,7 @@ export interface IFormData {
 export interface IRequest extends http.IncomingMessage {
     body?:
         | Record<string, any>
-        | Array<Record<string, any>>
+        | Record<string, any>[]
         | IFormData
         | string
         | Buffer;

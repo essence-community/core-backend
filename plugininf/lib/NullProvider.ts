@@ -85,7 +85,7 @@ export default abstract class NullProvider implements IProvider {
         ) {
             const rootLogger = Logger.getRootLogger();
             this.log.setLevel(this.params.lvl_logger);
-            for (let handler of rootLogger._handlers) {
+            for (const handler of rootLogger._handlers) {
                 this.log.addHandler(handler);
             }
         }

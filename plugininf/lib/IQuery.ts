@@ -29,6 +29,7 @@ export interface IGateQuery {
     readonly outParams: IObjectParam;
     readonly macros: IObjectParam;
     readonly queryStr: string;
+    readonly modifyMethod?: string;
     prepareParams(provider: IProvider);
     applyMacro(regexp: string, data: string);
 }

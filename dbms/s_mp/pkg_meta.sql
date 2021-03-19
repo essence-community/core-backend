@@ -929,12 +929,12 @@ begin
                              join s_mt.t_module_class mc on m.ck_id = mc.ck_module
                              join s_mt.t_class c on mc.ck_class = c.ck_id
                              left join s_mt.t_class_attr ca on c.ck_id = ca.ck_class and ca.ck_attr = 'type') as wmc
-                          on ((pv_action = u::varchar and wmc.ck_module = pot_module.ck_id and wmc.ck_module = pot_module.ck_view)
-                           or (pv_action = i::varchar and (vv_id is null or wmc.ck_module = vv_id ))) and 
-                           (jt.ck_class_id is null and ((jt.cv_datatype_type is null and wmc.ck_class = jt.cv_type) or (jt.cv_datatype_type is not null and wmc.ck_class = lower(jt.cv_type || ':' || jt.cv_datatype_type))) 
+                          on ((pv_action = u::varchar and wmc.ck_module = pot_module.ck_id and wmc.ck_view_module = pot_module.ck_view)
+                           or (pv_action = i::varchar and (vv_id is null or (wmc.ck_module = vv_id and wmc.ck_view_module = pot_module.ck_view)))) and 
+                           (jt.ck_class_id is null and ((jt.cv_datatype_type is null and lower(wmc.ck_class) = lower(pot_module.ck_view || ':' || jt.cv_type)) or (jt.cv_datatype_type is not null and lower(wmc.ck_class) = lower(pot_module.ck_view || ':' || jt.cv_type || ':' || jt.cv_datatype_type))) 
                            or (jt.ck_class_id is not null and jt.ck_class_id = wmc.ck_class))
                         ) loop
-            vot_class.ck_id          := pot_module.ck_view || ':' ||coalesce(vcur.ck_class, vcur.ck_class_id, vcur.cv_type);
+            vot_class.ck_id          := coalesce(vcur.ck_class, vcur.ck_class_id, lower(pot_module.ck_view || ':' || vcur.cv_type));
             vot_class.ck_view        := pot_module.ck_view;
             vot_class.cv_name        := vcur.cv_name;
             vot_class.cl_final       := vcur.cl_final::smallint;
@@ -951,7 +951,7 @@ begin
                 vl_new_id := 1;
               end loop;
               if vcur.ck_class_id is null and vcur.cv_datatype_type is not null then
-                vot_class.ck_id = lower(vcur.cv_type || ':' || vcur.cv_datatype_type);
+                vot_class.ck_id = lower(pot_module.ck_view || ':' || vcur.cv_type || ':' || vcur.cv_datatype_type);
               end if;
               vot_class := pkg_meta.p_modify_class(vcur.cv_action, vot_class, vl_new_id);
             else
