@@ -19,12 +19,13 @@ packageJson.scripts = {
     installSvc: "node server/installSvcWin.js",
 };
 packageJson.nodemonConfig = {
-    ignore: ["libs/**", "node_modules/**"],
+    ignore: ["libs/**", "node_modules/**", "server/plugins/**"],
     env: {
         NLS_LANG: "American_America.UTF8",
         NLS_DATE_FORMAT: "dd.mm.yyyy",
         NLS_TIMESTAMP_FORMAT: 'dd.mm.yyyy"T"hh:mi:ss',
     },
+    ext: "js",
     delay: "10000",
     watch: false,
 };
