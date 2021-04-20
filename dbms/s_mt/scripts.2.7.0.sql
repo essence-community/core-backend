@@ -241,3 +241,7 @@ join s_mt.t_class_attr tca
     on toa.ck_class_attr = tca.ck_id
 where
      toa.cv_value is not null and tca.ck_attr = 'btnexcel' and toa3.ck_id = toa.ck_id;
+
+--changeset artemov_i:fix-provider-length dbms:postgresql
+ALTER TABLE s_mt.t_object ALTER COLUMN ck_provider TYPE varchar(32) USING ck_provider::varchar;
+ALTER TABLE s_mt.t_object ALTER COLUMN cv_modify TYPE text USING cv_modify::text;
