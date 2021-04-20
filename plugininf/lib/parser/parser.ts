@@ -169,7 +169,7 @@ function parseOperations(
                 : values[key]);
             }} : values);
 
-            return expression.object.type === "ObjectExpression" || expression.object.type === "ArrayExpression" ? (res[property] || property) : property;
+            return res && (expression.object.type === "ObjectExpression" || expression.object.type === "ArrayExpression") ? (res[property] || property) : property;
         case "TemplateLiteral":
             return expression.expressions
                 ? expression.expressions.reduce(
