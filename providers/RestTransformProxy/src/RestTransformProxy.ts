@@ -262,6 +262,9 @@ export default class RestTransformProxy extends NullProvider {
                                 return responseParam[key] || key;
                             },
                         }) as any;
+                        if (!Array.isArray(result)) {
+                            result = [result];
+                        }
                     }
                     if (config.resultRowParse && Array.isArray(result)) {
                         const parserResult = parse(config.resultRowParse);
