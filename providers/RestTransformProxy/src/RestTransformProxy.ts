@@ -127,8 +127,8 @@ export default class RestTransformProxy extends NullProvider {
         };
 
         const config = parser.runer({
-            get: (key: string) => {
-                return param[key] || key;
+            get: (key: string, isKeyEmpty: boolean) => {
+                return param[key] || (isKeyEmpty ? "" : key);
             },
         }) as any;
         const headers = {

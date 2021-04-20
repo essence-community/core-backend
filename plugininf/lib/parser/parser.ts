@@ -11,6 +11,8 @@ import {
     Super,
     LogicalExpression,
     UnaryExpression,
+    Statement,
+    Function,
 } from "estree";
 import Logger from "../Logger";
 import { isEmpty } from "../util/Util";
@@ -29,7 +31,7 @@ export interface IParseReturnType {
 }
 
 interface IValues {
-    get?($key: string): any;
+    get?($key: string, isEmpty?: boolean): any;
     [$key: string]: any;
 }
 
@@ -77,7 +79,7 @@ const utils = {
 };
 
 function parseOperations(
-    expression: Expression | Pattern | Super,
+    expression: Expression | Pattern | Super | Function | Statement,
     values: IValues,
 ): any {
     if (!expression) {
@@ -97,22 +99,25 @@ function parseOperations(
         case "Literal":
             // @ts-ignore
             if (expression.isMember) {
-                return values.get
-                    ? // @ts-ignore
-                      values.get(expression.value, expression.isMember)
-                    : // @ts-ignore
-                      values[expression.value];
+                return (values.get
+                    // @ts-ignore
+                    ? values.get(expression.value, true)
+                    // @ts-ignore
+                    : values[expression.value]) || expression.value;
             }
             return expression.value;
         case "Identifier":
-            return values.get
-                ? values.get(expression.name)
-                : values[expression.name];
+            return (values.get
+                ? values.get(expression.name, true)
+                 // @ts-ignore
+                : values[expression.name]) || (expression.isMember && expression.name);
         case "AssignmentExpression":
             return parseOperations(expression.right, values);
         case "ObjectExpression":
             return expression.properties.reduce(
                 (acc: IValues, property: Property) => {
+                    // @ts-ignore
+                    property.key.isMember = true;
                     acc[
                         parseOperations(property.key, values)
                     ] = parseOperations(property.value, values);
@@ -130,41 +135,41 @@ function parseOperations(
                 ? parseOperations(expression.consequent, values)
                 : parseOperations(expression.alternate, values);
         case "MemberExpression":
+
             if (expression.property.type === "Literal") {
                 // @ts-ignore
                 expression.property.isMember = true;
             }
-            if (
-                (expression.object.type === "ObjectExpression" ||
-                    expression.object.type === "ArrayExpression" ||
-                    expression.object.type === "Identifier") &&
-                expression.property.type === "Identifier"
-            ) {
-                expression.property.name =
-                    (values.get
-                        ? values.get(expression.property.name)
-                        : values[expression.property.name]) ||
-                    expression.property.name;
-            }
+            
             let res = parseOperations(expression.object, values);
-            if (
-                typeof res === "string" &&
-                (res.charAt(0) === "{" || res.charAt(0) === "[")
-            ) {
+            if (typeof res === "string" && (res.charAt(0) === "{" || res.charAt(0) === "[")) {
                 try {
                     res = JSON.parse(res);
-                } catch (e) {
-                    logger.debug("Error parse %s", e.message, e);
+                } catch(e) {
+                    logger.info(e);
                 }
             }
-            return parseOperations(expression.property, {
-                get: (key) => {
-                    if (Array.isArray(res) || typeof res === "object") {
-                        return res[key];
+            if ((expression.object.type === "ObjectExpression" || expression.object.type === "ArrayExpression" || expression.object.type === "Identifier") && expression.property.type === "Identifier") {
+                expression.property.name = (values.get
+                        ? values.get(expression.property.name, true)
+                        : values[expression.property.name]) || expression.property.name;
+            }
+            const property = parseOperations(expression.property, res ? { get: (key) => {
+                if (Array.isArray(res) || typeof res === "object") {
+                    const result = res[key] || (values.get
+                        ? values.get(key, true)
+                        : values[key]);
+                    if (typeof result === "function") {
+                        result.parentFn = res;
                     }
-                    return values.get ? values.get(key) : values[key];
-                },
-            });
+                    return result;
+                }
+                return (values.get
+                ? values.get(key, true)
+                : values[key]);
+            }} : values);
+
+            return expression.object.type === "ObjectExpression" || expression.object.type === "ArrayExpression" ? (res[property] || property) : property;
         case "TemplateLiteral":
             return expression.expressions
                 ? expression.expressions.reduce(
@@ -175,15 +180,30 @@ function parseOperations(
                       expression.quasis[0].value.raw,
                   )
                 : "";
-        case "CallExpression":
-            const fn = parseOperations(expression.callee, utils);
-            return fn
-                ? fn(
-                      ...expression.arguments.map((arg) =>
-                          parseOperations(arg as any, values),
-                      ),
-                  )
-                : "";
+        case "CallExpression": 
+            const fn = parseOperations(expression.callee, { get: (key) => {
+                return utils[key] || (values.get
+                ? values.get(key, true)
+                : values[key]);
+            }});
+            // @ts-ignore
+            return typeof fn === "function" ? fn.apply(fn.parentFn || fn, (expression.arguments.map((arg) => parseOperations(arg, values)))) : "";
+        case "ArrowFunctionExpression":
+            return (...ags) => parseOperations(expression.body, { get: (key) => {
+                const res = ags.reduce((resParam, val, ind) => {
+                    // @ts-ignore
+                    resParam[expression.params[ind]?.name] = val;
+                    return resParam;
+                }, {})
+                if (Object.keys(res).length) {
+                    return res[key] || (values.get
+                        ? values.get(key, true)
+                        : values[key]);
+                }
+                return (values.get
+                ? values.get(key, true)
+                : values[key]);
+            }});
         default:
             logger.error("expression not found: ", expression);
 
@@ -192,6 +212,7 @@ function parseOperations(
 }
 
 export const parse = (src: string, withTokens = false): IParseReturnType => {
+    // tslint:disable-next-line:prefer-const
     let parsedSrc: esprima.Program | null = null;
 
     try {
