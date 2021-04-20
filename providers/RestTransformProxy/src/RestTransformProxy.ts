@@ -258,8 +258,8 @@ export default class RestTransformProxy extends NullProvider {
                         const parserResult = parse(config.resultParse);
 
                         result = parserResult.runer({
-                            get: (key: string) => {
-                                return responseParam[key] || key;
+                            get: (key: string, isKeyEmpty: boolean) => {
+                                return responseParam[key] || (isKeyEmpty ? "" : key);
                             },
                         }) as any;
                         if (!Array.isArray(result)) {
@@ -267,7 +267,7 @@ export default class RestTransformProxy extends NullProvider {
                         }
                     }
                     if (config.resultRowParse && Array.isArray(result)) {
-                        const parserResult = parse(config.resultRowParse);
+                        const parserRowResult = parse(config.resultRowParse);
                         const responseParam = {
                             ...param,
                             jt_response_header: res.headers,
@@ -278,9 +278,9 @@ export default class RestTransformProxy extends NullProvider {
                                 ...responseParam,
                                 jt_result_row: item,
                             };
-                            return parserResult.runer({
-                                get: (key: string) => {
-                                    return rowParam[key] || key;
+                            return parserRowResult.runer({
+                                get: (key: string, isKeyEmpty: boolean) => {
+                                    return rowParam[key] || (isKeyEmpty ? "" : key);
                                 },
                             });
                         });
