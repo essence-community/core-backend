@@ -4,6 +4,7 @@ import path = require("path");
 import { spawn } from "child_process";
 import * as fs from "fs";
 import { IFile } from "@ungate/plugininf/lib/IContext";
+import { Constant } from "@ungate/plugininf/lib/Constants";
 import {
     deleteFolderRecursive,
     isEmpty,
@@ -13,6 +14,7 @@ import { deepParam } from "@ungate/plugininf/lib/util/deepParam";
 import { IEncoder } from "./Encoder.types";
 import { YAMLEncoder } from "./YAMLEncoder";
 import { XMLEncoder } from "./XMLEncoder";
+import { v4 as uuidV4 } from "uuid";
 
 export class LocalOPARender implements IOPAEval {
     params: IOPARenderParams;
@@ -35,7 +37,11 @@ export class LocalOPARender implements IOPAEval {
         resultPath: string,
     ) {
         return new Promise(async (resolve, reject) => {
-            const temp = fs.mkdtempSync("opa_temp");
+            const temp = path.resolve(
+                Constant.UPLOAD_DIR,
+                `opa_temp_${uuidV4()}`,
+            );
+            fs.mkdirSync(temp, { recursive: true });
             const param = [];
             await Promise.all(
                 (query as any).map(async (val: string | IFile, ind: number) => {

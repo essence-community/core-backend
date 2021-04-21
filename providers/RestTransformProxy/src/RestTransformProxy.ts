@@ -259,7 +259,10 @@ export default class RestTransformProxy extends NullProvider {
 
                         result = parserResult.runer({
                             get: (key: string, isKeyEmpty: boolean) => {
-                                return responseParam[key] || (isKeyEmpty ? "" : key);
+                                return (
+                                    responseParam[key] ||
+                                    (isKeyEmpty ? "" : key)
+                                );
                             },
                         }) as any;
                         if (!Array.isArray(result)) {
@@ -280,7 +283,9 @@ export default class RestTransformProxy extends NullProvider {
                             };
                             return parserRowResult.runer({
                                 get: (key: string, isKeyEmpty: boolean) => {
-                                    return rowParam[key] || (isKeyEmpty ? "" : key);
+                                    return (
+                                        rowParam[key] || (isKeyEmpty ? "" : key)
+                                    );
                                 },
                             });
                         });

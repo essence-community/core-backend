@@ -99,18 +99,23 @@ function parseOperations(
         case "Literal":
             // @ts-ignore
             if (expression.isMember) {
-                return (values.get
-                    // @ts-ignore
-                    ? values.get(expression.value, true)
-                    // @ts-ignore
-                    : values[expression.value]) || expression.value;
+                return (
+                    (values.get
+                        ? // @ts-ignore
+                          values.get(expression.value, true)
+                        : // @ts-ignore
+                          values[expression.value]) || expression.value
+                );
             }
             return expression.value;
         case "Identifier":
-            return (values.get
-                ? values.get(expression.name, true)
-                 // @ts-ignore
-                : values[expression.name]) || (expression.isMember && expression.name);
+            return (
+                (values.get
+                    ? values.get(expression.name, true)
+                    : values[expression.name]) ||
+                // @ts-ignore
+                (expression.isMember && expression.name)
+            );
         case "AssignmentExpression":
             return parseOperations(expression.right, values);
         case "ObjectExpression":
@@ -135,41 +140,66 @@ function parseOperations(
                 ? parseOperations(expression.consequent, values)
                 : parseOperations(expression.alternate, values);
         case "MemberExpression":
-
             if (expression.property.type === "Literal") {
                 // @ts-ignore
                 expression.property.isMember = true;
             }
-            
+
             let res = parseOperations(expression.object, values);
-            if (typeof res === "string" && (res.charAt(0) === "{" || res.charAt(0) === "[")) {
+            if (
+                typeof res === "string" &&
+                (res.charAt(0) === "{" || res.charAt(0) === "[")
+            ) {
                 try {
                     res = JSON.parse(res);
-                } catch(e) {
+                } catch (e) {
                     logger.info(e);
                 }
             }
-            if ((expression.object.type === "ObjectExpression" || expression.object.type === "ArrayExpression" || expression.object.type === "Identifier") && expression.property.type === "Identifier") {
-                expression.property.name = (values.get
+            if (
+                (expression.object.type === "ObjectExpression" ||
+                    expression.object.type === "ArrayExpression" ||
+                    expression.object.type === "Identifier") &&
+                expression.property.type === "Identifier"
+            ) {
+                expression.property.name =
+                    (values.get
                         ? values.get(expression.property.name, true)
-                        : values[expression.property.name]) || expression.property.name;
+                        : values[expression.property.name]) ||
+                    expression.property.name;
             }
-            const property = parseOperations(expression.property, res ? { get: (key) => {
-                if (Array.isArray(res) || typeof res === "object") {
-                    const result = res[key] || (values.get
-                        ? values.get(key, true)
-                        : values[key]);
-                    if (typeof result === "function") {
-                        result.parentFn = res;
-                    }
-                    return result;
-                }
-                return (values.get
-                ? values.get(key, true)
-                : values[key]);
-            }} : values);
+            const property = parseOperations(
+                expression.property,
+                res
+                    ? {
+                          get: (key) => {
+                              if (
+                                  Array.isArray(res) ||
+                                  typeof res === "object"
+                              ) {
+                                  const result =
+                                      res[key] ||
+                                      (values.get
+                                          ? values.get(key, true)
+                                          : values[key]);
+                                  if (typeof result === "function") {
+                                      result.parentFn = res;
+                                  }
+                                  return result;
+                              }
+                              return values.get
+                                  ? values.get(key, true)
+                                  : values[key];
+                          },
+                      }
+                    : values,
+            );
 
-            return res && (expression.object.type === "ObjectExpression" || expression.object.type === "ArrayExpression") ? (res[property] || property) : property;
+            return res &&
+                (expression.object.type === "ObjectExpression" ||
+                    expression.object.type === "ArrayExpression")
+                ? res[property] || property
+                : property;
         case "TemplateLiteral":
             return expression.expressions
                 ? expression.expressions.reduce(
@@ -180,30 +210,44 @@ function parseOperations(
                       expression.quasis[0].value.raw,
                   )
                 : "";
-        case "CallExpression": 
-            const fn = parseOperations(expression.callee, { get: (key) => {
-                return utils[key] || (values.get
-                ? values.get(key, true)
-                : values[key]);
-            }});
-            // @ts-ignore
-            return typeof fn === "function" ? fn.apply(fn.parentFn || fn, (expression.arguments.map((arg) => parseOperations(arg, values)))) : "";
+        case "CallExpression":
+            const fn = parseOperations(expression.callee, {
+                get: (key) => {
+                    return (
+                        utils[key] ||
+                        (values.get ? values.get(key, true) : values[key])
+                    );
+                },
+            });
+            return typeof fn === "function"
+                ? fn.apply(
+                      fn.parentFn || fn,
+                      expression.arguments.map((arg) =>
+                          // @ts-ignore
+                          parseOperations(arg, values),
+                      ),
+                  )
+                : "";
         case "ArrowFunctionExpression":
-            return (...ags) => parseOperations(expression.body, { get: (key) => {
-                const res = ags.reduce((resParam, val, ind) => {
-                    // @ts-ignore
-                    resParam[expression.params[ind]?.name] = val;
-                    return resParam;
-                }, {})
-                if (Object.keys(res).length) {
-                    return res[key] || (values.get
-                        ? values.get(key, true)
-                        : values[key]);
-                }
-                return (values.get
-                ? values.get(key, true)
-                : values[key]);
-            }});
+            return (...ags) =>
+                parseOperations(expression.body, {
+                    get: (key) => {
+                        const res = ags.reduce((resParam, val, ind) => {
+                            // @ts-ignore
+                            resParam[expression.params[ind]?.name] = val;
+                            return resParam;
+                        }, {});
+                        if (Object.keys(res).length) {
+                            return (
+                                res[key] ||
+                                (values.get
+                                    ? values.get(key, true)
+                                    : values[key])
+                            );
+                        }
+                        return values.get ? values.get(key, true) : values[key];
+                    },
+                });
         default:
             logger.error("expression not found: ", expression);
 

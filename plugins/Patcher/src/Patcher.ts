@@ -27,6 +27,7 @@ import { patchMeta } from "./meta/MetaPatch";
 import { IPluginParams, IStorage } from "./Patcher.types";
 import { IJson } from "./Patcher.types";
 import { S3Storage } from "./S3Storage";
+import { Constant } from "@ungate/plugininf/lib/Constants";
 
 export class Patcher extends NullPlugin implements IStorage {
     public static getParamsInfo(): IParamsInfo {
@@ -124,7 +125,11 @@ export class Patcher extends NullPlugin implements IStorage {
                 }));
             }
             json.data.ck_id = uuid();
-            const temp = fs.mkdtempSync("patch");
+            const temp = path.resolve(
+                Constant.UPLOAD_DIR,
+                `patch_temp_${uuid()}`,
+            );
+            fs.mkdirSync(temp, { recursive: true });
             const zip = new Zip();
             zip.addLocalFile(path.join(__dirname, "assets", "update"));
             zip.addLocalFile(path.join(__dirname, "assets", "update.bat"));
