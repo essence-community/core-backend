@@ -6,7 +6,7 @@
     "license": "MIT",
     "dependencies": {
         "@ungate/plugininf": "^1.0.0",
-        "redis": "^3.0.2"
+        "redis": "^3.1.1"
     },
     "devDependencies": {
         "@types/redis": "^2.8.22"
