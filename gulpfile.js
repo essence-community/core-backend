@@ -658,6 +658,7 @@ gulp.task("packageJson", async () => {
         path.join(homeDir, "bin", "server", "package.json"),
         JSON.stringify(serverJson, null, 4),
     );
+    fs.writeFileSync(path.join(homeDir, "bin", 'yarn.lock'), fs.readFileSync(path.join(homeDir, 'yarn.lock')));
 });
 
 gulp.task(
