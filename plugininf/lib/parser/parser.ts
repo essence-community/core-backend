@@ -76,6 +76,8 @@ const utils = {
     isEmpty,
     lodash,
     util,
+    Object,
+    Array,
 };
 
 function parseOperations(
@@ -175,7 +177,8 @@ function parseOperations(
                           get: (key) => {
                               if (
                                   Array.isArray(res) ||
-                                  typeof res === "object"
+                                  typeof res === "object" ||
+                                  typeof res === "function"
                               ) {
                                   const result =
                                       res[key] ||
