@@ -256,3 +256,20 @@ VALUES('docs',
 1,
 '4fd05ca9-3a9e-4d66-82df-886dfa082113', 
 '2020-12-10 13:13:44.000') on conflict (ck_id) do update set cv_description = excluded.cv_description, cct_config = excluded.cct_config, cct_manifest = excluded.cct_manifest, cl_available = excluded.cl_available, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
+
+--changeset artemov_i:fix-copy-object-provider dbms:postgresql
+DROP TYPE ot_copy_object;
+
+CREATE TYPE ot_copy_object AS (
+    ck_id_origin varchar(32),
+    ck_id_new varchar(32),
+    ck_class varchar(32),
+    ck_parent varchar(32),
+    cv_name varchar(50),
+    cn_order int8,
+    ck_query varchar(255),
+    cv_description varchar(2000),
+    cv_displayed varchar(255),
+    cv_modify varchar(255),
+    ck_provider varchar(32),
+    cn_level int8);
