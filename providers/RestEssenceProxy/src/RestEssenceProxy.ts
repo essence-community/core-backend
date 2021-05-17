@@ -132,7 +132,7 @@ export default class RestEssenceProxy extends NullProvider {
             plugin: gateContext.pluginName.join(","),
             ...gateContext.params,
         };
-        const urlGate = url.parse(`${this.params.gateUrl}/${query.queryStr || query.modifyMethod}`.replace("//","/"), true) as any;
+        const urlGate = url.parse(`${this.params.gateUrl}/${query.queryStr || query.modifyMethod}`.replace("//","/").replace(":/","://"), true) as any;
         urlGate.query = QueryString.parse(
             (gateContext.request as any)._parsedUrl.query,
         );
