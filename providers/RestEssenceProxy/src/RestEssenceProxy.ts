@@ -3,15 +3,12 @@ import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import { IParamsInfo } from "@ungate/plugininf/lib/ICCTParams";
 import IContext, { IFormData } from "@ungate/plugininf/lib/IContext";
 import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
-import { parse } from "@ungate/plugininf/lib/parser/parser";
 import { IResultProvider } from "@ungate/plugininf/lib/IResult";
 import NullProvider from "@ungate/plugininf/lib/NullProvider";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
 import {
-    ReadStreamToArray,
     safeResponsePipe,
 } from "@ungate/plugininf/lib/stream/Util";
-import * as JSONStream from "JSONStream";
 import * as request from "request";
 import * as url from "url";
 import { isEmpty } from "@ungate/plugininf/lib/util/Util";
@@ -256,24 +253,27 @@ export default class RestEssenceProxy extends NullProvider {
                             json += data;
                         });
                         res.on("end", () => {
-                            let parseData = ctHeader.startsWith(
-                                "application/json",
-                            )
-                                ? JSON.parse(json)
-                                : {
-                                      response_data: json,
-                                  };
-                            if (!Array.isArray(parseData)) {
-                                parseData = [parseData];
+                            try {
+                                let parseData = ctHeader.startsWith(
+                                    "application/json",
+                                )
+                                    ? JSON.parse(json)
+                                    : {
+                                        response_data: json,
+                                    };
+                                if (!Array.isArray(parseData)) {
+                                    parseData = [parseData];
+                                }
+                                resolveArr(parseData);
+                            } catch (e) {
+                                this.log.error(`Parse json error: \n ${json}`, e)
+                                reject(e);;
                             }
-                            resolveArr(parseData);
                         });
                     });
 
-                    let result = arr;
-
                     return resolve({
-                        stream: ResultStream(result),
+                        stream: ResultStream(arr),
                     });
                 }
                 delete rheaders.date;

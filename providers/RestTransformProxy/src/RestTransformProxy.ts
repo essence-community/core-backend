@@ -224,17 +224,22 @@ export default class RestTransformProxy extends NullProvider {
                                 json += data;
                             });
                             res.on("end", () => {
-                                let parseData = ctHeader.startsWith(
-                                    "application/json",
-                                )
-                                    ? JSON.parse(json)
-                                    : {
-                                          response_data: json,
-                                      };
-                                if (!Array.isArray(parseData)) {
-                                    parseData = [parseData];
+                                try {
+                                    let parseData = ctHeader.startsWith(
+                                        "application/json",
+                                    )
+                                        ? JSON.parse(json)
+                                        : {
+                                            response_data: json,
+                                        };
+                                    if (!Array.isArray(parseData)) {
+                                        parseData = [parseData];
+                                    }
+                                    resolveArr(parseData);
+                                } catch (e) {
+                                    this.log.error(`Parse json error: \n ${json}`, e)
+                                    reject(e);
                                 }
-                                resolveArr(parseData);
                             });
                         });
                     } else {
@@ -318,7 +323,6 @@ export default class RestTransformProxy extends NullProvider {
                     }
                 });
                 safeResponsePipe(resp as any, gateContext.response);
-                return undefined;
             });
         });
     }
