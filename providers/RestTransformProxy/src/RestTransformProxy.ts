@@ -66,7 +66,6 @@ const validHeader = ["application/json", "application/xml", "text/"];
 export default class RestTransformProxy extends NullProvider {
     public static getParamsInfo(): IParamsInfo {
         return {
-            ...NullProvider.getParamsInfo(),
             defaultGateUrl: {
                 name: "Ссылка на проксируемый шлюз",
                 type: "string",
@@ -85,6 +84,7 @@ export default class RestTransformProxy extends NullProvider {
                 name: "Использовать компрессию",
                 type: "boolean",
             },
+            ...NullProvider.getParamsInfo(),
         };
     }
 
