@@ -242,7 +242,7 @@ export default class RestTransformProxy extends NullProvider {
                                 }
                             });
                         });
-                    } else {
+                    } else if (ctHeader.startsWith("application/json")) {
                         const stream = JSONStream.parse(
                             config.resultPath || "*",
                         );
