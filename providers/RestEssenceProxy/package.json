@@ -1,5 +1,5 @@
 {
-    "name": "@ungate-provider/rest-transform-proxy",
+    "name": "@ungate-provider/rest-essence-proxy",
     "version": "1.0.0",
     "description": "Прокси провайдер",
     "author": "Ivan Artemov (honyrik@gmail.com)",
