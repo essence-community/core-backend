@@ -273,3 +273,20 @@ CREATE TYPE ot_copy_object AS (
     cv_modify varchar(255),
     ck_provider varchar(32),
     cn_level int8);
+
+--changeset artemov_i:fix-copy-object-modify dbms:postgresql
+DROP TYPE ot_copy_object;
+
+CREATE TYPE ot_copy_object AS (
+    ck_id_origin varchar(32),
+    ck_id_new varchar(32),
+    ck_class varchar(32),
+    ck_parent varchar(32),
+    cv_name varchar(50),
+    cn_order int8,
+    ck_query varchar(255),
+    cv_description text,
+    cv_displayed varchar(255),
+    cv_modify text,
+    ck_provider varchar(32),
+    cn_level int8);
