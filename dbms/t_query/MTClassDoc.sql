@@ -32,4 +32,4 @@ from
  where /*##master.ck_id*/t.ck_id = (cast(:json as jsonb)->''master''->>''ck_id'')::varchar and/*master.ck_id##*/ ( &FILTER )
  order by &SORT
 ', 'meta', '-11', '2020-06-11 09:18:27.503811+03', 'select', 'free', NULL, 'Список страниц документации')
-on conflict (ck_id) do update set cc_query = excluded.cc_query, ck_provider = excluded.ck_provider, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cr_type = excluded.cr_type, cr_access = excluded.cr_access;
+on conflict (ck_id) do update set cc_query = excluded.cc_query, ck_provider = excluded.ck_provider, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cr_type = excluded.cr_type, cr_access = excluded.cr_access, cn_action = excluded.cn_action, cv_description = excluded.cv_description;

@@ -466,8 +466,8 @@ declare
   -- переменные функции
   vot_page  s_mt.t_page;
   vot_localization s_mt.t_localization;
-  vn_action_view s_mt.t_page_action.cn_action%type; /* Код действия просмотра из СУВК */
-  vn_action_edit s_mt.t_page_action.cn_action%type; /* Код действия модификации из СУВК */
+  vn_action_view s_mt.t_page_action.cn_action%type; /* Код действия просмотра */
+  vn_action_edit s_mt.t_page_action.cn_action%type; /* Код действия модификации */
   vv_action varchar;
   vk_main   varchar(32);
 begin
@@ -919,3 +919,146 @@ $$;
 
 
 ALTER FUNCTION pkg_json_meta.f_refresh_page_object(pv_user character varying, pv_session character varying, pc_json jsonb) OWNER TO s_mp;
+
+
+CREATE FUNCTION pkg_json_meta.f_modify_page_all(pv_user character varying, pk_session character varying, pc_json jsonb) RETURNS character varying
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 's_mt', 'pkg_json_meta', 'public'
+    AS $$
+declare
+  -- переменные пакета
+  gv_error sessvarstr;
+  gl_warning sessvari;
+  i sessvarstr;
+  -- переменные функции
+  vv_action varchar;
+  vk_main   varchar(32);
+  vot_page  s_mt.t_page;
+  vot_localization s_mt.t_localization;
+  vn_action_view s_mt.t_page_action.cn_action%type; /* Код действия просмотра */
+  vn_action_edit s_mt.t_page_action.cn_action%type; /* Код действия модификации */
+  vt_rec record;
+  rec record;
+begin
+  -- инициализация/получение переменных пакета
+  gv_error = sessvarstr_declare('pkg', 'gv_error', '');
+  gl_warning = sessvari_declare('pkg', 'gl_warning', 0);
+  i = sessvarstr_declare('pkg', 'i', 'I');
+  -- код функции
+  --обнулим глобальные переменные с перечнем ошибок/предупреждений/информационных сообщений
+  perform pkg.p_reset_response();
+  --JSON -> rowtype
+  vv_action = (pc_json#>>'{service,cv_action}');  
+  perform gl_warning == (pc_json#>>'{service,cl_warning}')::bigint;
+
+  --проверка прав доступа
+  perform pkg_access.p_check_access(pv_user, vk_main);
+  if nullif(gv_error::varchar, '') is not null then
+    return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}'; --ошибка прав доступа.
+  end if;
+  for rec in (
+    select
+        ja.ck_id,
+        (
+            coalesce(ja.ck_parent, ta.ck_parent)
+        ) as ck_parent,
+        (
+            coalesce(ja.cr_type, ta.cr_type::text, '3')
+        ) as cr_type,
+        (
+            coalesce(ja.cv_name, ta.cv_name)
+        ) as cv_name,
+        (
+            coalesce(ja.cn_order, ta.cn_order::text)
+        ) as cn_order,
+        (
+            coalesce(ja.cl_menu, ta.cl_menu::text, '1')
+        ) as cl_menu,
+        (
+            coalesce(ja.cl_static, ta.cl_static::text, '0')
+        ) as cl_static,
+        (
+            coalesce(ja.cv_url, ta.cv_url)
+        ) as cv_url,
+        (
+            coalesce(ja.ck_icon, ta.ck_icon)
+        ) as ck_icon,
+        (
+            coalesce(ja.ck_view, ta.ck_view, tpa.ck_view)
+        ) as ck_view,
+        (
+            coalesce(ja.cn_action_edit, tpea.cn_action::text, '999999')
+        ) as cn_action_edit,
+        (
+            coalesce(ja.cn_action_view, tpva.cn_action::text, '999999')
+        ) as cn_action_view
+    from
+        jsonb_to_record(pc_json#>'{data}') as 
+        ja(ck_id text, 
+          ck_parent text, 
+          cr_type text, 
+          cv_name text, 
+          cn_order text, 
+          cl_menu text, 
+          cl_static text, 
+          cv_url text, 
+          ck_icon text, 
+          ck_view text, 
+          cn_action_view text, 
+          cn_action_edit text)
+    left join s_mt.t_page ta on
+        ja.ck_id = ta.ck_id
+    left join s_mt.t_page tpa on
+        tpa.ck_id = ta.ck_parent
+    left join s_mt.t_page_action tpea on
+        ta.ck_id = tpea.ck_page and tpea.cr_type = 'edit'
+    left join s_mt.t_page_action tpva on
+        ta.ck_id = tpva.ck_page and tpva.cr_type = 'view'
+  ) loop
+    vot_page.ck_id = rec.ck_id;
+    vot_page.ck_parent = rec.ck_parent;
+    vot_page.cr_type = (rec.cr_type)::bigint;
+    vot_page.cv_name = rec.cv_name;
+    vot_page.cn_order = (rec.cn_order)::bigint;
+    vot_page.cl_menu = (rec.cl_menu)::smallint;
+    vot_page.cl_static = (rec.cl_static)::smallint;
+    vot_page.cv_url = rec.cv_url;
+    vot_page.ck_icon = rec.ck_icon;
+    vot_page.ck_view = rec.ck_view;
+    vn_action_view = (rec.cn_action_view)::bigint;
+    vn_action_edit = (rec.cn_action_edit)::bigint;
+  end loop;
+  if nullif(trim(vot_page.cv_name), '') is not null 
+    and substr(vot_page.cv_name, 0, 5) = 'new:'
+    and length(vot_page.cv_name) > 4 then
+
+    vot_localization.ck_d_lang = nullif(trim(pc_json#>>'{data,g_sys_lang}'), '');
+    vot_localization.cr_namespace = 'meta';
+    vot_localization.cv_value = substr(vot_page.cv_name, 5);
+    vot_localization.ck_user = pv_user;
+    vot_localization.ct_change = CURRENT_TIMESTAMP;
+
+    vot_localization := pkg_localization.p_add_new_localization(vot_localization);
+
+    if nullif(gv_error::varchar, '') is not null then
+      return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}'; --ошибка прав доступа.
+    end if;
+
+    vot_page.cv_name := coalesce(vot_localization.ck_id, '');
+  end if;
+  vot_page.ck_user = pv_user;
+  vot_page.ct_change = CURRENT_TIMESTAMP;
+  vot_page := pkg_meta.p_modify_page(vv_action, vot_page, vn_action_view, vn_action_edit);
+  --проверяем и сохраняем данные
+  for vt_rec in (
+    select value as json from jsonb_array_elements(pc_json#>'{data,children}')
+  ) loop
+      perform pkg_meta.p_modify_page_all_object(vt_rec.json, vv_action, pv_user);
+  end loop;
+  --Логируем данные
+  perform pkg_log.p_save(pv_user, pk_session, pc_json, 'pkg_json_meta.f_modify_page_all', vot_page.ck_id, vv_action);
+  return '{"ck_id":"'|| coalesce(vot_page.ck_id, '') ||'","cv_error":' || pkg.p_form_response() || '}';
+end;
+$$;
+
+ALTER FUNCTION pkg_json_meta.f_modify_page_all(pv_user character varying, pv_session character varying, pc_json jsonb) OWNER TO s_mp;
