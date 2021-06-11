@@ -7,9 +7,9 @@ export type ExecutePostResponse<
     TContentType extends "application/json" = "application/json"
 > = TCode extends 200
     ? TContentType extends "application/json"
-        ? /**
-           * Add in queue
-           */
-          ResultSuccess | ResultFault
+      /**
+       * Add in queue
+       */
+        ? ResultSuccess | ResultFault
         : any
     : any;

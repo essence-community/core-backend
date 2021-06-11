@@ -5,7 +5,9 @@ import IContext, { IFormData } from "@ungate/plugininf/lib/IContext";
 import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
 import { parse } from "@ungate/plugininf/lib/parser/parser";
 import { IResultProvider } from "@ungate/plugininf/lib/IResult";
-import NullProvider from "@ungate/plugininf/lib/NullProvider";
+import NullProvider, {
+    IParamsProvider,
+} from "@ungate/plugininf/lib/NullProvider";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
 import {
     ReadStreamToArray,
@@ -62,7 +64,12 @@ const optionsRequest = [
 ];
 
 const validHeader = ["application/json", "application/xml", "text/"];
-
+export interface IRestEssenceProxyParams extends IParamsProvider {
+    defaultGateUrl: string;
+    proxy?: string;
+    timeout: string;
+    useGzip: boolean;
+}
 export default class RestTransformProxy extends NullProvider {
     public static getParamsInfo(): IParamsInfo {
         return {
@@ -230,14 +237,17 @@ export default class RestTransformProxy extends NullProvider {
                                     )
                                         ? JSON.parse(json)
                                         : {
-                                            response_data: json,
-                                        };
+                                              response_data: json,
+                                          };
                                     if (!Array.isArray(parseData)) {
                                         parseData = [parseData];
                                     }
                                     resolveArr(parseData);
                                 } catch (e) {
-                                    this.log.error(`Parse json error: \n ${json}`, e)
+                                    this.log.error(
+                                        `Parse json error: \n ${json}`,
+                                        e,
+                                    );
                                     reject(e);
                                 }
                             });
@@ -293,6 +303,13 @@ export default class RestTransformProxy extends NullProvider {
                                     );
                                 },
                             });
+                        });
+                    }
+                    if (config.includeHeaderOut) {
+                        config.includeHeaderOut.split(",").forEach((item) => {
+                            gateContext.extraHeaders[item] = rheaders[
+                                item
+                            ] as any;
                         });
                     }
                     return resolve({

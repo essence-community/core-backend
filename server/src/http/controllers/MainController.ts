@@ -250,17 +250,28 @@ class MainController {
         if (param.cv_password) {
             param.cv_password = "***";
         }
+
         if (gateContext.session) {
             gateContext.info(
                 `${gateContext.request.method}(${gateContext.actionName},${gateContext.queryName}` +
-                    `,${gateContext.providerName || ""},${JSON.stringify(
-                        param,
-                    )},${JSON.stringify(gateContext.session)})`,
+                    `,${gateContext.providerName || ""},${
+                        gateContext.isTraceEnabled()
+                            ? JSON.stringify(param)
+                            : ""
+                    },${
+                        gateContext.isTraceEnabled()
+                            ? JSON.stringify(gateContext.session)
+                            : gateContext.session.session.substr(0, 10)
+                    })`,
             );
         } else {
             gateContext.info(
                 `${gateContext.request.method}(${gateContext.actionName},${gateContext.queryName}` +
-                    `,${gateContext.providerName},${JSON.stringify(param)})`,
+                    `,${gateContext.providerName},${
+                        gateContext.isTraceEnabled()
+                            ? JSON.stringify(param)
+                            : ""
+                    })`,
             );
         }
     }
