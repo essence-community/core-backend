@@ -14,6 +14,7 @@ import * as url from "url";
 import { isEmpty } from "@ungate/plugininf/lib/util/Util";
 import * as QueryString from "query-string";
 import * as fs from 'fs';
+import { IParamsProvider } from '@ungate/plugininf/lib/NullProvider';
 
 const optionsRequest = [
     "url",
@@ -62,6 +63,15 @@ const optionsRequest = [
 
 const validHeader = ["application/json", "application/xml", "text/"];
 
+export interface IRestEssenceProxyParams extends IParamsProvider {
+    defaultGateUrl: string;
+    proxy?: string;
+    timeout: string;
+    useGzip: boolean;
+    includeHeaderIn?: string;
+    excludeHeaderOut?: string;
+}
+
 export default class RestEssenceProxy extends NullProvider {
     public static getParamsInfo(): IParamsInfo {
         return {
@@ -96,6 +106,8 @@ export default class RestEssenceProxy extends NullProvider {
         };
     }
 
+    public params: IRestEssenceProxyParams;
+
     public processSql(
         context: IContext,
         query: IGateQuery,
@@ -129,7 +141,7 @@ export default class RestEssenceProxy extends NullProvider {
             plugin: gateContext.pluginName.join(","),
             ...gateContext.params,
         };
-        const urlGate = url.parse(`${this.params.gateUrl}/${query.queryStr || query.modifyMethod}`.replace("//","/").replace(":/","://"), true) as any;
+        const urlGate = url.parse(`${this.params.defaultGateUrl}/${query.queryStr || query.modifyMethod}`.replace("//","/").replace(":/","://"), true) as any;
         urlGate.query = QueryString.parse(
             (gateContext.request as any)._parsedUrl.query,
         );
