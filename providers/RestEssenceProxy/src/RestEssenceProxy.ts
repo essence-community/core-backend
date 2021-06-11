@@ -121,12 +121,16 @@ export default class RestEssenceProxy extends NullProvider {
         };
 
         defaultHeader.forEach((item) => {
-            params.headers[item] = headers[item];
+            if (headers[item]) {
+                params.headers[item] = headers[item];
+            }
         });
 
         if (this.params.includeHeaderIn) {
             this.params.includeHeaderIn.split(",").forEach((item) => {
-                params.headers[item] = headers[item];
+                if (headers[item]) {
+                    params.headers[item] = headers[item];
+                }
             });
         }
         if (!isEmpty(gateContext.request.body)) {
@@ -270,7 +274,9 @@ export default class RestEssenceProxy extends NullProvider {
 
                 if (this.params.includeHeaderOut) {
                     this.params.includeHeaderOut.split(",").forEach((item) => {
-                        gateContext.extraHeaders[item] = rheaders[item] as any;
+                        if (rheaders[item]) {
+                            gateContext.extraHeaders[item] = rheaders[item] as any;
+                        }
                     });
                 }
                 return resolve({
