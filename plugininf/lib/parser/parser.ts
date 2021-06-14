@@ -78,6 +78,8 @@ const utils = {
     util,
     Object,
     Array,
+    encodeURIComponent,
+    decodeURIComponent,
 };
 
 function parseOperations(
