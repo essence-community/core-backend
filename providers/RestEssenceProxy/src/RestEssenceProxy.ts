@@ -7,6 +7,8 @@ import { IResultProvider } from "@ungate/plugininf/lib/IResult";
 import NullProvider, {
     IParamsProvider,
 } from "@ungate/plugininf/lib/NullProvider";
+import { Agent as HttpsAgent, AgentOptions } from "https";
+import { Agent as HttpAgent } from "http";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
 import { safeResponsePipe } from "@ungate/plugininf/lib/stream/Util";
 import * as axios from "axios";
@@ -26,6 +28,7 @@ export interface IRestEssenceProxyParams extends IParamsProvider {
     includeHeaderIn?: string;
     excludeHeaderOut?: string;
     includeHeaderOut?: string;
+    httpsAgent?: string;
 }
 
 export default class RestEssenceProxy extends NullProvider {
@@ -61,6 +64,10 @@ export default class RestEssenceProxy extends NullProvider {
             includeHeaderOut: {
                 name: "Пропускаемые header при запросе, через запятую",
                 type: "string",
+            },
+            httpsAgent: {
+                name: "Настройки https agent",
+                type: "long_string",
             },
             ...NullProvider.getParamsInfo(),
         };
@@ -205,6 +212,68 @@ export default class RestEssenceProxy extends NullProvider {
                       protocol: proxy.protocol,
                   };
         }
+        if (this.params.httpsAgent) {
+            params.httpsAgent = JSON.parse(this.params.httpsAgent);
+        }
+        if (params.httpsAgent) {
+            const httpsAgent: AgentOptions = (params.httpsAgent as string).startsWith(
+                "{",
+            )
+                ? JSON.parse(params.httpsAgent as string)
+                : params.httpsAgent;
+            if (
+                typeof httpsAgent.key === "string" &&
+                httpsAgent.key.indexOf("/") > -1 &&
+                fs.existsSync(httpsAgent.key)
+            ) {
+                httpsAgent.key = fs.readFileSync(httpsAgent.key);
+            }
+            if (
+                typeof httpsAgent.ca === "string" &&
+                httpsAgent.ca.indexOf("/") > -1 &&
+                fs.existsSync(httpsAgent.ca)
+            ) {
+                httpsAgent.ca = fs.readFileSync(httpsAgent.ca);
+            }
+            if (
+                typeof httpsAgent.cert === "string" &&
+                httpsAgent.cert.indexOf("/") > -1 &&
+                fs.existsSync(httpsAgent.cert)
+            ) {
+                httpsAgent.cert = fs.readFileSync(httpsAgent.cert);
+            }
+            if (
+                typeof httpsAgent.crl === "string" &&
+                httpsAgent.crl.indexOf("/") > -1 &&
+                fs.existsSync(httpsAgent.crl)
+            ) {
+                httpsAgent.crl = fs.readFileSync(httpsAgent.crl);
+            }
+            if (
+                typeof httpsAgent.dhparam === "string" &&
+                httpsAgent.dhparam.indexOf("/") > -1 &&
+                fs.existsSync(httpsAgent.dhparam)
+            ) {
+                httpsAgent.dhparam = fs.readFileSync(httpsAgent.dhparam);
+            }
+            if (
+                typeof httpsAgent.pfx === "string" &&
+                httpsAgent.pfx.indexOf("/") > -1 &&
+                fs.existsSync(httpsAgent.pfx)
+            ) {
+                httpsAgent.pfx = fs.readFileSync(httpsAgent.pfx);
+            }
+
+            params.httpsAgent = new HttpsAgent(httpsAgent);
+        }
+
+        if (params.httpAgent) {
+            const httpAgent = (params.httpAgent as string).startsWith("{")
+                ? JSON.parse(params.httpAgent as string)
+                : params.httpAgent;
+
+            params.httpAgent = new HttpAgent(httpAgent);
+        }
         if (this.log.isDebugEnabled()) {
             this.log.debug(
                 `proxy request params: ${JSON.stringify(params).substr(
@@ -275,7 +344,9 @@ export default class RestEssenceProxy extends NullProvider {
                 if (this.params.includeHeaderOut) {
                     this.params.includeHeaderOut.split(",").forEach((item) => {
                         if (rheaders[item]) {
-                            gateContext.extraHeaders[item] = rheaders[item] as any;
+                            gateContext.extraHeaders[item] = rheaders[
+                                item
+                            ] as any;
                         }
                     });
                 }

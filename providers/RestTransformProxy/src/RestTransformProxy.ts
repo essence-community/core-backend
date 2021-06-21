@@ -13,54 +13,33 @@ import {
     ReadStreamToArray,
     safeResponsePipe,
 } from "@ungate/plugininf/lib/stream/Util";
+import { Agent as HttpsAgent, AgentOptions } from "https";
+import { Agent as HttpAgent } from "http";
 import * as JSONStream from "JSONStream";
-import * as request from "request";
+import * as axios from "axios";
 import * as url from "url";
 import { isEmpty } from "@ungate/plugininf/lib/util/Util";
+import * as fs from "fs";
 
 const optionsRequest = [
     "url",
-    "baseUrl",
-    "jar",
-    "formData",
-    "form",
-    "auth",
-    "oauth",
-    "aws",
-    "hawk",
-    "qs",
-    "qsStringifyOptions",
-    "qsParseOptions",
-    "json",
-    "multipart",
-    "agent",
-    "agentOptions",
     "method",
-    "body",
-    "family",
-    "followRedirect",
-    "followAllRedirects",
-    "followOriginalHttpMethod",
-    "maxRedirects",
-    "removeRefererHeader",
-    "encoding",
+    "baseURL",
+    "headers",
+    "params",
+    "data",
     "timeout",
-    "localAddress",
-    "proxy",
-    "tunnel",
-    "strictSSL",
-    "rejectUnauthorized",
-    "time",
-    "gzip",
-    "preambleCRLF",
-    "postambleCRLF",
+    "timeoutErrorMessage",
     "withCredentials",
-    "key",
-    "cert",
-    "passphrase",
-    "ca",
-    "har",
-    "useQuerystring",
+    "adapter",
+    "auth",
+    "xsrfCookieName",
+    "xsrfHeaderName",
+    "maxContentLength",
+    "maxRedirects",
+    "httpAgent",
+    "httpsAgent",
+    "proxy",
 ];
 
 const validHeader = ["application/json", "application/xml", "text/"];
@@ -69,6 +48,7 @@ export interface IRestEssenceProxyParams extends IParamsProvider {
     proxy?: string;
     timeout: string;
     useGzip: boolean;
+    httpsAgent?: string;
 }
 export default class RestTransformProxy extends NullProvider {
     public static getParamsInfo(): IParamsInfo {
@@ -90,6 +70,10 @@ export default class RestTransformProxy extends NullProvider {
                 defaultValue: false,
                 name: "Использовать компрессию",
                 type: "boolean",
+            },
+            httpsAgent: {
+                name: "Настройки https agent",
+                type: "long_string",
             },
             ...NullProvider.getParamsInfo(),
         };
@@ -154,13 +138,13 @@ export default class RestTransformProxy extends NullProvider {
             config.url || this.params.defaultGateUrl,
             true,
         ) as any;
-        const params: request.OptionsWithUrl = {
-            gzip: !!this.params.useGzip,
-            method: gateContext.request.method.toUpperCase(),
+        const params: axios.AxiosRequestConfig = {
+            method: gateContext.request.method.toUpperCase() as axios.Method,
             timeout: this.params.timeout
                 ? parseInt(this.params.timeout, 10) * 1000
                 : 660000,
-            url: url.format(urlGate),
+            headers: {},
+            responseType: "stream",
         };
         optionsRequest.forEach((key) => {
             if (Object.prototype.hasOwnProperty.call(config, key)) {
@@ -177,7 +161,99 @@ export default class RestTransformProxy extends NullProvider {
         }
 
         if (this.params.proxy) {
-            params.proxy = this.params.proxy;
+            const proxy = this.params.proxy.startsWith("{")
+                ? JSON.parse(this.params.proxy)
+                : url.parse(this.params.proxy, true);
+            const proxyauth = proxy.auth.split(":");
+            params.proxy = this.params.proxy.startsWith("{")
+                ? proxy
+                : {
+                      host: proxy.host,
+                      port: parseInt(proxy.port, 10),
+                      auth: proxy.auth
+                          ? { username: proxyauth[0], password: proxyauth[1] }
+                          : undefined,
+                      protocol: proxy.protocol,
+                  };
+        }
+
+        if (typeof params.proxy === "string") {
+            const proxy = (params.proxy as string).startsWith("{")
+                ? JSON.parse(this.params.proxy)
+                : url.parse(params.proxy, true);
+            const proxyauth = proxy.auth.split(":");
+            params.proxy = (params.proxy as string).startsWith("{")
+                ? proxy
+                : {
+                      host: proxy.host,
+                      port: parseInt(proxy.port, 10),
+                      auth: proxy.auth
+                          ? { username: proxyauth[0], password: proxyauth[1] }
+                          : undefined,
+                      protocol: proxy.protocol,
+                  };
+        }
+        if (this.params.httpsAgent) {
+            params.httpsAgent = JSON.parse(this.params.httpsAgent);
+        }
+        if (params.httpsAgent) {
+            const httpsAgent: AgentOptions = (params.httpsAgent as string).startsWith(
+                "{",
+            )
+                ? JSON.parse(params.httpsAgent as string)
+                : params.httpsAgent;
+            if (
+                typeof httpsAgent.key === "string" &&
+                httpsAgent.key.indexOf("/") > -1 &&
+                fs.existsSync(httpsAgent.key)
+            ) {
+                httpsAgent.key = fs.readFileSync(httpsAgent.key);
+            }
+            if (
+                typeof httpsAgent.ca === "string" &&
+                httpsAgent.ca.indexOf("/") > -1 &&
+                fs.existsSync(httpsAgent.ca)
+            ) {
+                httpsAgent.ca = fs.readFileSync(httpsAgent.ca);
+            }
+            if (
+                typeof httpsAgent.cert === "string" &&
+                httpsAgent.cert.indexOf("/") > -1 &&
+                fs.existsSync(httpsAgent.cert)
+            ) {
+                httpsAgent.cert = fs.readFileSync(httpsAgent.cert);
+            }
+            if (
+                typeof httpsAgent.crl === "string" &&
+                httpsAgent.crl.indexOf("/") > -1 &&
+                fs.existsSync(httpsAgent.crl)
+            ) {
+                httpsAgent.crl = fs.readFileSync(httpsAgent.crl);
+            }
+            if (
+                typeof httpsAgent.dhparam === "string" &&
+                httpsAgent.dhparam.indexOf("/") > -1 &&
+                fs.existsSync(httpsAgent.dhparam)
+            ) {
+                httpsAgent.dhparam = fs.readFileSync(httpsAgent.dhparam);
+            }
+            if (
+                typeof httpsAgent.pfx === "string" &&
+                httpsAgent.pfx.indexOf("/") > -1 &&
+                fs.existsSync(httpsAgent.pfx)
+            ) {
+                httpsAgent.pfx = fs.readFileSync(httpsAgent.pfx);
+            }
+
+            params.httpsAgent = new HttpsAgent(httpsAgent);
+        }
+
+        if (params.httpAgent) {
+            const httpAgent = (params.httpAgent as string).startsWith("{")
+                ? JSON.parse(params.httpAgent as string)
+                : params.httpAgent;
+
+            params.httpAgent = new HttpAgent(httpAgent);
         }
         if (this.log.isDebugEnabled()) {
             this.log.debug(
@@ -187,160 +263,152 @@ export default class RestTransformProxy extends NullProvider {
                 )}`,
             );
         }
-        return new Promise((resolve, reject) => {
-            const resp = request(params);
-
-            resp.on("response", async (res) => {
-                const ctHeader =
-                    res.headers["content-type"] || "application/json";
-                const rheaders = {
-                    ...res.headers,
-                };
-                if (gateContext.isDebugEnabled()) {
-                    gateContext.debug(
-                        `Response proxy headers: ${JSON.stringify(
-                            res.headers,
-                        )}`,
-                    );
-                }
-                if (validHeader.find((key) => ctHeader.startsWith(key))) {
-                    let arr = [];
-                    resp.on("error", (err) => {
-                        if (err) {
-                            gateContext.error(
-                                `Error query ${gateContext.queryName}`,
-                                err,
-                            );
-                            reject(
-                                new ErrorException(
-                                    -1,
-                                    "Ошибка вызова внешнего сервиса",
-                                ),
-                            );
-                        }
-                        return undefined;
-                    });
-                    if (
-                        isEmpty(config.resultPath) ||
-                        config.resultPath === "" ||
-                        !ctHeader.startsWith("application/json")
-                    ) {
-                        arr = await new Promise<any[]>((resolveArr) => {
-                            let json = "";
-                            res.on("data", (data) => {
-                                json += data;
-                            });
-                            res.on("end", () => {
-                                try {
-                                    let parseData = ctHeader.startsWith(
-                                        "application/json",
-                                    )
-                                        ? JSON.parse(json)
-                                        : {
-                                              response_data: json,
-                                          };
-                                    if (!Array.isArray(parseData)) {
-                                        parseData = [parseData];
-                                    }
-                                    resolveArr(parseData);
-                                } catch (e) {
-                                    this.log.error(
-                                        `Parse json error: \n ${json}`,
-                                        e,
-                                    );
-                                    reject(e);
-                                }
-                            });
-                        });
-                    } else if (ctHeader.startsWith("application/json")) {
-                        const stream = JSONStream.parse(
-                            config.resultPath || "*",
-                        );
-
-                        resp.pipe(stream);
-
-                        arr = await ReadStreamToArray(stream as any);
-                    }
-
-                    let result = arr;
-
-                    if (config.resultParse) {
-                        const responseParam = {
-                            ...param,
-                            jt_response_header: res.headers,
-                            jt_result: arr,
-                        };
-                        const parserResult = parse(config.resultParse);
-
-                        result = parserResult.runer({
-                            get: (key: string, isKeyEmpty: boolean) => {
-                                return (
-                                    responseParam[key] ||
-                                    (isKeyEmpty ? "" : key)
-                                );
-                            },
-                        }) as any;
-                        if (!Array.isArray(result)) {
-                            result = [result];
-                        }
-                    }
-                    if (config.resultRowParse && Array.isArray(result)) {
-                        const parserRowResult = parse(config.resultRowParse);
-                        const responseParam = {
-                            ...param,
-                            jt_response_header: res.headers,
-                            jt_result: result,
-                        };
-                        result = result.map((item) => {
-                            const rowParam = {
-                                ...responseParam,
-                                jt_result_row: item,
-                            };
-                            return parserRowResult.runer({
-                                get: (key: string, isKeyEmpty: boolean) => {
-                                    return (
-                                        rowParam[key] || (isKeyEmpty ? "" : key)
-                                    );
-                                },
-                            });
-                        });
-                    }
-                    if (config.includeHeaderOut) {
-                        config.includeHeaderOut.split(",").forEach((item) => {
-                            gateContext.extraHeaders[item] = rheaders[
-                                item
-                            ] as any;
-                        });
-                    }
-                    return resolve({
-                        stream: ResultStream(result),
-                    });
-                }
-                delete rheaders.date;
-                delete rheaders.host;
-                if (config.excludeHeader) {
-                    config.excludeHeader.forEach((item) => {
-                        delete rheaders[item];
-                    });
-                }
-                gateContext.response.writeHead(res.statusCode, rheaders);
-                resp.on("end", () => reject(new BreakException("break")));
-                resp.on("error", (err) => {
+        return new Promise(async (resolve, reject) => {
+            const response = await axios.default.request(params);
+            const ctHeader =
+                response.headers["content-type"] || "application/json";
+            const rheaders = {
+                ...response.headers,
+            };
+            if (gateContext.isDebugEnabled()) {
+                gateContext.debug(
+                    `Response proxy headers: ${JSON.stringify(
+                        response.headers,
+                    )}`,
+                );
+            }
+            if (validHeader.find((key) => ctHeader.startsWith(key))) {
+                let arr = [];
+                response.data.on("error", (err) => {
                     if (err) {
                         gateContext.error(
                             `Error query ${gateContext.queryName}`,
                             err,
                         );
-                        return reject(
+                        reject(
                             new ErrorException(
                                 -1,
                                 "Ошибка вызова внешнего сервиса",
                             ),
                         );
                     }
+                    return undefined;
                 });
-                safeResponsePipe(resp as any, gateContext.response);
+                if (
+                    isEmpty(config.resultPath) ||
+                    config.resultPath === "" ||
+                    !ctHeader.startsWith("application/json")
+                ) {
+                    arr = await new Promise<any[]>((resolveArr) => {
+                        let json = "";
+                        response.data.on("data", (data) => {
+                            json += data;
+                        });
+                        response.data.on("end", () => {
+                            try {
+                                let parseData = ctHeader.startsWith(
+                                    "application/json",
+                                )
+                                    ? isEmpty(json)
+                                        ? []
+                                        : JSON.parse(json)
+                                    : {
+                                          response_data: json,
+                                      };
+                                if (!Array.isArray(parseData)) {
+                                    parseData = [parseData];
+                                }
+                                resolveArr(parseData);
+                            } catch (e) {
+                                this.log.error(
+                                    `Parse json error: \n ${json}`,
+                                    e,
+                                );
+                                reject(e);
+                            }
+                        });
+                    });
+                } else if (ctHeader.startsWith("application/json")) {
+                    const stream = JSONStream.parse(config.resultPath || "*");
+
+                    response.data.pipe(stream);
+
+                    arr = await ReadStreamToArray(stream as any);
+                }
+
+                let result = arr;
+
+                if (config.resultParse) {
+                    const responseParam = {
+                        ...param,
+                        jt_response_header: response.headers,
+                        jt_result: arr,
+                    };
+                    const parserResult = parse(config.resultParse);
+
+                    result = parserResult.runer({
+                        get: (key: string, isKeyEmpty: boolean) => {
+                            return (
+                                responseParam[key] || (isKeyEmpty ? "" : key)
+                            );
+                        },
+                    }) as any;
+                    if (!Array.isArray(result)) {
+                        result = [result];
+                    }
+                }
+                if (config.resultRowParse && Array.isArray(result)) {
+                    const parserRowResult = parse(config.resultRowParse);
+                    const responseParam = {
+                        ...param,
+                        jt_response_header: response.headers,
+                        jt_result: result,
+                    };
+                    result = result.map((item) => {
+                        const rowParam = {
+                            ...responseParam,
+                            jt_result_row: item,
+                        };
+                        return parserRowResult.runer({
+                            get: (key: string, isKeyEmpty: boolean) => {
+                                return rowParam[key] || (isKeyEmpty ? "" : key);
+                            },
+                        });
+                    });
+                }
+                if (config.includeHeaderOut) {
+                    config.includeHeaderOut.split(",").forEach((item) => {
+                        gateContext.extraHeaders[item] = rheaders[item] as any;
+                    });
+                }
+                return resolve({
+                    stream: ResultStream(result),
+                });
+            }
+            delete rheaders.date;
+            delete rheaders.host;
+            if (config.excludeHeader) {
+                config.excludeHeader.forEach((item) => {
+                    delete rheaders[item];
+                });
+            }
+            gateContext.response.writeHead(response.status, rheaders);
+            response.data.on("end", () => reject(new BreakException("break")));
+            response.data.on("error", (err) => {
+                if (err) {
+                    gateContext.error(
+                        `Error query ${gateContext.queryName}`,
+                        err,
+                    );
+                    return reject(
+                        new ErrorException(
+                            -1,
+                            "Ошибка вызова внешнего сервиса",
+                        ),
+                    );
+                }
             });
+            safeResponsePipe(response.data as any, gateContext.response);
         });
     }
 }
