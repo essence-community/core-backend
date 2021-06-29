@@ -7,12 +7,18 @@ import IQuery, { IGateQuery } from "@ungate/plugininf/lib/IQuery";
 import { IResultProvider } from "@ungate/plugininf/lib/IResult";
 import IOracleController from "./IOracleController";
 import { IParamOracle } from "./OracleDb.types";
+import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
 
 export default class Oracle implements IOracleController {
     public dataSource: OracleDB;
     public params: IParamOracle;
     public name: string;
-    constructor(name: string, params: IParamOracle, dataSource: OracleDB) {
+    constructor(
+        name: string,
+        params: IParamOracle,
+        dataSource: OracleDB,
+        private authController: IAuthController,
+    ) {
         this.name = name;
         this.params = params;
         this.dataSource = dataSource;

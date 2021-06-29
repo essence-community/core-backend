@@ -9,6 +9,7 @@ import IGlobalObject from "@ungate/plugininf/lib/IGlobalObject";
 import NullContext from "@ungate/plugininf/lib/NullContext";
 import { initParams } from "@ungate/plugininf/lib/util/Util";
 import { noop } from "lodash";
+import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
 const createTempTable = ((global as any) as IGlobalObject).createTempTable;
 
 const querySql = "select q.* from t_interface q";
@@ -18,7 +19,6 @@ const queryFindSql =
 export default class CoreIntegration extends NullContext {
     public static getParamsInfo(): IParamsInfo {
         return {
-            ...NullContext.getParamsInfo(),
             ...PostgresDB.getParamsInfo(),
             disableCache: {
                 defaultValue: false,
@@ -30,8 +30,12 @@ export default class CoreIntegration extends NullContext {
     private dbQuery: ILocalDB;
     private dataSource: PostgresDB;
     private caller: any;
-    constructor(name: string, params: ICCTParams) {
-        super(name, params);
+    constructor(
+        name: string,
+        params: ICCTParams,
+        authController: IAuthController,
+    ) {
+        super(name, params, authController);
         this.params = initParams(CoreIntegration.getParamsInfo(), params);
         if (this.params.disableCache) {
             this.caller = this.onlineInitContext;
@@ -245,7 +249,7 @@ export default class CoreIntegration extends NullContext {
     private checkAccess(gateContext: IContext, cnAction: number) {
         if (
             gateContext.session &&
-            gateContext.session.data.ca_actions.includes(cnAction)
+            gateContext.session.userData.ca_actions.includes(cnAction)
         ) {
             return true;
         }

@@ -12,18 +12,22 @@ import * as cors from "cors";
 import * as http from "http";
 import { noop } from "lodash";
 import * as Router from "router";
+import * as expressSession from "express-session";
 import Constants from "../core/Constants";
 import PluginManager from "../core/pluginmanager/PluginManager";
 import IContextConfig from "../core/property/IContextConfig";
 import Property from "../core/property/Property";
 import RequestContext from "../core/request/RequestContext";
-import GateSession from "../core/session/GateSession";
 import BodyParse from "./BodyParse";
-import GlobalController from "./controllers/GlobalController";
 import MainController from "./controllers/MainController";
 import NotificationController from "./controllers/NotificationController";
 import ProcessController from "./controllers/ProcessController";
 import ResultController from "./controllers/ResultController";
+import { initParams } from "@ungate/plugininf/lib/util/Util";
+import NullContext from "@ungate/plugininf/lib/NullContext";
+import { IContextParams } from "@ungate/plugininf/lib/IContextPlugin";
+import { NeDbSessionStore } from "../core/session/store/NeDbSessionStore";
+import { GateSession } from "../core/session/GateSession";
 const log = Logger.getLogger("HttpServer");
 
 class HttpServer {
@@ -37,31 +41,45 @@ class HttpServer {
         this.route.use(compression());
         const contextDb = await Property.getContext();
         const contexts = await contextDb.find({});
-        contexts.forEach((obj) => {
-            const doc = obj as IContextConfig;
-            const gateContext = PluginManager.getGateContext(doc.ck_id);
-            const route = Router({
-                mergeParams: true,
-            });
-            this.route.use(doc.cv_path, route);
-            route.use(BodyParse(gateContext));
-            if (gateContext.params.enableCors) {
-                route.use(cors(gateContext.params.cors));
-            }
-            route.all("/", (req, res) => {
-                MainController.execute(
-                    new RequestContext(req as IRequest, res, gateContext),
-                ).then(noop, (err) => log.trace(err));
-            });
-        });
+        await Promise.all(
+            contexts.map(async (obj) => {
+                const doc = obj as IContextConfig;
+                const gateContext = PluginManager.getGateContext(doc.ck_id);
+                const params: IContextParams = initParams(
+                    NullContext.getParamsInfo(),
+                    gateContext.params,
+                );
+                const route = Router({
+                    mergeParams: true,
+                });
+                this.route.use(doc.cv_path, route);
+                const sessionConf = {
+                    name: "essence.sid",
+                    ...(params.paramSession || {}),
+                    store: (gateContext.authController as GateSession).store,
+                    secret: GateSession.sha1(
+                        `${gateContext.name}_${Constants.SESSION_SECRET}`,
+                    ),
+                };
+                sessionConf.cookie.maxAge *= 1000;
+                route.use(expressSession(sessionConf as any));
+                route.use(BodyParse(gateContext));
+                if (params.enableCors) {
+                    route.use(cors(params.cors));
+                }
+                route.all("/", (req, res) => {
+                    MainController.execute(
+                        new RequestContext(req as IRequest, res, gateContext),
+                    ).then(noop, (err) => log.trace(err));
+                });
+            }),
+        );
     }
 
     /**
      * Запуск сервера
      */
     public async start(): Promise<any> {
-        await GateSession.init();
-        GlobalController();
         await PluginManager.initGate();
         await this.initRoute();
         await MainController.init();

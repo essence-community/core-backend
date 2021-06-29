@@ -75,7 +75,6 @@ export default class RestTransformProxy extends NullProvider {
                 name: "Настройки https agent",
                 type: "long_string",
             },
-            ...NullProvider.getParamsInfo(),
         };
     }
 

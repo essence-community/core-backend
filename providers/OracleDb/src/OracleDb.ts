@@ -13,13 +13,13 @@ import IOracleController from "./IOracleController";
 import OldOracle from "./OldOracle";
 import Oracle from "./Oracle";
 import { IParamOracle } from "./OracleDb.types";
+import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
 
 export default class OracleDBPlugin extends NullProvider {
     /* tslint:disable:object-literal-sort-keys */
     public static getParamsInfo(): IParamsInfo {
         return {
             ...OracleDB.getParamsInfo(),
-            ...NullProvider.getParamsInfo(),
             preExecuteSql: {
                 name: "Запрос вызываемый перед",
                 type: "long_string",
@@ -49,8 +49,12 @@ export default class OracleDBPlugin extends NullProvider {
     public params: IParamOracle;
     public dataSource: OracleDB;
     private controller: IOracleController;
-    constructor(name: string, params: ICCTParams) {
-        super(name, params);
+    constructor(
+        name: string,
+        params: ICCTParams,
+        authController: IAuthController,
+    ) {
+        super(name, params, authController);
         this.params = {
             ...this.params,
             ...initParams(OracleDBPlugin.getParamsInfo(), params),
@@ -72,18 +76,21 @@ export default class OracleDBPlugin extends NullProvider {
                 this.name,
                 this.params,
                 this.dataSource,
+                this.authController,
             );
         } else if (params.old) {
             this.controller = new OldOracle(
                 this.name,
                 this.params,
                 this.dataSource,
+                this.authController,
             );
         } else {
             this.controller = new Oracle(
                 this.name,
                 this.params,
                 this.dataSource,
+                this.authController,
             );
         }
         if (!isEmpty(this.params.preExecuteSql)) {

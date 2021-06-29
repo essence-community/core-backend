@@ -1,7 +1,7 @@
 import { IRufusLogger } from "rufus";
 import BreakException from "./errors/BreakException";
 import ErrorException from "./errors/ErrorException";
-import ICCTParams from "./ICCTParams";
+import ICCTParams, { IParamsInfo } from "./ICCTParams";
 import IContext from "./IContext";
 import IObjectParam from "./IObjectParam";
 import IPlugin, { IPluginRequestContext } from "./IPlugin";
@@ -13,6 +13,9 @@ export default abstract class NullPlugin implements IPlugin {
     public name: string;
     public params: ICCTParams;
     public logger: IRufusLogger;
+    public static getParamsInfo(): IParamsInfo {
+        return {};
+    }
     constructor(name: string, params: ICCTParams) {
         this.name = name;
         this.params = params;

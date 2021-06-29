@@ -1,4 +1,5 @@
 import IObjectParam from "./IObjectParam";
+import { SessionData } from "express-session";
 
 /**
  * Created by artemov_i on 04.12.2018.
@@ -6,9 +7,9 @@ import IObjectParam from "./IObjectParam";
 
 export default interface ISession {
     session: string;
-    ck_id: string;
-    ck_d_provider: string;
-    data: IUserData;
+    idUser: string;
+    nameProvider: string;
+    userData: IUserData;
 }
 
 export interface IUserData {
@@ -18,4 +19,8 @@ export interface IUserData {
     ck_dept?: any;
     cv_timezone: any;
     [key: string]: any;
+}
+
+export interface ISessionData extends SessionData {
+    gsession?: ISession;
 }

@@ -18,6 +18,7 @@ import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
 import * as ActiveDirectory from "activedirectory";
 import { X509 } from "jsrsasign";
 import { isObject, uniq } from "lodash";
+import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
 
 const Property = ((global as any) as IGlobalObject).property;
 const BASIC_PATTERN = "Basic";
@@ -76,8 +77,12 @@ export default class PKOAuth extends NullAuthProvider {
     private mapUserAttr: IObjectParam = {};
     private mapGroupActions: IObjectParam = {};
     private listDefaultActions: number[] = [];
-    constructor(name: string, params: ICCTParams) {
-        super(name, params);
+    constructor(
+        name: string,
+        params: ICCTParams,
+        authController: IAuthController,
+    ) {
+        super(name, params, authController);
         this.params = {
             ...this.params,
             ...initParams(PKOAuth.getParamsInfo(), params),
@@ -210,18 +215,18 @@ export default class PKOAuth extends NullAuthProvider {
                     },
                 );
             }).then((user: IObjectParam) => ({
-                ck_user: user.ck_id,
-                data: user,
+                idUser: user.ck_id,
+                dataUser: user,
             }));
         }
         return {
-            ck_user: arr[0].ck_id,
-            data: arr[0],
+            idUser: arr[0].ck_id,
+            dataUser: arr[0],
         };
     }
     public async init(reload?: boolean): Promise<void> {
         if (!this.dbUsers) {
-            this.dbUsers = await Property.getUsers();
+            this.dbUsers = this.authController.getUserDb();
         }
         await this.dataSource.createPool();
         const users = {};
@@ -451,9 +456,8 @@ export default class PKOAuth extends NullAuthProvider {
                         return resolve(data);
                     }
                     const session = await this.authController.loadSession(
-                        null,
+                        gateContext,
                         userData.ck_id || user.objectSID,
-                        this.name,
                     );
                     if (session) {
                         return resolve(session);

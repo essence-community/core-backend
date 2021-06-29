@@ -2,6 +2,7 @@
  * Created by artemov_i on 04.12.2018.
  */
 import Connection from "./db/Connection";
+import { IAuthController } from "./IAuthController";
 import ICCTParams from "./ICCTParams";
 import IContext, { TAction } from "./IContext";
 import IQuery, { IGateQuery } from "./IQuery";
@@ -31,7 +32,7 @@ export interface IContextParams extends ICCTParams {
     maxPostSize: number;
     lvl_logger: string;
     cors?: {
-        origin: string | RegExp | boolean | (string | RegExp)[];
+        origin: string | RegExp | boolean | Array<string | RegExp>;
         methods?: string | string[];
         allowedHeaders?: string | string[];
         exposedHeaders?: string | string[];
@@ -39,6 +40,35 @@ export interface IContextParams extends ICCTParams {
         maxAge?: number;
         preflightContinue?: boolean;
         optionsSuccessStatus?: number;
+    };
+    paramSession?: {
+        name?: string;
+        proxy?: boolean;
+        resave: boolean;
+        rolling: boolean;
+        saveUninitialized: boolean;
+        secret: string;
+        unset: "keep" | "destroy";
+        typeStore: "nedb" | "typeorm";
+        typeorm: {
+            type: string;
+            name: string;
+            host: string;
+            port: number;
+            username: string;
+            password: string;
+            database: string;
+            typeOrmExtra: string;
+        };
+        cookie: {
+            secure: boolean;
+            sameSite?: boolean | "lax" | "none" | "strict";
+            path: string;
+            maxAge: number;
+            httpOnly: boolean;
+            expires?: string;
+            domain?: string;
+        };
     };
 }
 
@@ -49,6 +79,7 @@ export default interface IContextPlugin {
     maxLogParamLen: number;
     attachmentType: string;
     params: IContextParams;
+    authController: IAuthController;
     init(reload?: boolean): Promise<void>;
     initContext(gateContext: IContext): Promise<IContextPluginResult>;
     checkQueryAccess(

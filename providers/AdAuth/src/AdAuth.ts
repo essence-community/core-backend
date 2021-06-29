@@ -12,6 +12,7 @@ import NullAuthProvider, {
 import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
 import * as ActiveDirectory from "activedirectory";
 import { uniq } from "lodash";
+import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
 
 const BASIC_PATTERN = "Basic";
 const PASSWORD_PATTERN_NGINX_GSS = "bogus_auth_gss_passwd";
@@ -68,8 +69,12 @@ export default class AdAuth extends NullAuthProvider {
     private mapUserAttr: IObjectParam = {};
     private mapGroupActions: IObjectParam = {};
     private listDefaultActions: number[] = [];
-    constructor(name: string, params: ICCTParams) {
-        super(name, params);
+    constructor(
+        name: string,
+        params: ICCTParams,
+        authController: IAuthController,
+    ) {
+        super(name, params, authController);
         this.params = {
             ...this.params,
             ...initParams(AdAuth.getParamsInfo(), params),
@@ -147,7 +152,7 @@ export default class AdAuth extends NullAuthProvider {
                     this.log.trace(
                         `Найдена прокси авторизация nginx_gss Basic ${username}`,
                     );
-                    this.initSession(resolve, reject, username);
+                    this.initSession(gateContext, resolve, reject, username);
                     return;
                 }
                 this.ad.authenticate(username, password, (err, isAuth) => {
@@ -158,7 +163,7 @@ export default class AdAuth extends NullAuthProvider {
                         resolve(session);
                         return;
                     }
-                    this.initSession(resolve, reject, username);
+                    this.initSession(gateContext, resolve, reject, username);
                 });
             });
         }
@@ -187,6 +192,7 @@ export default class AdAuth extends NullAuthProvider {
                         return;
                     }
                     this.initSession(
+                        context,
                         resolve,
                         reject,
                         query.inParams.cv_login,
@@ -195,8 +201,8 @@ export default class AdAuth extends NullAuthProvider {
                 },
             );
         }).then((user: IObjectParam) => ({
-            ck_user: user.ck_id,
-            data: user,
+            idUser: user.ck_id,
+            dataUser: user,
         }));
     }
     /**
@@ -282,6 +288,7 @@ export default class AdAuth extends NullAuthProvider {
         return res;
     }
     private initSession(
+        context: IContext,
         resolve: any,
         reject: any,
         username: string,
@@ -340,9 +347,8 @@ export default class AdAuth extends NullAuthProvider {
                         return resolve(data);
                     }
                     const session = await this.authController.loadSession(
-                        null,
+                        context,
                         userData.ck_id || user.objectSID,
-                        this.name,
                     );
                     if (session) {
                         return resolve(session);

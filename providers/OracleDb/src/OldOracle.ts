@@ -8,6 +8,7 @@ import { IResultProvider } from "@ungate/plugininf/lib/IResult";
 import { noop } from "lodash";
 import IOracleController from "./IOracleController";
 import { IParamOracle } from "./OracleDb.types";
+import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
 const wsQuerySQL =
     "select vl_query, kd_type, pr_auth from report.wd_sqlstore where upper(nm_query) = upper(:nm_query)";
 
@@ -15,7 +16,12 @@ export default class OldOracle implements IOracleController {
     public dataSource: OracleDB;
     public params: IParamOracle;
     public name: string;
-    constructor(name: string, params: IParamOracle, dataSource: OracleDB) {
+    constructor(
+        name: string,
+        params: IParamOracle,
+        dataSource: OracleDB,
+        private authController: IAuthController,
+    ) {
         this.name = name;
         this.params = params;
         this.dataSource = dataSource;

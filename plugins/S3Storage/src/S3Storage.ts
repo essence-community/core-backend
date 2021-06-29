@@ -13,7 +13,7 @@ import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
 import * as AWS from "aws-sdk";
 import * as fs from "fs";
 import { forEach, isObject } from "lodash";
-import { uuid as uuidv4 } from "uuidv4";
+import { v4 as uuidv4 } from "uuid";
 
 export default class S3Storage extends NullPlugin {
     public static getParamsInfo(): IParamsInfo {
@@ -149,10 +149,10 @@ export default class S3Storage extends NullPlugin {
                                     this.params.cvDir,
                             )
                                 ? json.data.cv_file_guid
-                                : `${json.data[this.params.cvDirColumn] ||
-                                      this.params.cvDir}/${
-                                      json.data.cv_file_guid
-                                  }`,
+                                : `${
+                                      json.data[this.params.cvDirColumn] ||
+                                      this.params.cvDir
+                                  }/${json.data.cv_file_guid}`,
                         },
                         (err) => {
                             if (err) {
@@ -182,8 +182,10 @@ export default class S3Storage extends NullPlugin {
                                 this.params.cvDir,
                         )
                             ? json.data.cv_file_guid
-                            : `${json.data[this.params.cvDirColumn] ||
-                                  this.params.cvDir}/${json.data.cv_file_guid}`,
+                            : `${
+                                  json.data[this.params.cvDirColumn] ||
+                                  this.params.cvDir
+                              }/${json.data.cv_file_guid}`,
                     },
                     (err, response) => {
                         if (err) {
@@ -231,8 +233,10 @@ export default class S3Storage extends NullPlugin {
                             row[this.params.cvDirColumn] || this.params.cvDir,
                         )
                             ? row.cv_file_guid
-                            : `${row[this.params.cvDirColumn] ||
-                                  this.params.cvDir}/${row.cv_file_guid}`,
+                            : `${
+                                  row[this.params.cvDirColumn] ||
+                                  this.params.cvDir
+                              }/${row.cv_file_guid}`,
                     },
                     (err, response) => {
                         if (err) {
@@ -275,8 +279,10 @@ export default class S3Storage extends NullPlugin {
                         json.data[this.params.cvDirColumn] || this.params.cvDir,
                     )
                         ? cvFileUuid
-                        : `${json.data[this.params.cvDirColumn] ||
-                              this.params.cvDir}/${cvFileUuid}`,
+                        : `${
+                              json.data[this.params.cvDirColumn] ||
+                              this.params.cvDir
+                          }/${cvFileUuid}`,
                     ...(this.params.clReadPublic
                         ? {
                               ACL: "public-read",
@@ -319,12 +325,12 @@ export default class S3Storage extends NullPlugin {
                                                     ] || this.params.cvDir,
                                                 )
                                                     ? cvFileUuid
-                                                    : `${json.data[
-                                                          this.params
-                                                              .cvDirColumn
-                                                      ] ||
-                                                          this.params
-                                                              .cvDir}/${cvFileUuid}`,
+                                                    : `${
+                                                          json.data[
+                                                              this.params
+                                                                  .cvDirColumn
+                                                          ] || this.params.cvDir
+                                                      }/${cvFileUuid}`,
                                             },
                                             (errDelete) => {
                                                 if (errDelete) {

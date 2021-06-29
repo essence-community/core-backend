@@ -4,41 +4,85 @@ import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
 import IObjectParam from "@ungate/plugininf/lib/IObjectParam";
 import ISession from "@ungate/plugininf/lib/ISession";
 import Logger from "@ungate/plugininf/lib/Logger";
-import { dateBetween } from "@ungate/plugininf/lib/util/Util";
 import * as crypto from "crypto";
-import { isArray } from "lodash";
-import * as moment from "moment";
-import { uuid as uuidv4 } from "uuidv4";
+import { v4 as uuidv4 } from "uuid";
 import Constants from "../Constants";
 import Property from "../property/Property";
+import { IContextParams } from "@ungate/plugininf/lib/IContextPlugin";
+import { NeDbSessionStore } from "./store/NeDbSessionStore";
+import IContext from "@ungate/plugininf/lib/IContext";
+import { IRufusLogger } from "rufus";
+import NotificationController from "../../http/controllers/NotificationController";
+import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
+import { ISessionStore } from "./store/Store.types";
+import { ISessionData } from "@ungate/plugininf/lib/ISession";
+import { initParams } from "@ungate/plugininf/lib/util/Util";
+import NullContext from "@ungate/plugininf/lib/NullContext";
 
-const logger = Logger.getLogger("GateSession");
-
-class GateSession {
+export class GateSession implements IAuthController {
     private dbUsers: ILocalDB;
-    private dbSession: ILocalDB;
+    public store: ISessionStore;
     private dbCache: ILocalDB;
+    private logger: IRufusLogger;
+    public updateUserInfo: () => void;
+    private params: IContextParams;
+
+    constructor(
+        private name: string,
+        params: IContextParams,
+        private secret: string,
+    ) {
+        this.params = initParams(NullContext.getParamsInfo(), params);
+        this.logger = Logger.getLogger(`GateSession_${name}`);
+        this.updateUserInfo = NotificationController.updateUserInfo.bind(
+            NotificationController,
+        );
+    }
 
     public async init() {
-        this.dbUsers = await Property.getUsers();
-        this.dbSession = await Property.getSessions();
-        this.dbCache = await Property.getCache();
+        this.logger.debug(
+            "Start Init AuthController %s params %j",
+            this.name,
+            this.params,
+        );
+        this.dbUsers = await Property.getUsers(this.name);
+        this.store =
+            this.params.paramSession.typeStore === "nedb"
+                ? new NeDbSessionStore({
+                      nameContext: this.name,
+                      ttl: this.params.paramSession.cookie.maxAge,
+                  })
+                : new NeDbSessionStore({
+                      nameContext: this.name,
+                      ttl: this.params.paramSession.cookie.maxAge,
+                  });
+        await this.store.init();
+        this.dbCache = await Property.getCache(this.name);
+        this.logger.info("Inited AuthController %s", this.name);
     }
 
-    public sha1(buf): Promise<string> {
-        return new Promise((resolve) => {
-            const shasum = crypto.createHash("sha1");
-            shasum.update(buf);
-            return resolve(shasum.digest("hex"));
-        });
+    public sha1(buf): string {
+        const shasum = crypto.createHash("sha1");
+        shasum.update(buf);
+        return shasum.digest("hex");
     }
 
-    public sha256(buf): Promise<string> {
-        return new Promise((resolve) => {
-            const shasum = crypto.createHash("sha256");
-            shasum.update(buf);
-            return resolve(shasum.digest("hex"));
-        });
+    public static sha1(buf): string {
+        const shasum = crypto.createHash("sha1");
+        shasum.update(buf);
+        return shasum.digest("hex");
+    }
+
+    public sha256(buf): string {
+        const shasum = crypto.createHash("sha256");
+        shasum.update(buf);
+        return shasum.digest("hex");
+    }
+
+    public static sha256(buf): string {
+        const shasum = crypto.createHash("sha256");
+        shasum.update(buf);
+        return shasum.digest("hex");
     }
 
     /**
@@ -49,6 +93,7 @@ class GateSession {
      * @param sessionDuration время жизни сессии в минутах
      */
     public createSession(
+        context: IContext,
         idUser: string,
         nameProvider: string,
         data: IObjectParam,
@@ -58,108 +103,98 @@ class GateSession {
             idUser = uuidv4();
             idUser = idUser.replace(/-/g, "");
         }
-        return this.generateIdSession(idUser).then((sessionId) => {
-            const param: IObjectParam = {};
-            const now = new Date();
-            param.ck_id = sessionId;
-            param.ck_user = idUser;
-            param.ck_d_provider = nameProvider;
-            param.cd_create = now;
-            param.cn_session_duration = sessionDuration;
-            param.cd_expire = new Date(now.getTime() + sessionDuration * 60000);
-            param.data = data;
-            return this.dbSession.insert(param).then(async () => ({
-                ...data,
-                session: sessionId,
-            }));
+        var signed = "s:" + this.sign(context.request.session.id, this.secret);
+
+        context.request.session.gsession = {
+            nameProvider,
+            idUser,
+            userData: data as any,
+            session: signed,
+        };
+        context.request.session.cookie.originalMaxAge = sessionDuration * 60000;
+        context.request.session.cookie.maxAge = sessionDuration * 60000;
+        context.request.session.cookie.expires = new Date(
+            Date.now() + sessionDuration * 6000,
+        );
+        return new Promise((resolve, reject) => {
+            context.request.session.save((err) => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve({
+                    ...data,
+                    session: signed,
+                });
+            });
         });
     }
 
-    public loadSession(
-        sessionId: string,
-        idUser?: string,
-        nameProvider?: string,
+    public async loadSession(
+        context?: IContext,
+        sessionId?: string,
     ): Promise<ISession | null> {
         const now = new Date();
 
-        if (sessionId || (idUser && nameProvider)) {
-            return this.dbSession
-                .findOne(
-                    {
-                        $and: [
-                            ...(sessionId
-                                ? [{ ck_id: sessionId }]
-                                : [
-                                      { ck_user: idUser },
-                                      { ck_d_provider: nameProvider },
-                                  ]),
-                            {
-                                cd_expire: {
-                                    $gte: now,
-                                },
-                            },
-                        ],
-                    },
-                    true,
-                )
-                .then((doc) => {
-                    if (doc) {
-                        const cdExpire = moment(doc.cd_expire);
-                        if (cdExpire.isBefore(now)) {
-                            return Promise.reject(
-                                new ErrorException(ErrorGate.REQUIRED_AUTH),
-                            );
-                        }
-                        if (
-                            dateBetween(
-                                now,
-                                new Date(
-                                    cdExpire.toDate().getTime() -
-                                        (doc.cn_session_duration || 60) *
-                                            60000 *
-                                            0.2,
-                                ),
-                                cdExpire.toDate(),
-                            )
-                        ) {
-                            this.renewSession(
-                                doc.ck_id,
-                                doc.cn_session_duration,
-                            );
-                        }
-                        return this.dbUsers
-                            .findOne(
-                                {
-                                    ck_id: `${doc.ck_user}:${doc.ck_d_provider}`,
-                                },
-                                true,
-                            )
-                            .then(async (user) => ({
-                                ck_d_provider: doc.ck_d_provider as string,
-                                ck_id: doc.ck_user as string,
-                                data: (user && user.data) || doc.data,
-                                session: sessionId,
-                            }));
-                    }
-                    return Promise.resolve(null);
-                });
+        if (
+            context &&
+            sessionId &&
+            context.request.session &&
+            context.request.session.gsession &&
+            context.request.session.gsession.session === sessionId
+        ) {
+            return context.request.session.gsession;
         }
-        return Promise.resolve(null);
+
+        if (sessionId && sessionId.substr(0, 2) === "s:") {
+            const val = this.unsign(sessionId.slice(2), this.secret);
+
+            if (val) {
+                return new Promise((resolve, reject) => {
+                    this.store.get(val, (err, data) => {
+                        if (err) {
+                            return reject(err);
+                        }
+                        if (context) {
+                            Object.entries(data)
+                                .filter(([key]) => key !== "cookie")
+                                .forEach(([key, value]) => {
+                                    context.request.session[key] = value;
+                                });
+                            context.request.session.save((err) => {
+                                if (err) {
+                                    return reject(err);
+                                }
+                                return resolve(
+                                    context.request.session.gsession,
+                                );
+                            });
+                            return;
+                        }
+                        return resolve((data as any).gsession);
+                    });
+                });
+            }
+        }
+
+        return null;
     }
 
     /**
      * Устаревание сессии
-     * @param sessionId
+     * @param context {IContext}
      */
-    public logoutSession(sessionId: string) {
-        return this.dbSession.update(
-            {
-                ck_id: sessionId,
-            },
-            {
-                $set: { cd_expire: new Date() },
-            },
-        );
+    public logoutSession(context: IContext) {
+        return new Promise<void>((resolve, reject) => {
+            if (context.request.session.gsession) {
+                context.request.session.cookie.expires = new Date();
+                context.request.session?.destroy((err) => {
+                    if (err) {
+                        return reject(err);
+                    }
+                    return resolve();
+                });
+            }
+        });
     }
 
     /**
@@ -171,24 +206,19 @@ class GateSession {
     public findSessions(
         sessionId: string | string[],
         isExpired: boolean = false,
-    ): Promise<IObjectParam> {
-        const now = new Date();
-        return this.dbSession.find({
-            $and: [
-                {
-                    ck_id: isArray(sessionId)
-                        ? {
-                              $in: sessionId,
-                          }
-                        : sessionId,
-                },
-                {
-                    cd_expire: {
-                        [isExpired ? "$lt" : "$gte"]: now,
-                    },
-                },
-            ],
-        });
+    ): Promise<{ [sid: string]: ISessionData }> {
+        const sessions = Array.isArray(sessionId) ? sessionId : [sessionId];
+
+        return this.store.allSession(
+            sessions
+                .map((session) =>
+                    session.substr(0, 2) === "s:"
+                        ? this.unsign(session.slice(2), this.secret)
+                        : session,
+                )
+                .filter((session) => typeof session === "string") as string[],
+            isExpired,
+        );
     }
     /**
      * Добавляем пользователей в кэш
@@ -236,28 +266,8 @@ class GateSession {
         return this.dbUsers;
     }
 
-    /**
-     * Обновление времени жизни сессиии
-     * @param sessionId - сессия
-     * @param id
-     * @param sessionDuration - время жизни в минутах
-     */
-    public async renewSession(sessionId: string, sessionDuration: number = 60) {
-        const now = new Date();
-        try {
-            await this.dbSession.update(
-                { ck_id: sessionId },
-                {
-                    $set: {
-                        cd_expire: new Date(
-                            now.getTime() + sessionDuration * 60000,
-                        ),
-                    },
-                },
-            );
-        } catch (e) {
-            logger.error("Ошибка обновление сессии", e);
-        }
+    public getCacheDb(): ILocalDB {
+        return this.dbCache;
     }
 
     /**
@@ -293,26 +303,20 @@ class GateSession {
             const userActionsJson = JSON.stringify(userActions);
             const userDepartmentsJson = JSON.stringify(userDepartments);
             return Promise.all([
-                this.sha1(usersJson).then((sha) =>
-                    Promise.resolve({
-                        hash_user: sha,
-                    }),
-                ),
+                Promise.resolve({
+                    hash_user: this.sha1(usersJson),
+                }),
                 userActions.length
-                    ? this.sha1(userActionsJson).then((sha) =>
-                          Promise.resolve({
-                              hash_user_action: sha,
-                          }),
-                      )
+                    ? Promise.resolve({
+                          hash_user_action: this.sha1(userActionsJson),
+                      })
                     : Promise.resolve({
                           hash_user_action: null,
                       }),
                 userDepartments.length
-                    ? this.sha1(userDepartmentsJson).then((sha) =>
-                          Promise.resolve({
-                              hash_user_department: sha,
-                          }),
-                      )
+                    ? Promise.resolve({
+                          hash_user_department: this.sha1(userDepartmentsJson),
+                      })
                     : Promise.resolve({
                           hash_user_department: null,
                       }),
@@ -341,6 +345,27 @@ class GateSession {
             Constants.HASH_SALT = hashSalt;
         }
         return hashSalt;
+    }
+
+    public sign(val: string, secret: string): string {
+        return (
+            val +
+            "." +
+            crypto
+                .createHmac("sha256", secret)
+                .update(val)
+                .digest("base64")
+                .replace(/\=+$/, "")
+        );
+    }
+    public unsign(val: string, secret: string): string | false {
+        var str = val.slice(0, val.lastIndexOf(".")),
+            mac = this.sign(str, secret),
+            macBuffer = Buffer.from(mac),
+            valBuffer = Buffer.alloc(macBuffer.length);
+
+        valBuffer.write(val);
+        return crypto.timingSafeEqual(macBuffer, valBuffer) ? str : false;
     }
 
     /**
@@ -397,15 +422,13 @@ class GateSession {
                 .then((hash) => {
                     buf = hash;
                     const sessionId = buf.toUpperCase();
-                    logger.trace(`generated session id: ${sessionId}`);
+                    this.logger.trace(`generated session id: ${sessionId}`);
                     return resolve(sessionId);
                 })
                 .catch((err) => {
-                    logger.error(err);
+                    this.logger.error(err);
                     return reject(err);
                 });
         });
     }
 }
-
-export default new GateSession();

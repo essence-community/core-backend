@@ -13,6 +13,7 @@ import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
 import { isObject } from "lodash";
 import IOracleController from "./IOracleController";
 import { IParamOracle } from "./OracleDb.types";
+import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
 const Property = ((global as any) as IGlobalObject).property;
 const wsQuerySQL =
     "select cc_query from t_query where upper(ck_id) = upper(:query)";
@@ -23,17 +24,22 @@ export default class CoreOracle implements IOracleController {
     public name: string;
     private dbUsers: ILocalDB;
     private dbCache: ILocalDB;
-    constructor(name: string, params: IParamOracle, dataSource: OracleDB) {
+    constructor(
+        name: string,
+        params: IParamOracle,
+        dataSource: OracleDB,
+        private authController: IAuthController,
+    ) {
         this.name = name;
         this.params = params;
         this.dataSource = dataSource;
     }
     public async init(): Promise<void> {
         if (!this.dbUsers) {
-            this.dbUsers = await Property.getUsers();
+            this.dbUsers = this.authController.getUserDb();
         }
         if (!this.dbCache) {
-            this.dbCache = await Property.getCache();
+            this.dbCache = this.authController.getCacheDb();
         }
     }
     public async getConnection(context: IContext): Promise<Connection> {

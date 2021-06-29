@@ -13,7 +13,7 @@ import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
 import * as AWS from "aws-sdk";
 import * as fs from "fs";
 import { forEach, isObject, isString } from "lodash";
-import { uuid as uuidv4 } from "uuidv4";
+import { v4 as uuidv4 } from "uuid";
 import { IPluginParams, IStorage } from "./AssetsStorage.types";
 import { deepParam } from "@ungate/plugininf/lib/util/deepParam";
 import { DirStorage } from "./DirStorage";

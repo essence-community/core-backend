@@ -13,7 +13,6 @@ import PluginManager from "../../core/pluginmanager/PluginManager";
 import IQueryConfig from "../../core/property/IQueryConfig";
 import Property from "../../core/property/Property";
 import RequestContext from "../../core/request/RequestContext";
-import GateSession from "../../core/session/GateSession";
 import WSQuery from "../../core/WSQuery";
 import Mask from "../Mask";
 import ActionController from "./ActionController";
@@ -44,27 +43,35 @@ class MainController {
                     await requestContext.gateContextPlugin.maskResult(),
                 );
             }
+            const authProviders = PluginManager.getGateAuthProviders(
+                requestContext.gateContextPlugin.name,
+            ) as NullAuthProvider[];
+
             let session = await PluginController.applyBeforeSession(
                 requestContext,
-                PluginManager.getGateAuthProviders() as NullAuthProvider[],
+                authProviders,
             );
+
+            const authController =
+                requestContext.gateContextPlugin.authController;
             // 2: Если передана сессия то инициализируем сессию
             if (isEmpty(session) && requestContext.sessionId) {
-                session = await GateSession.loadSession(
+                session = await authController.loadSession(
+                    requestContext,
                     requestContext.sessionId,
                 );
             }
             session = await PluginController.applyAfterSession(
                 requestContext,
                 session as ISession,
-                PluginManager.getGateAuthProviders() as NullAuthProvider[],
+                authProviders,
             );
             if (session) {
                 requestContext.setSession(session);
             }
             if (requestContext.queryName === Constants.QUERY_LOGOUT) {
                 if (session) {
-                    await GateSession.logoutSession(session.session);
+                    await authController.logoutSession(requestContext);
                 }
                 return ResultController.responseCheck(requestContext, {
                     data: ResultStream([]),
@@ -81,7 +88,7 @@ class MainController {
                             ? [
                                   {
                                       session: session.session,
-                                      ...session.data,
+                                      ...session.userData,
                                   },
                               ]
                             : [],
@@ -117,7 +124,8 @@ class MainController {
             }
             if (
                 !isEmpty(cResult.defaultActionName) &&
-                isEmpty(requestContext.actionName)
+                (isEmpty(requestContext.actionName) ||
+                    requestContext.actionName === "auth")
             ) {
                 requestContext.setActionName(cResult.defaultActionName);
             }
@@ -166,7 +174,14 @@ class MainController {
                 const wsQuery = new WSQuery(requestContext, query);
                 requestContext.setQuery(wsQuery);
                 wsQuery.prepareParams(provider);
-                // 10: Проверка доступа
+                // 10: Проверка авторизации
+                await PluginController.applyCheckQuery(
+                    requestContext,
+                    wsQuery,
+                    authProviders,
+                );
+
+                // 10.1: Проверка доступа
                 if (
                     !(await requestContext.gateContextPlugin.checkQueryAccess(
                         requestContext,
@@ -285,13 +300,26 @@ class MainController {
         if (isEmpty(gateContext.providerName)) {
             throw new ErrorException(ErrorGate.REQUIRED_PARAM);
         }
-        let provider = PluginManager.getGateProvider(gateContext.providerName);
+        let provider = PluginManager.getGateProvider(
+            gateContext.gateContextPlugin.name,
+            gateContext.providerName,
+        );
         if (provider) {
             return provider;
         }
         const config = await this.providerDb.findOne(
             {
-                ck_id: gateContext.providerName,
+                $and: [
+                    {
+                        ck_id: gateContext.providerName,
+                    },
+                    {
+                        $or: [
+                            { ck_context: { $exists: false } },
+                            { ck_context: gateContext.gateContextPlugin.name },
+                        ],
+                    },
+                ],
             },
             true,
         );
@@ -301,9 +329,15 @@ class MainController {
         const pluginClass = PluginManager.getGateProviderClass(
             config.ck_d_plugin.toLowerCase(),
         );
-        provider = new pluginClass(config.ck_id, config.cct_params);
+        provider = pluginClass.default
+            ? new pluginClass.default(config.ck_id, config.cct_params)
+            : new pluginClass(config.ck_id, config.cct_params);
         await provider.init();
-        PluginManager.setGateProvider(config.ck_id, provider);
+        PluginManager.setGateProvider(
+            gateContext.gateContextPlugin.name,
+            config.ck_id,
+            provider,
+        );
         return provider;
     }
 
@@ -354,6 +388,12 @@ class MainController {
                     ],
                 },
                 { ck_d_provider: { $in: ["all", gateContext.providerName] } },
+                {
+                    $or: [
+                        { ck_context: { $exists: false } },
+                        { ck_context: gateContext.gateContextPlugin.name },
+                    ],
+                },
             ],
         });
         configs.sort((val1, val2) => val1.cn_order - val2.cn_order);
@@ -361,6 +401,7 @@ class MainController {
         const plugins = [];
         configs.forEach((conf) => {
             let plugin = PluginManager.getGatePlugin(
+                gateContext.gateContextPlugin.name,
                 conf.cv_name,
                 gateContext.providerName,
             );

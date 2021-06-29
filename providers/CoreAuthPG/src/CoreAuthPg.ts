@@ -18,6 +18,7 @@ import { initParams, isEmpty, debounce } from "@ungate/plugininf/lib/util/Util";
 import { noop } from "lodash";
 import { isObject } from "util";
 import ISession from "@ungate/plugininf/lib/ISession";
+import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
 const Property = ((global as any) as IGlobalObject).property;
 
 const MAX_WAIT_RELOAD = 5000;
@@ -53,8 +54,12 @@ export default class CoreAuthPg extends NullAuthProvider {
     private reloadTemp = debounce(() => {
         this.initTemp().then(noop, (err) => this.log.error(err));
     }, MAX_WAIT_RELOAD);
-    constructor(name: string, params: ICCTParams) {
-        super(name, params);
+    constructor(
+        name: string,
+        params: ICCTParams,
+        authController: IAuthController,
+    ) {
+        super(name, params, authController);
         this.params = {
             ...this.params,
             ...initParams(CoreAuthPg.getParamsInfo(), params),
@@ -84,14 +89,15 @@ export default class CoreAuthPg extends NullAuthProvider {
                         session: sessGuest,
                         ...sessDataGuest
                     }: any = await this.createSession(
+                        context,
                         this.params.guestAccount,
                         {},
                         this.params.sessionDuration,
                     );
                     return {
-                        ck_id: this.params.guestAccount,
-                        ck_d_provider: this.name,
-                        data: sessDataGuest,
+                        idUser: this.params.guestAccount,
+                        nameProvider: this.name,
+                        userData: sessDataGuest,
                         session: sessGuest,
                     };
                 }
@@ -117,8 +123,8 @@ export default class CoreAuthPg extends NullAuthProvider {
             throw new ErrorException(ErrorGate.AUTH_DENIED);
         }
         return {
-            ck_user: arr[0].ck_id,
-            data: arr[0],
+            idUser: arr[0].ck_id,
+            dataUser: arr[0],
         };
     }
     public processSql(
@@ -146,7 +152,7 @@ export default class CoreAuthPg extends NullAuthProvider {
     }
     public async init(reload?: boolean): Promise<void> {
         if (!this.dbUsers) {
-            this.dbUsers = await Property.getUsers();
+            this.dbUsers = this.authController.getUserDb();
         }
         if (this.eventConnect) {
             await this.eventConnect.rollbackAndClose();

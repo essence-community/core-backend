@@ -9,6 +9,7 @@
         "bignumber.js": "^9.0.1",
         "cron": "^1.7.2",
         "esprima": "^4.0.1",
+        "express-session": "^1.17.2",
         "js2xmlparser": "^4.0.0",
         "lodash": "^4.17.15",
         "moment": "^2.24.0",
@@ -22,11 +23,13 @@
         "request": "^2.88.2",
         "rufus": "^0.5.7",
         "soap": "^0.30.0",
+        "uuid": "^8.3.2",
         "yesql": "^3.2.2"
     },
     "devDependencies": {
         "@types/cron": "^1.6.0",
         "@types/es6-promise": "^3.3.0",
+        "@types/express-session": "^1.17.3",
         "@types/lodash": "^4.14.119",
         "@types/node": "^10.12.12",
         "@types/oracledb": "^4.1.0",

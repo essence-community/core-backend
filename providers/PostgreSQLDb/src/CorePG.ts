@@ -21,10 +21,10 @@ export default class CorePG extends IPostgreSQLController {
     private dbCache: ILocalDB;
     public async init(): Promise<void> {
         if (!this.dbUsers) {
-            this.dbUsers = await Property.getUsers();
+            this.dbUsers = this.authController.getUserDb();
         }
         if (!this.dbCache) {
-            this.dbCache = await Property.getCache();
+            this.dbCache = this.authController.getCacheDb();
         }
     }
     public async getConnection(context: IContext): Promise<Connection> {

@@ -344,6 +344,26 @@ class PluginController {
         }
         return Promise.resolve(session);
     }
+
+    public applyCheckQuery(
+        gateContext: IContext,
+        query: IGateQuery,
+        providers: NullAuthProvider[] = [],
+    ): Promise<void> {
+        if (providers.length) {
+            return providers.slice(1).reduce(
+                (prom, provider) =>
+                    prom.then(() => {
+                        gateContext.trace(
+                            `providerAuth ${provider.name} execute checkQuery`,
+                        );
+                        return provider.checkQuery(gateContext, query);
+                    }),
+                providers[0].checkQuery(gateContext, query),
+            );
+        }
+        return Promise.resolve();
+    }
 }
 
 export default new PluginController();

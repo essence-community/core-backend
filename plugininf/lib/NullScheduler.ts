@@ -1,6 +1,6 @@
 import * as cron from "cron";
 import * as rufus from "rufus";
-import ICCTParams from "./ICCTParams";
+import ICCTParams, { IParamsInfo } from "./ICCTParams";
 import IScheduler from "./IScheduler";
 import Logger from "./Logger";
 import { isEmpty } from "./util/Util";
@@ -14,6 +14,9 @@ export default abstract class NullScheduler implements IScheduler {
     public params: ICCTParams;
     public log: rufus.IRufusLogger;
     private job: cron.CronJob;
+    public static getParamsInfo(): IParamsInfo {
+        return {};
+    }
     constructor(
         name: string,
         params: ICCTParams,

@@ -18,7 +18,7 @@ export class TempTable {
         "    t.cv_url,\n" +
         "    t.cv_name,\n" +
         "    t.cn_action,\n" +
-        "    jsonb_agg(t.json) as children,\n" +
+        "    jsonb_agg(t.json ORDER BY t.cn_order) as children,\n" +
         "    (\n" +
         "        select\n" +
         "            jsonb_object_agg(pv.cv_name, pv.cv_value)\n" +
@@ -33,6 +33,7 @@ export class TempTable {
         "            p.ck_id as ck_page,\n" +
         "            p.cv_url,\n" +
         "            p.cv_name,\n" +
+        "            po.cn_order,\n" +
         "            pa.cn_action,\n" +
         "            pkg_json.f_get_object(po.ck_id)::jsonb as json\n" +
         "        from\n" +

@@ -33,7 +33,7 @@ export default class OnlineController implements ICoreController {
         "    t.cv_url,\n" +
         "    t.cv_name,\n" +
         "    t.cn_action,\n" +
-        "    jsonb_agg(t.json) as children,\n" +
+        "    jsonb_agg(t.json ORDER BY t.cn_order) as children,\n" +
         "    (\n" +
         "        select\n" +
         "            jsonb_object_agg(pv.cv_name, pv.cv_value)\n" +
@@ -48,6 +48,7 @@ export default class OnlineController implements ICoreController {
         "            p.ck_id as ck_page,\n" +
         "            p.cv_url,\n" +
         "            p.cv_name,\n" +
+        "            po.cn_order,\n" +
         "            pa.cn_action,\n" +
         "            pkg_json.f_get_object(po.ck_id)::jsonb as json\n" +
         "        from\n" +
@@ -117,7 +118,7 @@ export default class OnlineController implements ICoreController {
         const ckPageObject = json.filter?.ck_page_object;
         const caActions = [
             this.params.anonymousAction,
-            ...(gateContext.session?.data.ca_actions || []),
+            ...(gateContext.session?.userData.ca_actions || []),
         ];
         return new Promise((resolve, reject) => {
             this.dataSource
@@ -358,7 +359,7 @@ export default class OnlineController implements ICoreController {
         const pageObject = (gateContext.params.page_object || "").toLowerCase();
         const caActions = [
             this.params.anonymousAction,
-            ...(gateContext.session?.data.ca_actions || []),
+            ...(gateContext.session?.userData.ca_actions || []),
         ];
         const isAccess = await this.tempTable.dbModifyAction.findOne(
             {
@@ -550,7 +551,7 @@ export default class OnlineController implements ICoreController {
     ): Promise<IContextPluginResult> {
         const caActions = [
             this.params.anonymousAction,
-            ...(gateContext.session?.data.ca_actions || []),
+            ...(gateContext.session?.userData.ca_actions || []),
         ];
         const pageObject = (gateContext.params.page_object || "").toLowerCase();
         return this.dataSource

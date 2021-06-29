@@ -47,8 +47,8 @@ export interface IComboParamInfo extends IBaseParamInfo {
     queryparam?: string;
     query?: string;
     // tslint:disable-line array-type
-    records?: Record<string, string | number>[];
-    defaultValue?: string | number;
+    records?: Record<string, any>[];
+    defaultValue?: string | number | boolean;
 }
 
 export interface IStringAreaParamInfo extends IBaseParamInfo {

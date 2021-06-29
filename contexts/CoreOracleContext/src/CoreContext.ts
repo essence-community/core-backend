@@ -18,6 +18,7 @@ import { initParams } from "@ungate/plugininf/lib/util/Util";
 import ICoreController from "./ICoreController";
 import OfflineController from "./OfflineController";
 import OnlineController from "./OnlineController";
+import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
 const logger = Logger.getLogger("CoreContext");
 const Mask = ((global as any) as IGlobalObject).maskgate;
 const createTempTable = ((global as any) as IGlobalObject).createTempTable;
@@ -37,7 +38,6 @@ export interface ICoreParams extends IContextParams {
 export default class CoreContext extends NullContext {
     public static getParamsInfo(): IParamsInfo {
         return {
-            ...NullContext.getParamsInfo(),
             debug: {
                 defaultValue: false,
                 name: "Режим отладки",
@@ -130,8 +130,12 @@ export default class CoreContext extends NullContext {
     private dbDepartments: ILocalDB;
     private sysSettings =
         "select s.ck_id, s.cv_value, s.cv_description from s_mt.t_sys_setting s";
-    constructor(name: string, params: ICCTParams) {
-        super(name, params);
+    constructor(
+        name: string,
+        params: ICCTParams,
+        authController: IAuthController,
+    ) {
+        super(name, params, authController);
         this.params = {
             ...this.params,
             ...initParams(CoreContext.getParamsInfo(), params),
@@ -196,7 +200,7 @@ export default class CoreContext extends NullContext {
                     return Promise.reject(CoreContext.accessDenied());
                 }
                 const json = JSON.parse(gateContext.params.json);
-                const caActions = gateContext.session.data.ca_actions || [];
+                const caActions = gateContext.session.userData.ca_actions || [];
                 if (!json.filter || !json.filter.ck_page) {
                     return Promise.reject(CoreContext.accessDenied());
                 }
@@ -216,7 +220,7 @@ export default class CoreContext extends NullContext {
                     return Promise.reject(CoreContext.accessDenied());
                 }
                 const json = JSON.parse(gateContext.params.json);
-                const caActions = gateContext.session.data.ca_actions || [];
+                const caActions = gateContext.session.userData.ca_actions || [];
                 if (!json.filter || !json.filter.ck_parent) {
                     return Promise.reject(
                         new BreakException({
@@ -284,7 +288,7 @@ export default class CoreContext extends NullContext {
         return this.dbUsers
             .update(
                 {
-                    ck_id: `${gateContext.session.ck_id}:${gateContext.session.ck_d_provider}`,
+                    ck_id: `${gateContext.session.idUser}:${gateContext.session.nameProvider}`,
                 },
                 {
                     $set: {

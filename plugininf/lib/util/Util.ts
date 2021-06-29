@@ -44,14 +44,26 @@ function parseParam(conf: IParamInfo, value: any) {
             return moment(value).toDate();
         case "form_nested":
             return Object.entries(conf.childs).reduce((res, [key, obj]) => {
-                res[key] = parseParam(
-                    obj as IParamInfo,
-                    (value || conf.defaultValue || {})[key],
-                );
+                if (!isEmpty((value || {})[key])) {
+                    res[key] = parseParam(obj, (value || {})[key]);
+                } else if (
+                    isEmpty((value || {})[key]) &&
+                    !isEmpty((value || conf.defaultValue || {})[key])
+                ) {
+                    res[key] = parseParam(
+                        obj,
+                        (value || conf.defaultValue || {})[key],
+                    );
+                } else if (
+                    isEmpty((value || {})[key]) &&
+                    !isEmpty(obj.defaultValue)
+                ) {
+                    res[key] = obj.defaultValue;
+                }
                 return res;
             }, {});
         default:
-            return toString(value);
+            return value;
     }
 }
 /**

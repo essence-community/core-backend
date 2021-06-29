@@ -14,6 +14,7 @@ import NullAuthProvider, {
 import { ReadStreamToArray } from "@ungate/plugininf/lib/stream/Util";
 import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
 import * as moment from "moment";
+import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
 const Property = ((global as any) as IGlobalObject).property;
 
 export default class CoreAuthOracle extends NullAuthProvider {
@@ -27,9 +28,12 @@ export default class CoreAuthOracle extends NullAuthProvider {
     public dataSource: OracleDB;
 
     private dbUsers: ILocalDB;
-    private dbDepartments: ILocalDB;
-    constructor(name: string, params: ICCTParams) {
-        super(name, params);
+    constructor(
+        name: string,
+        params: ICCTParams,
+        authController: IAuthController,
+    ) {
+        super(name, params, authController);
         this.params = {
             ...this.params,
             ...initParams(CoreAuthOracle.getParamsInfo(), params),
@@ -112,16 +116,13 @@ export default class CoreAuthOracle extends NullAuthProvider {
             throw new ErrorException(ErrorGate.AUTH_DENIED);
         }
         return {
-            ck_user: arr[0].ck_id,
-            data: arr[0],
+            idUser: arr[0].ck_id,
+            dataUser: arr[0],
         };
     }
     public async init(reload?: boolean): Promise<void> {
-        if (!this.dbDepartments) {
-            this.dbDepartments = await Property.getDepartments();
-        }
         if (!this.dbUsers) {
-            this.dbUsers = await Property.getUsers();
+            this.dbUsers = this.authController.getUserDb();
         }
         await this.dataSource.createPool();
         const users = {};

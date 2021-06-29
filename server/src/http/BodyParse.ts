@@ -1,7 +1,12 @@
 import IContextPlugin from "@ungate/plugininf/lib/IContextPlugin";
 import Logger from "@ungate/plugininf/lib/Logger";
 import { safePipe } from "@ungate/plugininf/lib/stream/Util";
-import * as BodyParser from "body-parser";
+import {
+    json as Json,
+    text as Text,
+    urlencoded as Urlencoded,
+    raw as Raw,
+} from "body-parser";
 import * as Multiparty from "multiparty";
 import * as QueryString from "query-string";
 import * as typeis from "type-is";
@@ -16,6 +21,7 @@ function typeChecker(type) {
 }
 
 const shouldParse = typeChecker("multipart/form-data");
+
 /**
  * Get the content stream of the request.
  *
@@ -54,22 +60,22 @@ function contentStream(req) {
 }
 
 export default function BodyParse(gateContext: IContextPlugin) {
-    const json = BodyParser.json({
+    const json = Json({
         limit: gateContext.maxPostSize,
         type: ["application/json", "text/json"],
     });
-    const xml = BodyParser.text({
+    const xml = Text({
         limit: gateContext.maxPostSize,
         type: ["application/xml", "text/xml", "application/soap+xml"],
     });
-    const text = BodyParser.text({
+    const text = Text({
         limit: gateContext.maxPostSize,
     });
-    const urlencoded = BodyParser.urlencoded({
+    const urlencoded = Urlencoded({
         extended: true,
         limit: gateContext.maxPostSize,
     });
-    const raw = BodyParser.raw({
+    const raw = Raw({
         limit: gateContext.maxPostSize,
     });
 

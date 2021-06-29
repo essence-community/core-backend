@@ -1,7 +1,10 @@
 import ILocalDB from "@ungate/plugininf/lib/db/local/ILocalDB";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
-import ICCTParams, { IParamInfo } from "@ungate/plugininf/lib/ICCTParams";
+import ICCTParams, {
+    IParamInfo,
+    IParamsInfo,
+} from "@ungate/plugininf/lib/ICCTParams";
 import IContext from "@ungate/plugininf/lib/IContext";
 import {
     filterFilesData,
@@ -9,20 +12,24 @@ import {
     sortFilesData,
 } from "@ungate/plugininf/lib/util/Util";
 import { isObject } from "lodash";
-import { uuid as uuidv4 } from "uuidv4";
+import { v4 as uuidv4 } from "uuid";
 import PluginManager from "../../core/pluginmanager/PluginManager";
 import Property from "../../core/property/Property";
 import resetAction from "./ResetAction";
 import RiakAction from "./RiakAction";
+import NullProvider from "@ungate/plugininf/lib/NullProvider";
+import NullContext from "@ungate/plugininf/lib/NullContext";
+import NullPlugin from "@ungate/plugininf/lib/NullPlugin";
+import NullScheduler from "@ungate/plugininf/lib/NullScheduler";
+import NullEvent from "@ungate/plugininf/lib/NullEvent";
+import NullAuthProvider from "@ungate/plugininf/lib/NullAuthProvider";
 
 export default class AdminAction {
     public params: ICCTParams;
     public name: string;
     public riakAction: RiakAction;
-    public dbUsers: ILocalDB;
     public dbContexts: ILocalDB;
     public dbEvents: ILocalDB;
-    public dbSessions: ILocalDB;
     public dbProviders: ILocalDB;
     public dbSchedulers: ILocalDB;
     public dbPlugins: ILocalDB;
@@ -35,10 +42,8 @@ export default class AdminAction {
     }
 
     public async init(): Promise<void> {
-        this.dbUsers = await Property.getUsers();
         this.dbContexts = await Property.getContext();
         this.dbEvents = await Property.getEvents();
-        this.dbSessions = await Property.getSessions();
         this.dbProviders = await Property.getProviders();
         this.dbSchedulers = await Property.getSchedulers();
         this.dbPlugins = await Property.getPlugins();
@@ -74,33 +79,37 @@ export default class AdminAction {
                     "ck_id",
                 ),
             gtgetusers: (gateContext: IContext) =>
-                this.dbUsers.find().then((docs) =>
-                    Promise.resolve(
-                        docs
-                            .map((val) => ({
-                                ...val,
-                                ...Object.entries(val.data).reduce(
-                                    (obj, arr) => ({
-                                        ...obj,
-                                        [`data_${arr[0]}`]: arr[1],
-                                    }),
-                                    {},
-                                ),
-                                cv_actions:
-                                    val.data && val.data.ca_actions
-                                        ? val.data.ca_actions.join(", ")
-                                        : "",
-                                cv_departments:
-                                    val.data && val.data.ca_department
-                                        ? val.data.ca_department.join(", ")
-                                        : "",
-                            }))
-                            .sort(sortFilesData(gateContext))
-                            .filter(filterFilesData(gateContext)),
+                gateContext.gateContextPlugin.authController
+                    .getUserDb()
+                    .find()
+                    .then((docs) =>
+                        Promise.resolve(
+                            docs
+                                .map((val) => ({
+                                    ...val,
+                                    ...Object.entries(val.data).reduce(
+                                        (obj, arr) => ({
+                                            ...obj,
+                                            [`data_${arr[0]}`]: arr[1],
+                                        }),
+                                        {},
+                                    ),
+                                    cv_actions:
+                                        val.data && val.data.ca_actions
+                                            ? val.data.ca_actions.join(", ")
+                                            : "",
+                                    cv_departments:
+                                        val.data && val.data.ca_department
+                                            ? val.data.ca_department.join(", ")
+                                            : "",
+                                }))
+                                .sort(sortFilesData(gateContext))
+                                .filter(filterFilesData(gateContext)),
+                        ),
                     ),
-                ),
-            gtgetsessions: (gateContext: IContext) =>
-                this.dbSessions.find().then((docs) =>
+            gtgetsessions: (
+                gateContext: IContext,
+            ) => /*.find().then((docs) =>
                     Promise.resolve(
                         docs
                             .map((val) => ({
@@ -117,7 +126,7 @@ export default class AdminAction {
                             .sort(sortFilesData(gateContext))
                             .filter(filterFilesData(gateContext)),
                     ),
-                ),
+                )*/ [],
             gtgetservers: (gateContext: IContext) =>
                 this.dbServers
                     .find()
@@ -331,6 +340,10 @@ export default class AdminAction {
                     "ck_id",
                     PluginManager.getGateProviderClass,
                     this.dbProviders,
+                    (pkClass) =>
+                        pkClass.isAuth
+                            ? NullAuthProvider.getParamsInfo
+                            : NullProvider.getParamsInfo,
                 ),
             gtgetcontextsetting: (gateContext: IContext) =>
                 this.loadSetting(
@@ -338,6 +351,7 @@ export default class AdminAction {
                     "ck_id",
                     PluginManager.getGateContextClass,
                     this.dbContexts,
+                    () => NullContext.getParamsInfo,
                 ),
             gtgetpluginsetting: (gateContext: IContext) =>
                 this.loadSetting(
@@ -345,6 +359,7 @@ export default class AdminAction {
                     "ck_id",
                     PluginManager.getGatePluginsClass,
                     this.dbPlugins,
+                    () => NullPlugin.getParamsInfo,
                 ),
             gtgetschedulersetting: (gateContext: IContext) =>
                 this.loadSetting(
@@ -352,6 +367,7 @@ export default class AdminAction {
                     "ck_id",
                     PluginManager.getGateSchedulerClass,
                     this.dbSchedulers,
+                    () => NullScheduler.getParamsInfo,
                 ),
             gtgeteventsetting: (gateContext: IContext) =>
                 this.loadSetting(
@@ -359,6 +375,7 @@ export default class AdminAction {
                     "ck_id",
                     PluginManager.getGateEventsClass,
                     this.dbEvents,
+                    () => NullEvent.getParamsInfo,
                 ),
             gtgetboolean: () =>
                 Promise.resolve([
@@ -399,6 +416,7 @@ export default class AdminAction {
         column: string,
         method,
         db,
+        getParamsInfo: (pklass: any) => () => IParamsInfo,
     ): Promise<Record<string, any>[]> {
         if (isEmpty(gateContext.query.inParams.json)) {
             throw new ErrorException(ErrorGate.JSON_PARSE);
@@ -423,20 +441,23 @@ export default class AdminAction {
                       [column]: json.filter.cv_name,
                   })
                 : Promise.resolve({}));
-            const cctParam = Object.entries(params).reduce(
-                (res, [key, obj]) => {
-                    res[key] = this.checkData(
-                        key,
-                        obj as IParamInfo,
-                        doc.cct_params || (obj as IParamInfo).defaultValue,
-                    );
-                    return res;
-                },
-                {},
-            );
+            const cctParam = Object.entries({
+                ...params,
+                ...getParamsInfo(PClass)(),
+            }).reduce((res, [key, obj]) => {
+                res[key] = this.checkData(
+                    key,
+                    obj as IParamInfo,
+                    doc.cct_params || (obj as IParamInfo).defaultValue,
+                );
+                return res;
+            }, {});
             return [
                 {
-                    childs: Object.entries(params)
+                    childs: Object.entries({
+                        ...params,
+                        ...getParamsInfo(PClass)(),
+                    })
                         .map((arr) =>
                             this.createFields(
                                 gateContext,

@@ -5,7 +5,7 @@ import * as os from "os";
 import * as path from "path";
 import { IRufusLogger } from "rufus";
 import { Readable } from "stream";
-import { uuid } from "uuidv4";
+import { v4 as uuid } from "uuid";
 import { IPluginParams, IStorage } from "./Patcher.types";
 export class S3Storage implements IStorage {
     private clients: AWS.S3;

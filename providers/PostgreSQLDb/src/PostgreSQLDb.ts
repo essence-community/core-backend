@@ -12,13 +12,13 @@ import IPostgreSQLController from "./IPostgreSQLController";
 import OldPG from "./OldPG";
 import { IParamPg } from "./PostgreSQLDb.types";
 import SimplePG from "./SimplePG";
+import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
 
 export default class PostgreSQLDb extends NullProvider {
     /* tslint:disable:object-literal-sort-keys */
     public static getParamsInfo(): IParamsInfo {
         return {
             ...PostgresDB.getParamsInfo(),
-            ...NullProvider.getParamsInfo(),
             preExecuteSql: {
                 name: "Запрос вызываемый перед",
                 type: "long_string",
@@ -43,8 +43,12 @@ export default class PostgreSQLDb extends NullProvider {
     public params: IParamPg;
     public dataSource: PostgresDB;
     private controller: IPostgreSQLController;
-    constructor(name: string, params: ICCTParams) {
-        super(name, params);
+    constructor(
+        name: string,
+        params: ICCTParams,
+        authController: IAuthController,
+    ) {
+        super(name, params, authController);
         this.params = initParams(PostgreSQLDb.getParamsInfo(), params);
         this.dataSource = new PostgresDB(`${this.name}_provider`, {
             connectString: this.params.connectString,
@@ -62,18 +66,21 @@ export default class PostgreSQLDb extends NullProvider {
                 this.name,
                 this.params,
                 this.dataSource,
+                this.authController,
             );
         } else if (params.old) {
             this.controller = new OldPG(
                 this.name,
                 this.params,
                 this.dataSource,
+                this.authController,
             );
         } else {
             this.controller = new SimplePG(
                 this.name,
                 this.params,
                 this.dataSource,
+                this.authController,
             );
         }
         if (!isEmpty(this.params.preExecuteSql)) {

@@ -81,8 +81,9 @@ export default class GridToExcel extends NullPlugin {
                     "     <cols>" +
                     jsonbc.columns.reduce(
                         (all, col, colIndex) =>
-                            `${all}\n<col customWidth="0" bestFit="1" width="20" max="${colIndex +
-                                1}" min="${colIndex + 1}"/>`,
+                            `${all}\n<col customWidth="0" bestFit="1" width="20" max="${
+                                colIndex + 1
+                            }" min="${colIndex + 1}"/>`,
                         "",
                     ) +
                     "     </cols>" +

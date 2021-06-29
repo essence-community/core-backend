@@ -36,12 +36,12 @@ export default class AuthMock extends NullAuthProvider {
             query.inParams.cv_password === this.params.adminPassword
         ) {
             return {
-                ck_user: "1",
+                idUser: "1",
             };
         }
         if (query.inParams.cv_login === this.params.viewUser) {
             return {
-                ck_user: "2",
+                idUser: "2",
             };
         }
         throw new ErrorException(ErrorGate.AUTH_DENIED);

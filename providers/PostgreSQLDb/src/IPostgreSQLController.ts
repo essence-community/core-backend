@@ -6,16 +6,15 @@ import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
 import IQuery from "@ungate/plugininf/lib/IQuery";
 import { IResultProvider } from "@ungate/plugininf/lib/IResult";
 import { IParamPg } from "./PostgreSQLDb.types";
+import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
 
 export default abstract class IPostgreSQLController {
-    public name: string;
-    public params: IParamPg;
-    public dataSource: PostgresDB;
-    constructor(name: string, params: IParamPg, dataSource: PostgresDB) {
-        this.name = name;
-        this.params = params;
-        this.dataSource = dataSource;
-    }
+    constructor(
+        public name: string,
+        public params: IParamPg,
+        public dataSource: PostgresDB,
+        public authController: IAuthController,
+    ) {}
     public abstract init(): Promise<void>;
     public abstract getConnection(context: IContext): Promise<Connection>;
     public abstract processSql(

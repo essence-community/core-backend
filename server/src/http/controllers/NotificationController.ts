@@ -1,28 +1,50 @@
-import ILocalDB from "@ungate/plugininf/lib/db/local/ILocalDB";
-import IObjectParam from "@ungate/plugininf/lib/IObjectParam";
 import Logger from "@ungate/plugininf/lib/Logger";
 import * as crypto from "crypto";
 import * as http from "http";
 import * as https from "https";
 import { delay, forEach } from "lodash";
 import * as websocket from "websocket";
-import Property from "../../core/property/Property";
-import GateSession from "../../core/session/GateSession";
 import Mask from "../Mask";
+import PluginManager from "../../core/pluginmanager/PluginManager";
+import IContextPlugin from "@ungate/plugininf/lib/IContextPlugin";
+import { ParsedUrlQuery } from "querystring";
+import ISession from "@ungate/plugininf/lib/ISession";
+import { GateSession } from "../../core/session/GateSession";
+import session = require("express-session");
 const logger = Logger.getLogger("NotificationController");
 const TIMEOUT = 30000;
 
+interface IWSConnect extends websocket.connection {
+    sessionId: string;
+    session: ISession;
+    uniqhash: string;
+    gateContext: IContextPlugin;
+}
+interface IClientWs {
+    [key: string]: {
+        [key: string]: IWSConnect;
+    };
+}
+
+interface IConfigSession {
+    [key: string]: {
+        context: IContextPlugin;
+        sessions: string[];
+        conns: IWSConnect[];
+    };
+}
+
 class NotificationController {
-    public notificationClient: IObjectParam = {};
+    public notificationClient: IClientWs = {};
     private wsServer: websocket.server;
-    private dbUsers: ILocalDB;
+    private contexts: IContextPlugin[];
     public async init(httpServer: http.Server | https.Server): Promise<void> {
         this.wsServer = new websocket.server({
             httpServer,
         });
         this.wsServer.on("request", this.onRequest.bind(this));
         delay(() => this.checkConnection(), TIMEOUT);
-        this.dbUsers = await Property.getUsers();
+        this.contexts = PluginManager.getGateContexts();
         Mask.on("change", this.changeMask, this);
     }
     /**
@@ -50,49 +72,83 @@ class NotificationController {
         );
     }
 
-    public onRequest(request) {
-        if (!request.resourceURL.query || !request.resourceURL.query.session) {
+    public async onRequest(request: websocket.request) {
+        if (
+            !request.resourceURL.query ||
+            !(request.resourceURL.query as ParsedUrlQuery).session
+        ) {
             return;
         }
-        const connection = request.accept("notification", request.origin);
-        GateSession.loadSession(request.resourceURL.query.session)
-            .then((session) => {
+        const sessionId = decodeURIComponent(
+            (Array.isArray(
+                (request.resourceURL.query as ParsedUrlQuery).session,
+            )
+                ? (request.resourceURL.query as ParsedUrlQuery).session[0]
+                : (request.resourceURL.query as ParsedUrlQuery)
+                      .session) as string,
+        );
+        const connection = request.accept(
+            "notification",
+            request.origin,
+        ) as IWSConnect;
+        const configSession = (await this.contexts.slice(1).reduce(
+            (session, context) => {
                 if (session) {
-                    logger.info(`WS Connect ${JSON.stringify(session)}`);
-                    connection.sessionId = session.session;
-                    connection.session = session;
-                    const buf = Buffer.alloc(6);
-                    crypto.randomFillSync(buf);
-                    connection.uniqhash = buf.toString("hex");
-                    connection.on("close", () => {
-                        const obj = this.notificationClient[
-                            `${session.ck_id}:${session.ck_d_provider}`
-                        ];
-                        delete obj[connection.uniqhash];
-                    });
-                    if (
-                        this.notificationClient[
-                            `${session.ck_id}:${session.ck_d_provider}`
-                        ]
-                    ) {
-                        this.notificationClient[
-                            `${session.ck_id}:${session.ck_d_provider}`
-                        ][connection.uniqhash] = connection;
-                    } else {
-                        this.notificationClient[
-                            `${session.ck_id}:${session.ck_d_provider}`
-                        ] = {
-                            [connection.uniqhash]: connection,
-                        };
-                    }
-                    return;
+                    return session;
                 }
-                connection.close(
-                    4001,
-                    "Session not found, specified query requires authentication",
-                );
-            })
-            .catch((err) => logger.error(err));
+                return context.authController
+                    .loadSession(null, sessionId)
+                    .then((session) =>
+                        session ? { session, context } : session,
+                    );
+            },
+            this.contexts[0].authController
+                .loadSession(null, sessionId)
+                .then((session) =>
+                    session ? { session, context: this.contexts[0] } : session,
+                ),
+        )) as {
+            session: ISession;
+            context: IContextPlugin;
+        };
+        if (configSession) {
+            const { session, context } = configSession;
+            logger.info(`WS Connect ${JSON.stringify(session)}`);
+            connection.sessionId = session.session;
+            connection.gateContext = context;
+            connection.session = session;
+            const buf = Buffer.alloc(6);
+            crypto.randomFillSync(buf);
+            connection.uniqhash = buf.toString("hex");
+            connection.on("close", () => {
+                const obj = this.notificationClient[
+                    `${session.idUser}:${session.nameProvider}`
+                ];
+                delete obj[connection.uniqhash];
+            });
+            if (
+                this.notificationClient[
+                    `${session.idUser}:${session.nameProvider}`
+                ]
+            ) {
+                this.notificationClient[
+                    `${session.idUser}:${session.nameProvider}`
+                ][connection.uniqhash] = connection;
+            } else {
+                this.notificationClient[
+                    `${session.idUser}:${session.nameProvider}`
+                ] = {
+                    [connection.uniqhash]: connection,
+                };
+            }
+            return;
+        }
+        logger.debug("Close %s", sessionId);
+        connection.sendCloseFrame(
+            4001,
+            "Session not found, specified query requires authentication",
+            true,
+        );
     }
 
     /**
@@ -105,10 +161,10 @@ class NotificationController {
             forEach(userObj || {}, (conn) => {
                 if (
                     (nameProvider &&
-                        conn.session.ck_d_provider === nameProvider) ||
+                        conn.session.nameProvider === nameProvider) ||
                     !nameProvider
                 ) {
-                    names[(conn as any).session.ck_id] = true;
+                    names[(conn as any).session.idUser] = true;
                 }
             });
         });
@@ -149,53 +205,70 @@ class NotificationController {
         const allConn = Object.values(this.notificationClient || {}).reduce(
             (arr, value) => [...arr, ...Object.values(value)],
             [],
-        );
-        let sessions;
+        ) as IWSConnect[];
+        let filter: (IWSConnect) => boolean = () => true;
         if (ckUser && nameProvider) {
-            sessions = allConn
-                .filter(
-                    (conn) =>
-                        conn.session.ck_user === ckUser &&
-                        conn.session.ck_d_provider === nameProvider,
-                )
-                .map((conn) => conn.sessionId);
+            filter = (conn) =>
+                conn.session.idUser === ckUser &&
+                conn.session.nameProvider === nameProvider;
         } else if (nameProvider) {
-            sessions = allConn
-                .filter((conn) => conn.session.ck_d_provider === nameProvider)
-                .map((conn) => conn.sessionId);
-        } else {
-            sessions = allConn.map((conn) => conn.sessionId);
+            filter = (conn) => conn.session.nameProvider === nameProvider;
         }
-        if (allConn.length) {
-            GateSession.findSessions(sessions, false)
-                .then((docs) => {
-                    const ckUsers = docs.map(
-                        (doc) => `${doc.ck_id}:${doc.ck_d_provider}`,
-                    );
-                    return this.dbUsers
-                        .find({ ck_id: { $in: ckUsers } })
-                        .then((users) => {
-                            users.forEach((user) => {
-                                Object.values(
-                                    this.notificationClient[user.ck_id],
-                                ).forEach((conn) =>
-                                    (conn as any).sendUTF(
-                                        JSON.stringify([
-                                            {
-                                                data: {
-                                                    ...user.data,
-                                                    session: (conn as any)
-                                                        .sessionId,
+
+        const confSessions = allConn.filter(filter).reduce((res, conn) => {
+            if (!res[conn.gateContext.name]) {
+                res[conn.gateContext.name] = {
+                    context: conn.gateContext,
+                    sessions: [conn.sessionId],
+                    conns: [conn],
+                };
+            } else {
+                res[conn.gateContext.name].sessions.push(conn.sessionId);
+                res[conn.gateContext.name].conns.push(conn);
+            }
+            return res;
+        }, {}) as IConfigSession;
+        if (confSessions) {
+            Object.values(confSessions).forEach(({ context, sessions }) => {
+                (context.authController as GateSession)
+                    .findSessions(sessions, false)
+                    .then((docs) => {
+                        const ckUsers = Object.values(docs).map(
+                            (doc) =>
+                                `${doc.gsession.idUser}:${doc.gsession.nameProvider}`,
+                        );
+                        const data = Object.values(docs).reduce((res, doc) => {
+                            res[
+                                `${doc.gsession.idUser}:${doc.gsession.nameProvider}`
+                            ] = doc.gsession.userData;
+                            return res;
+                        }, {});
+                        return (context.authController as GateSession)
+                            .getUserDb()
+                            .find({ ck_id: { $in: ckUsers } })
+                            .then((users) => {
+                                users.forEach((user) => {
+                                    Object.values(
+                                        this.notificationClient[user.ck_id],
+                                    ).forEach((conn) =>
+                                        conn.sendUTF(
+                                            JSON.stringify([
+                                                {
+                                                    data: {
+                                                        ...data[user.ck_id],
+                                                        ...user.data,
+                                                        session: conn.sessionId,
+                                                    },
+                                                    event: "reloaduser",
                                                 },
-                                                event: "reloaduser",
-                                            },
-                                        ]),
-                                    ),
-                                );
+                                            ]),
+                                        ),
+                                    );
+                                });
                             });
-                        });
-                })
-                .catch((err) => logger.error(err));
+                    })
+                    .catch((err) => logger.error(err));
+            });
         }
     }
 
@@ -206,31 +279,55 @@ class NotificationController {
         const allConn = Object.values(this.notificationClient || {}).reduce(
             (arr, value) => [...arr, ...Object.values(value)],
             [],
-        );
-        const sessions = allConn.map((conn) => conn.sessionId);
+        ) as IWSConnect[];
+        const confSessions = allConn.reduce((res, conn) => {
+            if (!res[conn.gateContext.name]) {
+                res[conn.gateContext.name] = {
+                    context: conn.gateContext,
+                    sessions: [conn.sessionId],
+                    conns: [conn],
+                };
+            } else {
+                res[conn.gateContext.name].sessions.push(conn.sessionId);
+                res[conn.gateContext.name].conns.push(conn);
+            }
+            return res;
+        }, {}) as IConfigSession;
         if (allConn.length) {
-            GateSession.findSessions(sessions, false)
-                .then((docs) => {
-                    const getSession = docs.map((doc) => doc.ck_id);
-                    const disconectedSession = sessions.filter(
-                        (session) => getSession.indexOf(session) === -1,
-                    );
-                    disconectedSession.forEach((session) => {
-                        allConn.forEach((conn) => {
-                            if (conn.sessionId === session) {
-                                conn.close(
-                                    4001,
-                                    "Session not found, specified query requires authentication",
-                                );
-                                const obj = this.notificationClient[
-                                    `${conn.session.ck_id}:${conn.session.ck_d_provider}`
-                                ];
-                                delete obj[conn.uniqhash];
-                            }
-                        });
-                    });
-                })
-                .catch((err) => logger.error(err));
+            Object.values(confSessions).forEach(
+                ({ context, sessions, conns }) => {
+                    (context.authController as GateSession)
+                        .findSessions(sessions, false)
+                        .then((docs) => {
+                            const getSession = Object.values(docs).map(
+                                (doc) => doc.gsession?.session,
+                            );
+                            const disconectedSession = sessions.filter(
+                                (session) => getSession.indexOf(session) === -1,
+                            );
+                            disconectedSession.forEach((session) => {
+                                conns.forEach((conn) => {
+                                    if (conn.sessionId === session) {
+                                        logger.debug(
+                                            "Close expire %s",
+                                            conn.sessionId,
+                                        );
+                                        conn.sendCloseFrame(
+                                            4001,
+                                            "Session not found, specified query requires authentication",
+                                            true,
+                                        );
+                                        const obj = this.notificationClient[
+                                            `${conn.session.idUser}:${conn.session.nameProvider}`
+                                        ];
+                                        delete obj[conn.uniqhash];
+                                    }
+                                });
+                            });
+                        })
+                        .catch((err) => logger.error(err));
+                },
+            );
         }
         delay(() => this.checkConnection(), TIMEOUT);
     }

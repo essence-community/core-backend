@@ -9,16 +9,15 @@ import { IResultProvider } from "@ungate/plugininf/lib/IResult";
 import NullAuthProvider, {
     IAuthResult,
 } from "@ungate/plugininf/lib/NullAuthProvider";
-import NullProvider from "@ungate/plugininf/lib/NullProvider";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
 import { ReadStreamToArray } from "@ungate/plugininf/lib/stream/Util";
 import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
+import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
 
 export default class AuthCrmWs extends NullAuthProvider {
     public static getParamsInfo(): IParamsInfo {
         return {
             ...CrmWsCaller.getParamsInfo(),
-            ...NullProvider.getParamsInfo(),
             clAudit: {
                 defaultValue: true,
                 name: "Признак аудита",
@@ -76,8 +75,12 @@ export default class AuthCrmWs extends NullAuthProvider {
     }
     private crmWSCaller: CrmWsCaller;
     private nsiJsonGateCaller: JsonGateCaller;
-    constructor(name: string, params: ICCTParams) {
-        super(name, params);
+    constructor(
+        name: string,
+        params: ICCTParams,
+        authController: IAuthController,
+    ) {
+        super(name, params, authController);
         this.params = {
             ...this.params,
             ...initParams(AuthCrmWs.getParamsInfo(), params),
@@ -110,7 +113,7 @@ export default class AuthCrmWs extends NullAuthProvider {
                 throw new ErrorException(ErrorGate.AUTH_DENIED);
             }
             return {
-                ck_user: result[0].cn_user,
+                idUser: result[0].cn_user,
             };
         } catch (e) {
             this.log.error(
@@ -141,7 +144,7 @@ export default class AuthCrmWs extends NullAuthProvider {
          */
         getCrmUrl: async (gateContext: IContext): Promise<IResultProvider> => {
             const params = {
-                cn_user: gateContext.session.ck_id,
+                cn_user: gateContext.session.idUser,
             };
             const res = await this.crmWSCaller.getData(
                 this.params.queryToken,
@@ -200,7 +203,7 @@ export default class AuthCrmWs extends NullAuthProvider {
             }
             const json = JSON.parse(gateContext.params.json || "{}");
             const params = {
-                cn_user: gateContext.session.ck_id,
+                cn_user: gateContext.session.idUser,
             };
             const jsonCaller = await this.nsiJsonGateCaller.callGet(
                 gateContext,

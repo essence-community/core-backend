@@ -24,7 +24,10 @@ class ProcessController {
      * @return {[type]}      [description]
      */
     public async reloadProvider(data) {
-        const provider = PluginManager.getGateProvider(data.name);
+        const provider = PluginManager.getGateProvider(
+            data.nameContext,
+            data.name,
+        );
         if (provider) {
             log.info(
                 `Start init provider ${data.name} process: ${process.env.UNGATE_HTTP_ID}`,
@@ -61,9 +64,11 @@ class ProcessController {
         );
         Mask.mask(data.session)
             .then(() => {
-                PluginManager.getGateProviders().forEach((provider) => {
-                    rows.push(provider.init(true));
-                });
+                PluginManager.getGateProviders(data.nameContext).forEach(
+                    (provider) => {
+                        rows.push(provider.init(true));
+                    },
+                );
                 return Promise.all(rows).then(
                     () => {
                         log.info(
@@ -195,7 +200,10 @@ class ProcessController {
     public async destroyProvider(data) {
         Mask.mask(data.session)
             .then(async () => {
-                await PluginManager.removeGateProvider(data.name);
+                await PluginManager.removeGateProvider(
+                    data.nameContext,
+                    data.name,
+                );
                 return Mask.unmask(data.session);
             })
             .then(noop);
