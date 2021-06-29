@@ -9,5 +9,5 @@ select pkg_json_meta.f_refresh_page_object(pv_user => :sess_ck_id,
                                                  pc_json => :json) as result
 
  ', 'meta', '20783', '2019-05-28 16:18:09.874041+03', 'dml', 'po_session', NULL, 'Необходимо актуализировать')
-on conflict (ck_id) do update set cc_query = excluded.cc_query, ck_provider = excluded.ck_provider, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cr_type = excluded.cr_type, cr_access = excluded.cr_access;
+on conflict (ck_id) do update set cc_query = excluded.cc_query, ck_provider = excluded.ck_provider, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cr_type = excluded.cr_type, cr_access = excluded.cr_access, cn_action = excluded.cn_action, cv_description = excluded.cv_description;
 

@@ -1354,7 +1354,17 @@ begin
    	  return;
     end if;
     if pv_action = i::varchar then
-      pot_object.ck_id := sys_guid();
+      if pot_object.ck_id is not null then
+        for pcur_cnt in (
+            select 1
+            from s_mt.t_object o
+            where o.ck_id = pot_object.ck_id
+        ) loop
+            pot_object.ck_id := sys_guid();
+        end loop;
+      else 
+        pot_object.ck_id := sys_guid();
+      end if;
       insert into s_mt.t_object values (pot_object.*);
     elsif pv_action = u::varchar then
       update s_mt.t_object
@@ -1930,6 +1940,7 @@ begin
          and o.ck_page = pot_page_object.ck_page
          and o.cn_order = pot_page_object.cn_order
          and ((pot_page_object.ck_id is not null and o.ck_id <> pot_page_object.ck_id) or pot_page_object.ck_id is null))
+
     loop
         perform  pkg.p_set_error(34);
     end loop;
@@ -2012,7 +2023,13 @@ begin
 
     if pv_action = i::varchar then
         /*При вставке записи берем все дочерние элементы и вставляем в той же иерархии, что и в объекте.*/
-        pot_page_object.ck_id := sys_guid();
+        if pot_page_object.ck_id is not null then
+          for vcur_object in ( select 1 from s_mt.t_page_object where ck_id = pot_page_object.ck_id) loop
+            pot_page_object.ck_id := sys_guid();
+          end loop;
+        else
+          pot_page_object.ck_id := sys_guid();
+        end if;
         insert into s_mt.t_page_object(ck_id, ck_parent, ck_master, ck_object, ck_page, cn_order, ck_user, ct_change)
         (
           select
@@ -3161,3 +3178,324 @@ end;
 $$;
 
 ALTER FUNCTION pkg_meta.p_lock_sys_setting(pk_id character varying) OWNER TO s_mp;
+
+CREATE OR REPLACE FUNCTION pkg_meta.p_modify_page_all_object(pc_json jsonb, pv_action character varying, pv_user character varying, pv_parent_object character varying DEFAULT NULL::character varying) RETURNS void
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 's_mt', 'pkg_meta', 'public'
+    AS $$
+declare
+  -- переменные пакета
+  i sessvarstr;
+  u sessvarstr;
+  d sessvarstr;
+  gv_error sessvarstr;
+  gl_warning sessvari;
+  gv_warning sessvarstr;
+
+  -- переменные функции
+  vot_page_object_attr s_mt.t_page_object_attr;
+  vot_object_attr s_mt.t_object_attr;
+  vot_object s_mt.t_object;
+  vot_page_object s_mt.t_page_object;
+  rec record;
+  rec2 record;
+  rec3 record;
+begin
+  -- инициализация/получение переменных пакета
+  i = sessvarstr_declare('pkg', 'i', 'I');
+  u = sessvarstr_declare('pkg', 'u', 'U');
+  d = sessvarstr_declare('pkg', 'd', 'D');
+  gv_error = sessvarstr_declare('pkg', 'gv_error', '');
+  gl_warning = sessvari_declare('pkg', 'gl_warning', 0);
+  gv_warning = sessvarstr_declare('pkg', 'gv_warning', '');
+
+  -- код функции
+  if pv_action = d::varchar then
+    if nullif(trim(pc_json#>>'{ck_page_object}'), '') is not null then
+      vot_page_object.ck_id = nullif(trim(pc_json#>>'{ck_page_object}'), '');  
+      perform pkg_meta.p_modify_page_object(d::varchar, vot_page_object);
+    end if;
+    if nullif(trim(pc_json#>>'{ck_object}'), '') is not null then
+      for rec in (
+        select
+              1
+          where
+              not exists (
+                  select
+                      1
+                  from
+                      s_mt.t_object tob
+                  join s_mt.t_page_object tpo on
+                      tpo.ck_object = tob.ck_id
+                      and tpo.ck_id <> nullif(trim(pc_json#>>'{ck_page_object}'), '')
+                  where
+                      tob.ck_id = nullif(trim(pc_json#>>'{ck_object}'), '')
+              ) 
+      ) loop
+        vot_object.ck_id = nullif(trim(pc_json#>>'{ck_object}'), '');
+        perform pkg_meta.p_modify_object(d::varchar, vot_object);
+      end loop;
+    end if;
+    
+    RETURN;
+  end if;
+  /*
+  ck_id varchar(32) NOT NULL,
+	ck_class varchar(32) NOT NULL,
+	ck_parent varchar(32) NULL,
+	cv_name varchar(50) NOT NULL,
+	cn_order int8 NOT NULL,
+	ck_query varchar(255) NULL,
+	cv_description varchar(2000) NOT NULL,
+	cv_displayed varchar(255) NULL DEFAULT ' '::character varying,
+	cv_modify text NULL,
+	ck_provider varchar(32) NULL,
+	ck_user varchar(150) NOT NULL,
+	ct_change timestamptz NOT NULL,
+  */
+  for rec in (
+    select
+        ta.ck_id as ck_id,
+        case
+          when ta.ck_id is not null then
+            'U'
+          else
+            'I'
+        end as cv_action,
+        (
+            coalesce(ja.ck_class, ta.ck_class, tco.ck_id)
+        ) as ck_class,
+        (
+            coalesce(ta.ck_parent, pv_parent_object)
+        ) as ck_parent,
+        (
+            coalesce(ja.cv_name, ta.cv_name)
+        ) as cv_name,
+        (
+            coalesce(ja.cn_order, ta.cn_order::text)
+        ) as cn_order,
+        (
+            coalesce(ja.ck_query, ta.ck_query)
+        ) as ck_query,
+        (
+            coalesce(ja.cv_description, ta.cv_description)
+        ) as cv_description,
+        (
+            coalesce(ja.cv_displayed, ta.cv_displayed)
+        ) as cv_displayed,
+        (
+            coalesce(ja.cv_modify, ta.cv_modify)
+        ) as cv_modify,
+        (
+            coalesce(ja.ck_provider, ta.ck_provider)
+        ) as ck_provider
+    from
+        jsonb_to_record(pc_json) as 
+        ja(ck_object text,
+           ck_parent text,
+           cv_name text,
+           ck_class text,
+           cn_order text,
+           ck_query text,
+           cv_description text,
+           cv_displayed text,
+           cv_modify text,
+           ck_provider text,
+           type text,
+           datatype text
+        )
+    left join s_mt.t_object ta on
+        ja.ck_object = ta.ck_id
+    left join s_mt.t_object tpa on
+        tpa.ck_id = ta.ck_parent
+    join (select
+        tc.*,
+        tca.cv_value as cv_type,
+        tca2.cv_value as cv_datatype
+    from
+        s_mt.t_class tc
+    join s_mt.t_class_attr tca on
+        tc.ck_id = tca.ck_class
+        and tca.ck_attr = 'type'
+    left join s_mt.t_class_attr tca2 on
+        tc.ck_id = tca2.ck_class
+        and tca2.ck_attr = 'datatype'
+        ) tco on
+        ta.ck_class = tco.ck_id or (ta.ck_class is null and ja.ck_class = tco.ck_id) or (ta.ck_class is null and ja.ck_class is null and ja.datatype is null and tco.cv_datatype is null and ja.type = tco.cv_type)
+        or (ta.ck_class is null and ja.ck_class is null and ja.datatype is not null and tco.cv_datatype is not null and ja.datatype = tco.cv_datatype and ja.type = tco.cv_type)
+  ) loop
+    vot_object.ck_id = rec.ck_id;
+    vot_object.ck_class = rec.ck_class;
+    vot_object.ck_parent = rec.ck_parent;
+    vot_object.cv_name = rec.cv_name;
+    vot_object.cn_order = rec.cn_order::bigint;
+    vot_object.ck_query = rec.ck_query;
+    vot_object.cv_description = rec.cv_description;
+    vot_object.cv_displayed = rec.cv_displayed;
+    vot_object.cv_modify = rec.cv_modify;
+    vot_object.ck_provider = rec.ck_provider;
+    vot_object.ck_user = pv_user;
+    vot_object.ct_change = CURRENT_TIMESTAMP;
+    vot_object := pkg_meta.p_modify_object(rec.cv_action, vot_object);
+  end loop;
+  if nullif(gv_error::varchar, '') is not null then
+      return;
+  end if;
+  -- add children
+  for rec in (
+    select
+      *
+    from
+        jsonb_each(pc_json)
+    where
+        key in (
+            select
+                ta.ck_id
+            from
+                s_mt.t_attr ta
+            where
+                ta.ck_attr_type = 'placement'
+        ) and value is not null and jsonb_typeof(value) = 'array' and value::text <> '[]'
+  ) loop
+    for rec2 in (
+        select
+          *
+        from
+            jsonb_array_elements(rec.value)
+      ) loop
+        perform pkg_meta.p_modify_page_all_object(rec2.value, pv_action, pv_user, vot_object.ck_id);
+        if nullif(gv_error::varchar, '') is not null then
+          return;
+        end if;
+      end loop;
+  end loop;
+
+  vot_page_object.ck_page = nullif(trim(pc_json#>>'{ck_page}'), '');
+  vot_page_object.ck_object = vot_object.ck_id;
+  vot_page_object.ck_id = nullif(trim(pc_json#>>'{ck_page_object}'), '');
+  vot_page_object.cn_order = nullif(trim(pc_json#>>'{cn_order}'), '')::bigint;
+  vot_page_object.ck_master = null;
+  vot_page_object.ck_parent = nullif(trim(pc_json#>>'{ck_parent}'), '');
+  vot_page_object.ck_user = pv_user;
+  vot_page_object.ct_change = CURRENT_TIMESTAMP;
+    
+  if vot_page_object.ck_parent is null then
+    for rec in (
+        select
+          1
+        from
+            s_mt.t_page_object
+        where ck_id = vot_page_object.ck_id
+      ) loop
+        perform pkg_meta.p_modify_page_object(d::varchar, vot_page_object);
+    end loop;
+  end if;
+  if nullif(gv_error::varchar, '') is not null then
+      return;
+  end if;
+  -- clear children
+  /*
+  for rec in (
+    select
+    ja.*
+    from
+        jsonb_each(pc_json) as ja
+    where
+        ja.key in (
+            select
+                ta.ck_id
+            from
+                s_mt.t_attr ta
+            where
+                ta.ck_attr_type = 'placement'
+        ) and ja.value is not null and jsonb_typeof(ja.value) = 'array' and ja.value::text <> '[]'
+  ) loop
+    for rec2 in (
+        select
+          tob.ck_id,
+          ja2.*
+        from s_mt.t_object tob
+        left join jsonb_array_elements(rec.value) as ja2 on
+        ja2.value#>>'{ck_object}' = tob.ck_id
+        where ja2.value is null
+      ) loop
+        if rec2.ck_id is not null then
+          for rec3 in (
+            select
+                  1
+              where
+                  not exists (
+                      select
+                          1
+                      from
+                          s_mt.t_object tob1
+                      join s_mt.t_page_object tpo1 on
+                          tpo1.ck_object = tob1.ck_id
+                          and tpo1.ck_page <> nullif(trim(pc_json#>>'{ck_page}'), '')
+                      where
+                          tob1.ck_id = rec2.ck_id
+                  ) 
+          ) loop
+            vot_object.ck_id := rec2.ck_id;
+            perform pkg_meta.p_modify_object(d::varchar, vot_object);
+          end loop;
+        end if;
+      end loop;
+  end loop;
+  */
+  if nullif(gv_error::varchar, '') is not null then
+      return;
+  end if;
+  -- add attributes
+  for rec in (
+    select
+      toa.ck_id,
+      case
+          when toa.ck_id is not null then
+            'U'
+          else
+            'I'
+      end as cv_action,
+      tca.ck_id as ck_class_attr,
+      (
+        coalesce(ja.value, toa.cv_value)
+      ) as cv_value
+    from s_mt.t_object tobj
+    join s_mt.t_class_attr tca on 
+      tobj.ck_class = tca.ck_class 
+    join jsonb_each_text(pc_json) as ja on
+      ja.key = tca.ck_attr
+    left join s_mt.t_object_attr toa on 
+      toa.ck_class_attr = tca.ck_id and toa.ck_object = tobj.ck_id
+    where
+      tobj.ck_id = vot_object.ck_id and 
+      tca.ck_attr not in (
+            select
+                ta.ck_id
+            from
+                s_mt.t_attr ta
+            where
+                ta.ck_attr_type in ('placement', 'system', 'behavior')
+        )
+  ) loop
+    vot_object_attr.ck_id = rec.ck_id;
+    vot_object_attr.ck_object = vot_object.ck_id;
+    vot_object_attr.ck_class_attr = rec.ck_class_attr;
+    vot_object_attr.cv_value = rec.cv_value;
+    vot_object_attr.ck_user = pv_user;
+    vot_object_attr.ct_change = CURRENT_TIMESTAMP;
+    perform pkg_meta.p_modify_object_attr(rec.cv_action, vot_object_attr);
+    if nullif(gv_error::varchar, '') is not null then
+      perform pkg.p_set_error(51, row_to_json(vot_object)::text);
+      return;
+    end if;
+  end loop;
+  if vot_page_object.ck_parent is null then
+    vot_page_object := pkg_meta.p_modify_page_object(i::varchar, vot_page_object);
+  end if;
+  RETURN;
+end;
+$$;
+
+
+ALTER FUNCTION pkg_meta.p_modify_page_all_object(jsonb, varchar, varchar, varchar) OWNER TO s_mp;

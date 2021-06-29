@@ -19,5 +19,5 @@ select i.ck_id,
  order by i.cv_name
 
    ', 'meta', '20783', '2019-05-30 14:43:15.211439+03', 'select', 'po_session', NULL, 'Необходимо актуализировать')
-on conflict (ck_id) do update set cc_query = excluded.cc_query, ck_provider = excluded.ck_provider, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cr_type = excluded.cr_type, cr_access = excluded.cr_access;
+on conflict (ck_id) do update set cc_query = excluded.cc_query, ck_provider = excluded.ck_provider, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cr_type = excluded.cr_type, cr_access = excluded.cr_access, cn_action = excluded.cn_action, cv_description = excluded.cv_description;
 

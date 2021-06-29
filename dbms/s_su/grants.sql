@@ -30,9 +30,6 @@ GRANT USAGE ON SCHEMA public TO s_mp;
 
 GRANT USAGE ON SCHEMA s_mt TO s_mp;
 
---на update
-GRANT SELECT, UPDATE ON TABLE s_mt.t_notification TO s_mc;
-
 --гранты на выполнение
 
 GRANT SELECT ON TABLE public.dual TO s_mc;
@@ -44,3 +41,6 @@ GRANT SELECT, UPDATE, INSERT, DELETE ON TABLE public.dual TO s_mp;
 SELECT pkg_patcher.p_change_role_connect_user('${user.connect}', '${user.table}');
 
 SELECT pkg_patcher.p_change_role_update_user('${user.update}', '${user.table}');
+
+--на update
+GRANT SELECT, UPDATE ON TABLE s_mt.t_notification TO s_mc;

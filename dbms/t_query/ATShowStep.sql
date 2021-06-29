@@ -29,5 +29,5 @@ where s.ck_scenario = (cast(:json as jsonb)->''master''->>''ck_id'')::varchar
 order by &SORT, s.cn_order asc
 
   ', 'meta', '20783', '2019-05-22 13:34:05.248676+03', 'select', 'po_session', NULL, 'Необходимо актуализировать')
-on conflict (ck_id) do update set cc_query = excluded.cc_query, ck_provider = excluded.ck_provider, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cr_type = excluded.cr_type, cr_access = excluded.cr_access;
+on conflict (ck_id) do update set cc_query = excluded.cc_query, ck_provider = excluded.ck_provider, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cr_type = excluded.cr_type, cr_access = excluded.cr_access, cn_action = excluded.cn_action, cv_description = excluded.cv_description;
 

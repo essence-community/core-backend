@@ -107,5 +107,5 @@ where ( &FILTER )
 /*##filter.ck_id*/and t.ck_id = :json::json#>>''{filter,ck_id}''/*filter.ck_id##*/
 order by &SORT
   ', 'meta', '20783', '2019-05-31 11:47:23.81503+03', 'select', 'po_session', NULL, 'Список глобальных переменных страницы')
-on conflict (ck_id) do update set cc_query = excluded.cc_query, ck_provider = excluded.ck_provider, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cr_type = excluded.cr_type, cr_access = excluded.cr_access;
+on conflict (ck_id) do update set cc_query = excluded.cc_query, ck_provider = excluded.ck_provider, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cr_type = excluded.cr_type, cr_access = excluded.cr_access, cn_action = excluded.cn_action, cv_description = excluded.cv_description;
 
