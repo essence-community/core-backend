@@ -27,7 +27,6 @@ const PASSWORD_PATTERN_NGINX_GSS = "bogus_auth_gss_passwd";
 export default class PKOAuth extends NullAuthProvider {
     public static getParamsInfo(): IParamsInfo {
         return {
-            ...NullAuthProvider.getParamsInfo(),
             ...PostgresDB.getParamsInfo(),
             adBaseDN: {
                 name: "Начальный уровень поиска в ldap",
@@ -85,7 +84,7 @@ export default class PKOAuth extends NullAuthProvider {
         super(name, params, authController);
         this.params = {
             ...this.params,
-            ...initParams(PKOAuth.getParamsInfo(), params),
+            ...initParams(PKOAuth.getParamsInfo(), this.params),
         };
         this.dataSource = new PostgresDB(`${this.name}_provider`, {
             connectString: this.params.connectString,

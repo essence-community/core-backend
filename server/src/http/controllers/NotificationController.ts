@@ -96,14 +96,14 @@ class NotificationController {
                 if (session) {
                     return session;
                 }
-                return context.authController
-                    .loadSession(null, sessionId)
+                return (context.authController as GateSession)
+                    .loadSession(null, sessionId, true)
                     .then((session) =>
                         session ? { session, context } : session,
                     );
             },
-            this.contexts[0].authController
-                .loadSession(null, sessionId)
+            (this.contexts[0].authController as GateSession)
+                .loadSession(null, sessionId, true)
                 .then((session) =>
                     session ? { session, context: this.contexts[0] } : session,
                 ),

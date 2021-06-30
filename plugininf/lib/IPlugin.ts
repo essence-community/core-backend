@@ -8,7 +8,7 @@ import IContext from "./IContext";
 import IObjectParam from "./IObjectParam";
 import IQuery, { IGateQuery } from "./IQuery";
 import IResult from "./IResult";
-import ISession from "./ISession";
+import { IAuthResult } from "./NullAuthProvider";
 export interface IPluginRequestContext {
     [key: string]: any;
 }
@@ -38,7 +38,7 @@ export default interface IPlugin {
     beforeSession(
         gateContext: IContext,
         PRequestContext: IPluginRequestContext,
-    ): Promise<IObjectParam | void>;
+    ): Promise<IAuthResult | void>;
     beforeSaveSession(
         gateContext: IContext,
         PRequestContext: IPluginRequestContext,

@@ -36,7 +36,7 @@ export default class CoreIntegration extends NullContext {
         authController: IAuthController,
     ) {
         super(name, params, authController);
-        this.params = initParams(CoreIntegration.getParamsInfo(), params);
+        this.params = initParams(CoreIntegration.getParamsInfo(), this.params);
         if (this.params.disableCache) {
             this.caller = this.onlineInitContext;
         } else {

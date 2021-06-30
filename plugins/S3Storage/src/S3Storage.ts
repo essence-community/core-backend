@@ -57,7 +57,7 @@ export default class S3Storage extends NullPlugin {
     private clients: AWS.S3;
     constructor(name: string, params: ICCTParams) {
         super(name, params);
-        this.params = initParams(S3Storage.getParamsInfo(), params);
+        this.params = initParams(S3Storage.getParamsInfo(), this.params);
         const endpoint = new AWS.Endpoint("http://s3.amazonaws.com");
         const credentials = new AWS.Credentials({
             accessKeyId: this.params.cvKeyId,

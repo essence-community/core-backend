@@ -488,14 +488,18 @@ export default class AdminAction {
             case "long_string": {
                 return isObject(params[name])
                     ? JSON.stringify(params[name])
-                    : params[name] || conf.defaultValue;
+                    : isEmpty(params[name])
+                    ? conf.defaultValue
+                    : params[name];
             }
             case "form_nested": {
                 return Object.entries(conf.childs).reduce((res, [key, obj]) => {
                     res[key] = this.checkData(
                         key,
                         obj as IParamInfo,
-                        params[name] || conf.defaultValue,
+                        isEmpty(params[name])
+                            ? conf.defaultValue
+                            : params[name],
                     );
                     return res;
                 }, {});
@@ -510,15 +514,19 @@ export default class AdminAction {
             }
             case "boolean": {
                 if (isEmpty(conf.defaultValue)) {
-                    return params[name] || conf.defaultValue;
+                    return isEmpty(params[name])
+                        ? conf.defaultValue
+                        : params[name];
                 }
-                return `${+(params[name] || conf.defaultValue)}`;
+                return `${+(isEmpty(params[name])
+                    ? conf.defaultValue
+                    : params[name])}`;
             }
             case "combo": {
-                return params[name] || conf.defaultValue;
+                return isEmpty(params[name]) ? conf.defaultValue : params[name];
             }
             default: {
-                return params[name] || conf.defaultValue;
+                return isEmpty(params[name]) ? conf.defaultValue : params[name];
             }
         }
     }
@@ -564,10 +572,14 @@ export default class AdminAction {
                     datatype: "text",
                     initvalue: isObject(params[name])
                         ? JSON.stringify(params[name])
-                        : params[name] || conf.defaultValue,
+                        : isEmpty(params[name])
+                        ? conf.defaultValue
+                        : params[name],
                     defaultvalue: isObject(params[name])
                         ? JSON.stringify(params[name])
-                        : params[name] || conf.defaultValue,
+                        : isEmpty(params[name])
+                        ? conf.defaultValue
+                        : params[name],
                     type: "IFIELD",
                 };
             }
@@ -587,16 +599,37 @@ export default class AdminAction {
                     type: "FORM_NESTED",
                 };
             }
+            case "form_repeater": {
+                return {
+                    ...defaultAttr,
+                    childs: Object.entries(conf.childs).map(([key, obj]) =>
+                        this.createFields(
+                            gateContext,
+                            key,
+                            ckPage,
+                            child,
+                            obj,
+                            params[name] || {},
+                        ),
+                    ),
+                    datatype: "repeater",
+                    type: "IFIELD",
+                };
+            }
             case "long_string": {
                 return {
                     ...defaultAttr,
                     datatype: "textarea",
                     initvalue: isObject(params[name])
                         ? JSON.stringify(params[name])
-                        : params[name] || conf.defaultValue,
+                        : isEmpty(params[name])
+                        ? conf.defaultValue
+                        : params[name],
                     defaultvalue: isObject(params[name])
                         ? JSON.stringify(params[name])
-                        : params[name] || conf.defaultValue,
+                        : isEmpty(params[name])
+                        ? conf.defaultValue
+                        : params[name],
                     type: "IFIELD",
                 };
             }
@@ -636,8 +669,12 @@ export default class AdminAction {
                         ck_page_object: child.ck_page_object,
                         cl_dataset: 1,
                         datatype: "combo",
-                        initvalue: params[name] || conf.defaultValue,
-                        defaultvalue: params[name] || conf.defaultValue,
+                        initvalue: isEmpty(params[name])
+                            ? conf.defaultValue
+                            : params[name],
+                        defaultvalue: isEmpty(params[name])
+                            ? conf.defaultValue
+                            : params[name],
                         displayfield: "cv_name",
                         type: "IFIELD",
                         localization: "static",
@@ -657,8 +694,12 @@ export default class AdminAction {
                 return {
                     ...defaultAttr,
                     datatype: "checkbox",
-                    initvalue: `${+(params[name] || conf.defaultValue)}`,
-                    defaultvalue: `${+(params[name] || conf.defaultValue)}`,
+                    initvalue: `${+(isEmpty(params[name])
+                        ? conf.defaultValue
+                        : params[name])}`,
+                    defaultvalue: `${+(isEmpty(params[name])
+                        ? conf.defaultValue
+                        : params[name])}`,
                     type: "IFIELD",
                 };
             }
@@ -671,8 +712,13 @@ export default class AdminAction {
                     getglobaltostore: conf.getGlobalToStore,
                     cl_dataset: 1,
                     datatype: "combo",
-                    initvalue: params[name] || conf.defaultValue,
-                    defaultvalue: params[name] || conf.defaultValue,
+                    idproperty: conf.idproperty || "ck_id",
+                    initvalue: isEmpty(params[name])
+                        ? conf.defaultValue
+                        : params[name],
+                    defaultvalue: isEmpty(params[name])
+                        ? conf.defaultValue
+                        : params[name],
                     displayfield: conf.displayField,
                     type: "IFIELD",
                     valuefield: conf.valueField,

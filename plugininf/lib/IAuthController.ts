@@ -1,7 +1,26 @@
+import { Store } from "express-session";
 import ILocalDB from "./db/local/ILocalDB";
 import IContext from "./IContext";
 import IObjectParam from "./IObjectParam";
 import ISession from "./ISession";
+import { IUserData, ISessionData } from "./ISession";
+
+export interface ICreateSessionParam {
+    context: IContext;
+    idUser: string;
+    nameProvider: string;
+    userData: IUserData;
+    sessionDuration?: number;
+    sessionData: IObjectParam;
+}
+
+export interface ISessionStore extends Store {
+    init(): Promise<void>;
+    allSession(
+        sessionId?: string | string[],
+        isExpired?: boolean,
+    ): Promise<{ [sid: string]: ISessionData } | null>;
+}
 
 export interface IAuthController {
     /**
@@ -36,13 +55,7 @@ export interface IAuthController {
      * @param data данные пользователя
      * @param sessionDuration время жизни сессии в минутах
      */
-    createSession(
-        gateContext: IContext,
-        idUser: string,
-        nameProvider: string,
-        data: IObjectParam,
-        sessionDuration?: number,
-    ): Promise<IObjectParam>;
+    createSession(ICreateSessionParam): Promise<IObjectParam>;
 
     /**
      * Устаревание сессии
@@ -66,6 +79,8 @@ export interface IAuthController {
      * @returns user db
      */
     getCacheDb(): ILocalDB;
+
+    getSessionStore(): ISessionStore;
     /**
      * Загрузка сессии
      * @param [sessionId]

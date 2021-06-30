@@ -13,15 +13,18 @@ import { NeDbSessionStore } from "./store/NeDbSessionStore";
 import IContext from "@ungate/plugininf/lib/IContext";
 import { IRufusLogger } from "rufus";
 import NotificationController from "../../http/controllers/NotificationController";
-import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
-import { ISessionStore } from "./store/Store.types";
+import {
+    IAuthController,
+    ICreateSessionParam,
+} from "@ungate/plugininf/lib/IAuthController";
+import { ISessionStore } from "@ungate/plugininf/lib/IAuthController";
 import { ISessionData } from "@ungate/plugininf/lib/ISession";
 import { initParams } from "@ungate/plugininf/lib/util/Util";
 import NullContext from "@ungate/plugininf/lib/NullContext";
 
 export class GateSession implements IAuthController {
     private dbUsers: ILocalDB;
-    public store: ISessionStore;
+    private store: ISessionStore;
     private dbCache: ILocalDB;
     private logger: IRufusLogger;
     public updateUserInfo: () => void;
@@ -92,24 +95,27 @@ export class GateSession implements IAuthController {
      * @param data данные пользователя
      * @param sessionDuration время жизни сессии в минутах
      */
-    public createSession(
-        context: IContext,
-        idUser: string,
-        nameProvider: string,
-        data: IObjectParam,
-        sessionDuration: number = 60,
-    ): Promise<IObjectParam> {
+    public createSession({
+        context,
+        idUser,
+        nameProvider,
+        userData,
+        sessionDuration = 60,
+        sessionData,
+    }: ICreateSessionParam): Promise<IObjectParam> {
         if (!idUser) {
             idUser = uuidv4();
             idUser = idUser.replace(/-/g, "");
         }
-        var signed = "s:" + this.sign(context.request.session.id, this.secret);
+        const signed =
+            "s:" + this.sign(context.request.session.id, this.secret);
 
         context.request.session.gsession = {
             nameProvider,
             idUser,
-            userData: data as any,
+            userData: userData as any,
             session: signed,
+            ...sessionData,
         };
         context.request.session.cookie.originalMaxAge = sessionDuration * 60000;
         context.request.session.cookie.maxAge = sessionDuration * 60000;
@@ -122,7 +128,7 @@ export class GateSession implements IAuthController {
                     return reject(err);
                 }
                 resolve({
-                    ...data,
+                    ...userData,
                     session: signed,
                 });
             });
@@ -132,6 +138,7 @@ export class GateSession implements IAuthController {
     public async loadSession(
         context?: IContext,
         sessionId?: string,
+        isNotification = false,
     ): Promise<ISession | null> {
         const now = new Date();
 
@@ -145,14 +152,34 @@ export class GateSession implements IAuthController {
             return context.request.session.gsession;
         }
 
+        if (
+            context &&
+            context.request.session &&
+            context.request.session.gsession &&
+            (context.request.session.gsession.typeCheckAuth === "cookie" ||
+                context.request.session.gsession.typeCheckAuth ===
+                    "cookieorsession")
+        ) {
+            return context.request.session.gsession;
+        }
+
         if (sessionId && sessionId.substr(0, 2) === "s:") {
             const val = this.unsign(sessionId.slice(2), this.secret);
 
             if (val) {
                 return new Promise((resolve, reject) => {
-                    this.store.get(val, (err, data) => {
+                    this.store.get(val, (err, data: ISessionData) => {
                         if (err) {
                             return reject(err);
+                        }
+                        if (
+                            !data ||
+                            !data.gsession ||
+                            (data.gsession.typeCheckAuth ===
+                                "cookieandsession" &&
+                                !isNotification)
+                        ) {
+                            return resolve(null);
                         }
                         if (context) {
                             Object.entries(data)
@@ -160,9 +187,9 @@ export class GateSession implements IAuthController {
                                 .forEach(([key, value]) => {
                                     context.request.session[key] = value;
                                 });
-                            context.request.session.save((err) => {
-                                if (err) {
-                                    return reject(err);
+                            context.request.session.save((errChild) => {
+                                if (errChild) {
+                                    return reject(errChild);
                                 }
                                 return resolve(
                                     context.request.session.gsession,
@@ -266,6 +293,10 @@ export class GateSession implements IAuthController {
         return this.dbUsers;
     }
 
+    public getSessionStore(): ISessionStore {
+        return this.store;
+    }
+
     public getCacheDb(): ILocalDB {
         return this.dbCache;
     }
@@ -359,10 +390,10 @@ export class GateSession implements IAuthController {
         );
     }
     public unsign(val: string, secret: string): string | false {
-        var str = val.slice(0, val.lastIndexOf(".")),
-            mac = this.sign(str, secret),
-            macBuffer = Buffer.from(mac),
-            valBuffer = Buffer.alloc(macBuffer.length);
+        const str = val.slice(0, val.lastIndexOf("."));
+        const mac = this.sign(str, secret);
+        const macBuffer = Buffer.from(mac);
+        const valBuffer = Buffer.alloc(macBuffer.length);
 
         valBuffer.write(val);
         return crypto.timingSafeEqual(macBuffer, valBuffer) ? str : false;

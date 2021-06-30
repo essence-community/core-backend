@@ -24,7 +24,7 @@ export default class CoreSemaphore extends NullEvent {
     private eventConnect: Connection;
     constructor(name: string, params: ICCTParams) {
         super(name, params);
-        this.params = initParams(CoreSemaphore.getParamsInfo(), params);
+        this.params = initParams(CoreSemaphore.getParamsInfo(), this.params);
         this.dataSource = new PostgresDB(`${this.name}_semaphore`, {
             connectString: this.params.connectString,
             connectionTimeoutMillis: this.params.connectionTimeoutMillis,

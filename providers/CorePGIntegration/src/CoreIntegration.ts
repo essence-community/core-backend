@@ -55,7 +55,7 @@ export default class CoreIntegration extends NullProvider {
         super(name, params, authController);
         this.params = {
             ...this.params,
-            ...initParams(CoreIntegration.getParamsInfo(), params),
+            ...initParams(CoreIntegration.getParamsInfo(), this.params),
         };
         this.dataSource = new PostgresDB(`${this.name}_provider`, {
             connectString: this.params.connectString,

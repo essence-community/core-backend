@@ -19,7 +19,10 @@ export default class CorePgLocalization extends NullEvent {
     private eventConnect: Connection;
     constructor(name: string, params: ICCTParams) {
         super(name, params);
-        this.params = initParams(CorePgLocalization.getParamsInfo(), params);
+        this.params = initParams(
+            CorePgLocalization.getParamsInfo(),
+            this.params,
+        );
         this.dataSource = new PostgresDB(`${this.name}_events`, {
             connectString: this.params.connectString,
             connectionTimeoutMillis: this.params.connectionTimeoutMillis,

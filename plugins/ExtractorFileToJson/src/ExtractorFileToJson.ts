@@ -67,7 +67,10 @@ export default class ExtractorFileToJson extends NullPlugin {
     public params: IPluginParams;
     constructor(name: string, params: ICCTParams) {
         super(name, params);
-        this.params = initParams(ExtractorFileToJson.getParamsInfo(), params);
+        this.params = initParams(
+            ExtractorFileToJson.getParamsInfo(),
+            this.params,
+        );
         if (isEmpty(this.params.cvTypeStorage)) {
             return;
         }

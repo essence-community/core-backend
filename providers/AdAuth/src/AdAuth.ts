@@ -20,7 +20,6 @@ const PASSWORD_PATTERN_NGINX_GSS = "bogus_auth_gss_passwd";
 export default class AdAuth extends NullAuthProvider {
     public static getParamsInfo(): IParamsInfo {
         return {
-            ...NullAuthProvider.getParamsInfo(),
             adBaseDN: {
                 name: "Начальный уровень поиска в ldap",
                 type: "string",
@@ -77,7 +76,7 @@ export default class AdAuth extends NullAuthProvider {
         super(name, params, authController);
         this.params = {
             ...this.params,
-            ...initParams(AdAuth.getParamsInfo(), params),
+            ...initParams(AdAuth.getParamsInfo(), this.params),
         };
         const userAttr = [
             "dn",

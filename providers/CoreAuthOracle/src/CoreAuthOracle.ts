@@ -20,7 +20,6 @@ const Property = ((global as any) as IGlobalObject).property;
 export default class CoreAuthOracle extends NullAuthProvider {
     public static getParamsInfo(): IParamsInfo {
         return {
-            ...NullAuthProvider.getParamsInfo(),
             ...OracleDB.getParamsInfo(),
         };
     }
@@ -36,7 +35,7 @@ export default class CoreAuthOracle extends NullAuthProvider {
         super(name, params, authController);
         this.params = {
             ...this.params,
-            ...initParams(CoreAuthOracle.getParamsInfo(), params),
+            ...initParams(CoreAuthOracle.getParamsInfo(), this.params),
         };
         this.dataSource = new OracleDB(`${this.name}_provider`, {
             connectString: this.params.connectString,

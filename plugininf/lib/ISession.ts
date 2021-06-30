@@ -10,6 +10,11 @@ export default interface ISession {
     idUser: string;
     nameProvider: string;
     userData: IUserData;
+    typeCheckAuth?:
+        | "cookie"
+        | "session"
+        | "cookieandsession"
+        | "cookieorsession";
 }
 
 export interface IUserData {

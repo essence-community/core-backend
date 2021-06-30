@@ -271,6 +271,17 @@ export default abstract class NullContext implements IContextPlugin {
                                     { ck_id: "auto", value: "auto" },
                                 ],
                                 defaultValue: false,
+                                checkvalue: (value) => {
+                                    if (typeof value === "string") {
+                                        if (value === "true") {
+                                            return true;
+                                        }
+                                        if (value === "false") {
+                                            return false;
+                                        }
+                                    }
+                                    return value;
+                                },
                             },
                             sameSite: {
                                 name: "Session cookie sameSite",
@@ -286,6 +297,17 @@ export default abstract class NullContext implements IContextPlugin {
                                     { ck_id: "none", value: "none" },
                                     { ck_id: "strict", value: "strict" },
                                 ],
+                                checkvalue: (value) => {
+                                    if (typeof value === "string") {
+                                        if (value === "true") {
+                                            return true;
+                                        }
+                                        if (value === "false") {
+                                            return false;
+                                        }
+                                    }
+                                    return value;
+                                },
                             },
                         },
                     },

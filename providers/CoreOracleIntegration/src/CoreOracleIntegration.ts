@@ -47,7 +47,7 @@ export default class CoreOracleIntegration extends NullProvider {
         super(name, params, authController);
         this.params = {
             ...this.params,
-            ...initParams(CoreOracleIntegration.getParamsInfo(), params),
+            ...initParams(CoreOracleIntegration.getParamsInfo(), this.params),
         };
         this.dataSource = new OracleDB(`${this.name}_provider`, {
             connectString: this.params.connectString,

@@ -34,7 +34,7 @@ export = class AdminGate extends NullProvider {
         authController: IAuthController,
     ) {
         super(name, params, authController);
-        this.params = initParams(AdminGate.getParamsInfo(), params);
+        this.params = initParams(AdminGate.getParamsInfo(), this.params);
         this.adminAction = new AdminAction(name, this.params);
         this.adminModify = new AdminModify(name, this.params);
     }

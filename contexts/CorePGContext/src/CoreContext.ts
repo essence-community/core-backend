@@ -157,7 +157,7 @@ export default class CoreContext extends NullContext {
         super(name, params, authController);
         this.params = {
             ...this.params,
-            ...initParams(CoreContext.getParamsInfo(), params),
+            ...initParams(CoreContext.getParamsInfo(), this.params),
             anonymousAction: 99999,
         };
         this.dataSource = new PostgresDB(`${this.name}_context`, {

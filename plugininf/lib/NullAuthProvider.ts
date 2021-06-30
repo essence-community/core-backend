@@ -22,6 +22,11 @@ export interface IAuthProviderParam extends IParamsProvider {
     onlySession: boolean;
     sessionDuration: number;
     idKey: string;
+    typeCheckAuth:
+        | "cookie"
+        | "session"
+        | "cookieandsession"
+        | "cookieorsession";
 }
 export default abstract class NullAuthProvider extends NullProvider {
     public static getParamsInfo(): IParamsInfo {
@@ -131,13 +136,16 @@ export default abstract class NullAuthProvider extends NullProvider {
             this.name,
             isAccessErrorNotFound,
         );
-        const session = await this.authController.createSession(
+        const session = await this.authController.createSession({
             context,
             idUser,
-            this.name,
-            { ...dataUser, ...data },
+            nameProvider: this.name,
+            userData: { ...dataUser, ...data },
             sessionDuration,
-        );
+            sessionData: {
+                typeCheckAuth: this.params.typeCheckAuth || "session",
+            },
+        });
         return this.params.onlySession ? { session: session.session } : session;
     }
     public async destroy(): Promise<void> {

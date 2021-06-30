@@ -136,10 +136,7 @@ export default class CoreContext extends NullContext {
         authController: IAuthController,
     ) {
         super(name, params, authController);
-        this.params = {
-            ...this.params,
-            ...initParams(CoreContext.getParamsInfo(), params),
-        };
+        this.params = initParams(CoreContext.getParamsInfo(), this.params);
         this.dataSource = new OracleDB(`${this.name}_context`, {
             connectString: this.params.connectString,
             maxRows: this.params.maxRows,

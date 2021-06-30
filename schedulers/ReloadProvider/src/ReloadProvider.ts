@@ -20,7 +20,7 @@ export default class ReloadProvider extends NullScheduler {
         isEnable: boolean,
     ) {
         super(name, params, cron, isEnable);
-        this.params = initParams(ReloadProvider.getParamsInfo(), params);
+        this.params = initParams(ReloadProvider.getParamsInfo(), this.params);
     }
     public async init(reload?: boolean): Promise<void> {
         return;

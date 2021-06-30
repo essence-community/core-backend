@@ -22,7 +22,8 @@ export interface IBaseParamInfo {
         | "password"
         | "long_string"
         | "combo"
-        | "form_nested";
+        | "form_nested"
+        | "form_repeater";
     setGlobal?: ISetGlobalValueParam[];
     getGlobal?: string;
     hiddenRules?: string;
@@ -33,6 +34,7 @@ export interface IBaseParamInfo {
     description?: string;
     hidden?: boolean;
     disabled?: boolean;
+    checkvalue?: (val) => string | number | boolean;
 }
 
 export interface IComboParamInfo extends IBaseParamInfo {
@@ -40,6 +42,7 @@ export interface IComboParamInfo extends IBaseParamInfo {
     valueField: IComboValueParam[];
     getGlobalToStore?: IComboValueParam[];
     displayField: string;
+    idproperty?: string;
     allownew?: string;
     minchars?: number;
     pagesize?: number;
@@ -77,6 +80,13 @@ export interface IBooleanParamInfo extends IBaseParamInfo {
 export interface IFormNestedParamInfo extends IBaseParamInfo {
     type: "form_nested";
     childs: IParamsInfo;
+    defaultValue?: Record<string, any>;
+}
+
+export interface IFormRepeaterParamInfo extends IBaseParamInfo {
+    type: "form_repeater";
+    childs: IParamsInfo;
+    defaultValue?: Record<string, any>[];
 }
 
 export type IParamInfo =
@@ -85,7 +95,8 @@ export type IParamInfo =
     | INumberParamInfo
     | IStringAreaParamInfo
     | IComboParamInfo
-    | IFormNestedParamInfo;
+    | IFormNestedParamInfo
+    | IFormRepeaterParamInfo;
 
 export interface IParamsInfo {
     [key: string]: IParamInfo;

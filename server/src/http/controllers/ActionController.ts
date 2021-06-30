@@ -55,10 +55,12 @@ class ActionController {
         );
         if (resPlugin) {
             session = await gateContext.gateContextPlugin.authController.createSession(
-                gateContext,
-                resPlugin.idUser,
-                "plugin",
-                resPlugin,
+                {
+                    context: gateContext,
+                    idUser: resPlugin.idUser,
+                    nameProvider: `plugin_${resPlugin.namePlugin}`,
+                    userData: resPlugin.dataUser,
+                },
             );
         }
         if (!session) {

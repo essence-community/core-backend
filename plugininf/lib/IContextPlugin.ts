@@ -61,8 +61,8 @@ export interface IContextParams extends ICCTParams {
             typeOrmExtra: string;
         };
         cookie: {
-            secure: boolean;
-            sameSite?: boolean | "lax" | "none" | "strict";
+            secure: boolean | string;
+            sameSite?: boolean | "lax" | "none" | "strict" | string;
             path: string;
             maxAge: number;
             httpOnly: boolean;

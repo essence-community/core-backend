@@ -56,7 +56,7 @@ class HttpServer {
                 const sessionConf = {
                     name: "essence.sid",
                     ...(params.paramSession || {}),
-                    store: (gateContext.authController as GateSession).store,
+                    store: gateContext.authController.getSessionStore(),
                     secret: GateSession.sha1(
                         `${gateContext.name}_${Constants.SESSION_SECRET}`,
                     ),

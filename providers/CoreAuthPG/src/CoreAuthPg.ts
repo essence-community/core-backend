@@ -30,7 +30,6 @@ export default class CoreAuthPg extends NullAuthProvider {
     public static getParamsInfo(): IParamsInfo {
         /* tslint:disable:object-literal-sort-keys */
         return {
-            ...NullAuthProvider.getParamsInfo(),
             ...PostgresDB.getParamsInfo(),
             guestAccount: {
                 type: "combo",
@@ -62,7 +61,7 @@ export default class CoreAuthPg extends NullAuthProvider {
         super(name, params, authController);
         this.params = {
             ...this.params,
-            ...initParams(CoreAuthPg.getParamsInfo(), params),
+            ...initParams(CoreAuthPg.getParamsInfo(), this.params),
         };
         this.dataSource = new PostgresDB(`${this.name}_provider`, {
             connectString: this.params.connectString,

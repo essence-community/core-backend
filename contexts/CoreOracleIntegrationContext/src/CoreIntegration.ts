@@ -36,7 +36,10 @@ export default class CoreOracleIntegration extends NullContext {
         authController: IAuthController,
     ) {
         super(name, params, authController);
-        this.params = initParams(CoreOracleIntegration.getParamsInfo(), params);
+        this.params = initParams(
+            CoreOracleIntegration.getParamsInfo(),
+            this.params,
+        );
         if (this.params.disableCache) {
             this.caller = this.onlineInitContext;
         } else {

@@ -1,10 +1,12 @@
+/* tslint:disable:variable-name */
 import { SessionOptions, Store } from "express-session";
 import ILocalDB from "@ungate/plugininf/lib/db/local/ILocalDB";
 import { loadProperty } from "../../property/Property";
-import { ISessionStore, IStoreTypes } from "./Store.types";
+import { IStoreTypes } from "./Store.types";
 import Logger from "@ungate/plugininf/lib/Logger";
 import { ISessionData } from "@ungate/plugininf/lib/ISession";
 import { IRufusLogger } from "rufus";
+import { ISessionStore } from "@ungate/plugininf/lib/IAuthController";
 
 export class NeDbSessionStore extends Store implements ISessionStore {
     db: ILocalDB;
@@ -31,7 +33,7 @@ export class NeDbSessionStore extends Store implements ISessionStore {
         });
     }
 
-    get(ck_id, cb) {
+    get(ck_id, cb: any = (err) => (err ? this.logger.error(err) : null)) {
         this.logger.debug("GET %s", ck_id);
         const now = new Date();
         this.db
@@ -57,7 +59,7 @@ export class NeDbSessionStore extends Store implements ISessionStore {
                 (err) => cb(err),
             );
     }
-    set(ck_id, data, cb) {
+    set(ck_id, data, cb: any = (err) => (err ? this.logger.error(err) : null)) {
         this.logger.debug("SET %s data %j", ck_id, data);
         this.db
             .update(
@@ -79,7 +81,7 @@ export class NeDbSessionStore extends Store implements ISessionStore {
                 (err) => cb(err),
             );
     }
-    destroy(ck_id, cb) {
+    destroy(ck_id, cb: any = (err) => (err ? this.logger.error(err) : null)) {
         this.logger.debug("DESTROY %s", ck_id);
         this.db
             .update(
@@ -93,7 +95,11 @@ export class NeDbSessionStore extends Store implements ISessionStore {
             );
     }
 
-    touch(ck_id, sess, cb) {
+    touch(
+        ck_id,
+        sess,
+        cb: any = (err) => (err ? this.logger.error(err) : null),
+    ) {
         this.logger.debug("TOUCH %s data %j", ck_id, sess);
         if (!sess.gsession) {
             return cb();
@@ -141,7 +147,7 @@ export class NeDbSessionStore extends Store implements ISessionStore {
             );
     }
 
-    all(cb) {
+    all(cb: any = (err) => (err ? this.logger.error(err) : null)) {
         this.logger.debug("ALL");
         this.db
             .find({
@@ -203,7 +209,7 @@ export class NeDbSessionStore extends Store implements ISessionStore {
             );
     }
 
-    length(cb) {
+    length(cb: any = (err) => (err ? this.logger.error(err) : null)) {
         this.logger.debug("LENGTH");
         this.db
             .count({
@@ -217,7 +223,7 @@ export class NeDbSessionStore extends Store implements ISessionStore {
             );
     }
 
-    clear(cb) {
+    clear(cb: any = (err) => (err ? this.logger.error(err) : null)) {
         this.logger.debug("CLEAR");
         this.db
             .update(

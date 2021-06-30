@@ -64,6 +64,7 @@ export interface IRequest extends http.IncomingMessage {
     preParams: IParam;
     session: Session & {
         gsession: ISession;
+        [key: string]: any;
     };
 }
 export default interface IContext {

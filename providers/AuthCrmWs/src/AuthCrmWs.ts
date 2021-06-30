@@ -83,7 +83,7 @@ export default class AuthCrmWs extends NullAuthProvider {
         super(name, params, authController);
         this.params = {
             ...this.params,
-            ...initParams(AuthCrmWs.getParamsInfo(), params),
+            ...initParams(AuthCrmWs.getParamsInfo(), this.params),
         };
         this.crmWSCaller = new CrmWsCaller(this.params);
         this.nsiJsonGateCaller = new JsonGateCaller({

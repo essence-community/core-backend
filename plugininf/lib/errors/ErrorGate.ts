@@ -128,6 +128,9 @@ class ErrorGate {
     public get PLUGIN_NOT_FOUND() {
         return this.compileErrorResult(301, "Specified plugin not found");
     }
+    public REDIRECT_MESSAGE(url: string) {
+        return this.compileErrorResult(302, url);
+    }
     /** Ошибка: указанный плагин не найден : compileErrorResult(например, не указан в конфигурации) */
     public get JSON_PARSE() {
         return this.compileErrorResult(400, "Not valid json");

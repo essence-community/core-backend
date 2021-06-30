@@ -137,7 +137,7 @@ export class RedisProvider extends NullProvider {
         authController: IAuthController,
     ) {
         super(name, params, authController);
-        this.params = initParams(RedisProvider.getParamsInfo(), params);
+        this.params = initParams(RedisProvider.getParamsInfo(), this.params);
     }
     private getClient() {
         return createClient({

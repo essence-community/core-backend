@@ -8,6 +8,7 @@ import IPlugin, { IPluginRequestContext } from "./IPlugin";
 import IQuery, { IGateQuery } from "./IQuery";
 import IResult from "./IResult";
 import Logger from "./Logger";
+import { IAuthResult } from "./NullAuthProvider";
 
 export default abstract class NullPlugin implements IPlugin {
     public name: string;
@@ -66,7 +67,7 @@ export default abstract class NullPlugin implements IPlugin {
     public async beforeSession(
         gateContext: IContext,
         PRequestContext: IPluginRequestContext,
-    ): Promise<IObjectParam | void> {
+    ): Promise<IAuthResult | void> {
         return;
     }
     public async beforeSaveSession(

@@ -49,7 +49,7 @@ export default class PostgreSQLDb extends NullProvider {
         authController: IAuthController,
     ) {
         super(name, params, authController);
-        this.params = initParams(PostgreSQLDb.getParamsInfo(), params);
+        this.params = initParams(PostgreSQLDb.getParamsInfo(), this.params);
         this.dataSource = new PostgresDB(`${this.name}_provider`, {
             connectString: this.params.connectString,
             connectionTimeoutMillis: this.params.connectionTimeoutMillis,

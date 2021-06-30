@@ -30,29 +30,39 @@ function parseParam(conf: IParamInfo, value: any) {
         case "string":
         case "long_string":
         case "password":
-            return toString(value);
+            return conf.checkvalue
+                ? conf.checkvalue(toString(value))
+                : toString(value);
         case "boolean": {
             if (isString(value)) {
-                return value === "true" || value === "1";
+                return conf.checkvalue
+                    ? conf.checkvalue(value === "true" || value === "1")
+                    : value === "true" || value === "1";
             }
-            return !!value;
+            return conf.checkvalue ? conf.checkvalue(!!value) : !!value;
         }
         case "integer":
         case "numeric":
-            return toNumber(value);
+            return conf.checkvalue
+                ? conf.checkvalue(toNumber(value))
+                : toNumber(value);
         case "date":
-            return moment(value).toDate();
+            return conf.checkvalue
+                ? conf.checkvalue(moment(value).toDate())
+                : moment(value).toDate();
         case "form_nested":
             return Object.entries(conf.childs).reduce((res, [key, obj]) => {
                 if (!isEmpty((value || {})[key])) {
-                    res[key] = parseParam(obj, (value || {})[key]);
+                    res[key] = parseParam(obj, value[key]);
                 } else if (
                     isEmpty((value || {})[key]) &&
-                    !isEmpty((value || conf.defaultValue || {})[key])
+                    !isEmpty(
+                        (isEmpty(value) ? conf.defaultValue || {} : value)[key],
+                    )
                 ) {
                     res[key] = parseParam(
                         obj,
-                        (value || conf.defaultValue || {})[key],
+                        (isEmpty(value) ? conf.defaultValue || {} : value)[key],
                     );
                 } else if (
                     isEmpty((value || {})[key]) &&
@@ -62,8 +72,22 @@ function parseParam(conf: IParamInfo, value: any) {
                 }
                 return res;
             }, {});
+        case "form_repeater":
+            return (value || conf.defaultValue || []).map((val) =>
+                Object.entries(conf.childs).reduce((res, [key, obj]) => {
+                    if (!isEmpty(val[key])) {
+                        res[key] = parseParam(obj, val[key]);
+                    } else if (
+                        isEmpty(val[key]) &&
+                        !isEmpty(obj.defaultValue)
+                    ) {
+                        res[key] = obj.defaultValue;
+                    }
+                    return res;
+                }, {}),
+            );
         default:
-            return value;
+            return conf.checkvalue ? conf.checkvalue(value) : value;
     }
 }
 /**
