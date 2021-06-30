@@ -74,10 +74,7 @@ export default class AdAuth extends NullAuthProvider {
         authController: IAuthController,
     ) {
         super(name, params, authController);
-        this.params = {
-            ...this.params,
-            ...initParams(AdAuth.getParamsInfo(), this.params),
-        };
+        this.params = initParams(AdAuth.getParamsInfo(), this.params);
         const userAttr = [
             "dn",
             "sAMAccountName",

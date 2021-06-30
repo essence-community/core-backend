@@ -144,10 +144,7 @@ export default class KeyClockAuth extends NullAuthProvider {
         authController: IAuthController,
     ) {
         super(name, params, authController);
-        this.params = {
-            ...this.params,
-            ...initParams(KeyClockAuth.getParamsInfo(), this.params),
-        };
+        this.params = initParams(KeyClockAuth.getParamsInfo(), this.params);
         if (
             this.params.keyClockConfig["realm-public-key"] &&
             fs.existsSync(this.params.keyClockConfig["realm-public-key"])
@@ -236,18 +233,6 @@ export default class KeyClockAuth extends NullAuthProvider {
                 ca_actions: [],
                 ck_id: (grant.access_token as any).content.sub,
             } as IUserData;
-            this.params.mapKeyClockGrant.forEach((obj) => {
-                if (grant.access_token.hasRole(obj.grant)) {
-                    dataUser.ca_actions.push(
-                        typeof obj.action === "string"
-                            ? parseInt(
-                                  obj.action.replace("new#", "") as any,
-                                  10,
-                              )
-                            : obj.action,
-                    );
-                }
-            });
             const userInfo = await this.keyClock.grantManager.userInfo(
                 grant.access_token,
             );
@@ -264,6 +249,34 @@ export default class KeyClockAuth extends NullAuthProvider {
                     ];
                 }
             });
+            if (typeof dataUser.ca_actions === "string") {
+                dataUser.ca_actions = (dataUser.ca_actions as string).startsWith(
+                    "[",
+                )
+                    ? JSON.parse(dataUser.ca_actions)
+                    : dataUser.ca_actions;
+            }
+            if (!Array.isArray(dataUser.ca_actions)) {
+                dataUser.ca_actions = [];
+            }
+            this.params.mapKeyClockGrant.forEach((obj) => {
+                if (grant.access_token.hasRole(obj.grant)) {
+                    dataUser.ca_actions.push(
+                        typeof obj.action === "string"
+                            ? parseInt(
+                                  obj.action.replace("new#", "") as any,
+                                  10,
+                              )
+                            : obj.action,
+                    );
+                }
+            });
+            await this.authController.addUser(
+                dataUser.ck_id,
+                this.name,
+                dataUser,
+            );
+            await this.authController.updateHashAuth();
             const sess = await this.createSession(
                 gateContext,
                 dataUser.ck_id,
@@ -292,17 +305,76 @@ export default class KeyClockAuth extends NullAuthProvider {
             (gateContext.request as IRequestExtra).kauth = {};
 
             return GrantAttacher(gateContext, this.keyClock)
-                .then(() => {
+                .then(async () => {
                     if (
                         session &&
                         !(gateContext.request as IRequestExtra).kauth.grant
                     ) {
                         throw new Error("Not Auth");
                     }
+                    const grant = (gateContext.request as IRequestExtra).kauth
+                        .grant;
+                    const dataUser = {
+                        ca_actions: [],
+                        ck_id: (grant.access_token as any).content.sub,
+                    } as IUserData;
+
+                    const userInfo = await this.keyClock.grantManager.userInfo(
+                        grant.access_token,
+                    );
+                    this.params.mapKeyClockUserInfo.forEach((obj) => {
+                        if (isEmpty(userInfo[obj.in])) {
+                            dataUser[obj.out] = userInfo[obj.in];
+                        }
+                        if (
+                            (grant.access_token as any).content &&
+                            isEmpty((grant.access_token as any).content[obj.in])
+                        ) {
+                            dataUser[
+                                obj.out
+                            ] = (grant.access_token as any).content[obj.in];
+                        }
+                    });
+                    if (typeof dataUser.ca_actions === "string") {
+                        dataUser.ca_actions =
+                            (dataUser.ca_actions as string).startsWith("[") &&
+                            (dataUser.ca_actions as string).startsWith("]")
+                                ? JSON.parse(dataUser.ca_actions)
+                                : dataUser.ca_actions;
+                    }
+                    if (!Array.isArray(dataUser.ca_actions)) {
+                        dataUser.ca_actions = [];
+                    }
+                    this.params.mapKeyClockGrant.forEach((obj) => {
+                        if (grant.access_token.hasRole(obj.grant)) {
+                            dataUser.ca_actions.push(
+                                typeof obj.action === "string"
+                                    ? parseInt(
+                                          obj.action.replace("new#", "") as any,
+                                          10,
+                                      )
+                                    : obj.action,
+                            );
+                        }
+                    });
+                    session.userData = {
+                        ...session.userData,
+                        dataUser,
+                    };
+                    await this.authController.addUser(
+                        dataUser.ck_id,
+                        this.name,
+                        dataUser,
+                    );
+                    this.authController.updateUserInfo(
+                        this.name,
+                        dataUser.ck_id,
+                    );
                     return session;
                 })
-                .catch(() => {
-                    return this.redirectAccess(gateContext);
+                .catch(async () => {
+                    await this.authController.logoutSession(gateContext);
+                    return null;
                 });
         }
         return session;

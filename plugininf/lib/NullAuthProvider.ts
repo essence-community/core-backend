@@ -13,6 +13,7 @@ import NullProvider from "./NullProvider";
 import { IParamsProvider } from "./NullProvider";
 import { isEmpty } from "./util/Util";
 import { IAuthController } from "./IAuthController";
+import { initParams } from "@ungate/plugininf/lib/util/Util";
 
 export interface IAuthResult {
     idUser: string;
@@ -70,6 +71,7 @@ export default abstract class NullAuthProvider extends NullProvider {
         authController: IAuthController,
     ) {
         super(name, params, authController);
+        this.params = initParams(NullAuthProvider.getParamsInfo(), this.params);
     }
     public async beforeSession(
         context: IContext,

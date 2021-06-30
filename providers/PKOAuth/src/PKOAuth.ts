@@ -82,10 +82,7 @@ export default class PKOAuth extends NullAuthProvider {
         authController: IAuthController,
     ) {
         super(name, params, authController);
-        this.params = {
-            ...this.params,
-            ...initParams(PKOAuth.getParamsInfo(), this.params),
-        };
+        this.params = initParams(PKOAuth.getParamsInfo(), this.params);
         this.dataSource = new PostgresDB(`${this.name}_provider`, {
             connectString: this.params.connectString,
             connectionTimeoutMillis: this.params.connectionTimeoutMillis,

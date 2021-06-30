@@ -33,10 +33,7 @@ export default class CoreAuthOracle extends NullAuthProvider {
         authController: IAuthController,
     ) {
         super(name, params, authController);
-        this.params = {
-            ...this.params,
-            ...initParams(CoreAuthOracle.getParamsInfo(), this.params),
-        };
+        this.params = initParams(CoreAuthOracle.getParamsInfo(), this.params);
         this.dataSource = new OracleDB(`${this.name}_provider`, {
             connectString: this.params.connectString,
             maxRows: this.params.maxRows,

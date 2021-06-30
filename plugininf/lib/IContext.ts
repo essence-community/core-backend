@@ -62,6 +62,7 @@ export interface IRequest extends http.IncomingMessage {
         | Buffer;
     params?: IParam;
     preParams: IParam;
+    sessionID?: string;
     session: Session & {
         gsession: ISession;
         [key: string]: any;

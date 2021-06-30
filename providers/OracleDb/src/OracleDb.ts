@@ -55,10 +55,7 @@ export default class OracleDBPlugin extends NullProvider {
         authController: IAuthController,
     ) {
         super(name, params, authController);
-        this.params = {
-            ...this.params,
-            ...initParams(OracleDBPlugin.getParamsInfo(), this.params),
-        };
+        this.params = initParams(OracleDBPlugin.getParamsInfo(), this.params);
         this.dataSource = new OracleDB(`${this.name}_provider`, {
             connectString: this.params.connectString,
             maxRows: this.params.maxRows,

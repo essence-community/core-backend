@@ -21,6 +21,7 @@ import { ISessionStore } from "@ungate/plugininf/lib/IAuthController";
 import { ISessionData } from "@ungate/plugininf/lib/ISession";
 import { initParams } from "@ungate/plugininf/lib/util/Util";
 import NullContext from "@ungate/plugininf/lib/NullContext";
+import RequestContext from "../request/RequestContext";
 
 export class GateSession implements IAuthController {
     private dbUsers: ILocalDB;
@@ -210,11 +211,13 @@ export class GateSession implements IAuthController {
      * Устаревание сессии
      * @param context {IContext}
      */
-    public logoutSession(context: IContext) {
+    public logoutSession(context: RequestContext) {
         return new Promise<void>((resolve, reject) => {
             if (context.request.session.gsession) {
                 context.request.session.cookie.expires = new Date();
-                context.request.session?.destroy((err) => {
+                this.store.destroy(context.request.session.id, (err) => {
+                    context.request.sessionID = null;
+                    context.setSession(null);
                     if (err) {
                         return reject(err);
                     }
