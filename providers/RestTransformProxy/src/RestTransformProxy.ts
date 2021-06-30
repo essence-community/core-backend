@@ -20,6 +20,10 @@ import * as axios from "axios";
 import * as url from "url";
 import { isEmpty } from "@ungate/plugininf/lib/util/Util";
 import * as fs from "fs";
+import * as path from "path";
+import * as QueryString from "query-string";
+import * as FormData from "form-data";
+import { IFile } from "@ungate/plugininf/lib/IContext";
 
 const optionsRequest = [
     "url",
@@ -153,6 +157,59 @@ export default class RestTransformProxy extends NullProvider {
 
         if (urlGate) {
             params.url = url.format(urlGate);
+        }
+
+        if (config.json) {
+            params.data = JSON.stringify(config.json);
+            params.headers["content-type"] = "application/json";
+        }
+
+        if (config.form) {
+            params.data =
+                typeof config.form === "string"
+                    ? config.form
+                    : QueryString.stringify(config.form);
+            params.headers["content-type"] =
+                "application/x-www-form-urlencoded";
+        }
+
+        if (config.formData) {
+            const formData = new FormData();
+            Object.entries(config.formData).forEach(([key, value]) => {
+                if (
+                    (Array.isArray(value) &&
+                        typeof value[0] === "object" &&
+                        (value[0] as IFile).path) ||
+                    (typeof value === "object" && (value as IFile).path)
+                ) {
+                    (Array.isArray(value) ? value : [value]).forEach(
+                        (val: IFile) => {
+                            formData.append(
+                                key,
+                                fs.readFileSync(val.path, null),
+                                {
+                                    contentType: val.headers["content-type"],
+                                    filename: val.originalFilename,
+                                },
+                            );
+                        },
+                    );
+                    return;
+                }
+                if (typeof value === "string" && fs.existsSync(value)) {
+                    formData.append(key, fs.readFileSync(value, null), {
+                        contentType: "application/octet-stream",
+                        filename: path.basename(value),
+                    });
+                    return;
+                }
+                formData.append(key, value);
+            });
+            params.data = formData;
+            params.headers = {
+                ...params.headers,
+                ...formData.getHeaders(),
+            };
         }
 
         if (Object.keys(headers).length) {
