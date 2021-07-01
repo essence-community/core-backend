@@ -17,6 +17,7 @@ import * as URL from "url";
 import { Admin, GrantAttacher, PostAuth } from "./Midleware";
 import BreakException from "@ungate/plugininf/lib/errors/BreakException";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
+import { uniq } from "lodash";
 import * as fs from "fs";
 
 const FLAG_REDIRECT = "jl_keyclock_auth_callback";
@@ -333,6 +334,7 @@ export default class KeyClockAuth extends NullAuthProvider {
                 );
             }
         });
+        dataUser.ca_actions = uniq(dataUser.ca_actions);
         return dataUser;
     }
     private async redirectAccess(context: IContext): Promise<any> {
