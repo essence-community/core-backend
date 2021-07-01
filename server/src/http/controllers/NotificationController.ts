@@ -10,7 +10,6 @@ import IContextPlugin from "@ungate/plugininf/lib/IContextPlugin";
 import { ParsedUrlQuery } from "querystring";
 import ISession from "@ungate/plugininf/lib/ISession";
 import { GateSession } from "../../core/session/GateSession";
-import session = require("express-session");
 const logger = Logger.getLogger("NotificationController");
 const TIMEOUT = 30000;
 
@@ -92,9 +91,9 @@ class NotificationController {
             request.origin,
         ) as IWSConnect;
         const configSession = (await this.contexts.slice(1).reduce(
-            (session, context) => {
-                if (session) {
-                    return session;
+            (res, context) => {
+                if (res) {
+                    return res;
                 }
                 return (context.authController as GateSession)
                     .loadSession(null, sessionId, true)
@@ -303,11 +302,12 @@ class NotificationController {
                                 (doc) => doc.gsession?.session,
                             );
                             const disconectedSession = sessions.filter(
-                                (session) => getSession.indexOf(session) === -1,
+                                (sessionId) =>
+                                    getSession.indexOf(sessionId) === -1,
                             );
-                            disconectedSession.forEach((session) => {
+                            disconectedSession.forEach((sessionId) => {
                                 conns.forEach((conn) => {
-                                    if (conn.sessionId === session) {
+                                    if (conn.sessionId === sessionId) {
                                         logger.debug(
                                             "Close expire %s",
                                             conn.sessionId,

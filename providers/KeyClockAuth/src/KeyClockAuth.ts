@@ -227,50 +227,8 @@ export default class KeyClockAuth extends NullAuthProvider {
             if (!(gateContext.request as IRequestExtra).kauth.grant) {
                 return this.redirectAccess(gateContext);
             }
+            const dataUser = await this.generateUserData(gateContext);
 
-            const grant = (gateContext.request as IRequestExtra).kauth.grant;
-            const dataUser = {
-                ca_actions: [],
-                ck_id: (grant.access_token as any).content.sub,
-            } as IUserData;
-            const userInfo = await this.keyClock.grantManager.userInfo(
-                grant.access_token,
-            );
-            this.params.mapKeyClockUserInfo.forEach((obj) => {
-                if (isEmpty(userInfo[obj.in])) {
-                    dataUser[obj.out] = userInfo[obj.in];
-                }
-                if (
-                    (grant.access_token as any).content &&
-                    isEmpty((grant.access_token as any).content[obj.in])
-                ) {
-                    dataUser[obj.out] = (grant.access_token as any).content[
-                        obj.in
-                    ];
-                }
-            });
-            if (typeof dataUser.ca_actions === "string") {
-                dataUser.ca_actions = (dataUser.ca_actions as string).startsWith(
-                    "[",
-                )
-                    ? JSON.parse(dataUser.ca_actions)
-                    : dataUser.ca_actions;
-            }
-            if (!Array.isArray(dataUser.ca_actions)) {
-                dataUser.ca_actions = [];
-            }
-            this.params.mapKeyClockGrant.forEach((obj) => {
-                if (grant.access_token.hasRole(obj.grant)) {
-                    dataUser.ca_actions.push(
-                        typeof obj.action === "string"
-                            ? parseInt(
-                                  obj.action.replace("new#", "") as any,
-                                  10,
-                              )
-                            : obj.action,
-                    );
-                }
-            });
             await this.authController.addUser(
                 dataUser.ck_id,
                 this.name,
@@ -312,63 +270,19 @@ export default class KeyClockAuth extends NullAuthProvider {
                     ) {
                         throw new Error("Not Auth");
                     }
-                    const grant = (gateContext.request as IRequestExtra).kauth
-                        .grant;
-                    const dataUser = {
-                        ca_actions: [],
-                        ck_id: (grant.access_token as any).content.sub,
-                    } as IUserData;
-
-                    const userInfo = await this.keyClock.grantManager.userInfo(
-                        grant.access_token,
-                    );
-                    this.params.mapKeyClockUserInfo.forEach((obj) => {
-                        if (isEmpty(userInfo[obj.in])) {
-                            dataUser[obj.out] = userInfo[obj.in];
-                        }
-                        if (
-                            (grant.access_token as any).content &&
-                            isEmpty((grant.access_token as any).content[obj.in])
-                        ) {
-                            dataUser[
-                                obj.out
-                            ] = (grant.access_token as any).content[obj.in];
-                        }
-                    });
-                    if (typeof dataUser.ca_actions === "string") {
-                        dataUser.ca_actions =
-                            (dataUser.ca_actions as string).startsWith("[") &&
-                            (dataUser.ca_actions as string).startsWith("]")
-                                ? JSON.parse(dataUser.ca_actions)
-                                : dataUser.ca_actions;
-                    }
-                    if (!Array.isArray(dataUser.ca_actions)) {
-                        dataUser.ca_actions = [];
-                    }
-                    this.params.mapKeyClockGrant.forEach((obj) => {
-                        if (grant.access_token.hasRole(obj.grant)) {
-                            dataUser.ca_actions.push(
-                                typeof obj.action === "string"
-                                    ? parseInt(
-                                          obj.action.replace("new#", "") as any,
-                                          10,
-                                      )
-                                    : obj.action,
-                            );
-                        }
-                    });
+                    const dataUser = await this.generateUserData(gateContext);
+                    gateContext.request.session.gsession.userData = {
+                        ...gateContext.request.session.gsession.userData,
+                        ...dataUser,
+                    };
                     session.userData = {
                         ...session.userData,
-                        dataUser,
+                        ...dataUser,
                     };
-                    await this.authController.addUser(
+                    this.authController.addUser(
                         dataUser.ck_id,
                         this.name,
                         dataUser,
-                    );
-                    this.authController.updateUserInfo(
-                        this.name,
-                        dataUser.ck_id,
                     );
                     return session;
                 })
@@ -378,6 +292,48 @@ export default class KeyClockAuth extends NullAuthProvider {
                 });
         }
         return session;
+    }
+    private async generateUserData(context: IContext) {
+        const grant = (context.request as IRequestExtra).kauth.grant;
+        const dataUser = {
+            ca_actions: [],
+            ck_id: (grant.access_token as any).content.sub,
+        } as IUserData;
+
+        const userInfo = await this.keyClock.grantManager.userInfo(
+            grant.access_token,
+        );
+        this.params.mapKeyClockUserInfo.forEach((obj) => {
+            if (isEmpty(userInfo[obj.in])) {
+                dataUser[obj.out] = userInfo[obj.in];
+            }
+            if (
+                (grant.access_token as any).content &&
+                isEmpty((grant.access_token as any).content[obj.in])
+            ) {
+                dataUser[obj.out] = (grant.access_token as any).content[obj.in];
+            }
+        });
+        if (typeof dataUser.ca_actions === "string") {
+            dataUser.ca_actions =
+                (dataUser.ca_actions as string).startsWith("[") &&
+                (dataUser.ca_actions as string).startsWith("]")
+                    ? JSON.parse(dataUser.ca_actions)
+                    : dataUser.ca_actions;
+        }
+        if (!Array.isArray(dataUser.ca_actions)) {
+            dataUser.ca_actions = [];
+        }
+        this.params.mapKeyClockGrant.forEach((obj) => {
+            if (grant.access_token.hasRole(obj.grant)) {
+                dataUser.ca_actions.push(
+                    typeof obj.action === "string"
+                        ? parseInt(obj.action.replace("new#", "") as any, 10)
+                        : obj.action,
+                );
+            }
+        });
+        return dataUser;
     }
     private async redirectAccess(context: IContext): Promise<any> {
         const redirectUrl = URL.parse(this.params.redirectUrl, true);

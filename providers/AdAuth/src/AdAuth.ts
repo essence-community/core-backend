@@ -13,9 +13,25 @@ import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
 import * as ActiveDirectory from "activedirectory";
 import { uniq } from "lodash";
 import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
+import { IAuthProviderParam } from "@ungate/plugininf/lib/NullAuthProvider";
 
 const BASIC_PATTERN = "Basic";
 const PASSWORD_PATTERN_NGINX_GSS = "bogus_auth_gss_passwd";
+
+interface IAdAuthParam extends IAuthProviderParam {
+    adBaseDN?: string;
+    adLogin: string;
+    adPassword: string;
+    adUrl: string;
+    adMapGroups: {
+        group: string;
+        action: string;
+    }[];
+    adMapUserAttr: {
+        inKey: string;
+        outKey: string;
+    }[];
+}
 
 export default class AdAuth extends NullAuthProvider {
     public static getParamsInfo(): IParamsInfo {
@@ -24,30 +40,8 @@ export default class AdAuth extends NullAuthProvider {
                 name: "Начальный уровень поиска в ldap",
                 type: "string",
             },
-            adDefaultAction: {
-                description:
-                    "Список экшенов которые назначаются любому авторизованому пользователю",
-                name: "Список экшенов по умолчанию",
-                type: "string",
-            },
             adLogin: {
                 name: "Логин УЗ доступа к ldap",
-                required: true,
-                type: "string",
-            },
-            adMapGroups: {
-                description:
-                    "Мапинг групп AD c Core Экшенами, Пример: NameGroup=900,200;NameGroup=100,215",
-                name: "Мапинг групп и экшенов пользователя",
-                required: true,
-                type: "string",
-            },
-            adMapUserAttr: {
-                defaultValue:
-                    "cv_login=sAMAccountName;cv_name=cn;cv_surname=sn;cv_email=mail;cv_cert=userCertificate",
-                description:
-                    "Пример: cv_login=sAMAccountName;cv_name=cn;cv_surname=sn;cv_email=email;cv_cert=userCertificate",
-                name: "Мапинг атрибутов пользователя",
                 required: true,
                 type: "string",
             },
@@ -62,12 +56,73 @@ export default class AdAuth extends NullAuthProvider {
                 required: true,
                 type: "string",
             },
+            adMapGroups: {
+                name: "Мапинг групп и экшенов пользователя",
+                required: true,
+                type: "form_repeater",
+                childs: {
+                    group: {
+                        type: "string",
+                        name: "Group",
+                        required: true,
+                    },
+                    action: {
+                        type: "combo",
+                        allownew: "new#",
+                        query: "MTGetPageAction",
+                        displayField: "cn_action",
+                        valueField: [{ in: "cn_action" }],
+                        querymode: "remote",
+                        queryparam: "cn_action",
+                        idproperty: "cn_action",
+                        name: "Action",
+                        required: true,
+                    },
+                },
+            },
+            adMapUserAttr: {
+                defaultValue: [
+                    {
+                        inKey: "sAMAccountName",
+                        outKey: "cv_login",
+                    },
+                    {
+                        inKey: "cn",
+                        outKey: "cv_name",
+                    },
+                    {
+                        inKey: "sn",
+                        outKey: "cv_surname",
+                    },
+                    {
+                        inKey: "mail",
+                        outKey: "cv_email",
+                    },
+                    {
+                        inKey: "userCertificate",
+                        outKey: "cv_cert",
+                    },
+                ],
+                name: "Мапинг атрибутов пользователя",
+                required: true,
+                type: "form_repeater",
+                childs: {
+                    inKey: {
+                        type: "string",
+                        name: "Key ldap",
+                        required: true,
+                    },
+                    outKey: {
+                        type: "string",
+                        name: "Session key",
+                        required: true,
+                    },
+                },
+            },
         };
     }
+    public params: IAdAuthParam;
     private ad: ActiveDirectory;
-    private mapUserAttr: IObjectParam = {};
-    private mapGroupActions: IObjectParam = {};
-    private listDefaultActions: number[] = [];
     constructor(
         name: string,
         params: ICCTParams,
@@ -88,26 +143,11 @@ export default class AdAuth extends NullAuthProvider {
             "comment",
             "description",
         ];
-        this.params.adMapUserAttr.split(";").forEach((val) => {
-            const [bdkey, adkey] = val.split("=");
-            this.mapUserAttr[bdkey] = adkey;
-            if (!userAttr.includes(adkey)) {
-                userAttr.push(adkey);
+        this.params.adMapUserAttr.forEach(({ inKey }) => {
+            if (!userAttr.includes(inKey)) {
+                userAttr.push(inKey);
             }
         });
-        if (this.params.adMapGroups) {
-            this.params.adMapGroups.split(";").forEach((val) => {
-                const [bdkey, adkey] = val.split("=");
-                this.mapGroupActions[bdkey] = adkey
-                    .split(",")
-                    .map((action) => parseInt(action, 10));
-            });
-        }
-        if (this.params.adDefaultAction) {
-            this.listDefaultActions = this.params.adDefaultAction
-                .split(",")
-                .map((val) => parseInt(val, 10));
-        }
         this.ad = new ActiveDirectory({
             attributes: {
                 user: userAttr,
@@ -208,7 +248,7 @@ export default class AdAuth extends NullAuthProvider {
      */
     public async init(reload?: boolean): Promise<void> {
         const rows = [];
-        Object.keys(this.mapGroupActions).forEach((group) => {
+        this.params.adMapGroups.forEach(({ group }) => {
             rows.push(
                 new Promise((resolve, reject) => {
                     this.log.trace("Cache users...");
@@ -228,16 +268,13 @@ export default class AdAuth extends NullAuthProvider {
                         const addUsers = [];
 
                         users.forEach((user) => {
-                            const data = Object.keys(this.mapUserAttr).reduce(
-                                (obj, val) => ({
+                            const data = this.params.adMapUserAttr.reduce(
+                                (obj, { inKey, outKey }) => ({
                                     ...obj,
-                                    [val]: user[this.mapUserAttr[val]],
+                                    [outKey]: user[inKey],
                                 }),
                                 {
-                                    ca_actions: this.getActionUser(
-                                        user,
-                                        this.listDefaultActions,
-                                    ),
+                                    ca_actions: this.getActionUser(user),
                                     ck_id: user.objectSID,
                                     cv_timezone: "+03:00",
                                 },
@@ -315,16 +352,15 @@ export default class AdAuth extends NullAuthProvider {
                     true,
                 )
                 .then(async (userData = {}) => {
-                    const data = Object.keys(this.mapUserAttr).reduce(
-                        (obj, val) => ({
+                    const data = this.params.adMapUserAttr.reduce(
+                        (obj, { inKey, outKey }) => ({
                             ...obj,
-                            [val]: user[this.mapUserAttr[val]],
+                            [outKey]: user[inKey],
                         }),
                         {
                             ...userData.data,
                             ca_actions: this.getActionUser(user, [
                                 ...(userData.data || {}).ca_actions,
-                                ...this.listDefaultActions,
                             ]),
                             ck_id:
                                 (userData.data || {}).ck_id || user.objectSID,
@@ -341,13 +377,6 @@ export default class AdAuth extends NullAuthProvider {
                     }
                     if (isUserData) {
                         return resolve(data);
-                    }
-                    const session = await this.authController.loadSession(
-                        context,
-                        userData.ck_id || user.objectSID,
-                    );
-                    if (session) {
-                        return resolve(session);
                     }
                     return this.createSession(data.ck_id, data)
                         .then((res) =>
@@ -368,18 +397,20 @@ export default class AdAuth extends NullAuthProvider {
      * @param actions
      */
     private getActionUser(user: any, actions?: number[]) {
-        const groups = Object.keys(this.mapGroupActions);
-        if (groups.length) {
-            return uniq(
-                groups.reduce(
-                    (arr, group) =>
-                        user.isMemberOf(group)
-                            ? [...arr, this.mapGroupActions[group]]
-                            : arr,
-                    actions,
-                ),
-            );
-        }
+        return uniq(
+            this.params.adMapGroups.reduce(
+                (arr, { group, action }) =>
+                    user.isMemberOf(group)
+                        ? [
+                              ...arr,
+                              typeof action === "string"
+                                  ? parseInt(action.replace("new#", ""), 10)
+                                  : action,
+                          ]
+                        : arr,
+                actions,
+            ),
+        );
         return actions;
     }
 }

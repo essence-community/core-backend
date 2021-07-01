@@ -22,13 +22,15 @@ import { ISessionData } from "@ungate/plugininf/lib/ISession";
 import { initParams } from "@ungate/plugininf/lib/util/Util";
 import NullContext from "@ungate/plugininf/lib/NullContext";
 import RequestContext from "../request/RequestContext";
+import { debounce } from "../../../../plugininf/lib/util/Util";
+import { noop } from "lodash";
 
 export class GateSession implements IAuthController {
     private dbUsers: ILocalDB;
     private store: ISessionStore;
     private dbCache: ILocalDB;
     private logger: IRufusLogger;
-    public updateUserInfo: () => void;
+    public updateUserInfo: typeof NotificationController.updateUserInfo;
     private params: IContextParams;
 
     constructor(
@@ -250,6 +252,11 @@ export class GateSession implements IAuthController {
             isExpired,
         );
     }
+
+    private updateHashDebounce = debounce(() => {
+        this.updateHashAuth().then(noop, (err) => this.logger.error(err));
+    }, 5000);
+
     /**
      * Добавляем пользователей в кэш
      * @param idUser индификатор пользователя
@@ -261,11 +268,16 @@ export class GateSession implements IAuthController {
         nameProvider: string,
         data: IObjectParam,
     ): Promise<void> {
-        return this.dbUsers.insert({
-            ck_d_provider: nameProvider,
-            ck_id: `${idUser}:${nameProvider}`,
-            data,
-        });
+        return this.dbUsers
+            .insert({
+                ck_d_provider: nameProvider,
+                ck_id: `${idUser}:${nameProvider}`,
+                data,
+            })
+            .then(() => {
+                this.updateUserInfo();
+                this.updateHashDebounce();
+            });
     }
     /**
      * Получаем данные о пользователе
