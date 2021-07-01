@@ -116,10 +116,10 @@ union all /* выберем их родителей в рекурсивном з
         t2.ck_parent = p.ck_id
 ),
 t3 as(
-    select
-        distinct p.*
+   select distinct
+        op.*
     from
-        t2 p
+      t2 op
 )
 select
     op.ck_id,
@@ -127,11 +127,10 @@ select
     op.cr_type,
     op.cv_name,
     op.cn_order,
-    op.cl_menu,
+    case when op.cl_menu>0 and not exists(select 1 from t3 m where m.ck_parent = op.ck_id and m.cl_menu=1) and exists(select 1 from t3 m where m.ck_parent = op.ck_id) then 0 else op.cl_menu end as cl_menu,
     op.cl_static,
     op.cv_url,
     op.ck_icon,
-    op.ck_id,
     op.ck_view,
     op.cv_app_url,
     op.cv_icon_name,
