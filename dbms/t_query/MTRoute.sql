@@ -98,7 +98,7 @@ union all /* выберем их дочернии элементы в рекур
 ot_action as (
     select tss.cv_value::bigint as cn_action from s_mt.t_sys_setting tss where tss.ck_id = ''g_sys_anonymous_action''
     union all
-    select cn_action from tt_user_action where ck_user = :sess_ck_id
+    select value::bigint as cn_action from jsonb_array_elements_text(:sess_ca_actions::jsonb)
 ),
 t2 as(
     select
@@ -136,7 +136,7 @@ select
     op.cv_app_url,
     op.cv_icon_name,
     op.cv_icon_font,
-    case when not exists(select 1 from t2 m where m.ck_parent = op.ck_id) then ''true'' else ''false'' end as leaf,
+    case when not exists(select 1 from t3 m where m.ck_parent = op.ck_id) then ''true'' else ''false'' end as leaf,
     op.root,
     op.cn_action_edit
 from
