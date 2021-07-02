@@ -441,30 +441,32 @@ export default class AdminAction {
                       [column]: json.filter.cv_name,
                   })
                 : Promise.resolve({}));
-            const cctParam = Object.entries({
-                ...params,
-                ...getParamsInfo(PClass)(),
-            }).reduce((res, [key, obj]) => {
-                res[key] = this.checkData(
-                    key,
-                    obj as IParamInfo,
-                    doc.cct_params || (obj as IParamInfo).defaultValue,
-                );
-                return res;
-            }, {});
+            Object.entries(getParamsInfo(PClass)()).forEach(([key, value]) => {
+                if (!Object.prototype.hasOwnProperty.call(params, key)) {
+                    params[key] = value;
+                }
+            });
+            const cctParam = Object.entries(params).reduce(
+                (res, [key, obj]) => {
+                    res[key] = this.checkData(
+                        key,
+                        obj as IParamInfo,
+                        doc.cct_params || (obj as IParamInfo).defaultValue,
+                    );
+                    return res;
+                },
+                {},
+            );
             return [
                 {
-                    childs: Object.entries({
-                        ...params,
-                        ...getParamsInfo(PClass)(),
-                    })
-                        .map((arr) =>
+                    childs: Object.entries(params)
+                        .map(([key, obj]) =>
                             this.createFields(
                                 gateContext,
-                                arr[0],
+                                key,
                                 json.filter.ck_page,
                                 (json.filter.ca_childs || [])[0],
-                                arr[1] as IParamInfo,
+                                obj as IParamInfo,
                                 doc.cct_params,
                             ),
                         )
@@ -504,6 +506,21 @@ export default class AdminAction {
                     return res;
                 }, {});
             }
+            case "form_repeater": {
+                return (params[name] || conf.defaultValue || []).map((val) => {
+                    return Object.entries(conf.childs).reduce(
+                        (res, [key, obj]) => {
+                            res[key] = this.checkData(
+                                key,
+                                obj as IParamInfo,
+                                isEmpty(val) ? obj.defaultValue : val,
+                            );
+                            return res;
+                        },
+                        {},
+                    );
+                });
+            }
             case "password": {
                 return isEmpty(params[name])
                     ? ""
@@ -513,14 +530,20 @@ export default class AdminAction {
                 return isEmpty(params[name]) ? conf.defaultValue : params[name];
             }
             case "boolean": {
+                const defaultValue = conf.defaultValue
+                    ? `${+conf.defaultValue}`
+                    : undefined;
+                const value = isEmpty(params[name])
+                    ? "0"
+                    : `${+(typeof params[name] === "string"
+                          ? params[name] === "1" || params[name] === "true"
+                          : params[name])}`;
                 if (isEmpty(conf.defaultValue)) {
-                    return isEmpty(params[name])
-                        ? conf.defaultValue
-                        : params[name];
+                    return isEmpty(params[name]) ? defaultValue : value;
                 }
                 return `${+(isEmpty(params[name])
-                    ? conf.defaultValue
-                    : params[name])}`;
+                    ? defaultValue || "0"
+                    : value)}`;
             }
             case "combo": {
                 return isEmpty(params[name]) ? conf.defaultValue : params[name];

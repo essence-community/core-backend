@@ -25,6 +25,8 @@ export interface IKeyCloakAuthParams extends IAuthProviderParam {
     mapKeyCloakUserInfo: IUserInfoMap[];
     disableRecursiveAuth: boolean;
     flagRedirect: string;
+    adminPathParam: string;
+    idKey: string;
 }
 
 export interface IRequestExtra extends IRequest {

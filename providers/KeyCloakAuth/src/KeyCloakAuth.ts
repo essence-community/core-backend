@@ -172,6 +172,16 @@ export default class KeyCloakAuth extends NullAuthProvider {
                 defaultValue: FLAG_REDIRECT,
                 name: "Flag Redirect Param",
             },
+            adminPathParam: {
+                type: "string",
+                defaultValue: PATH_CALLBACK,
+                name: "Admin path parameter",
+            },
+            idKey: {
+                defaultValue: "sub",
+                name: "Наименование ключа индетификации",
+                type: "string",
+            },
         };
     }
     public params: IKeyCloakAuthParams;
@@ -268,15 +278,15 @@ export default class KeyCloakAuth extends NullAuthProvider {
             const dataUser = await this.generateUserData(gateContext);
 
             await this.authController.addUser(
-                dataUser.ck_id,
+                dataUser.idUser,
                 this.name,
-                dataUser,
+                dataUser.userData,
             );
             await this.authController.updateHashAuth();
             const sess = await this.createSession(
                 gateContext,
-                dataUser.ck_id,
-                dataUser,
+                dataUser.idUser,
+                dataUser.userData,
                 this.params.sessionDuration,
             );
             if (sess) {
@@ -287,13 +297,13 @@ export default class KeyCloakAuth extends NullAuthProvider {
             } else {
                 return this.redirectAccess(gateContext);
             }
-        } else if (gateContext.params[PATH_CALLBACK]) {
+        } else if (gateContext.params[this.params.adminPathParam]) {
             gateContext.debug("KeyCloak Admin");
             (gateContext.request as IRequestExtra).kauth = {};
             await Admin(
                 gateContext,
                 this.keyCloak,
-                gateContext.params[PATH_CALLBACK],
+                gateContext.params[this.params.adminPathParam],
             );
             throw new BreakException("break");
         } else if (gateContext.request.session[TOKEN_KEY]) {
@@ -311,16 +321,16 @@ export default class KeyCloakAuth extends NullAuthProvider {
                     const dataUser = await this.generateUserData(gateContext);
                     gateContext.request.session.gsession.userData = {
                         ...gateContext.request.session.gsession.userData,
-                        ...dataUser,
+                        ...dataUser.userData,
                     };
                     session.userData = {
                         ...session.userData,
-                        ...dataUser,
+                        ...dataUser.userData,
                     };
                     this.authController.addUser(
-                        dataUser.ck_id,
+                        dataUser.idUser,
                         this.name,
-                        dataUser,
+                        dataUser.userData,
                     );
                     return session;
                 })
@@ -343,16 +353,21 @@ export default class KeyCloakAuth extends NullAuthProvider {
         }
         return session;
     }
-    private async generateUserData(context: IContext) {
+    private async generateUserData(
+        context: IContext,
+    ): Promise<{ userData: IUserData; idUser: string }> {
         const grant = (context.request as IRequestExtra).kauth.grant;
-        const dataUser = {
-            ca_actions: [],
-            ck_id: (grant.access_token as any).content.sub,
-        } as IUserData;
-
         const userInfo = await this.keyCloak.grantManager.userInfo(
             grant.access_token,
         );
+        const idUser =
+            (grant.access_token as any).content[this.params.idKey] ||
+            userInfo[this.params.idKey];
+        const dataUser = {
+            ca_actions: [],
+            ck_id: idUser,
+        } as IUserData;
+
         this.params.mapKeyCloakUserInfo.forEach((obj) => {
             if (!isEmpty(userInfo[obj.in])) {
                 dataUser[obj.out] = userInfo[obj.in];
@@ -384,7 +399,7 @@ export default class KeyCloakAuth extends NullAuthProvider {
             }
         });
         dataUser.ca_actions = uniq(dataUser.ca_actions);
-        return dataUser;
+        return { userData: dataUser, idUser };
     }
     private async redirectAccess(context: IContext): Promise<any> {
         const redirectUrl = URL.parse(this.params.redirectUrl, true);
