@@ -1,7 +1,7 @@
 {
-    "name": "@ungate-provider/key-clock-auth",
+    "name": "@ungate-provider/key-cloak-auth",
     "version": "1.0.0",
-    "description": "Провайдер авторизации KeyClock",
+    "description": "Провайдер авторизации KeyCloak",
     "author": "Ivan Artemov (honyrik@gmail.com)",
     "license": "MIT",
     "dependencies": {

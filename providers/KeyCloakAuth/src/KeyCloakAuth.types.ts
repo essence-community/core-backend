@@ -1,5 +1,5 @@
 import { IRequest } from "@ungate/plugininf/lib/IContext";
-import * as KeyClock from "keycloak-connect";
+import * as KeyCloak from "keycloak-connect";
 import { IAuthProviderParam } from "@ungate/plugininf/lib/NullAuthProvider";
 
 export interface IGrantMap {
@@ -12,27 +12,28 @@ export interface IUserInfoMap {
     out: string;
 }
 
-export interface IKeyClockAuthParams extends IAuthProviderParam {
-    keyClockConfig: KeyClock.KeycloakConfig & {
+export interface IKeyCloakAuthParams extends IAuthProviderParam {
+    keyCloakConfig: KeyCloak.KeycloakConfig & {
         secret?: string;
         "public-client"?: boolean;
         "min-time-between-jwks-requests"?: number;
         "realm-public-key"?: string;
     };
-    keyClockParamName: string;
+    keyCloakParamName: string;
     redirectUrl: string;
-    mapKeyClockGrant: IGrantMap[];
-    mapKeyClockUserInfo: IUserInfoMap[];
+    mapKeyCloakGrant: IGrantMap[];
+    mapKeyCloakUserInfo: IUserInfoMap[];
     disableRecursiveAuth: boolean;
+    flagRedirect: string;
 }
 
 export interface IRequestExtra extends IRequest {
     kauth: {
-        grant?: KeyClock.Grant;
+        grant?: KeyCloak.Grant;
     };
 }
 
-export interface IKeyClockAuthParam {
+export interface IKeyCloakAuthParam {
     query: Record<string, any>;
     path: string;
 }

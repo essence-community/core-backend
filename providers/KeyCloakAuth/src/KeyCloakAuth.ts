@@ -10,8 +10,8 @@ import NullAuthProvider, {
 } from "@ungate/plugininf/lib/NullAuthProvider";
 import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
 import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
-import * as KeyClock from "keycloak-connect";
-import { IKeyClockAuthParams, IRequestExtra } from "./KeyClockAuth.types";
+import * as KeyCloak from "keycloak-connect";
+import { IKeyCloakAuthParams, IRequestExtra } from "./KeyCloakAuth.types";
 import * as QueryString from "query-string";
 import * as URL from "url";
 import { Admin, GrantAttacher, PostAuth } from "./Midleware";
@@ -21,12 +21,12 @@ import { uniq } from "lodash";
 import * as fs from "fs";
 import { Constant } from "@ungate/plugininf/lib/Constants";
 
-const FLAG_REDIRECT = "jl_keyclock_auth_callback";
-const USE_REDIRECT = "jl_keyclock_use_redirect";
-const PATH_CALLBACK = "jv_keyclock_path_callback";
+const FLAG_REDIRECT = "jl_keycloak_auth_callback";
+const USE_REDIRECT = "jl_keycloak_use_redirect";
+const PATH_CALLBACK = "jv_keycloak_path_callback";
 const TOKEN_KEY = "keycloak-token";
 
-export default class KeyClockAuth extends NullAuthProvider {
+export default class KeyCloakAuth extends NullAuthProvider {
     public async init(reload?: boolean): Promise<void> {
         return;
     }
@@ -37,14 +37,14 @@ export default class KeyClockAuth extends NullAuthProvider {
                 type: "string",
                 required: true,
             },
-            keyClockParamName: {
-                name: "KeyClock param key use front",
+            keyCloakParamName: {
+                name: "KeyCloak param key use front",
                 type: "string",
                 required: true,
-                defaultValue: "jt_keycloack",
+                defaultValue: "jt_keycloak",
             },
-            keyClockConfig: {
-                name: "KeyClockConfig",
+            keyCloakConfig: {
+                name: "KeyCloakConfig",
                 type: "form_nested",
                 childs: {
                     "auth-server-url": {
@@ -97,7 +97,7 @@ export default class KeyClockAuth extends NullAuthProvider {
                     },
                 },
             },
-            mapKeyClockGrant: {
+            mapKeyCloakGrant: {
                 type: "form_repeater",
                 name: "Grant Map",
                 childs: {
@@ -120,13 +120,13 @@ export default class KeyClockAuth extends NullAuthProvider {
                     },
                 },
             },
-            mapKeyClockUserInfo: {
+            mapKeyCloakUserInfo: {
                 type: "form_repeater",
                 name: "UserInfo Map",
                 childs: {
                     in: {
                         type: "string",
-                        name: "Key KeyClock",
+                        name: "Key KeyCloak",
                         required: true,
                     },
                     out: {
@@ -141,45 +141,50 @@ export default class KeyClockAuth extends NullAuthProvider {
                 defaultValue: true,
                 name: "Disable recursive auth",
             },
+            flagRedirect: {
+                type: "string",
+                defaultValue: FLAG_REDIRECT,
+                name: "Flag Redirect Param",
+            },
         };
     }
-    public params: IKeyClockAuthParams;
-    private keyClock: KeyClock.Keycloak;
+    public params: IKeyCloakAuthParams;
+    private keyCloak: KeyCloak.Keycloak;
     constructor(
         name: string,
         params: ICCTParams,
         authController: IAuthController,
     ) {
         super(name, params, authController);
-        this.params = initParams(KeyClockAuth.getParamsInfo(), this.params);
+        this.params = initParams(KeyCloakAuth.getParamsInfo(), this.params);
         if (
-            this.params.keyClockConfig["realm-public-key"] &&
-            fs.existsSync(this.params.keyClockConfig["realm-public-key"])
+            this.params.keyCloakConfig["realm-public-key"] &&
+            fs.existsSync(this.params.keyCloakConfig["realm-public-key"])
         ) {
-            this.params.keyClockConfig["realm-public-key"] = fs
-                .readFileSync(this.params.keyClockConfig["realm-public-key"])
+            this.params.keyCloakConfig["realm-public-key"] = fs
+                .readFileSync(this.params.keyCloakConfig["realm-public-key"])
                 .toString();
         }
-        if (this.params.keyClockConfig["realm-public-key"]) {
-            this.params.keyClockConfig[
+        if (this.params.keyCloakConfig["realm-public-key"]) {
+            this.params.keyCloakConfig[
                 "realm-public-key"
-            ] = this.params.keyClockConfig["realm-public-key"]
+            ] = this.params.keyCloakConfig["realm-public-key"]
                 .replace("-----BEGIN PUBLIC KEY-----\n", "")
                 .replace("-----END PUBLIC KEY-----", "")
                 .trim();
         }
-        Object.entries(this.params.keyClockConfig).forEach(([key, value]) => {
+        Object.entries(this.params.keyCloakConfig).forEach(([key, value]) => {
             if (isEmpty(value)) {
-                delete this.params.keyClockConfig[key];
+                delete this.params.keyCloakConfig[key];
             }
         });
-        this.keyClock = new KeyClock(
+        this.keyCloak = new KeyCloak(
             {
                 store: this.authController.getSessionStore(),
             },
-            this.params.keyClockConfig,
+            this.params.keyCloakConfig,
         );
-        this.keyClock.storeGrant = function (grant, request, response) {
+        this.keyCloak.storeGrant = function (grant, request, response) {
             if (this.stores.length < 2 || this.stores[0].get(request)) {
                 return;
             }
@@ -191,7 +196,7 @@ export default class KeyClockAuth extends NullAuthProvider {
             (grant as any).store(request, response);
             return grant;
         };
-        this.keyClock.storeGrant.bind(this.keyClock);
+        this.keyCloak.storeGrant.bind(this.keyCloak);
     }
     /**
      * Проверка на случай если авторизация вынесена на внешний прокси nginx
@@ -206,14 +211,14 @@ export default class KeyClockAuth extends NullAuthProvider {
         session: ISession,
     ): Promise<ISession> {
         if (
-            gateContext.params[this.params.keyClockParamName] ||
-            gateContext.params[FLAG_REDIRECT] === "1"
+            gateContext.params[this.params.keyCloakParamName] ||
+            gateContext.params[this.params.flagRedirect] === "1"
         ) {
-            gateContext.debug("KeyClock login");
+            gateContext.debug("KeyCloak login");
             let data;
-            if (gateContext.params[this.params.keyClockParamName]) {
+            if (gateContext.params[this.params.keyCloakParamName]) {
                 data = JSON.parse(
-                    gateContext.params[this.params.keyClockParamName],
+                    gateContext.params[this.params.keyCloakParamName],
                 );
                 data.query = QueryString.parse(data.query);
             } else {
@@ -225,11 +230,11 @@ export default class KeyClockAuth extends NullAuthProvider {
             }
             (gateContext.request as IRequestExtra).kauth = {};
             const redirectUrl = URL.parse(this.params.redirectUrl, true);
-            redirectUrl.query[FLAG_REDIRECT] = "1";
+            redirectUrl.query[this.params.flagRedirect] = "1";
             gateContext.request.session.auth_redirect_uri = URL.format(
                 redirectUrl,
             );
-            await PostAuth(gateContext, this.keyClock, data);
+            await PostAuth(gateContext, this.keyCloak, data);
             delete gateContext.request.session.auth_redirect_uri;
             if (!(gateContext.request as IRequestExtra).kauth.grant) {
                 return this.redirectAccess(gateContext);
@@ -257,19 +262,19 @@ export default class KeyClockAuth extends NullAuthProvider {
                 return this.redirectAccess(gateContext);
             }
         } else if (gateContext.params[PATH_CALLBACK]) {
-            gateContext.debug("KeyClock Admin");
+            gateContext.debug("KeyCloak Admin");
             (gateContext.request as IRequestExtra).kauth = {};
             await Admin(
                 gateContext,
-                this.keyClock,
+                this.keyCloak,
                 gateContext.params[PATH_CALLBACK],
             );
             throw new BreakException("break");
         } else if (gateContext.request.session[TOKEN_KEY]) {
-            gateContext.debug("KeyClock Init grant");
+            gateContext.debug("KeyCloak Init grant");
             (gateContext.request as IRequestExtra).kauth = {};
 
-            return GrantAttacher(gateContext, this.keyClock)
+            return GrantAttacher(gateContext, this.keyCloak)
                 .then(async () => {
                     if (
                         session &&
@@ -319,10 +324,10 @@ export default class KeyClockAuth extends NullAuthProvider {
             ck_id: (grant.access_token as any).content.sub,
         } as IUserData;
 
-        const userInfo = await this.keyClock.grantManager.userInfo(
+        const userInfo = await this.keyCloak.grantManager.userInfo(
             grant.access_token,
         );
-        this.params.mapKeyClockUserInfo.forEach((obj) => {
+        this.params.mapKeyCloakUserInfo.forEach((obj) => {
             if (isEmpty(userInfo[obj.in])) {
                 dataUser[obj.out] = userInfo[obj.in];
             }
@@ -343,7 +348,7 @@ export default class KeyClockAuth extends NullAuthProvider {
         if (!Array.isArray(dataUser.ca_actions)) {
             dataUser.ca_actions = [];
         }
-        this.params.mapKeyClockGrant.forEach((obj) => {
+        this.params.mapKeyCloakGrant.forEach((obj) => {
             if (grant.access_token.hasRole(obj.grant)) {
                 dataUser.ca_actions.push(
                     typeof obj.action === "string"
@@ -357,8 +362,8 @@ export default class KeyClockAuth extends NullAuthProvider {
     }
     private async redirectAccess(context: IContext): Promise<any> {
         const redirectUrl = URL.parse(this.params.redirectUrl, true);
-        redirectUrl.query[FLAG_REDIRECT] = "1";
-        const loginUrl = this.keyClock.loginUrl(
+        redirectUrl.query[this.params.flagRedirect] = "1";
+        const loginUrl = this.keyCloak.loginUrl(
             context.request.session.id,
             URL.format(redirectUrl),
         );

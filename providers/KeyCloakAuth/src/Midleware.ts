@@ -2,7 +2,7 @@ import * as KeyClock from "keycloak-connect";
 import * as Token from "keycloak-connect/middleware/auth-utils/token";
 import * as Signature from "keycloak-connect/middleware/auth-utils/signature";
 import IContext from "@ungate/plugininf/lib/IContext";
-import { IRequestExtra, IKeyClockAuthParam } from "./KeyClockAuth.types";
+import { IRequestExtra, IKeyClockAuthParam } from "./KeyCloakAuth.types";
 
 export async function PostAuth(
     gateContext: IContext,
