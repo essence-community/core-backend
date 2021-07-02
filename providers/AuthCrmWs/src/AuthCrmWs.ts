@@ -388,7 +388,7 @@ export default class AuthCrmWs extends NullAuthProvider {
                         this.authController.addUser(
                             (user as any).ck_id,
                             this.name,
-                            user,
+                            user as any,
                         ),
                     ),
                 ),

@@ -268,7 +268,6 @@ export default class PKOAuth extends NullAuthProvider {
                                 ? chunk.json
                                 : JSON.stringify(chunk.json);
                             users[row.ck_id] = {
-                                cv_timezone: "+03:00",
                                 ...row,
                                 ca_actions: [],
                             };
@@ -335,7 +334,7 @@ export default class PKOAuth extends NullAuthProvider {
                         this.authController.addUser(
                             (user as any).ck_id,
                             this.name,
-                            user,
+                            user as any,
                         ),
                     ),
                 ),
@@ -437,8 +436,6 @@ export default class PKOAuth extends NullAuthProvider {
                             ]),
                             ck_id:
                                 (userData.data || {}).ck_id || user.objectSID,
-                            cv_timezone:
-                                (userData.data || {}).cv_timezone || "+03:00",
                         },
                     );
                     if (!(userData.data || {}).ck_id) {

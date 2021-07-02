@@ -277,7 +277,6 @@ export default class CoreAuthPg extends NullAuthProvider {
                                 ? chunk.json
                                 : JSON.stringify(chunk.json);
                             users[row.ck_id] = {
-                                cv_timezone: "+03:00",
                                 ...row,
                                 ca_actions: [],
                             };
@@ -349,7 +348,7 @@ export default class CoreAuthPg extends NullAuthProvider {
                         this.authController.addUser(
                             (user as any).ck_id,
                             this.name,
-                            user,
+                            user as any,
                         ),
                     ),
                 ),

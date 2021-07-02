@@ -18,11 +18,11 @@ export default interface ISession {
 }
 
 export interface IUserData {
-    ca_actions?: any[];
+    ca_actions: any[];
     ca_department?: any[];
     ck_id: any;
     ck_dept?: any;
-    cv_timezone: any;
+    cv_timezone?: string;
     [key: string]: any;
 }
 

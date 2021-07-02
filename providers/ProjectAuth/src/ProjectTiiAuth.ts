@@ -145,7 +145,6 @@ export default class ProjectTiiAuth extends NullAuthProvider {
                                 cv_name: chunk.nm_first,
                                 cv_patronymic: chunk.nm_middle,
                                 cv_surname: chunk.nm_last,
-                                cv_timezone: "+03:00",
                             };
                         });
                         resUser.stream.on("end", () => {
@@ -205,7 +204,7 @@ export default class ProjectTiiAuth extends NullAuthProvider {
                         this.authController.addUser(
                             (user as any).ck_id,
                             this.name,
-                            user,
+                            user as any,
                         ),
                     ),
                 ),

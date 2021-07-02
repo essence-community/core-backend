@@ -142,7 +142,6 @@ export default class CoreAuthOracle extends NullAuthProvider {
                             users[chunk.ck_id] = {
                                 ...chunk,
                                 ca_actions: [],
-                                cv_timezone: "+03:00",
                             };
                         });
                         resUser.stream.on("end", () => {
@@ -214,7 +213,7 @@ export default class CoreAuthOracle extends NullAuthProvider {
                         this.authController.addUser(
                             (user as any).ck_id,
                             this.name,
-                            user,
+                            user as any,
                         ),
                     ),
                 ),

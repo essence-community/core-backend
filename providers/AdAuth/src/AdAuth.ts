@@ -276,14 +276,13 @@ export default class AdAuth extends NullAuthProvider {
                                 {
                                     ca_actions: this.getActionUser(user),
                                     ck_id: user.objectSID,
-                                    cv_timezone: "+03:00",
                                 },
                             );
                             addUsers.push(
                                 this.authController.addUser(
                                     data.ck_id,
                                     this.name,
-                                    data,
+                                    data as any,
                                 ),
                             );
                         });
@@ -364,8 +363,6 @@ export default class AdAuth extends NullAuthProvider {
                             ]),
                             ck_id:
                                 (userData.data || {}).ck_id || user.objectSID,
-                            cv_timezone:
-                                (userData.data || {}).cv_timezone || "+03:00",
                         },
                     );
                     if (!(userData.data || {}).ck_id) {

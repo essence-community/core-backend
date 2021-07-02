@@ -1,8 +1,7 @@
 import ILocalDB from "@ungate/plugininf/lib/db/local/ILocalDB";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
-import IObjectParam from "@ungate/plugininf/lib/IObjectParam";
-import ISession from "@ungate/plugininf/lib/ISession";
+import ISession, { IUserData } from "@ungate/plugininf/lib/ISession";
 import Logger from "@ungate/plugininf/lib/Logger";
 import * as crypto from "crypto";
 import { v4 as uuidv4 } from "uuid";
@@ -19,11 +18,12 @@ import {
 } from "@ungate/plugininf/lib/IAuthController";
 import { ISessionStore } from "@ungate/plugininf/lib/IAuthController";
 import { ISessionData } from "@ungate/plugininf/lib/ISession";
-import { initParams } from "@ungate/plugininf/lib/util/Util";
+import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
 import NullContext from "@ungate/plugininf/lib/NullContext";
 import RequestContext from "../request/RequestContext";
 import { debounce } from "@ungate/plugininf/lib/util/Util";
 import { noop } from "lodash";
+import * as moment from "moment-timezone";
 
 export class GateSession implements IAuthController {
     private dbUsers: ILocalDB;
@@ -32,12 +32,16 @@ export class GateSession implements IAuthController {
     private logger: IRufusLogger;
     public updateUserInfo: typeof NotificationController.updateUserInfo;
     private params: IContextParams;
+    private timezone: string;
 
     constructor(
         private name: string,
         params: IContextParams,
         private secret: string,
     ) {
+        this.timezone = moment()
+            .tz(Constants.DEFAULT_TIMEZONE_DATE)
+            .format("Z");
         this.params = initParams(NullContext.getParamsInfo(), params);
         this.logger = Logger.getLogger(`GateSession_${name}`);
         this.updateUserInfo = NotificationController.updateUserInfo.bind(
@@ -105,10 +109,16 @@ export class GateSession implements IAuthController {
         userData,
         sessionDuration = 60,
         sessionData,
-    }: ICreateSessionParam): Promise<IObjectParam> {
+    }: ICreateSessionParam): Promise<IUserData> {
         if (!idUser) {
             idUser = uuidv4();
             idUser = idUser.replace(/-/g, "");
+        }
+        if (isEmpty(userData.cv_timezone)) {
+            userData.cv_timezone = this.timezone;
+        }
+        if (isEmpty(userData.ca_actions)) {
+            userData.ca_actions = [];
         }
         const signed =
             "s:" + this.sign(context.request.session.id, this.secret);
@@ -266,8 +276,14 @@ export class GateSession implements IAuthController {
     public addUser(
         idUser: string,
         nameProvider: string,
-        data: IObjectParam,
+        data: IUserData,
     ): Promise<void> {
+        if (isEmpty(data.cv_timezone)) {
+            data.cv_timezone = this.timezone;
+        }
+        if (isEmpty(data.ca_actions)) {
+            data.ca_actions = [];
+        }
         return this.dbUsers
             .insert({
                 ck_d_provider: nameProvider,
@@ -288,7 +304,7 @@ export class GateSession implements IAuthController {
         idUser: string,
         nameProvider: string,
         isAccessErrorNotFound: boolean = false,
-    ): Promise<IObjectParam | null> {
+    ): Promise<IUserData | null> {
         const data = await this.dbUsers.findOne(
             {
                 ck_id: `${idUser}:${nameProvider}`,

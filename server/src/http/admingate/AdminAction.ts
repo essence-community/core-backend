@@ -662,6 +662,14 @@ export default class AdminAction {
                 };
             }
             case "boolean": {
+                const defaultValue = conf.defaultValue
+                    ? `${+conf.defaultValue}`
+                    : undefined;
+                const value = isEmpty(params[name])
+                    ? "0"
+                    : `${+(typeof params[name] === "string"
+                          ? params[name] === "1" || params[name] === "true"
+                          : params[name])}`;
                 if (isEmpty(conf.defaultValue)) {
                     return {
                         ...defaultAttr,
@@ -669,22 +677,20 @@ export default class AdminAction {
                         ck_page_object: child.ck_page_object,
                         cl_dataset: 1,
                         datatype: "combo",
-                        initvalue: isEmpty(params[name])
-                            ? conf.defaultValue
-                            : params[name],
+                        initvalue: isEmpty(params[name]) ? defaultValue : value,
                         defaultvalue: isEmpty(params[name])
-                            ? conf.defaultValue
-                            : params[name],
+                            ? defaultValue
+                            : value,
                         displayfield: "cv_name",
                         type: "IFIELD",
                         localization: "static",
                         records: [
                             {
-                                ck_id: 1,
+                                ck_id: "1",
                                 cv_name: "dacf7ab025c344cb81b700cfcc50e403",
                             },
                             {
-                                ck_id: 0,
+                                ck_id: "0",
                                 cv_name: "f0e9877df106481eb257c2c04f8eb039",
                             },
                         ],
@@ -694,12 +700,12 @@ export default class AdminAction {
                 return {
                     ...defaultAttr,
                     datatype: "checkbox",
-                    initvalue: `${+(isEmpty(params[name])
-                        ? conf.defaultValue
-                        : params[name])}`,
-                    defaultvalue: `${+(isEmpty(params[name])
-                        ? conf.defaultValue
-                        : params[name])}`,
+                    initvalue: isEmpty(params[name])
+                        ? defaultValue || "0"
+                        : value,
+                    defaultvalue: isEmpty(params[name])
+                        ? defaultValue || "0"
+                        : value,
                     type: "IFIELD",
                 };
             }

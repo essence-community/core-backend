@@ -211,7 +211,7 @@ export default class CoreContext extends NullContext {
     }
 
     public async init(reload?: boolean): Promise<void> {
-        this.dbUsers = await createTempTable("tt_users");
+        this.dbUsers = this.authController.getUserDb();
         return this.controller.init(reload);
     }
     public initContext(gateContext: IContext): Promise<IContextPluginResult> {

@@ -135,6 +135,32 @@ export default class KeyCloakAuth extends NullAuthProvider {
                         required: true,
                     },
                 },
+                defaultValue: [
+                    {
+                        in: "sub",
+                        out: "ck_id",
+                    },
+                    {
+                        in: "given_name",
+                        out: "cv_name",
+                    },
+                    {
+                        in: "name",
+                        out: "cv_full_name",
+                    },
+                    {
+                        in: "preferred_username",
+                        out: "cv_login",
+                    },
+                    {
+                        in: "family_name",
+                        out: "cv_surname",
+                    },
+                    {
+                        in: "email",
+                        out: "cv_email",
+                    },
+                ],
             },
             disableRecursiveAuth: {
                 type: "boolean",
@@ -328,12 +354,12 @@ export default class KeyCloakAuth extends NullAuthProvider {
             grant.access_token,
         );
         this.params.mapKeyCloakUserInfo.forEach((obj) => {
-            if (isEmpty(userInfo[obj.in])) {
+            if (!isEmpty(userInfo[obj.in])) {
                 dataUser[obj.out] = userInfo[obj.in];
             }
             if (
                 (grant.access_token as any).content &&
-                isEmpty((grant.access_token as any).content[obj.in])
+                !isEmpty((grant.access_token as any).content[obj.in])
             ) {
                 dataUser[obj.out] = (grant.access_token as any).content[obj.in];
             }

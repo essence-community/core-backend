@@ -36,7 +36,7 @@ export interface IAuthController {
     addUser(
         idUser: string,
         nameProvider: string,
-        data: IObjectParam,
+        data: IUserData,
     ): Promise<void>;
     /**
      * Получаем данные о пользователе
@@ -47,7 +47,7 @@ export interface IAuthController {
         idUser: string,
         nameProvider: string,
         isAccessErrorNotFound?: boolean,
-    ): Promise<IObjectParam | null>;
+    ): Promise<IUserData | null>;
     /**
      * Создание сессии
      * @param idUser индификатор пользователя
@@ -55,7 +55,7 @@ export interface IAuthController {
      * @param data данные пользователя
      * @param sessionDuration время жизни сессии в минутах
      */
-    createSession(ICreateSessionParam): Promise<IObjectParam>;
+    createSession(ICreateSessionParam): Promise<IUserData>;
 
     /**
      * Устаревание сессии
