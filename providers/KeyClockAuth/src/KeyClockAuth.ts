@@ -19,6 +19,7 @@ import BreakException from "@ungate/plugininf/lib/errors/BreakException";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
 import { uniq } from "lodash";
 import * as fs from "fs";
+import { Constant } from "@ungate/plugininf/lib/Constants";
 
 const FLAG_REDIRECT = "jl_keyclock_auth_callback";
 const USE_REDIRECT = "jl_keyclock_use_redirect";
@@ -134,6 +135,11 @@ export default class KeyClockAuth extends NullAuthProvider {
                         required: true,
                     },
                 },
+            },
+            disableRecursiveAuth: {
+                type: "boolean",
+                defaultValue: true,
+                name: "Disable recursive auth",
             },
         };
     }
@@ -289,8 +295,20 @@ export default class KeyClockAuth extends NullAuthProvider {
                 })
                 .catch(async () => {
                     await this.authController.logoutSession(gateContext);
+                    if (
+                        !this.params.disableRecursiveAuth &&
+                        gateContext.queryName === Constant.QUERY_GETSESSIONDATA
+                    ) {
+                        return this.redirectAccess(gateContext);
+                    }
                     return null;
                 });
+        } else if (
+            !session &&
+            !this.params.disableRecursiveAuth &&
+            gateContext.queryName === Constant.QUERY_GETSESSIONDATA
+        ) {
+            return this.redirectAccess(gateContext);
         }
         return session;
     }

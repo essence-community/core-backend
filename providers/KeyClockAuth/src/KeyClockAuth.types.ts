@@ -23,6 +23,7 @@ export interface IKeyClockAuthParams extends IAuthProviderParam {
     redirectUrl: string;
     mapKeyClockGrant: IGrantMap[];
     mapKeyClockUserInfo: IUserInfoMap[];
+    disableRecursiveAuth: boolean;
 }
 
 export interface IRequestExtra extends IRequest {
