@@ -1,13 +1,13 @@
-import * as KeyClock from "keycloak-connect";
+import * as KeyCloak from "keycloak-connect";
 import * as Token from "keycloak-connect/middleware/auth-utils/token";
 import * as Signature from "keycloak-connect/middleware/auth-utils/signature";
 import IContext from "@ungate/plugininf/lib/IContext";
-import { IRequestExtra, IKeyClockAuthParam } from "./KeyCloakAuth.types";
+import { IRequestExtra, IKeyCloakAuthParam } from "./KeyCloakAuth.types";
 
 export async function PostAuth(
     gateContext: IContext,
-    keycloak: KeyClock.Keycloak,
-    data: IKeyClockAuthParam,
+    keycloak: KeyCloak.Keycloak,
+    data: IKeyCloakAuthParam,
 ) {
     const request = gateContext.request as IRequestExtra;
 
@@ -38,7 +38,7 @@ export async function PostAuth(
 
 export async function GrantAttacher(
     gateContext: IContext,
-    keycloak: KeyClock.Keycloak,
+    keycloak: KeyCloak.Keycloak,
 ) {
     return keycloak
         .getGrant(gateContext.request as any, gateContext.response as any)
@@ -47,9 +47,9 @@ export async function GrantAttacher(
         });
 }
 
-async function adminLogout(context: IContext, keycloak: KeyClock.Keycloak) {
+async function adminLogout(context: IContext, keycloak: KeyCloak.Keycloak) {
     context.debug(
-        "KeyClock Admin Logout %s",
+        "KeyCloak Admin Logout %s",
         context.params.text || context.params.json || context.params.raw,
     );
     const preToken = new Token(
@@ -69,7 +69,7 @@ async function adminLogout(context: IContext, keycloak: KeyClock.Keycloak) {
                         context.response.end("ok");
                         return;
                     }
-                    context.debug("KeyClock logout %j", sessionIDs);
+                    context.debug("KeyCloak logout %j", sessionIDs);
                     if (sessionIDs && sessionIDs.length > 0) {
                         let seen = 0;
                         sessionIDs.forEach((id) => {
@@ -101,9 +101,9 @@ async function adminLogout(context: IContext, keycloak: KeyClock.Keycloak) {
     }
 }
 
-async function adminNotBefore(context: IContext, keycloak: KeyClock.Keycloak) {
+async function adminNotBefore(context: IContext, keycloak: KeyCloak.Keycloak) {
     context.debug(
-        "KeyClock Admin Not Before %s",
+        "KeyCloak Admin Not Before %s",
         context.params.text || context.params.json || context.params.raw,
     );
     const preToken = new Token(
@@ -133,10 +133,10 @@ async function adminNotBefore(context: IContext, keycloak: KeyClock.Keycloak) {
 
 export async function Admin(
     context: IContext,
-    keycloak: KeyClock.Keycloak,
+    keycloak: KeyCloak.Keycloak,
     path: string,
 ) {
-    context.debug("KeyClock Admin path %s", path);
+    context.debug("KeyCloak Admin path %s", path);
     switch (path) {
         case "k_logout":
             return adminLogout(context, keycloak);

@@ -22,7 +22,7 @@ import { ISessionData } from "@ungate/plugininf/lib/ISession";
 import { initParams } from "@ungate/plugininf/lib/util/Util";
 import NullContext from "@ungate/plugininf/lib/NullContext";
 import RequestContext from "../request/RequestContext";
-import { debounce } from "../../../../plugininf/lib/util/Util";
+import { debounce } from "@ungate/plugininf/lib/util/Util";
 import { noop } from "lodash";
 
 export class GateSession implements IAuthController {
