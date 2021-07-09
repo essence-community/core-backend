@@ -58,7 +58,7 @@ class HttpServer {
                     ...(params.paramSession || {}),
                     store: gateContext.authController.getSessionStore(),
                     secret: GateSession.sha1(
-                        `${gateContext.name}_${Constants.SESSION_SECRET}`,
+                        `${gateContext.name}_cookie_${Constants.SESSION_SECRET}`,
                     ),
                 };
                 sessionConf.cookie.maxAge *= 1000;

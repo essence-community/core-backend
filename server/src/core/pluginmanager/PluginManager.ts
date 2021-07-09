@@ -459,7 +459,7 @@ class PluginManager {
                         doc.ck_id,
                         doc.cct_params,
                         GateSession.sha1(
-                            `${doc.ck_id}_${Constants.SESSION_SECRET}`,
+                            `${doc.ck_id}_session_${Constants.SESSION_SECRET}`,
                         ),
                     );
                     GateContext[doc.ck_id] = PluginClass.default
