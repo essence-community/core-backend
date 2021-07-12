@@ -17,6 +17,7 @@ import { isEmpty } from "@ungate/plugininf/lib/util/Util";
 import * as QueryString from "query-string";
 import * as fs from "fs";
 import * as FormData from "form-data";
+import ErrorGate from '@ungate/plugininf/lib/errors/ErrorGate';
 
 const validHeader = ["application/json", "application/xml", "text/"];
 const defaultHeader = ["content-type", "cookie"];
@@ -297,23 +298,26 @@ export default class RestEssenceProxy extends NullProvider {
                     )}`,
                 );
             }
+            if (response.status === 403) {
+                return reject(new ErrorException(ErrorGate.REQUIRED_AUTH));
+            }
+            response.data.on("error", (err) => {
+                if (err) {
+                    gateContext.error(
+                        `Error query ${gateContext.queryName}`,
+                        err,
+                    );
+                    reject(
+                        new ErrorException(
+                            -1,
+                            "Ошибка вызова внешнего сервиса",
+                        ),
+                    );
+                }
+                return undefined;
+            });
             if (validHeader.find((key) => ctHeader.startsWith(key))) {
-                let arr = [];
-                response.data.on("error", (err) => {
-                    if (err) {
-                        gateContext.error(
-                            `Error query ${gateContext.queryName}`,
-                            err,
-                        );
-                        reject(
-                            new ErrorException(
-                                -1,
-                                "Ошибка вызова внешнего сервиса",
-                            ),
-                        );
-                    }
-                    return undefined;
-                });
+                let arr = [];               
                 arr = await new Promise<any[]>((resolveArr) => {
                     let json = "";
                     response.data.on("data", (data) => {
@@ -341,6 +345,10 @@ export default class RestEssenceProxy extends NullProvider {
                     });
                 });
 
+                if (arr.length === 1 && arr[0].statusCode && arr[0].error) {
+                    return reject(new ErrorException(-1, `StatusCode: ${arr[0].statusCode}\nError:\n${arr[0].message}`));
+                }
+
                 if (this.params.includeHeaderOut) {
                     this.params.includeHeaderOut.split(",").forEach((item) => {
                         if (rheaders[item]) {
@@ -363,20 +371,6 @@ export default class RestEssenceProxy extends NullProvider {
             }
             gateContext.response.writeHead(response.status, rheaders);
             response.data.on("end", () => reject(new BreakException("break")));
-            response.data.on("error", (err) => {
-                if (err) {
-                    gateContext.error(
-                        `Error query ${gateContext.queryName}`,
-                        err,
-                    );
-                    return reject(
-                        new ErrorException(
-                            -1,
-                            "Ошибка вызова внешнего сервиса",
-                        ),
-                    );
-                }
-            });
             safeResponsePipe(response.data as any, gateContext.response);
             return undefined;
         });
