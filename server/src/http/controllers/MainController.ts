@@ -330,8 +330,8 @@ class MainController {
             config.ck_d_plugin.toLowerCase(),
         );
         provider = pluginClass.default
-            ? new pluginClass.default(config.ck_id, config.cct_params)
-            : new pluginClass(config.ck_id, config.cct_params);
+            ? new pluginClass.default(config.ck_id, config.cct_params, gateContext.gateContextPlugin.authController)
+            : new pluginClass(config.ck_id, config.cct_params, gateContext.gateContextPlugin.authController);
         await provider.init();
         PluginManager.setGateProvider(
             gateContext.gateContextPlugin.name,
