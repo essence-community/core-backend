@@ -19,7 +19,7 @@ import * as fs from "fs";
 import * as FormData from "form-data";
 
 const validHeader = ["application/json", "application/xml", "text/"];
-const defaultHeader = ["content-type", "cookies"];
+const defaultHeader = ["content-type", "cookie"];
 export interface IRestEssenceProxyParams extends IParamsProvider {
     defaultGateUrl: string;
     proxy?: string;
