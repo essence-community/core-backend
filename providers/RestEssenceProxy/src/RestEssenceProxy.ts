@@ -17,7 +17,7 @@ import { isEmpty } from "@ungate/plugininf/lib/util/Util";
 import * as QueryString from "query-string";
 import * as fs from "fs";
 import * as FormData from "form-data";
-import ErrorGate from '@ungate/plugininf/lib/errors/ErrorGate';
+import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
 
 const validHeader = ["application/json", "application/xml", "text/"];
 const defaultHeader = ["content-type", "cookie"];
@@ -285,7 +285,40 @@ export default class RestEssenceProxy extends NullProvider {
         }
 
         return new Promise(async (resolve, reject) => {
-            const response = await axios.default.request(params);
+            let response = null;
+            try {
+                response = await axios.default.request(params);
+            } catch (err) {
+                if (err && err.isAxiosError) {
+                    gateContext.error(
+                        `Error query ${gateContext.queryName}`,
+                        err,
+                    );
+                    if (err.response?.status === 403) {
+                        return reject(
+                            new ErrorException(ErrorGate.REQUIRED_AUTH),
+                        );
+                    } else {
+                        return reject(
+                            new ErrorException(
+                                -1,
+                                JSON.stringify(err.toJSON()),
+                            ),
+                        );
+                    }
+                } else if (err) {
+                    gateContext.error(
+                        `Error query ${gateContext.queryName}`,
+                        err,
+                    );
+                    return reject(
+                        new ErrorException(
+                            -1,
+                            "Ошибка вызова внешнего сервиса",
+                        ),
+                    );
+                }
+            }
             const ctHeader =
                 response.headers["content-type"] || "application/json";
             const rheaders = {
@@ -298,9 +331,7 @@ export default class RestEssenceProxy extends NullProvider {
                     )}`,
                 );
             }
-            if (response.status === 403) {
-                return reject(new ErrorException(ErrorGate.REQUIRED_AUTH));
-            }
+
             response.data.on("error", (err) => {
                 if (err) {
                     gateContext.error(
@@ -317,7 +348,7 @@ export default class RestEssenceProxy extends NullProvider {
                 return undefined;
             });
             if (validHeader.find((key) => ctHeader.startsWith(key))) {
-                let arr = [];               
+                let arr = [];
                 arr = await new Promise<any[]>((resolveArr) => {
                     let json = "";
                     response.data.on("data", (data) => {
@@ -346,7 +377,12 @@ export default class RestEssenceProxy extends NullProvider {
                 });
 
                 if (arr.length === 1 && arr[0].statusCode && arr[0].error) {
-                    return reject(new ErrorException(-1, `StatusCode: ${arr[0].statusCode}\nError:\n${arr[0].message}`));
+                    return reject(
+                        new ErrorException(
+                            -1,
+                            `StatusCode: ${arr[0].statusCode}\nError:\n${arr[0].message}`,
+                        ),
+                    );
                 }
 
                 if (this.params.includeHeaderOut) {
