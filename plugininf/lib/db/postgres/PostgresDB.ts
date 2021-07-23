@@ -48,6 +48,7 @@ export interface IPostgresDBConfig {
     user?: string;
     password?: string;
     lvl_logger?: string;
+    poolPg?: Record<string, any>;
 }
 interface IParams {
     [key: string]: string | boolean | number | IObjectParam;
@@ -99,18 +100,29 @@ export default class PostgresDB {
                 name: "Время выполнения запроса",
                 type: "integer",
             },
-            ssl: {
-                name: "SSL Postgre",
+            poolPg: {
+                name: "Extra Postgres param",
                 type: "form_nested",
                 childs: {
-                    rejectUnauthorized: {
-                        name: "Reject Unauthorized",
-                        type: "boolean",
-                        defaultValue: false,
-                    }
+                    ssl: {
+                        name: "SSL Postgres param",
+                        type: "form_nested",
+                        childs: {
+                            rejectUnauthorized: {
+                                name: "Reject Unauthorized",
+                                type: "boolean",
+                                defaultValue: true,
+                            }
+                        },
+                        defaultValue: {
+                            rejectUnauthorized: true,
+                        }
+                    },
                 },
                 defaultValue: {
-                    rejectUnauthorized: false,
+                    ssl: {
+                        rejectUnauthorized: true,
+                    },
                 }
             },
             lvl_logger: {
@@ -210,6 +222,7 @@ export default class PostgresDB {
         const [user, pass] = (connectionString.auth || "").split(":");
         /* tslint:disable:object-literal-sort-keys */
         const pool = new pg.Pool({
+            ...(this.connectionConfig.poolPg ? this.connectionConfig.poolPg : {}),
             application_name: this.name,
             host: connectionString.hostname,
             port: parseInt(connectionString.port || "5432", 10),
