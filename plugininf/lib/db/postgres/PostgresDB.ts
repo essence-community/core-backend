@@ -1,5 +1,6 @@
 import { forEach, isObject, noop } from "lodash";
 import * as pg from "pg";
+// @ts-ignore
 import * as QueryStream from "pg-query-stream";
 import { IRufusLogger } from "rufus";
 import { Readable, Transform, TransformCallback } from "stream";
