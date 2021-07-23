@@ -99,6 +99,20 @@ export default class PostgresDB {
                 name: "Время выполнения запроса",
                 type: "integer",
             },
+            ssl: {
+                name: "SSL Postgre",
+                type: "form_nested",
+                childs: {
+                    rejectUnauthorized: {
+                        name: "Reject Unauthorized",
+                        type: "boolean",
+                        defaultValue: false,
+                    }
+                },
+                defaultValue: {
+                    rejectUnauthorized: false,
+                }
+            },
             lvl_logger: {
                 displayField: "ck_id",
                 name: "Level logger",
