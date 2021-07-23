@@ -49,7 +49,7 @@ export interface IPostgresDBConfig {
     user?: string;
     password?: string;
     lvl_logger?: string;
-    poolPg?: Record<string, any>;
+    poolPg?: string | Record<string, any>;
 }
 interface IParams {
     [key: string]: string | boolean | number | IObjectParam;
@@ -103,28 +103,8 @@ export default class PostgresDB {
             },
             poolPg: {
                 name: "Extra Postgres param",
-                type: "form_nested",
-                childs: {
-                    ssl: {
-                        name: "SSL Postgres param",
-                        type: "form_nested",
-                        childs: {
-                            rejectUnauthorized: {
-                                name: "Reject Unauthorized",
-                                type: "boolean",
-                                defaultValue: true,
-                            }
-                        },
-                        defaultValue: {
-                            rejectUnauthorized: true,
-                        }
-                    },
-                },
-                defaultValue: {
-                    ssl: {
-                        rejectUnauthorized: true,
-                    },
-                }
+                type: "long_string",
+                defaultValue: "{}",
             },
             lvl_logger: {
                 displayField: "ck_id",
@@ -166,6 +146,15 @@ export default class PostgresDB {
         if (!this.connectionConfig.connectString) {
             throw new Error(
                 "Не указан параметр connectString при вызове констуктора",
+            );
+        }
+        if (
+            typeof this.connectionConfig.poolPg === "string" &&
+            this.connectionConfig.poolPg.startsWith("{") &&
+            this.connectionConfig.poolPg.endsWith("}")
+        ) {
+            this.connectionConfig.poolPg = JSON.parse(
+                this.connectionConfig.poolPg,
             );
         }
         this.log = Logger.getLogger(`PostgresDB ${name}`);
@@ -223,7 +212,9 @@ export default class PostgresDB {
         const [user, pass] = (connectionString.auth || "").split(":");
         /* tslint:disable:object-literal-sort-keys */
         const pool = new pg.Pool({
-            ...(this.connectionConfig.poolPg ? this.connectionConfig.poolPg : {}),
+            ...(typeof this.connectionConfig.poolPg === "object"
+                ? this.connectionConfig.poolPg
+                : {}),
             application_name: this.name,
             host: connectionString.hostname,
             port: parseInt(connectionString.port || "5432", 10),
