@@ -105,6 +105,7 @@ export default class PostgresDB {
                 name: "Extra Postgres param",
                 type: "long_string",
                 defaultValue: "{}",
+                description: "https://node-postgres.com/api/pool",
             },
             lvl_logger: {
                 displayField: "ck_id",
