@@ -420,10 +420,11 @@ export default class RestTransformProxy extends NullProvider {
                         jt_response_header: response.headers,
                         jt_result: result,
                     };
-                    result = result.map((item) => {
+                    result = result.map((item, index) => {
                         const rowParam = {
                             ...responseParam,
                             jt_result_row: item,
+                            jt_result_row_index: index,
                         };
                         return parserRowResult.runer({
                             get: (key: string, isKeyEmpty: boolean) => {

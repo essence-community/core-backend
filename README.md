@@ -59,3 +59,6 @@ GATE_ADMIN_CLUSTER_CA - сертификат root
 GATE_ADMIN_CLUSTER_PORT - порт межсетевого взаимодействия
 
 GATE_NODE_NAME - наименование сервера. По умолчанию: имя машины
+
+# Документация
+[Описание доступных плагинов](docs/README.md)
