@@ -343,12 +343,32 @@ export class GateSession implements IAuthController {
             const userDepartments = [];
             data.forEach((row) => {
                 const item = row.data || {};
+                if (!Array.isArray(item.ca_actions)) {
+                    if (
+                        typeof item.ca_actions === "string" &&
+                        (item.ca_actions as any).startsWith("[")
+                    ) {
+                        item.ca_actions = JSON.parse(item.ca_actions);
+                    } else {
+                        item.ca_actions = [];
+                    }
+                }
                 (item.ca_actions || []).forEach((action) => {
                     userActions.push({
                         ck_user: item.ck_id,
                         cn_action: action,
                     });
                 });
+                if (!Array.isArray(item.ca_department)) {
+                    if (
+                        typeof item.ca_department === "string" &&
+                        (item.ca_department as any).startsWith("[")
+                    ) {
+                        item.ca_department = JSON.parse(item.ca_department);
+                    } else {
+                        item.ca_department = [];
+                    }
+                }
                 (item.ca_department || []).forEach((dep) => {
                     userDepartments.push({
                         ck_department: dep,
@@ -357,8 +377,6 @@ export class GateSession implements IAuthController {
                 });
                 delete item.ca_actions;
                 delete item.ca_department;
-                delete item.ck_dept;
-                delete item.cv_timezone;
                 users.push(item);
             });
             const usersJson = JSON.stringify(users);
