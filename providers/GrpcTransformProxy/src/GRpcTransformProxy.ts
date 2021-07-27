@@ -46,7 +46,7 @@ export interface IQueryConfig {
 }
 
 export interface IServiceClient extends grpc.Client {
-    [methodName: string]: Function;
+    [methodName: string]: any;
 }
 
 export default class GRpcTransformProxy extends NullProvider {
@@ -162,7 +162,7 @@ export default class GRpcTransformProxy extends NullProvider {
             this.params.typeCredentials === "ssl" &&
             this.params.credentialsSsl
         ) {
-            let opts = undefined;
+            let opts;
             if (fs.existsSync(this.params.credentialsSsl.rootCerts)) {
                 this.params.credentialsSsl.rootCerts = fs.readFileSync(
                     this.params.credentialsSsl.rootCerts,
@@ -232,6 +232,25 @@ export default class GRpcTransformProxy extends NullProvider {
         return;
     }
 
+    private extractFile(obj: Record<string, any>) {
+        if (typeof obj !== "object") {
+            return;
+        }
+        Object.entries(obj).forEach(([key, value]) => {
+            if (
+                typeof value === "object" &&
+                value.originalFilename &&
+                value.path
+            ) {
+                obj[key] = fs.readFileSync(value.path);
+            } else if (Array.isArray(value)) {
+                value.forEach((val) => this.extractFile(val));
+            } else if (typeof value === "object") {
+                this.extractFile(value);
+            }
+        });
+    }
+
     public async callRequest(
         gateContext: IContext,
         query: IGateQuery,
@@ -264,12 +283,18 @@ export default class GRpcTransformProxy extends NullProvider {
                 `Request proxy config: ${JSON.stringify(config)}`,
             );
         }
+        if (config.args) {
+            (Array.isArray(config.args)
+                ? config.args
+                : [config.args]
+            ).forEach((val) => this.extractFile(val));
+        }
         const service = `${config.package}.${config.service}`;
         let client = this.clients[service];
         if (!client) {
             const sClass = deepParam(service, this.grpcObject);
             if (sClass) {
-                let channelOptions = undefined;
+                let channelOptions;
                 if (this.params.channelOptions) {
                     channelOptions = this.params.channelOptions;
                 }
