@@ -134,4 +134,5 @@
     <include file="MTPageAttr.sql" relativeToChangelogFile="true"/>
     <include file="MTDummy.sql" relativeToChangelogFile="true"/>
     <include file="MTGetPageAction.sql" relativeToChangelogFile="true"/>
+    <include file="MTQueryExtra.sql" relativeToChangelogFile="true"/>
 </databaseChangeLog>
