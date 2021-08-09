@@ -120,6 +120,29 @@ export class GateSession implements IAuthController {
         if (isEmpty(userData.ca_actions)) {
             userData.ca_actions = [];
         }
+        if (isEmpty(userData.ca_department)) {
+            userData.ca_department = [];
+        }
+        if (
+            typeof userData.ca_actions === "string" &&
+            (userData.ca_actions as string).startsWith("[") &&
+            (userData.ca_actions as string).endsWith("]")
+        ) {
+            userData.ca_actions = JSON.parse(userData.ca_actions);
+        }
+        if (
+            typeof userData.ca_department === "string" &&
+            (userData.ca_department as string).startsWith("[") &&
+            (userData.ca_department as string).endsWith("]")
+        ) {
+            userData.ca_department = JSON.parse(userData.ca_department);
+        }
+        if (!Array.isArray(userData.ca_department)) {
+            userData.ca_department = [];
+        }
+        if (!Array.isArray(userData.ca_actions)) {
+            userData.ca_actions = [];
+        }
         const signed =
             "s:" + this.sign(context.request.session.id, this.secret);
 
@@ -282,6 +305,29 @@ export class GateSession implements IAuthController {
             data.cv_timezone = this.timezone;
         }
         if (isEmpty(data.ca_actions)) {
+            data.ca_actions = [];
+        }
+        if (isEmpty(data.ca_department)) {
+            data.ca_department = [];
+        }
+        if (
+            typeof data.ca_actions === "string" &&
+            (data.ca_actions as string).startsWith("[") &&
+            (data.ca_actions as string).endsWith("]")
+        ) {
+            data.ca_actions = JSON.parse(data.ca_actions);
+        }
+        if (
+            typeof data.ca_department === "string" &&
+            (data.ca_department as string).startsWith("[") &&
+            (data.ca_department as string).endsWith("]")
+        ) {
+            data.ca_department = JSON.parse(data.ca_department);
+        }
+        if (!Array.isArray(data.ca_department)) {
+            data.ca_department = [];
+        }
+        if (!Array.isArray(data.ca_actions)) {
             data.ca_actions = [];
         }
         return this.dbUsers
