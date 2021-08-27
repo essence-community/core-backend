@@ -1,18 +1,22 @@
 import { IRufusLogger } from "rufus";
 import BreakException from "./errors/BreakException";
 import ErrorException from "./errors/ErrorException";
-import ICCTParams from "./ICCTParams";
+import ICCTParams, { IParamsInfo } from "./ICCTParams";
 import IContext from "./IContext";
 import IObjectParam from "./IObjectParam";
 import IPlugin, { IPluginRequestContext } from "./IPlugin";
 import IQuery, { IGateQuery } from "./IQuery";
 import IResult from "./IResult";
 import Logger from "./Logger";
+import { IAuthResult } from "./NullAuthProvider";
 
 export default abstract class NullPlugin implements IPlugin {
     public name: string;
     public params: ICCTParams;
     public logger: IRufusLogger;
+    public static getParamsInfo(): IParamsInfo {
+        return {};
+    }
     constructor(name: string, params: ICCTParams) {
         this.name = name;
         this.params = params;
@@ -24,7 +28,7 @@ export default abstract class NullPlugin implements IPlugin {
         ) {
             const rootLogger = Logger.getRootLogger();
             this.logger.setLevel(this.params.lvl_logger);
-            for (let handler of rootLogger._handlers) {
+            for (const handler of rootLogger._handlers) {
                 this.logger.addHandler(handler);
             }
         }
@@ -63,7 +67,7 @@ export default abstract class NullPlugin implements IPlugin {
     public async beforeSession(
         gateContext: IContext,
         PRequestContext: IPluginRequestContext,
-    ): Promise<IObjectParam | void> {
+    ): Promise<IAuthResult | void> {
         return;
     }
     public async beforeSaveSession(

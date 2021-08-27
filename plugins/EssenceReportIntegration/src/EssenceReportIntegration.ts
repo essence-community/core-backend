@@ -109,7 +109,7 @@ export default class EssenceReportIntegration extends NullPlugin {
                     );
                 }
                 json.session = {
-                    ...gateContext.session.data,
+                    ...gateContext.session.userData,
                     session: gateContext.sessionId,
                 };
                 const runReport = URL.parse(this.executeReport, true);
@@ -249,7 +249,7 @@ export default class EssenceReportIntegration extends NullPlugin {
             limit: params.maxExcelRows,
             method: "POST",
             session: {
-                ...gateContext.session.data,
+                ...gateContext.session.userData,
                 session: gateContext.sessionId,
             },
             stream: false,

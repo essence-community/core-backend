@@ -20,7 +20,9 @@ class EventsNode {
                     conf.ck_d_plugin.toLowerCase(),
                 );
                 if (pluginClass) {
-                    const plugin = new pluginClass(conf.ck_id, conf.cct_params);
+                    const plugin = pluginClass.default
+                        ? new pluginClass.default(conf.ck_id, conf.cct_params)
+                        : new pluginClass(conf.ck_id, conf.cct_params);
                     return plugin.init().then(
                         () => {
                             PluginManager.setGateEvent(conf.ck_id, plugin);

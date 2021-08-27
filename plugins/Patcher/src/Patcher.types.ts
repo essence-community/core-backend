@@ -1,4 +1,5 @@
 import ICCTParams from "@ungate/plugininf/lib/ICCTParams";
+import { IFile } from "@ungate/plugininf/lib/IContext";
 import { Readable } from "stream";
 
 export interface IPluginParams extends ICCTParams {
@@ -9,29 +10,6 @@ export interface IPluginParams extends ICCTParams {
     cvS3SecretKey?: string;
     cvDir: string;
     cvDirColumn: string;
-}
-
-export interface IFile {
-    /**
-     * same as name - the field name for this file
-     */
-    fieldName: string;
-    /**
-     * the filename that the user reports for the file
-     */
-    originalFilename: string;
-    /**
-     * the absolute path of the uploaded file on disk
-     */
-    path: string;
-    /**
-     * the HTTP headers that were sent along with this file
-     */
-    headers: any;
-    /**
-     * size of the file in bytes
-     */
-    size: number;
 }
 
 export interface IJson {

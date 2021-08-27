@@ -1,7 +1,7 @@
 import BreakException from "@ungate/plugininf/lib/errors/BreakException";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import { IParamsInfo } from "@ungate/plugininf/lib/ICCTParams";
-import IContext from "@ungate/plugininf/lib/IContext";
+import IContext, { IFormData } from "@ungate/plugininf/lib/IContext";
 import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
 import { IResultProvider } from "@ungate/plugininf/lib/IResult";
 import NullProvider from "@ungate/plugininf/lib/NullProvider";
@@ -23,7 +23,6 @@ const keysJson = ["total", "data", "metaData", "success"];
 export default class ProxyTransparent extends NullProvider {
     public static getParamsInfo(): IParamsInfo {
         return {
-            ...NullProvider.getParamsInfo(),
             gateUrl: {
                 name: "Ссылка на проксируемый шлюз",
                 required: true,
@@ -67,6 +66,7 @@ export default class ProxyTransparent extends NullProvider {
         query: IGateQuery,
     ): Promise<IResultProvider> {
         const headers = gateContext.request.headers;
+        const contentType = headers["content-type"].toLowerCase();
         delete headers["content-encoding"];
         delete headers["content-length"];
         delete headers["transfer-encoding"];
@@ -94,43 +94,56 @@ export default class ProxyTransparent extends NullProvider {
             url: url.format(urlGate),
         };
         if (!isEmpty(gateContext.request.body)) {
-            if (gateContext.actionName === "upload") {
+            if (
+                typeof gateContext.request.body === "object" &&
+                (gateContext.request.body as IFormData).files &&
+                contentType.startsWith("multipart/form-data")
+            ) {
                 const formData = {};
                 delete headers["content-type"];
-                Object.keys(gateContext.request.body).forEach((key) => {
-                    if (gateContext.request.body[key].length) {
-                        formData[key] = {
-                            options: {
-                                contentType:
-                                    gateContext.request.body[key][0].headers[
-                                        "content-type"
-                                    ],
-                                filename:
-                                    gateContext.request.body[key][0]
-                                        .originalFilename,
-                            },
-                            value: fs.readFileSync(
-                                gateContext.request.body[key][0].path,
-                                null,
-                            ),
-                        };
+                Object.keys(
+                    (gateContext.request.body as IFormData).files,
+                ).forEach((key) => {
+                    if (
+                        (gateContext.request.body as IFormData).files[key]
+                            .length
+                    ) {
+                        formData[key] = [];
+                        (gateContext.request.body as IFormData).files[
+                            key
+                        ].forEach((item) => {
+                            formData[key].push({
+                                options: {
+                                    contentType: item.headers["content-type"],
+                                    filename: item.originalFilename,
+                                },
+                                value: fs.readFileSync(item.path, null),
+                            });
+                        });
                     }
                 });
-                Object.entries(paramsQuery).forEach((val) => {
+                Object.keys(
+                    (gateContext.request.body as IFormData).fields,
+                ).forEach((key) => {
                     if (
-                        !Object.prototype.hasOwnProperty.call(
-                            urlGate.query,
-                            val[0],
-                        )
+                        (gateContext.request.body as IFormData).fields[key]
+                            .length
                     ) {
-                        formData[val[0]] = val[1];
+                        formData[key] = [];
+                        (gateContext.request.body as IFormData).fields[
+                            key
+                        ].forEach((item) => {
+                            formData[key].push(item);
+                        });
                     }
                 });
                 params.formData = formData;
+            } else if (
+                contentType.startsWith("application/x-www-form-urlencoded")
+            ) {
+                params.body = QueryString.stringify(paramsQuery);
             } else {
-                params.body = isObject(gateContext.request.body)
-                    ? QueryString.stringify(paramsQuery)
-                    : gateContext.request.body;
+                params.body = gateContext.request.body as IFormData;
             }
         }
         if (this.params.proxy) {

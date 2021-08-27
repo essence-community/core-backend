@@ -100,7 +100,7 @@ begin
   end if;
   
   --  or pk_data_type = 'global'
-  if pk_data_type = 'array' or pk_data_type = 'object' or pk_data_type = 'global' then
+  if pk_data_type = 'array' or pk_data_type = 'object' or pk_data_type = 'global' or pk_data_type = 'order' then
     if pv_value ~ '^[\[\{]' then
       return pv_value::jsonb;
     end if;
@@ -128,3 +128,52 @@ CREATE AGGREGATE pkg_json.f_agg_merge_jsonb (varchar, jsonb)
     stype = jsonb
 );
 ALTER AGGREGATE pkg_json.f_agg_merge_jsonb(varchar, jsonb) OWNER TO s_mp;
+
+CREATE FUNCTION pkg_json.f_get_origin_object(pk_start character varying) RETURNS character varying
+    LANGUAGE plpgsql SECURITY DEFINER PARALLEL SAFE
+    SET search_path TO 'pkg_json', 'public'
+    AS $$
+begin
+  /*Добавление статичных объектов*/
+  return (select jsonb_build_object('ck_object', o.ck_id,
+                                    'cl_dataset', c.cl_dataset,
+                                    'cv_name', o.cv_name,
+                                    'cv_displayed', o.cv_displayed,
+                                    'cv_description', o.cv_description,
+                                    'ck_parent', o.ck_parent,
+                                    'cn_order', o.cn_order
+      ) ||
+      case when c.cl_dataset::int = 1 then jsonb_build_object('ck_query', o.ck_query,
+                                                              'ck_modify', 'modify'
+        )
+        else '{}'::jsonb
+      end
+      /*Добавление динамических атрибутов из класса и обьекта*/
+      || coalesce((select jsonb_object_agg(t.ck_attr,
+                                 pkg_json.f_decode_attr(t.cv_value, t.ck_d_data_type)) as attr_po
+           from
+           (select ca2.ck_attr,
+                   a2.ck_d_data_type,
+                   coalesce(oa.cv_value, ca2.cv_value) as cv_value
+              from s_mt.t_class_attr ca2
+              join s_mt.t_attr a2 on a2.ck_id = ca2.ck_attr
+              left join s_mt.t_object_attr oa on o.ck_id = oa.ck_object and ca2.ck_id = oa.ck_class_attr
+             where ca2.ck_class = c.ck_id and ca2.ck_id not in 
+             (select ck_class_attr from s_mt.t_class_hierarchy ch where ch.ck_class_attr in 
+             (select ck_id from s_mt.t_class_attr where ck_class = c.ck_id))) as t where t.cv_value is not null), '{}'::jsonb)
+        /*Сборка атрибутов дочерних объектов*/
+      || coalesce((select pkg_json.f_agg_merge_jsonb(pca.ck_attr, (pkg_json.f_get_origin_object(o2.ck_id))::jsonb  order by o.cn_order)
+              from s_mt.t_object o2
+              join s_mt.t_class c2 on c2.ck_id = o2.ck_class
+              join s_mt.t_class_hierarchy ch on c2.ck_id = ch.ck_class_child
+              join s_mt.t_class_attr pca on pca.ck_id = ch.ck_class_attr
+             where o2.ck_parent = o.ck_id and pca.ck_class = c.ck_id
+             ), '{}'::jsonb)
+    from s_mt.t_object o
+    join s_mt.t_class c on o.ck_class = c.ck_id
+   where o.ck_id = pk_start
+  )::varchar;
+end;
+$$;
+
+ALTER FUNCTION pkg_json.f_get_origin_object(pk_start character varying) OWNER TO s_mp;

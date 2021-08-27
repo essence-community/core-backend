@@ -13,13 +13,13 @@ import IOracleController from "./IOracleController";
 import OldOracle from "./OldOracle";
 import Oracle from "./Oracle";
 import { IParamOracle } from "./OracleDb.types";
+import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
 
 export default class OracleDBPlugin extends NullProvider {
     /* tslint:disable:object-literal-sort-keys */
     public static getParamsInfo(): IParamsInfo {
         return {
             ...OracleDB.getParamsInfo(),
-            ...NullProvider.getParamsInfo(),
             preExecuteSql: {
                 name: "Запрос вызываемый перед",
                 type: "long_string",
@@ -49,12 +49,13 @@ export default class OracleDBPlugin extends NullProvider {
     public params: IParamOracle;
     public dataSource: OracleDB;
     private controller: IOracleController;
-    constructor(name: string, params: ICCTParams) {
-        super(name, params);
-        this.params = {
-            ...this.params,
-            ...initParams(OracleDBPlugin.getParamsInfo(), params),
-        };
+    constructor(
+        name: string,
+        params: ICCTParams,
+        authController: IAuthController,
+    ) {
+        super(name, params, authController);
+        this.params = initParams(OracleDBPlugin.getParamsInfo(), this.params);
         this.dataSource = new OracleDB(`${this.name}_provider`, {
             connectString: this.params.connectString,
             maxRows: this.params.maxRows,
@@ -72,18 +73,21 @@ export default class OracleDBPlugin extends NullProvider {
                 this.name,
                 this.params,
                 this.dataSource,
+                this.authController,
             );
         } else if (params.old) {
             this.controller = new OldOracle(
                 this.name,
                 this.params,
                 this.dataSource,
+                this.authController,
             );
         } else {
             this.controller = new Oracle(
                 this.name,
                 this.params,
                 this.dataSource,
+                this.authController,
             );
         }
         if (!isEmpty(this.params.preExecuteSql)) {
@@ -94,7 +98,7 @@ export default class OracleDBPlugin extends NullProvider {
                     query.inParams,
                     query.outParams,
                 );
-                await new Promise((resolve, reject) => {
+                await new Promise<void>((resolve, reject) => {
                     res.stream.on("error", (err) => reject(err));
                     res.stream.on("data", noop);
                     res.stream.on("end", () => resolve());
@@ -108,7 +112,7 @@ export default class OracleDBPlugin extends NullProvider {
                     query.inParams,
                     query.outParams,
                 );
-                await new Promise((resolve, reject) => {
+                await new Promise<void>((resolve, reject) => {
                     res.stream.on("error", (err) => reject(err));
                     res.stream.on("data", noop);
                     res.stream.on("end", () => resolve());
@@ -129,7 +133,7 @@ export default class OracleDBPlugin extends NullProvider {
                         )
                         .then(
                             (resPost) =>
-                                new Promise((resolve, reject) => {
+                                new Promise<void>((resolve, reject) => {
                                     resPost.stream.on("error", (err) =>
                                         reject(err),
                                     );
@@ -160,7 +164,7 @@ export default class OracleDBPlugin extends NullProvider {
                         )
                         .then(
                             (resPost) =>
-                                new Promise((resolve, reject) => {
+                                new Promise<void>((resolve, reject) => {
                                     resPost.stream.on("error", (err) =>
                                         reject(err),
                                     );

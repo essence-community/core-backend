@@ -21,10 +21,10 @@ export default class CorePG extends IPostgreSQLController {
     private dbCache: ILocalDB;
     public async init(): Promise<void> {
         if (!this.dbUsers) {
-            this.dbUsers = await Property.getUsers();
+            this.dbUsers = this.authController.getUserDb();
         }
         if (!this.dbCache) {
-            this.dbCache = await Property.getCache();
+            this.dbCache = this.authController.getCacheDb();
         }
     }
     public async getConnection(context: IContext): Promise<Connection> {
@@ -168,12 +168,34 @@ export default class CorePG extends IPostgreSQLController {
                               );
                               return false;
                           }
+                          if (!Array.isArray(item.ca_actions)) {
+                              if (
+                                  typeof item.ca_actions === "string" &&
+                                  (item.ca_actions as any).startsWith("[")
+                              ) {
+                                  item.ca_actions = JSON.parse(item.ca_actions);
+                              } else {
+                                  item.ca_actions = [];
+                              }
+                          }
                           (item.ca_actions || []).forEach((action) => {
                               userActions.push({
                                   ck_user: item.ck_id,
                                   cn_action: action,
                               });
                           });
+                          if (!Array.isArray(item.ca_department)) {
+                              if (
+                                  typeof item.ca_department === "string" &&
+                                  (item.ca_department as any).startsWith("[")
+                              ) {
+                                  item.ca_department = JSON.parse(
+                                      item.ca_department,
+                                  );
+                              } else {
+                                  item.ca_department = [];
+                              }
+                          }
                           (item.ca_department || []).forEach((dep) => {
                               userDepartments.push({
                                   ck_department: dep,

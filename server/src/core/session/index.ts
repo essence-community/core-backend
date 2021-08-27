@@ -1,3 +1,5 @@
-import GateSession from "./GateSession";
+import { GateSession } from "./GateSession";
+
+export * from "./store";
 
 export default GateSession;

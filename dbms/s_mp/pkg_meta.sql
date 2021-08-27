@@ -633,7 +633,7 @@ begin
                               join s_mt.t_attr a on a.ck_id = ca.ck_attr
                              where ca.ck_class = pot_class_hierarchy.ck_class_parent
                                and ca.ck_id = pot_class_hierarchy.ck_class_attr
-                               and a.ck_attr_type != 'placement') loop
+                               and a.ck_attr_type <> 'placement') loop
       perform pkg.p_set_error(66);
     end loop;
 
@@ -693,9 +693,9 @@ begin
   -- код функции
   if pv_action = d::varchar then
     -- если есть модули с данным именем еще то удаляем только его
-    for vcur in (select 1 from s_mt.t_module where ck_id != pot_module.ck_id and trim(lower(cv_name)) = trim(lower(pot_module.cv_name))) loop
+    for vcur in (select 1 from s_mt.t_module where ck_id <> pot_module.ck_id and trim(lower(cv_name)) = trim(lower(pot_module.cv_name))) loop
       delete from s_mt.t_module_class where ck_module = pot_module.ck_id; 
-      delete from s_mt.t_module where ck_id = pot_module.ck_id;
+      delete from s_mt.t_module where ck_id = pot_module.ck_id and ck_view = pot_module.ck_view;
       return;
     end loop;
     -- Удаляем связанные данные по таблице иерархии
@@ -707,7 +707,7 @@ begin
                   inner join s_mt.t_module_class mc on mc.ck_module = m.ck_id
                   inner join s_mt.t_class c on mc.ck_class = c.ck_id
                   inner join s_mt.t_class_hierarchy ch on c.ck_id in (ch.ck_class_child, ch.ck_class_parent)
-                  where m.ck_id = pot_module.ck_id) loop
+                  where m.ck_id = pot_module.ck_id and m.ck_view = pot_module.ck_view) loop
       vot_class_hierarchy.ck_id := vcur.ck_id;
       vot_class_hierarchy.ck_class_parent := vcur.ck_class_parent;
       vot_class_hierarchy.ck_class_child := vcur.ck_class_child;
@@ -727,11 +727,11 @@ begin
         inner join s_mt.t_class c on mc.ck_class = c.ck_id
         inner join s_mt.t_class_attr ca on c.ck_id = ca.ck_class
         inner join s_mt.t_attr a on ca.ck_attr = a.ck_id
-        where m.ck_id = pot_module.ck_id
+        where m.ck_id = pot_module.ck_id and m.ck_view = pot_module.ck_view
           and not exists (select 1
                             from s_mt.t_class_attr ca1
                            where a.ck_id = ca1.ck_attr
-                             and ca1.ck_class != ca.ck_class)) t;
+                             and ca1.ck_class <> ca.ck_class)) t;
                              
      -- Удаляем связанные данные по таблице атрибутов
     for vcur in (select ca.ck_id,
@@ -743,7 +743,7 @@ begin
                   inner join s_mt.t_module_class mc on mc.ck_module = m.ck_id
                   inner join s_mt.t_class c on mc.ck_class = c.ck_id
                   inner join s_mt.t_class_attr ca on c.ck_id = ca.ck_class
-                  where m.ck_id = pot_module.ck_id) loop
+                  where m.ck_id = pot_module.ck_id and m.ck_view = pot_module.ck_view) loop
       vot_class_attr.ck_id := vcur.ck_id;
       vot_class_attr.ck_class := vcur.ck_class;
       vot_class_attr.ck_attr := vcur.ck_attr;
@@ -772,7 +772,7 @@ begin
                 from s_mt.t_module m
                inner join s_mt.t_module_class mc on mc.ck_module = m.ck_id
                inner join s_mt.t_class c on mc.ck_class = c.ck_id
-               where m.ck_id = pot_module.ck_id) loop
+               where m.ck_id = pot_module.ck_id and m.ck_view = pot_module.ck_view) loop
       vot_class.ck_id := vc.ck_id;
       vot_class.cv_name := vc.cv_name;
       vot_class.cv_description := vc.cv_description;
@@ -787,7 +787,7 @@ begin
 
     if nullif(gv_error::varchar, '') is null then
       -- Удаление
-      delete from s_mt.t_module where ck_id = pot_module.ck_id;    
+      delete from s_mt.t_module where ck_id = pot_module.ck_id and ck_view = pot_module.ck_view;    
     end if;
   else
     if pot_module.cv_name is null then
@@ -810,11 +810,14 @@ begin
       from (select m.ck_id,
            row_number() over (order by(m.cv_version) desc ) as cn_rn
         from s_mt.t_module m 
-        where trim(lower(m.cv_name)) = trim(lower(pot_module.cv_name))) as t
+        where trim(lower(m.cv_name)) = trim(lower(pot_module.cv_name))
+        and m.ck_view = pot_module.ck_view
+        ) as t
         where t.cn_rn = 1;    
       -- Проверяем, что модуля такого нет в базе
       for vcur in (select 1 from s_mt.t_module
                    where trim(lower(cv_name)) = trim(lower(pot_module.cv_name))
+                        and ck_view = pot_module.ck_view
                         and cv_version = pot_module.cv_version
                         and cv_version_api = pot_module.cv_version_api) loop
         perform pkg.p_set_error(63);
@@ -828,6 +831,7 @@ begin
                      inner join s_mt.t_module_class mc on mc.ck_module = m.ck_id
                      inner join s_mt.t_class c on mc.ck_class = c.ck_id
                      where m.ck_id = pot_module.ck_id
+                       and m.ck_view = pot_module.ck_view
                        and m.cl_available = 1
                        and pot_module.cl_available = 0)
                    select '"' || string_agg(t.cv_class, '","' order by t.cv_class) || '"' as cv_class
@@ -844,7 +848,7 @@ begin
                             inner join s_mt.t_module_class mc on mc.ck_module = c.ck_id
                             inner join s_mt.t_module m on m.ck_id = mc.ck_module
                             where wm2.cl_available = 1) t) loop
-      if vcur.cv_class != '""' then
+      if vcur.cv_class <> '""' then
         perform pkg.p_set_error(60, vcur.cv_class);
       end if;
       exit;
@@ -857,6 +861,7 @@ begin
                      inner join s_mt.t_module_class mc on mc.ck_module = m.ck_id
                      inner join s_mt.t_class c on mc.ck_class = c.ck_id
                      where m.ck_id = pot_module.ck_id
+                       and m.ck_view = pot_module.ck_view
                        and m.cl_available = 0
                        and pot_module.cl_available = 1)
                    select '"' || string_agg(t.cv_class, '","' order by t.cv_class) || '"' as cv_class
@@ -870,10 +875,10 @@ begin
                             inner join s_mt.t_class c on ch.ck_class_parent = c.ck_id
                             inner join s_mt.t_module_class mc on mc.ck_class = c.ck_id
                             inner join s_mt.t_module m on m.ck_id = mc.ck_module
-                            where m.ck_id != pot_module.ck_id and trim(lower(m.cv_name)) != trim(lower(pot_module.cv_name))
+                            where m.ck_id <> pot_module.ck_id and trim(lower(m.cv_name)) <> trim(lower(pot_module.cv_name))
                             ) t
                     where (t.cn_available <> 1 and t.cl_available = 0 or t.cl_available = 0)) loop
-      if vcur.cv_class != '""' then
+      if vcur.cv_class <> '""' then
         perform pkg.p_set_error(61, vcur.cv_class);
       end if;
       exit;
@@ -920,16 +925,17 @@ begin
                                       (select (t.dt->>'cv_value') as cv_value
                                         from jsonb_array_elements(vcur_class.cj_class->'class_attributes') as t(dt)
                                         where (t.dt->>'ck_attr') = 'datatype') as cv_datatype_type) jt
-                        left join (select c.ck_id as ck_class, ca.ck_id as ck_class_attr, m.ck_id as ck_module, ca.cv_value from s_mt.t_module m
+                        left join (select c.ck_id as ck_class, ca.ck_id as ck_class_attr, m.ck_id as ck_module, m.ck_view as ck_view_module, ca.cv_value from s_mt.t_module m
                              join s_mt.t_module_class mc on m.ck_id = mc.ck_module
                              join s_mt.t_class c on mc.ck_class = c.ck_id
                              left join s_mt.t_class_attr ca on c.ck_id = ca.ck_class and ca.ck_attr = 'type') as wmc
-                          on ((pv_action = u::varchar and wmc.ck_module = pot_module.ck_id)
-                           or (pv_action = i::varchar and (vv_id is null or wmc.ck_module = vv_id))) and 
-                           (jt.ck_class_id is null and ((jt.cv_datatype_type is null and wmc.ck_class = jt.cv_type) or (jt.cv_datatype_type is not null and wmc.ck_class = lower(jt.cv_type || ':' || jt.cv_datatype_type))) 
+                          on ((pv_action = u::varchar and wmc.ck_module = pot_module.ck_id and wmc.ck_view_module = pot_module.ck_view)
+                           or (pv_action = i::varchar and (vv_id is null or (wmc.ck_module = vv_id and wmc.ck_view_module = pot_module.ck_view)))) and 
+                           (jt.ck_class_id is null and ((jt.cv_datatype_type is null and lower(wmc.ck_class) = lower(pot_module.ck_view || ':' || jt.cv_type)) or (jt.cv_datatype_type is not null and lower(wmc.ck_class) = lower(pot_module.ck_view || ':' || jt.cv_type || ':' || jt.cv_datatype_type))) 
                            or (jt.ck_class_id is not null and jt.ck_class_id = wmc.ck_class))
                         ) loop
-            vot_class.ck_id          := coalesce(vcur.ck_class, vcur.ck_class_id, vcur.cv_type);
+            vot_class.ck_id          := coalesce(vcur.ck_class, vcur.ck_class_id, lower(pot_module.ck_view || ':' || vcur.cv_type));
+            vot_class.ck_view        := pot_module.ck_view;
             vot_class.cv_name        := vcur.cv_name;
             vot_class.cl_final       := vcur.cl_final::smallint;
             vot_class.cl_dataset     := vcur.cl_dataset::smallint;
@@ -945,7 +951,7 @@ begin
                 vl_new_id := 1;
               end loop;
               if vcur.ck_class_id is null and vcur.cv_datatype_type is not null then
-                vot_class.ck_id = lower(vcur.cv_type || ':' || vcur.cv_datatype_type);
+                vot_class.ck_id = lower(pot_module.ck_view || ':' || vcur.cv_type || ':' || vcur.cv_datatype_type);
               end if;
               vot_class := pkg_meta.p_modify_class(vcur.cv_action, vot_class, vl_new_id);
             else
@@ -1036,7 +1042,7 @@ begin
                                     from s_mt.t_class c
                                     inner join s_mt.t_class_attr ca on c.ck_id = ca.ck_class
                                     where c.ck_id = vot_class.ck_id
-                                      and ca.ck_attr != 'type') ca on jt.ck_attr = ca.ck_attr
+                                      and ca.ck_attr <> 'type') ca on jt.ck_attr = ca.ck_attr
                         where jt.ck_attr is not null
                           or ca.ck_attr is not null) loop
             vot_class_attr.ck_id       := vcur.ck_id;
@@ -1048,7 +1054,6 @@ begin
             vot_class_attr.cl_empty    := coalesce(nullif(vcur.cl_empty, '')::bigint, 0);
             vot_class_attr.ck_attr     := vcur.ck_attr;
             vot_class_attr.cv_value    := nullif(vcur.cv_value, '');
-          
             vot_class_attr := pkg_meta.p_modify_class_attr(vcur.cv_action, vot_class_attr);
           end loop;
 
@@ -1155,8 +1160,8 @@ begin
       
       -- Изменение
       update s_mt.t_module set 
-       (cv_name, ck_user, ct_change, cv_version, cl_available, cc_manifest, cc_config, cv_version_api) = 
-       (pot_module.cv_name, pot_module.ck_user, pot_module.ct_change, pot_module.cv_version, pot_module.cl_available, pot_module.cc_manifest, pot_module.cc_config, pot_module.cv_version_api) 
+       (cv_name, ck_view, ck_user, ct_change, cv_version, cl_available, cc_manifest, cc_config, cv_version_api) = 
+       (pot_module.cv_name, pot_module.ck_view, pot_module.ck_user, pot_module.ct_change, pot_module.cv_version, pot_module.cl_available, pot_module.cc_manifest, pot_module.cc_config, pot_module.cv_version_api) 
        where ck_id = pot_module.ck_id;
      
       if not found then
@@ -1256,7 +1261,7 @@ begin
       for vcur_object in (select 1
                             from s_mt.t_object o
                            where o.ck_parent || o.cn_order::varchar = pot_object.ck_parent || pot_object.cn_order::varchar
-                             and ((o.ck_id != pot_object.ck_id and
+                             and ((o.ck_id <> pot_object.ck_id and
                                  pv_action = u::varchar) or
                                  (pot_object.ck_id is null and
                                  pv_action = i::varchar))) loop
@@ -1300,7 +1305,7 @@ begin
       for vcur_object in (select 1
                             from s_mt.t_object o
                            where o.ck_id = pot_object.ck_id
-                             and o.ck_class != pot_object.ck_class) loop
+                             and o.ck_class <> pot_object.ck_class) loop
         perform pkg.p_set_error(67);
         exit;
       end loop;
@@ -1532,20 +1537,43 @@ begin
     if pot_page.cv_name is null then
       perform pkg.p_set_error(2);
     end if;
-    if pot_page.cl_static is null then
+    if pot_page.cl_static is null and pot_page.cr_type <> 3 then
       perform pkg.p_set_error(7);
+    end if;
+    if pot_page.cr_type = 3 then
+      pot_page.cl_static := 1;
+      pot_page.cl_menu := 0;
     end if;
     if pot_page.cn_order is null then
       perform pkg.p_set_error(8);
     end if;
-    if pot_page.cr_type is null or pot_page.cr_type not in (0, 1, 2) then
+    if pot_page.cr_type is null or pot_page.cr_type not in (0, 1, 2, 3) then
       perform pkg.p_set_error(9);
     end if;
     if pot_page.ck_parent is not null and pot_page.cr_type = 0 then
-      perform pkg.p_set_error(10);
+      for vcur_cnt in (
+            select 1
+            from s_mt.t_page p
+              where p.ck_id = pot_page.ck_parent and p.cr_type <> 3
+          ) loop
+            perform pkg.p_set_error(10);
+      end loop;
     end if;
-    if pot_page.ck_parent is null and pot_page.cr_type in (1, 2) then
-      perform pkg.p_set_error(11);
+    if (pot_page.ck_parent is null and pot_page.cr_type <> 3) or 
+       (pot_page.ck_parent is not null and pot_page.cr_type = 3) then
+        perform pkg.p_set_error(11);
+    end if;
+    if pot_page.cr_type <> 3 then
+      for vcur_cnt in (
+            select ck_view
+            from s_mt.t_page p
+              where p.ck_id = pot_page.ck_parent
+          ) loop
+            pot_page.ck_view := vcur_cnt.ck_view;
+      end loop;
+    end if;
+    if pot_page.ck_view is null then
+        perform pkg.p_set_error(51, 'message:f9139ac6cf8046d59660b7a5a8340416');
     end if;
     -- Проверяем ссылку
     if pot_page.cl_static is not null and pot_page.cl_static = 1::smallint then
@@ -1565,6 +1593,7 @@ begin
         end loop;
       end if;
     end if;
+    
     if pot_page.cr_type = 2 then /* проверки 35 и 36 актуальны только для страниц */
       if pn_action_view is null and (gl_warning::bigint) = 0 then
         perform pkg.p_set_warning(35);
@@ -1587,7 +1616,7 @@ begin
       select 1
       from s_mt.t_page a
       where a.ck_id = pot_page.ck_id and
-        (a.cr_type != pot_page.cr_type) and
+        (a.cr_type <> pot_page.cr_type) and
         pv_action = u::varchar
     ) loop
       perform pkg.p_set_error(21);
@@ -1629,8 +1658,8 @@ begin
         insert into s_mt.t_page values (pot_page.*);
       elsif pv_action = u::varchar then
         update s_mt.t_page set
-          (ck_id, ck_parent, cr_type, cv_name, cn_order, cl_menu, cl_static, cv_url, ck_icon, ck_user, ct_change) = 
-          (pot_page.ck_id, pot_page.ck_parent, pot_page.cr_type, pot_page.cv_name, pot_page.cn_order, pot_page.cl_menu, pot_page.cl_static, pot_page.cv_url, pot_page.ck_icon, pot_page.ck_user, pot_page.ct_change)
+          (ck_id, ck_parent, cr_type, cv_name, cn_order, cl_menu, cl_static, cv_url, ck_icon, ck_view, ck_user, ct_change) = 
+          (pot_page.ck_id, pot_page.ck_parent, pot_page.cr_type, pot_page.cv_name, pot_page.cn_order, pot_page.cl_menu, pot_page.cl_static, pot_page.cv_url, pot_page.ck_icon, pot_page.ck_view, pot_page.ck_user, pot_page.ct_change)
         where ck_id = pot_page.ck_id;
 
         if not found then
@@ -1662,7 +1691,7 @@ begin
       /* 2. Преобразуем новое значение для удобства сравнений */
       vn_action_view_new := coalesce(pn_action_view,-1);
       /* 3. Проверим, изменилось ли значение */
-      if vn_action_view_new != vn_action_view_old then /* если что-то изменилось */
+      if vn_action_view_new <> vn_action_view_old then /* если что-то изменилось */
         if vn_action_view_old = -1 then
         /* если раньше записи не было, а сейчас должна появиться */
           insert into s_mt.t_page_action(ck_id, ck_page, cr_type, cn_action, ck_user, ct_change)
@@ -1697,7 +1726,7 @@ begin
       /* 2. Преобразуем новое значение для удобства сравнений */
       vn_action_edit_new := coalesce(pn_action_edit,-1);
       /* 3. Проверим, изменилось ли значение */
-      if vn_action_edit_new != vn_action_edit_old then /* если что-то изменилось */
+      if vn_action_edit_new <> vn_action_edit_old then /* если что-то изменилось */
         if vn_action_edit_old = -1 then
         /* если раньше записи не было, а сейчас должна появиться */
           insert into s_mt.t_page_action(ck_id, ck_page, cr_type, cn_action, ck_user, ct_change)
@@ -1723,6 +1752,64 @@ $$;
 ALTER FUNCTION pkg_meta.p_modify_page(pv_action character varying, INOUT pot_page s_mt.t_page, pn_action_view bigint, pn_action_edit bigint) OWNER TO s_mp;
 
 COMMENT ON FUNCTION pkg_meta.p_modify_page(pv_action character varying, INOUT pot_page s_mt.t_page, pn_action_view bigint, pn_action_edit bigint) IS 'Создание/обновление/удаление Страниц t_page, вместе с t_page_action';
+
+CREATE FUNCTION pkg_meta.p_modify_page_attr(pv_action character varying, INOUT pot_page_attr s_mt.t_page_attr) RETURNS s_mt.t_page_attr
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 's_mt', 'pkg_meta', 'public'
+    AS $$
+declare
+  -- переменные пакета
+  i sessvarstr;
+  u sessvarstr;
+  d sessvarstr;
+  gv_error sessvarstr;
+
+  -- переменные функции
+  vk_d_data_type VARCHAR;
+  rec record;
+begin
+   -- инициализация/получение переменных пакета
+  i = sessvarstr_declare('pkg', 'i', 'I');
+  u = sessvarstr_declare('pkg', 'u', 'U');
+  d = sessvarstr_declare('pkg', 'd', 'D');
+  gv_error = sessvarstr_declare('pkg', 'gv_error', '');
+
+  -- код функции
+  if pv_action = d::varchar then
+    /*Проверки на удаление*/
+    /*Удаление*/
+    delete from s_mt.t_page_attr where ck_id = pot_page_attr.ck_id;
+  else
+    /* Блок "Проверка переданных данных" */
+    if pot_page_attr.ck_attr is null then
+      perform pkg.p_set_error(2);
+    end if;
+
+    if nullif(gv_error::varchar, '') is not null then
+       return;
+    end if;
+
+    if pv_action = i::varchar then
+      pot_page_attr.ck_id := sys_guid();
+      insert into s_mt.t_page_attr values (pot_page_attr.*);
+    elsif pv_action = u::varchar then
+      update s_mt.t_page_attr set
+        (ck_attr, cv_value, ck_user, ct_change) = 
+        (pot_page_attr.ck_attr, pot_page_attr.cv_value, pot_page_attr.ck_user, pot_page_attr.ct_change)
+      where ck_id = pot_page_attr.ck_id;
+      if not found then
+        perform pkg.p_set_error(504);
+      end if;
+    end if;
+    null;
+  end if;
+end;
+$$;
+
+
+ALTER FUNCTION pkg_meta.p_modify_page_attr(pv_action character varying, INOUT pot_page_attr s_mt.t_page_attr) OWNER TO s_mp;
+
+COMMENT ON FUNCTION pkg_meta.p_modify_page_attr(pv_action character varying, INOUT pot_page_attr s_mt.t_page_attr) IS 'Создание/обновление/удаление настроек страницы';
 
 CREATE FUNCTION pkg_meta.p_modify_page_object(pv_action character varying, INOUT pot_page_object s_mt.t_page_object) RETURNS s_mt.t_page_object
     LANGUAGE plpgsql SECURITY DEFINER
@@ -1842,7 +1929,7 @@ begin
          or (pot_page_object.ck_parent is null and o.ck_parent is null))
          and o.ck_page = pot_page_object.ck_page
          and o.cn_order = pot_page_object.cn_order
-         and ((pot_page_object.ck_id is not null and o.ck_id != pot_page_object.ck_id) or pot_page_object.ck_id is null))
+         and ((pot_page_object.ck_id is not null and o.ck_id <> pot_page_object.ck_id) or pot_page_object.ck_id is null))
     loop
         perform  pkg.p_set_error(34);
     end loop;
@@ -1851,7 +1938,7 @@ begin
       perform  pkg.p_set_error(42);  
     end if;
    
-    for vcur_page in (select 1 from s_mt.t_page p where p.ck_id = pot_page_object.ck_page and p.cr_type != 2) loop
+    for vcur_page in (select 1 from s_mt.t_page p where p.ck_id = pot_page_object.ck_page and p.cr_type <> 2) loop
       perform  pkg.p_set_error(205);
     end loop;
 
@@ -2081,7 +2168,7 @@ begin
         )v
         left join s_mt.t_page_variable pv on pv.ck_page = v.ck_page
          and pv.cv_name = v.cv_variable
-        having count(v.cv_variable) != count(pv.cv_name)
+        having count(v.cv_variable) <> count(pv.cv_name)
     ) loop
       perform pkg.p_set_error(45);
     end loop;
@@ -2111,7 +2198,7 @@ begin
             and p.ck_id = (select ck_page from s_mt.t_page_object where ck_id = pot_page_object_attr.ck_page_object)
                 /* при апдейте не будем учитывать текущий объект */
             and (pv_action = i::varchar or
-                 (pv_action = u::varchar and po.ck_id != pot_page_object_attr.ck_page_object))
+                 (pv_action = u::varchar and po.ck_id <> pot_page_object_attr.ck_page_object))
           )
           -------------
           select
@@ -2160,7 +2247,7 @@ begin
                   /* в рамках страницы, на которой мы работаем с переменной */
               and po.ck_page = (select ck_page from s_mt.t_page_object where ck_id = pot_page_object_attr.ck_page_object)
                   /* при апдейте не будем учитывать текущий объект */
-              and (pv_action = i::varchar or (pv_action = u::varchar and po.ck_id != pot_page_object_attr.ck_page_object))
+              and (pv_action = i::varchar or (pv_action = u::varchar and po.ck_id <> pot_page_object_attr.ck_page_object))
                   /* там, где используется переменная с этим именем */
               and poa.cv_value like '%' || t3.cv_variable || '%'
             ) as cv_path_set
@@ -2304,7 +2391,7 @@ begin
       from s_mt.t_page_variable v
       where v.ck_page = pot_page_variable.ck_page
        and v.cv_name = pot_page_variable.cv_name
-       and ((v.ck_id != pot_page_variable.ck_id and pv_action = u::varchar) or
+       and ((v.ck_id <> pot_page_variable.ck_id and pv_action = u::varchar) or
            (pot_page_variable.ck_id is null and pv_action = i::varchar))
     ) loop
       perform pkg.p_set_error(43);
@@ -2530,7 +2617,7 @@ begin
     return vv_value;
   end if;
 
-  if vk_data_type = 'array' or vk_data_type = 'object' or vk_data_type = 'global' then
+  if vk_data_type = 'array' or vk_data_type = 'object' or vk_data_type = 'global' or vk_data_type = 'order' then
     if pk_attr is not null and vv_value is null then 
       perform pkg.p_set_error(80);
     end if; 
@@ -2954,6 +3041,63 @@ $$;
 ALTER FUNCTION pkg_meta.p_refresh_page_object(pk_page character varying) OWNER TO s_mp;
 
 COMMENT ON FUNCTION pkg_meta.p_refresh_page_object(pk_page character varying) IS 'Перепривязка объетов страницы';
+
+CREATE FUNCTION pkg_meta.p_modify_query(pv_action character varying, INOUT pot_query s_mt.t_query) RETURNS s_mt.t_query
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 's_mt', 'pkg_meta', 'public'
+    AS $$
+declare
+  -- переменные пакета
+  i sessvarstr;
+  u sessvarstr;
+  d sessvarstr;
+  gv_error sessvarstr;
+
+  -- переменные функции
+  vk_d_data_type VARCHAR;
+  rec record;
+begin
+   -- инициализация/получение переменных пакета
+  i = sessvarstr_declare('pkg', 'i', 'I');
+  u = sessvarstr_declare('pkg', 'u', 'U');
+  d = sessvarstr_declare('pkg', 'd', 'D');
+  gv_error = sessvarstr_declare('pkg', 'gv_error', '');
+
+  -- код функции
+  if pv_action = d::varchar then
+    /*Проверки на удаление*/
+    /*Удаление*/
+    delete from s_mt.t_query where ck_id = pot_query.ck_id;
+  else
+    /* Блок "Проверка переданных данных" */
+    if pot_query.ck_id is null then
+      perform pkg.p_set_error(2);
+    end if;
+
+    if nullif(gv_error::varchar, '') is not null then
+       return;
+    end if;
+
+    if pv_action = i::varchar then
+      insert into s_mt.t_query values (pot_query.*);
+    elsif pv_action = u::varchar then
+      update s_mt.t_query set
+        (cc_query, ck_provider, cr_type, cr_access, cn_action, cv_description, ck_user, ct_change) = 
+        (pot_query.cc_query, pot_query.ck_provider, pot_query.cr_type, pot_query.cr_access, pot_query.cn_action, pot_query.cv_description, pot_query.ck_user, pot_query.ct_change)
+      where ck_id = pot_query.ck_id;
+      if not found then
+        perform pkg.p_set_error(504);
+      end if;
+    end if;
+    null;
+  end if;
+end;
+$$;
+
+
+ALTER FUNCTION pkg_meta.p_modify_query(pv_action character varying, INOUT pot_query s_mt.t_query) OWNER TO s_mp;
+
+COMMENT ON FUNCTION pkg_meta.p_modify_query(pv_action character varying, INOUT pot_query s_mt.t_query) IS 'Создание/обновление/удаление сервисов';
 
 CREATE FUNCTION pkg_meta.p_lock_attr(pk_id character varying) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER

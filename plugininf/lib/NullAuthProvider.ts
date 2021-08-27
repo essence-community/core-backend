@@ -5,7 +5,6 @@ import ErrorGate from "./errors/ErrorGate";
 import { IParamsInfo } from "./ICCTParams";
 import ICCTParams from "./ICCTParams";
 import IContext from "./IContext";
-import IGlobalObject, { IAuthController } from "./IGlobalObject";
 import IObjectParam from "./IObjectParam";
 import IQuery, { IGateQuery } from "./IQuery";
 import { IResultProvider } from "./IResult";
@@ -13,19 +12,26 @@ import ISession from "./ISession";
 import NullProvider from "./NullProvider";
 import { IParamsProvider } from "./NullProvider";
 import { isEmpty } from "./util/Util";
+import { IAuthController } from "./IAuthController";
+import { initParams } from "@ungate/plugininf/lib/util/Util";
 
 export interface IAuthResult {
-    ck_user: string;
-    data?: IObjectParam;
+    idUser: string;
+    dataUser?: IObjectParam;
 }
 export interface IAuthProviderParam extends IParamsProvider {
     onlySession: boolean;
     sessionDuration: number;
+    idKey: string;
+    typeCheckAuth:
+        | "cookie"
+        | "session"
+        | "cookieandsession"
+        | "cookieorsession";
 }
 export default abstract class NullAuthProvider extends NullProvider {
     public static getParamsInfo(): IParamsInfo {
         return {
-            ...NullProvider.getParamsInfo(),
             onlySession: {
                 defaultValue: false,
                 name: "Возвращаем только полученую сессию",
@@ -36,14 +42,36 @@ export default abstract class NullAuthProvider extends NullProvider {
                 name: "Время жизни сессии в минутах по умолчанию 60 минут",
                 type: "integer",
             },
+            idKey: {
+                defaultValue: "ck_id",
+                name: "Наименование ключа индетификации",
+                type: "string",
+            },
+            typeCheckAuth: {
+                name: "Auth check",
+                type: "combo",
+                displayField: "ck_id",
+                valueField: [{ in: "ck_id" }],
+                records: [
+                    { ck_id: "cookie" },
+                    { ck_id: "session" },
+                    { ck_id: "cookieandsession" },
+                    { ck_id: "cookieorsession" },
+                ],
+                defaultValue: "session",
+            },
         };
     }
     public params: IAuthProviderParam;
+    public static isAuth: boolean = true;
     public isAuth: boolean = true;
-    public authController: IAuthController;
-    constructor(name: string, params: ICCTParams) {
-        super(name, params);
-        this.authController = ((global as any) as IGlobalObject).authController;
+    constructor(
+        name: string,
+        params: ICCTParams,
+        authController: IAuthController,
+    ) {
+        super(name, params, authController);
+        this.params = initParams(NullAuthProvider.getParamsInfo(), this.params);
     }
     public async beforeSession(
         context: IContext,
@@ -58,10 +86,17 @@ export default abstract class NullAuthProvider extends NullProvider {
     ): Promise<ISession> {
         return session;
     }
+    public async checkQuery(
+        context: IContext,
+        query: IGateQuery,
+    ): Promise<void> {
+        return;
+    }
     public abstract processAuth(
         context: IContext,
         query: IGateQuery,
     ): Promise<IAuthResult>;
+
     public processSql(
         context: IContext,
         query: IGateQuery,
@@ -84,6 +119,7 @@ export default abstract class NullAuthProvider extends NullProvider {
         return val;
     }
     public async createSession(
+        context: IContext,
         idUser: string,
         data: IObjectParam = {},
         sessionDuration: number = this.params.sessionDuration || 60,
@@ -102,12 +138,16 @@ export default abstract class NullAuthProvider extends NullProvider {
             this.name,
             isAccessErrorNotFound,
         );
-        const session = await this.authController.createSession(
+        const session = await this.authController.createSession({
+            context,
             idUser,
-            this.name,
-            { ...dataUser, ...data },
+            nameProvider: this.name,
+            userData: { ...dataUser, ...data },
             sessionDuration,
-        );
+            sessionData: {
+                typeCheckAuth: this.params.typeCheckAuth || "session",
+            },
+        });
         return this.params.onlySession ? { session: session.session } : session;
     }
     public async destroy(): Promise<void> {

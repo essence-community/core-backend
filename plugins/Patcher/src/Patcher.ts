@@ -2,7 +2,7 @@ import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
 import ICCTParams from "@ungate/plugininf/lib/ICCTParams";
 import IParamsInfo from "@ungate/plugininf/lib/ICCTParams";
-import IContext from "@ungate/plugininf/lib/IContext";
+import IContext, { IFile } from "@ungate/plugininf/lib/IContext";
 import { IPluginRequestContext } from "@ungate/plugininf/lib/IPlugin";
 import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
 import IResult from "@ungate/plugininf/lib/IResult";
@@ -19,14 +19,15 @@ import * as fs from "fs";
 import * as moment from "moment";
 import * as path from "path";
 import { Readable } from "stream";
-import { uuid } from "uuidv4";
+import { v4 as uuid } from "uuid";
 import { patchAuth } from "./auth/AuthPatch";
 import { DirStorage } from "./DirStorage";
 import { patchIntegr } from "./integr/IntegrPatch";
 import { patchMeta } from "./meta/MetaPatch";
-import { IFile, IPluginParams, IStorage } from "./Patcher.types";
+import { IPluginParams, IStorage } from "./Patcher.types";
 import { IJson } from "./Patcher.types";
 import { S3Storage } from "./S3Storage";
+import { Constant } from "@ungate/plugininf/lib/Constants";
 
 export class Patcher extends NullPlugin implements IStorage {
     public static getParamsInfo(): IParamsInfo {
@@ -124,7 +125,11 @@ export class Patcher extends NullPlugin implements IStorage {
                 }));
             }
             json.data.ck_id = uuid();
-            const temp = fs.mkdtempSync("patch");
+            const temp = path.resolve(
+                Constant.UPLOAD_DIR,
+                `patch_temp_${uuid()}`,
+            );
+            fs.mkdirSync(temp, { recursive: true });
             const zip = new Zip();
             zip.addLocalFile(path.join(__dirname, "assets", "update"));
             zip.addLocalFile(path.join(__dirname, "assets", "update.bat"));
@@ -208,7 +213,7 @@ export class Patcher extends NullPlugin implements IStorage {
                 )
                 .then(
                     (res) =>
-                        new Promise((resolve, reject) => {
+                        new Promise<void>((resolve, reject) => {
                             res.stream.on("data", (row) => {
                                 this.logger.debug(row);
                             });
@@ -221,8 +226,8 @@ export class Patcher extends NullPlugin implements IStorage {
                 sendProcess({
                     command: "sendNotification",
                     data: {
-                        ckUser: gateContext.session.ck_id,
-                        nameProvider: gateContext.session.ck_d_provider,
+                        ckUser: gateContext.session.idUser,
+                        nameProvider: gateContext.session.nameProvider,
                         text: JSON.stringify([
                             {
                                 data: {

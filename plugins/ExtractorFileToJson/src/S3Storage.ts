@@ -1,11 +1,12 @@
+import { IFile } from "@ungate/plugininf/lib/IContext";
 import * as AWS from "aws-sdk";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import { IRufusLogger } from "rufus";
 import { Readable } from "stream";
-import { uuid as uuidv4 } from "uuidv4";
-import { IFile, IPluginParams } from "./ExtractorFileToJson.types";
+import { v4 as uuidv4 } from "uuid";
+import { IPluginParams } from "./ExtractorFileToJson.types";
 export class S3Storage {
     private clients: AWS.S3;
     private params: IPluginParams;
@@ -121,7 +122,7 @@ export class S3Storage {
         return new Promise((resolve, reject) => {
             this.clients.getObject(
                 {
-                    Bucket: this.params.cvBucket,
+                    Bucket: this.params.cvS3Bucket,
                     Key: key,
                 },
                 (err, response) => {
@@ -129,7 +130,7 @@ export class S3Storage {
                         return reject(err);
                     }
                     const filePath = path.join(this.UPLOAD_DIR, uuidv4());
-                    fs.writeFile(filePath, response.Body, (er) => {
+                    fs.writeFile(filePath, response.Body as Buffer, (er) => {
                         if (er) {
                             return reject(er);
                         }

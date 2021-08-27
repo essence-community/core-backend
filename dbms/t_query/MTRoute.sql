@@ -14,6 +14,8 @@ with recursive t1(
     cv_url,
     ck_icon,
     cl_menu,
+    ck_view,
+    cv_app_url,
     lvl,
     root,
     cn_action_view,
@@ -25,7 +27,7 @@ with recursive t1(
     /* сначала выберем все объекты которые могут быть отображены */
     select
         p.ck_id,
-        p.ck_parent,
+        null::varchar as ck_parent,
         p.cr_type,
         p.cv_name,
         l.cv_value as cv_name_locale,
@@ -34,6 +36,8 @@ with recursive t1(
         p.cv_url,
         p.ck_icon,
         p.cl_menu,
+        p.ck_view,
+        par.cv_url as cv_app_url,
         1 as lvl,
         p.cv_name  as root,
         pav.cn_action as cn_action_view,
@@ -43,6 +47,8 @@ with recursive t1(
         i.cv_font as cv_icon_font
     from
         s_mt.t_page p
+    join s_mt.t_page par on 
+        p.ck_parent = par.ck_id
     left join s_mt.t_localization l on
         l.ck_id = p.cv_name and l.ck_d_lang in (select tdl.ck_id from s_mt.t_d_lang tdl where tdl.cl_default = 1)
     left join s_mt.t_page_action pav on
@@ -52,8 +58,9 @@ with recursive t1(
     left join s_mt.t_icon i on
         i.ck_id = p.ck_icon
     where
-        p.ck_parent is null
-        and p.cl_menu = 1
+        (lower(:json::json#>>''{filter,appUrl}'') in (''pages'', ''frame'', ''reports'', ''safe'', ''redirect'', ''preference'')
+        and p.ck_parent in (select ck_id from s_mt.t_page where ck_parent is null and cr_type = 3))
+        or (p.ck_parent in (select ck_id from s_mt.t_page where lower(cv_url)=lower(:json::json#>>''{filter,appUrl}'') and cr_type = 3))
 union all /* выберем их дочернии элементы в рекурсивном запросе */
     select
         p.ck_id,
@@ -66,6 +73,8 @@ union all /* выберем их дочернии элементы в рекур
         p.cv_url,
         p.ck_icon,
         p.cl_menu,
+        p.ck_view,
+        op.cv_app_url,
         op.lvl+1 as lvl,
         op.cv_name as root,
         pav.cn_action as cn_action_view,
@@ -85,12 +94,11 @@ union all /* выберем их дочернии элементы в рекур
         pae.ck_page = p.ck_id and pae.cr_type = ''edit''
     left join s_mt.t_icon i on
         i.ck_id = p.ck_icon
-    where p.cl_menu = 1
 ),
 ot_action as (
     select tss.cv_value::bigint as cn_action from s_mt.t_sys_setting tss where tss.ck_id = ''g_sys_anonymous_action''
     union all
-    select cn_action from tt_user_action where ck_user = :sess_ck_id
+    select value::bigint as cn_action from jsonb_array_elements_text(:sess_ca_actions::jsonb)
 ),
 t2 as(
     select
@@ -108,10 +116,10 @@ union all /* выберем их родителей в рекурсивном з
         t2.ck_parent = p.ck_id
 ),
 t3 as(
-    select
-        distinct p.*
+   select distinct
+        op.*
     from
-        t2 p
+      t2 op
 )
 select
     op.ck_id,
@@ -119,14 +127,15 @@ select
     op.cr_type,
     op.cv_name,
     op.cn_order,
-    op.cl_menu,
+    case when op.cl_menu>0 and not exists(select 1 from t3 m where m.ck_parent = op.ck_id and m.cl_menu=1) and exists(select 1 from t3 m where m.ck_parent = op.ck_id) then 0 else op.cl_menu end as cl_menu,
     op.cl_static,
     op.cv_url,
     op.ck_icon,
-    op.ck_id,
+    op.ck_view,
+    op.cv_app_url,
     op.cv_icon_name,
     op.cv_icon_font,
-    case when not exists(select 1 from t2 m where m.ck_parent = op.ck_id) then ''true'' else ''false'' end as leaf,
+    case when not exists(select 1 from t3 m where m.ck_parent = op.ck_id) then ''true'' else ''false'' end as leaf,
     op.root,
     op.cn_action_edit
 from

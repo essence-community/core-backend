@@ -441,7 +441,7 @@ class ResultController {
                 };
             }
         }
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
             switch (
                 result.type // Разбираем по типу ответа
             ) {

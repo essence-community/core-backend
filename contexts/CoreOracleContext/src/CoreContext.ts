@@ -5,7 +5,10 @@ import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
 import ICCTParams, { IParamsInfo } from "@ungate/plugininf/lib/ICCTParams";
 import IContext from "@ungate/plugininf/lib/IContext";
-import { IContextPluginResult } from "@ungate/plugininf/lib/IContextPlugin";
+import {
+    IContextParams,
+    IContextPluginResult,
+} from "@ungate/plugininf/lib/IContextPlugin";
 import IGlobalObject from "@ungate/plugininf/lib/IGlobalObject";
 import IResult from "@ungate/plugininf/lib/IResult";
 import Logger from "@ungate/plugininf/lib/Logger";
@@ -15,11 +18,12 @@ import { initParams } from "@ungate/plugininf/lib/util/Util";
 import ICoreController from "./ICoreController";
 import OfflineController from "./OfflineController";
 import OnlineController from "./OnlineController";
+import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
 const logger = Logger.getLogger("CoreContext");
 const Mask = ((global as any) as IGlobalObject).maskgate;
 const createTempTable = ((global as any) as IGlobalObject).createTempTable;
 
-export interface ICoreParams extends ICCTParams {
+export interface ICoreParams extends IContextParams {
     debug: boolean;
     defaultDepartmentQueryName: string;
     disableCache: boolean;
@@ -34,7 +38,6 @@ export interface ICoreParams extends ICCTParams {
 export default class CoreContext extends NullContext {
     public static getParamsInfo(): IParamsInfo {
         return {
-            ...NullContext.getParamsInfo(),
             debug: {
                 defaultValue: false,
                 name: "Режим отладки",
@@ -127,12 +130,13 @@ export default class CoreContext extends NullContext {
     private dbDepartments: ILocalDB;
     private sysSettings =
         "select s.ck_id, s.cv_value, s.cv_description from s_mt.t_sys_setting s";
-    constructor(name: string, params: ICCTParams) {
-        super(name, params);
-        this.params = {
-            ...this.params,
-            ...initParams(CoreContext.getParamsInfo(), params),
-        };
+    constructor(
+        name: string,
+        params: ICCTParams,
+        authController: IAuthController,
+    ) {
+        super(name, params, authController);
+        this.params = initParams(CoreContext.getParamsInfo(), this.params);
         this.dataSource = new OracleDB(`${this.name}_context`, {
             connectString: this.params.connectString,
             maxRows: this.params.maxRows,
@@ -193,7 +197,7 @@ export default class CoreContext extends NullContext {
                     return Promise.reject(CoreContext.accessDenied());
                 }
                 const json = JSON.parse(gateContext.params.json);
-                const caActions = gateContext.session.data.ca_actions || [];
+                const caActions = gateContext.session.userData.ca_actions || [];
                 if (!json.filter || !json.filter.ck_page) {
                     return Promise.reject(CoreContext.accessDenied());
                 }
@@ -213,7 +217,7 @@ export default class CoreContext extends NullContext {
                     return Promise.reject(CoreContext.accessDenied());
                 }
                 const json = JSON.parse(gateContext.params.json);
-                const caActions = gateContext.session.data.ca_actions || [];
+                const caActions = gateContext.session.userData.ca_actions || [];
                 if (!json.filter || !json.filter.ck_parent) {
                     return Promise.reject(
                         new BreakException({
@@ -281,7 +285,7 @@ export default class CoreContext extends NullContext {
         return this.dbUsers
             .update(
                 {
-                    ck_id: `${gateContext.session.ck_id}:${gateContext.session.ck_d_provider}`,
+                    ck_id: `${gateContext.session.idUser}:${gateContext.session.nameProvider}`,
                 },
                 {
                     $set: {
@@ -366,7 +370,7 @@ export default class CoreContext extends NullContext {
                 )
                 .then(
                     (docs) =>
-                        new Promise((resolv, reject) => {
+                        new Promise<void>((resolv, reject) => {
                             const rows = [];
                             docs.stream.on("data", (chunk) => rows.push(chunk));
                             docs.stream.on("error", (err) => reject(err));

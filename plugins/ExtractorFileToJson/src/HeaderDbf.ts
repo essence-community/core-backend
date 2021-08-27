@@ -29,7 +29,9 @@ export default class HeaderDbf {
                 return callback(err);
             }
 
-            this.type = buffer.slice(0, 1).toString(this.encoding);
+            this.type = buffer
+                .slice(0, 1)
+                .toString(this.encoding as BufferEncoding);
             this.dateUpdated = this.parseDate(buffer.slice(1, 4));
             this.numberOfRecords = this.convertBinaryToInteger(
                 buffer.slice(4, 8),

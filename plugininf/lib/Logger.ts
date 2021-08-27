@@ -23,7 +23,7 @@ class Logger {
             fs.readFile(
                 pathConf,
                 {
-                    encoding: "UTF-8",
+                    encoding: "utf8",
                     flag: "r",
                 },
                 (err, strConf) => {

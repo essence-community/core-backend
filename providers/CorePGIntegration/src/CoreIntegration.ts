@@ -18,6 +18,7 @@ import { isEmpty } from "@ungate/plugininf/lib/util/Util";
 import { isObject, noop } from "lodash";
 import * as request from "request";
 import * as URL from "url";
+import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
 
 interface IResultSequence {
     res?: IResultProvider;
@@ -34,7 +35,6 @@ export default class CoreIntegration extends NullProvider {
     public static getParamsInfo(): IParamsInfo {
         return {
             ...PostgresDB.getParamsInfo(),
-            ...NullProvider.getParamsInfo(),
             proxy: {
                 name: "Прокси сервер",
                 type: "string",
@@ -47,12 +47,13 @@ export default class CoreIntegration extends NullProvider {
     }
     public dataSource: PostgresDB;
     public params: IIntegrationParams;
-    constructor(name: string, params: ICCTParams) {
-        super(name, params);
-        this.params = {
-            ...this.params,
-            ...initParams(CoreIntegration.getParamsInfo(), params),
-        };
+    constructor(
+        name: string,
+        params: ICCTParams,
+        authController: IAuthController,
+    ) {
+        super(name, params, authController);
+        this.params = initParams(CoreIntegration.getParamsInfo(), this.params);
         this.dataSource = new PostgresDB(`${this.name}_provider`, {
             connectString: this.params.connectString,
             connectionTimeoutMillis: this.params.connectionTimeoutMillis,
@@ -86,8 +87,8 @@ export default class CoreIntegration extends NullProvider {
                 const inParam: any = {};
                 if (context.session) {
                     inParam.sess_session = context.session.session;
-                    Object.keys(context.session.data).forEach((key) => {
-                        inParam[`sess_${key}`] = context.session.data[key];
+                    Object.keys(context.session.userData).forEach((key) => {
+                        inParam[`sess_${key}`] = context.session.userData[key];
                     });
                 }
                 return conn

@@ -24,7 +24,7 @@ export default class CoreSemaphore extends NullEvent {
     private eventConnect: Connection;
     constructor(name: string, params: ICCTParams) {
         super(name, params);
-        this.params = initParams(CoreSemaphore.getParamsInfo(), params);
+        this.params = initParams(CoreSemaphore.getParamsInfo(), this.params);
         this.dataSource = new PostgresDB(`${this.name}_semaphore`, {
             connectString: this.params.connectString,
             connectionTimeoutMillis: this.params.connectionTimeoutMillis,
@@ -98,7 +98,7 @@ export default class CoreSemaphore extends NullEvent {
                 )
                 .then(
                     (data) =>
-                        new Promise((resolve, reject) => {
+                        new Promise<void>((resolve, reject) => {
                             const rows = [];
                             data.stream.on("data", (chunk) => rows.push(chunk));
                             data.stream.on("error", (error) => reject(error));

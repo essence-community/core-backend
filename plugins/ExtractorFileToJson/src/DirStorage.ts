@@ -1,10 +1,11 @@
+import { IFile } from "@ungate/plugininf/lib/IContext";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import { IRufusLogger } from "rufus";
 import { Readable } from "stream";
-import { uuid as uuidv4 } from "uuidv4";
-import { IFile, IPluginParams } from "./ExtractorFileToJson.types";
+import { v4 as uuidv4 } from "uuid";
+import { IPluginParams } from "./ExtractorFileToJson.types";
 export class DirStorage {
     private params: IPluginParams;
     private logger: IRufusLogger;
@@ -56,12 +57,16 @@ export class DirStorage {
                 (buffer as Readable).pipe(ws);
                 return;
             }
-            fs.writeFile(`${this.params.cvPath}${prePath}`, buffer, (err) => {
-                if (err) {
-                    reject(err);
-                }
-                resolve();
-            });
+            fs.writeFile(
+                `${this.params.cvPath}${prePath}`,
+                buffer as Buffer,
+                (err) => {
+                    if (err) {
+                        reject(err);
+                    }
+                    resolve();
+                },
+            );
         });
     }
     public deletePath(key: string): Promise<void> {
@@ -100,7 +105,7 @@ export class DirStorage {
             readFile.on("error", (err) => reject(err));
             const writeFile = fs.createWriteStream(filePath);
             writeFile.on("error", (err) => reject(err));
-            writeFile.on("end", () => {
+            readFile.on("end", () => {
                 resolve({
                     fieldName: "upload",
                     headers: {
@@ -111,6 +116,7 @@ export class DirStorage {
                     size: readMetaData.ContentLength,
                 });
             });
+            readFile.pipe(writeFile);
         });
     }
 }

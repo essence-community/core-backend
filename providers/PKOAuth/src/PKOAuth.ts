@@ -18,6 +18,7 @@ import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
 import * as ActiveDirectory from "activedirectory";
 import { X509 } from "jsrsasign";
 import { isObject, uniq } from "lodash";
+import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
 
 const Property = ((global as any) as IGlobalObject).property;
 const BASIC_PATTERN = "Basic";
@@ -26,7 +27,6 @@ const PASSWORD_PATTERN_NGINX_GSS = "bogus_auth_gss_passwd";
 export default class PKOAuth extends NullAuthProvider {
     public static getParamsInfo(): IParamsInfo {
         return {
-            ...NullAuthProvider.getParamsInfo(),
             ...PostgresDB.getParamsInfo(),
             adBaseDN: {
                 name: "Начальный уровень поиска в ldap",
@@ -76,12 +76,13 @@ export default class PKOAuth extends NullAuthProvider {
     private mapUserAttr: IObjectParam = {};
     private mapGroupActions: IObjectParam = {};
     private listDefaultActions: number[] = [];
-    constructor(name: string, params: ICCTParams) {
-        super(name, params);
-        this.params = {
-            ...this.params,
-            ...initParams(PKOAuth.getParamsInfo(), params),
-        };
+    constructor(
+        name: string,
+        params: ICCTParams,
+        authController: IAuthController,
+    ) {
+        super(name, params, authController);
+        this.params = initParams(PKOAuth.getParamsInfo(), this.params);
         this.dataSource = new PostgresDB(`${this.name}_provider`, {
             connectString: this.params.connectString,
             connectionTimeoutMillis: this.params.connectionTimeoutMillis,
@@ -210,18 +211,18 @@ export default class PKOAuth extends NullAuthProvider {
                     },
                 );
             }).then((user: IObjectParam) => ({
-                ck_user: user.ck_id,
-                data: user,
+                idUser: user.ck_id,
+                dataUser: user,
             }));
         }
         return {
-            ck_user: arr[0].ck_id,
-            data: arr[0],
+            idUser: arr[0].ck_id,
+            dataUser: arr[0],
         };
     }
     public async init(reload?: boolean): Promise<void> {
         if (!this.dbUsers) {
-            this.dbUsers = await Property.getUsers();
+            this.dbUsers = this.authController.getUserDb();
         }
         await this.dataSource.createPool();
         const users = {};
@@ -267,7 +268,6 @@ export default class PKOAuth extends NullAuthProvider {
                                 ? chunk.json
                                 : JSON.stringify(chunk.json);
                             users[row.ck_id] = {
-                                cv_timezone: "+03:00",
                                 ...row,
                                 ca_actions: [],
                             };
@@ -334,7 +334,7 @@ export default class PKOAuth extends NullAuthProvider {
                         this.authController.addUser(
                             (user as any).ck_id,
                             this.name,
-                            user,
+                            user as any,
                         ),
                     ),
                 ),
@@ -436,8 +436,6 @@ export default class PKOAuth extends NullAuthProvider {
                             ]),
                             ck_id:
                                 (userData.data || {}).ck_id || user.objectSID,
-                            cv_timezone:
-                                (userData.data || {}).cv_timezone || "+03:00",
                         },
                     );
                     if (!(userData.data || {}).ck_id) {
@@ -451,9 +449,8 @@ export default class PKOAuth extends NullAuthProvider {
                         return resolve(data);
                     }
                     const session = await this.authController.loadSession(
-                        null,
+                        gateContext,
                         userData.ck_id || user.objectSID,
-                        this.name,
                     );
                     if (session) {
                         return resolve(session);

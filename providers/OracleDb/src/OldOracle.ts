@@ -8,6 +8,7 @@ import { IResultProvider } from "@ungate/plugininf/lib/IResult";
 import { noop } from "lodash";
 import IOracleController from "./IOracleController";
 import { IParamOracle } from "./OracleDb.types";
+import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
 const wsQuerySQL =
     "select vl_query, kd_type, pr_auth from report.wd_sqlstore where upper(nm_query) = upper(:nm_query)";
 
@@ -15,7 +16,12 @@ export default class OldOracle implements IOracleController {
     public dataSource: OracleDB;
     public params: IParamOracle;
     public name: string;
-    constructor(name: string, params: IParamOracle, dataSource: OracleDB) {
+    constructor(
+        name: string,
+        params: IParamOracle,
+        dataSource: OracleDB,
+        private authController: IAuthController,
+    ) {
         this.name = name;
         this.params = params;
         this.dataSource = dataSource;
@@ -165,7 +171,7 @@ export default class OldOracle implements IOracleController {
                 return context.connection
                     .executeStmt(sql)
                     .then((res) => {
-                        return new Promise((resolve, reject) => {
+                        return new Promise<void>((resolve, reject) => {
                             res.stream.on("data", noop);
                             res.stream.on("err", (err) => reject(err));
                             res.stream.on("end", () => resolve());

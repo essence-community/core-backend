@@ -2,7 +2,7 @@ import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
 import ICCTParams from "@ungate/plugininf/lib/ICCTParams";
 import IParamsInfo from "@ungate/plugininf/lib/ICCTParams";
-import IContext from "@ungate/plugininf/lib/IContext";
+import IContext, { IFormData } from "@ungate/plugininf/lib/IContext";
 import { IPluginRequestContext } from "@ungate/plugininf/lib/IPlugin";
 import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
 import IResult from "@ungate/plugininf/lib/IResult";
@@ -13,34 +13,7 @@ import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
 import * as AWS from "aws-sdk";
 import * as fs from "fs";
 import { forEach, isObject } from "lodash";
-import { uuid as uuidv4 } from "uuidv4";
-
-interface File {
-    /**
-     * same as name - the field name for this file
-     */
-    fieldName: string;
-    /**
-     * the filename that the user reports for the file
-     */
-    originalFilename: string;
-    /**
-     * the absolute path of the uploaded file on disk
-     */
-    path: string;
-    /**
-     * the HTTP headers that were sent along with this file
-     */
-    headers: any;
-    /**
-     * size of the file in bytes
-     */
-    size: number;
-}
-
-interface Files {
-    [key: string]: File[];
-}
+import { v4 as uuidv4 } from "uuid";
 
 export default class S3Storage extends NullPlugin {
     public static getParamsInfo(): IParamsInfo {
@@ -84,7 +57,7 @@ export default class S3Storage extends NullPlugin {
     private clients: AWS.S3;
     constructor(name: string, params: ICCTParams) {
         super(name, params);
-        this.params = initParams(S3Storage.getParamsInfo(), params);
+        this.params = initParams(S3Storage.getParamsInfo(), this.params);
         const endpoint = new AWS.Endpoint("http://s3.amazonaws.com");
         const credentials = new AWS.Credentials({
             accessKeyId: this.params.cvKeyId,
@@ -125,7 +98,10 @@ export default class S3Storage extends NullPlugin {
                     ),
                 );
             }
-            if (!isObject(gateContext.request.body)) {
+            if (
+                !isObject(gateContext.request.body) ||
+                (gateContext.request.body as IFormData).files
+            ) {
                 throw new ErrorException(
                     ErrorGate.compileErrorResult(
                         -1,
@@ -135,7 +111,7 @@ export default class S3Storage extends NullPlugin {
             }
             const rows = [];
             const json = JSON.parse(query.inParams.json);
-            forEach(gateContext.request.body as Files, (val) => {
+            forEach((gateContext.request.body as IFormData).files, (val) => {
                 if (val && val.length) {
                     val.forEach((value) => {
                         rows.push(

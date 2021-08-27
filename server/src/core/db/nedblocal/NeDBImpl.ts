@@ -163,7 +163,7 @@ export class NeDBImpl implements ILocalDB {
     }
 
     public compactDatafile() {
-        return new Promise((resolve) => {
+        return new Promise<void>((resolve) => {
             this.db.persistence.compactDatafile();
             return resolve();
         });

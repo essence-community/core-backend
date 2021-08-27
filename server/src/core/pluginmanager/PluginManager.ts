@@ -11,6 +11,7 @@ import * as fs from "fs";
 import Constants from "../Constants";
 import IPluginConfig from "../property/IPluginConfig";
 import Property from "../property/Property";
+import { GateSession } from "../session/GateSession";
 const logger = Logger.getLogger("PluginManager");
 
 interface IPluginM extends IPluginConfig {
@@ -23,7 +24,9 @@ let GateContextClass = {};
 let GateSchedulersClass = {};
 let GateEventsClass = {};
 let GateProvider: {
-    [key: string]: IProvider;
+    [key: string]: {
+        [key: string]: IProvider;
+    };
 } = {};
 let GatePlugins: IPluginM[] = [];
 let GateContext: {
@@ -39,9 +42,12 @@ const GateSchedulers: {
 class PluginManager {
     public initGate() {
         return Promise.all([
-            this.resetGateContextClass(),
-            this.resetGatePluginsClass(),
-            this.resetGateProviderClass(),
+            this.resetGateContextClass().then(() =>
+                Promise.all([
+                    this.resetGatePluginsClass(),
+                    this.resetGateProviderClass(),
+                ]),
+            ),
             this.resetEventsClass(),
             this.resetSchedulersClass(),
         ]);
@@ -66,9 +72,9 @@ class PluginManager {
             }
             const name = file.replace(".js", "").toLowerCase();
             rows.push(
-                new Promise((resolve) => {
+                new Promise<void>((resolve) => {
                     const Class = require(`${Constants.SCHEDULER_PLUGIN_DIR}/${file}`);
-                    GateSchedulersClass[name] = Class;
+                    GateSchedulersClass[name] = Class.default || Class;
                     logger.info(`Найден класс scheduler ${name}`);
                     return resolve();
                 }),
@@ -83,7 +89,12 @@ class PluginManager {
 
     public getGateSchedulerClass(key: string) {
         if (!GateSchedulersClass[key]) {
-            throw new ErrorException(ErrorGate.PLUGIN_NOT_FOUND);
+            throw new ErrorException(
+                ErrorGate.compileErrorResult(
+                    301,
+                    `Specified ${key} plugin not found`,
+                ),
+            );
         }
         return GateSchedulersClass[key];
     }
@@ -120,9 +131,9 @@ class PluginManager {
             }
             const name = file.replace(".js", "").toLowerCase();
             rows.push(
-                new Promise((resolve) => {
+                new Promise<void>((resolve) => {
                     const Class = require(`${Constants.EVENT_PLUGIN_DIR}/${file}`);
-                    GateEventsClass[name] = Class;
+                    GateEventsClass[name] = Class.default || Class;
                     logger.info(`Найден класс events ${name}`);
                     return resolve();
                 }),
@@ -137,7 +148,12 @@ class PluginManager {
 
     public getGateEventsClass(key: string) {
         if (!GateEventsClass[key]) {
-            throw new ErrorException(ErrorGate.PLUGIN_NOT_FOUND);
+            throw new ErrorException(
+                ErrorGate.compileErrorResult(
+                    301,
+                    `Specified ${key} plugin not found`,
+                ),
+            );
         }
         return GateEventsClass[key];
     }
@@ -178,44 +194,70 @@ class PluginManager {
             }
             const name = file.replace(".js", "").toLowerCase();
             rows.push(
-                new Promise((resolve) => {
+                new Promise<void>((resolve) => {
                     const Class = require(`${Constants.PROVIDER_PLUGIN_DIR}/${file}`);
-                    GateProviderClass[name] = Class;
+                    GateProviderClass[name] = Class.default || Class;
                     logger.info(`Найден класс провайдера ${name}`);
                     return resolve();
                 }),
             );
         });
         await Promise.all(rows);
-        GateProvider = {};
         await this.removeAllGateProvider();
+        GateProvider = {};
+        Object.keys(GateContext).forEach((name) => {
+            GateProvider[name] = {};
+        });
         const db = await Property.getProviders();
         const docs = await db.find();
         const rowsInit = [];
         if (docs) {
             docs.forEach((doc) => {
-                if (doc.cl_autoload) {
-                    const PluginClass =
-                        GateProviderClass[doc.ck_d_plugin.toLowerCase()];
+                const PluginClass =
+                    GateProviderClass[doc.ck_d_plugin.toLowerCase()];
+                if (
+                    doc.cl_autoload ||
+                    (PluginClass &&
+                        (PluginClass.isAuth ||
+                            (PluginClass.default &&
+                                PluginClass.default.isAuth)))
+                ) {
                     if (PluginClass) {
-                        GateProvider[doc.ck_id] = new PluginClass(
-                            doc.ck_id,
-                            doc.cct_params,
-                        );
-                        rowsInit.push(
-                            GateProvider[doc.ck_id].init().then(
-                                () => {
-                                    logger.info(
-                                        `Загружен провайдер ${doc.ck_id}`,
-                                    );
-                                    return Promise.resolve();
-                                },
-                                (err) => {
-                                    logger.error(err);
-                                    return Promise.resolve();
-                                },
-                            ),
-                        );
+                        (doc.ck_context
+                            ? [
+                                  [
+                                      doc.ck_context,
+                                      this.getGateContext(doc.ck_context),
+                                  ],
+                              ]
+                            : Object.entries(GateContext)
+                        ).forEach(([name, value]) => {
+                            GateProvider[name][doc.ck_id] = PluginClass.default
+                                ? new PluginClass.default(
+                                      doc.ck_id,
+                                      doc.cct_params,
+                                      value.authController,
+                                  )
+                                : new PluginClass(
+                                      doc.ck_id,
+                                      doc.cct_params,
+                                      value.authController,
+                                  );
+                            rowsInit.push(
+                                GateProvider[name][doc.ck_id].init().then(
+                                    () => {
+                                        logger.info(
+                                            `Загружен провайдер ${doc.ck_id}`,
+                                        );
+                                        return Promise.resolve();
+                                    },
+                                    (err) => {
+                                        logger.error(err);
+                                        return Promise.resolve();
+                                    },
+                                ),
+                            );
+                        });
                     }
                 }
             });
@@ -225,7 +267,12 @@ class PluginManager {
 
     public getGateProviderClass(key: string) {
         if (!GateProviderClass[key]) {
-            throw new ErrorException(ErrorGate.PLUGIN_NOT_FOUND);
+            throw new ErrorException(
+                ErrorGate.compileErrorResult(
+                    301,
+                    `Specified ${key} plugin not found`,
+                ),
+            );
         }
         return GateProviderClass[key];
     }
@@ -234,36 +281,47 @@ class PluginManager {
         return Object.keys(GateProviderClass);
     }
 
-    public getGateProvider(key: string): IProvider {
-        return GateProvider[key];
+    public getGateProvider(context: string, key: string): IProvider {
+        return GateProvider[context][key];
     }
 
-    public getGateAuthProviders() {
-        return Object.values(GateProvider).filter(
+    public getGateAuthProviders(context: string) {
+        return Object.values(GateProvider[context]).filter(
             (provider: NullAuthProvider) => provider.isAuth,
         );
     }
-    public getGateProviders() {
-        return Object.values(GateProvider) || [];
+    public getGateProviders(context: string) {
+        return Object.values(GateProvider[context]) || [];
     }
 
-    public setGateProvider(key: string, value: IProvider) {
-        GateProvider[key] = value;
+    public setGateProvider(context: string, key: string, value: IProvider) {
+        GateProvider[context][key] = value;
     }
 
-    public async removeGateProvider(key: string) {
-        await GateProvider[key].destroy();
-        delete GateProvider[key];
+    public async removeGateProvider(context: string, key: string) {
+        await GateProvider[context][key].destroy();
+        delete GateProvider[context][key];
         return true;
     }
 
-    public async removeAllGateProvider() {
+    public async removeAllGateProvider(context?: string) {
         const rows = [];
-        Object.values(GateProvider).forEach((pl) => {
-            rows.push(pl.destroy());
-        });
-        await Promise.all(rows);
-        GateProvider = {};
+        if (context) {
+            Object.values(GateProvider[context]).forEach((pl) => {
+                rows.push(pl.destroy());
+            });
+            await Promise.all(rows);
+            GateProvider[context] = {};
+        } else {
+            Object.values(GateProvider)
+                .reduce((res, obj) => {
+                    return res.concat(Object.values(obj));
+                }, [])
+                .forEach((pl) => {
+                    rows.push(pl.destroy());
+                });
+            await Promise.all(rows);
+        }
         return true;
     }
 
@@ -285,9 +343,9 @@ class PluginManager {
             }
             const name = file.replace(".js", "").toLowerCase();
             rows.push(
-                new Promise((resolve) => {
+                new Promise<void>((resolve) => {
                     const Class = require(`${Constants.DATA_PLUGIN_DIR}/${file}`);
-                    GatePluginsClass[name] = Class;
+                    GatePluginsClass[name] = Class.default || Class;
                     logger.info(`Найден класс плагина ${name}`);
                     return resolve();
                 }),
@@ -305,7 +363,12 @@ class PluginManager {
 
     public getGatePluginsClass(key: string) {
         if (!GatePluginsClass[key]) {
-            throw new ErrorException(ErrorGate.PLUGIN_NOT_FOUND);
+            throw new ErrorException(
+                ErrorGate.compileErrorResult(
+                    301,
+                    `Specified ${key} plugin not found`,
+                ),
+            );
         }
         return GatePluginsClass[key];
     }
@@ -314,19 +377,29 @@ class PluginManager {
         return GatePlugins.map((val) => val.plugin);
     }
 
-    public getGatePlugins(names: string[], provider: string): IPlugin[] {
+    public getGatePlugins(
+        context: string,
+        names: string[],
+        provider: string,
+    ): IPlugin[] {
         return GatePlugins.filter(
             (val) =>
                 names.includes(val.cv_name) &&
-                ["all", provider].includes(val.ck_d_provider),
+                ["all", provider].includes(val.ck_d_provider) &&
+                (!val.ck_context || val.ck_context === context),
         ).map((obj) => obj.plugin);
     }
 
-    public getGatePlugin(name: string, provider: string): IPlugin {
+    public getGatePlugin(
+        context: string,
+        name: string,
+        provider: string,
+    ): IPlugin {
         return GatePlugins.filter(
             (val) =>
                 name === val.cv_name &&
-                ["all", provider].includes(val.ck_d_provider),
+                ["all", provider].includes(val.ck_d_provider) &&
+                (!val.ck_context || val.ck_context === context),
         ).map((obj) => obj.plugin)[0];
     }
 
@@ -364,9 +437,9 @@ class PluginManager {
             }
             const name = file.replace(".js", "").toLowerCase();
             rows.push(
-                new Promise((resolve) => {
+                new Promise<void>((resolve) => {
                     const Class = require(`${Constants.CONTEXT_PLUGIN_DIR}/${file}`);
-                    GateContextClass[name] = Class;
+                    GateContextClass[name] = Class.default || Class;
                     logger.info(`Найден класс плагина контекста ${name}`);
                     return resolve();
                 }),
@@ -382,21 +455,40 @@ class PluginManager {
                 const PluginClass =
                     GateContextClass[doc.ck_d_plugin.toLowerCase()];
                 if (PluginClass) {
-                    GateContext[doc.ck_id] = new PluginClass(
+                    const authController = new GateSession(
                         doc.ck_id,
                         doc.cct_params,
-                    );
-                    rowContext.push(
-                        GateContext[doc.ck_id].init().then(
-                            () => {
-                                logger.info(`Загружен контекст ${doc.ck_id}`);
-                                return Promise.resolve();
-                            },
-                            (err) => {
-                                logger.error(err);
-                                return Promise.resolve();
-                            },
+                        GateSession.sha1(
+                            `${doc.ck_id}_session_${Constants.SESSION_SECRET}`,
                         ),
+                    );
+                    GateContext[doc.ck_id] = PluginClass.default
+                        ? new PluginClass.default(
+                              doc.ck_id,
+                              doc.cct_params,
+                              authController,
+                          )
+                        : new PluginClass(
+                              doc.ck_id,
+                              doc.cct_params,
+                              authController,
+                          );
+                    rowContext.push(
+                        (GateContext[doc.ck_id].authController as GateSession)
+                            .init()
+                            .then(() => GateContext[doc.ck_id].init())
+                            .then(
+                                () => {
+                                    logger.info(
+                                        `Загружен контекст ${doc.ck_id}`,
+                                    );
+                                    return Promise.resolve();
+                                },
+                                (err) => {
+                                    logger.error(err);
+                                    return Promise.resolve();
+                                },
+                            ),
                     );
                 }
             });
@@ -406,7 +498,12 @@ class PluginManager {
 
     public getGateContextClass(key: string) {
         if (!GateContextClass[key]) {
-            throw new ErrorException(ErrorGate.PLUGIN_NOT_FOUND);
+            throw new ErrorException(
+                ErrorGate.compileErrorResult(
+                    301,
+                    `Specified ${key} plugin not found`,
+                ),
+            );
         }
         return GateContextClass[key];
     }

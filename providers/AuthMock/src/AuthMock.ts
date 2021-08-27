@@ -36,12 +36,12 @@ export default class AuthMock extends NullAuthProvider {
             query.inParams.cv_password === this.params.adminPassword
         ) {
             return {
-                ck_user: "1",
+                idUser: "1",
             };
         }
         if (query.inParams.cv_login === this.params.viewUser) {
             return {
-                ck_user: "2",
+                idUser: "2",
             };
         }
         throw new ErrorException(ErrorGate.AUTH_DENIED);
@@ -121,7 +121,6 @@ export default class AuthMock extends NullAuthProvider {
             cv_name: "admin",
             cv_patronymic: "",
             cv_surname: "",
-            cv_timezone: "+03:00",
         };
         const viewUser = {
             ca_actions: [491, 497, 499, 511, 515, 533, 704, 692, 503],
@@ -131,7 +130,6 @@ export default class AuthMock extends NullAuthProvider {
             cv_name: "view",
             cv_patronymic: "",
             cv_surname: "",
-            cv_timezone: "+03:00",
         };
         await this.authController.addUser(
             "" + adminUser.ck_id,

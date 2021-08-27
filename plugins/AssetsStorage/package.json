@@ -1,0 +1,16 @@
+{
+    "name": "@ungate-plugin/assets-storage",
+    "version": "1.0.0",
+    "description": "Плагин сохранения и получения файлов из хранилища",
+    "author": "Ivan Artemov (honyrik@gmail.com)",
+    "license": "MIT",
+    "dependencies": {
+        "@ungate/plugininf": "^1.0.0",
+        "aws-sdk": "^2.665.0",
+        "lodash": "^4.17.15"
+    },
+    "devDependencies": {
+        "@types/aws-sdk": "^2.7.0",
+        "@types/lodash": "^4.14.150"
+    }
+}

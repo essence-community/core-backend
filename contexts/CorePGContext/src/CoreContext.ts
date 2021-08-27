@@ -5,7 +5,10 @@ import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
 import ICCTParams, { IParamsInfo } from "@ungate/plugininf/lib/ICCTParams";
 import IContext, { TAction } from "@ungate/plugininf/lib/IContext";
-import { IContextPluginResult } from "@ungate/plugininf/lib/IContextPlugin";
+import {
+    IContextParams,
+    IContextPluginResult,
+} from "@ungate/plugininf/lib/IContextPlugin";
 import IGlobalObject from "@ungate/plugininf/lib/IGlobalObject";
 import IResult from "@ungate/plugininf/lib/IResult";
 import ISession from "@ungate/plugininf/lib/ISession";
@@ -18,11 +21,12 @@ import ICoreController from "./ICoreController";
 import OfflineController from "./OfflineController";
 import OnlineController from "./OnlineController";
 import { TempTable } from "./TempTable";
+import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
 const logger = Logger.getLogger("CoreContext");
 const Mask = ((global as any) as IGlobalObject).maskgate;
 const createTempTable = ((global as any) as IGlobalObject).createTempTable;
 
-export interface ICoreParams extends ICCTParams {
+export interface ICoreParams extends IContextParams {
     debug: boolean;
     anonymousAction: number;
     defaultDepartmentQueryName: string;
@@ -42,7 +46,6 @@ export default class CoreContext extends NullContext {
     public static getParamsInfo(): IParamsInfo {
         /* tslint:disable:object-literal-sort-keys */
         return {
-            ...NullContext.getParamsInfo(),
             debug: {
                 defaultValue: false,
                 name: "Режим отладки",
@@ -146,11 +149,15 @@ export default class CoreContext extends NullContext {
     private dataSource: PostgresDB;
     private dbUsers: ILocalDB;
     private tempTable: TempTable;
-    constructor(name: string, params: ICCTParams) {
-        super(name, params);
+    constructor(
+        name: string,
+        params: ICCTParams,
+        authController: IAuthController,
+    ) {
+        super(name, params, authController);
         this.params = {
             ...this.params,
-            ...initParams(CoreContext.getParamsInfo(), params),
+            ...initParams(CoreContext.getParamsInfo(), this.params),
             anonymousAction: 99999,
         };
         this.dataSource = new PostgresDB(`${this.name}_context`, {
@@ -204,7 +211,7 @@ export default class CoreContext extends NullContext {
     }
 
     public async init(reload?: boolean): Promise<void> {
-        this.dbUsers = await createTempTable("tt_users");
+        this.dbUsers = this.authController.getUserDb();
         return this.controller.init(reload);
     }
     public initContext(gateContext: IContext): Promise<IContextPluginResult> {
@@ -224,7 +231,7 @@ export default class CoreContext extends NullContext {
                 const json = JSON.parse(gateContext.params.json || "{}");
                 const caActions = [
                     this.params.anonymousAction,
-                    ...(gateContext.session?.data.ca_actions || []),
+                    ...(gateContext.session?.userData.ca_actions || []),
                 ];
                 if (version !== "2" && (!json.filter || !json.filter.ck_page)) {
                     return Promise.reject(CoreContext.accessDenied());
@@ -306,7 +313,7 @@ export default class CoreContext extends NullContext {
         return this.dbUsers
             .update(
                 {
-                    ck_id: `${gateContext.session.ck_id}:${gateContext.session.ck_d_provider}`,
+                    ck_id: `${gateContext.session.idUser}:${gateContext.session.nameProvider}`,
                 },
                 {
                     $set: {
@@ -388,7 +395,7 @@ export default class CoreContext extends NullContext {
                 )
                 .then(
                     (docs) =>
-                        new Promise((resolv) => {
+                        new Promise<void>((resolv) => {
                             const rows = [];
                             docs.stream.on("data", (chunk) => rows.push(chunk));
                             docs.stream.on("error", (err) => {

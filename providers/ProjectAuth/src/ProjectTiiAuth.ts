@@ -14,12 +14,12 @@ import NullAuthProvider, {
 import { ReadStreamToArray } from "@ungate/plugininf/lib/stream/Util";
 import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
 import * as moment from "moment";
+import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
 const Property = ((global as any) as IGlobalObject).property;
 
 export default class ProjectTiiAuth extends NullAuthProvider {
     public static getParamsInfo(): IParamsInfo {
         return {
-            ...NullAuthProvider.getParamsInfo(),
             ...OracleDB.getParamsInfo(),
         };
     }
@@ -27,12 +27,13 @@ export default class ProjectTiiAuth extends NullAuthProvider {
     public dataSource: OracleDB;
 
     private dbUsers: ILocalDB;
-    constructor(name: string, params: ICCTParams) {
-        super(name, params);
-        this.params = {
-            ...this.params,
-            ...initParams(ProjectTiiAuth.getParamsInfo(), params),
-        };
+    constructor(
+        name: string,
+        params: ICCTParams,
+        authController: IAuthController,
+    ) {
+        super(name, params, authController);
+        this.params = initParams(ProjectTiiAuth.getParamsInfo(), this.params);
         this.dataSource = new OracleDB(`${this.name}_provider`, {
             connectString: this.params.connectString,
             maxRows: this.params.maxRows,
@@ -117,13 +118,13 @@ export default class ProjectTiiAuth extends NullAuthProvider {
             throw new ErrorException(ErrorGate.AUTH_DENIED);
         }
         return {
-            ck_user: arr[0].ck_id,
-            data: arr[0],
+            idUser: arr[0].ck_id,
+            dataUser: arr[0],
         };
     }
     public async init(reload?: boolean): Promise<void> {
         if (!this.dbUsers) {
-            this.dbUsers = await Property.getUsers();
+            this.dbUsers = this.authController.getUserDb();
         }
         await this.dataSource.createPool();
         const users = {};
@@ -144,7 +145,6 @@ export default class ProjectTiiAuth extends NullAuthProvider {
                                 cv_name: chunk.nm_first,
                                 cv_patronymic: chunk.nm_middle,
                                 cv_surname: chunk.nm_last,
-                                cv_timezone: "+03:00",
                             };
                         });
                         resUser.stream.on("end", () => {
@@ -161,7 +161,7 @@ export default class ProjectTiiAuth extends NullAuthProvider {
                                 )
                                 .then(
                                     (resAction) =>
-                                        new Promise(
+                                        new Promise<void>(
                                             (resolveAction, rejectAction) => {
                                                 resAction.stream.on(
                                                     "error",
@@ -204,7 +204,7 @@ export default class ProjectTiiAuth extends NullAuthProvider {
                         this.authController.addUser(
                             (user as any).ck_id,
                             this.name,
-                            user,
+                            user as any,
                         ),
                     ),
                 ),

@@ -10,7 +10,11 @@ from s_mt.t_page_object po,
 
   s_mt.t_page_action pa,
 
-  s_mt.tt_user_action ua
+  (
+    select tss.cv_value::bigint as cn_action from s_mt.t_sys_setting tss where tss.ck_id = ''g_sys_anonymous_action''
+    union all
+    select value::bigint as cn_action from jsonb_array_elements_text(:sess_ca_actions::jsonb)
+) ua
 
 where po.ck_page = (cast(:json as jsonb)->''filter''->>''ck_page'')::varchar
 
@@ -21,8 +25,6 @@ and pa.ck_page = po.ck_page
 and pa.cr_type = ''view''
 
 and ua.cn_action = pa.cn_action
-
-and ua.ck_user = :sess_ck_id
 
 order by po.cn_order
 

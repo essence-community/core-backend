@@ -23,7 +23,7 @@ export default class CoreNotification extends NullEvent {
     private eventConnect: Connection;
     constructor(name: string, params: ICCTParams) {
         super(name, params);
-        this.params = initParams(CoreNotification.getParamsInfo(), params);
+        this.params = initParams(CoreNotification.getParamsInfo(), this.params);
         this.dataSource = new PostgresDB(`${this.name}_events`, {
             connectString: this.params.connectString,
             connectionTimeoutMillis: this.params.connectionTimeoutMillis,
@@ -129,7 +129,7 @@ export default class CoreNotification extends NullEvent {
                 .executeStmt(sqlNotification, params)
                 .then(
                     (data) =>
-                        new Promise((resolve, reject) => {
+                        new Promise<void>((resolve, reject) => {
                             const rows = [];
                             data.stream.on("data", (chunk) => rows.push(chunk));
                             data.stream.on("error", (err) => reject(err));
@@ -201,7 +201,7 @@ export default class CoreNotification extends NullEvent {
      * @returns {Promise}
      */
     private sendNotification(user, row) {
-        return new Promise((resolve) => {
+        return new Promise<void | Record<string, any>>((resolve) => {
             try {
                 const msg = JSON.parse(row.cv_message);
                 const text = JSON.stringify([

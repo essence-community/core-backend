@@ -1,5 +1,6 @@
 import { forEach, isObject, noop } from "lodash";
 import * as pg from "pg";
+// @ts-ignore
 import * as QueryStream from "pg-query-stream";
 import { IRufusLogger } from "rufus";
 import { Readable, Transform, TransformCallback } from "stream";
@@ -48,6 +49,7 @@ export interface IPostgresDBConfig {
     user?: string;
     password?: string;
     lvl_logger?: string;
+    poolPg?: string | Record<string, any>;
 }
 interface IParams {
     [key: string]: string | boolean | number | IObjectParam;
@@ -99,6 +101,12 @@ export default class PostgresDB {
                 name: "Время выполнения запроса",
                 type: "integer",
             },
+            poolPg: {
+                name: "Extra Postgres param",
+                type: "long_string",
+                defaultValue: "{}",
+                description: "https://node-postgres.com/api/pool",
+            },
             lvl_logger: {
                 displayField: "ck_id",
                 name: "Level logger",
@@ -141,11 +149,20 @@ export default class PostgresDB {
                 "Не указан параметр connectString при вызове констуктора",
             );
         }
+        if (
+            typeof this.connectionConfig.poolPg === "string" &&
+            this.connectionConfig.poolPg.startsWith("{") &&
+            this.connectionConfig.poolPg.endsWith("}")
+        ) {
+            this.connectionConfig.poolPg = JSON.parse(
+                this.connectionConfig.poolPg,
+            );
+        }
         this.log = Logger.getLogger(`PostgresDB ${name}`);
         if (params.lvl_logger && params.lvl_logger !== "NOTSET") {
             const rootLogger = Logger.getRootLogger();
             this.log.setLevel(params.lvl_logger);
-            for (let handler of rootLogger._handlers) {
+            for (const handler of rootLogger._handlers) {
                 this.log.addHandler(handler);
             }
         }
@@ -157,7 +174,7 @@ export default class PostgresDB {
 
         this.partRows =
             this.connectionConfig.partRows ||
-            PostgresDB.getParamsInfo().partRows.defaultValue;
+            (PostgresDB.getParamsInfo().partRows.defaultValue as number);
         this.pg = pg;
     }
 
@@ -196,6 +213,9 @@ export default class PostgresDB {
         const [user, pass] = (connectionString.auth || "").split(":");
         /* tslint:disable:object-literal-sort-keys */
         const pool = new pg.Pool({
+            ...(typeof this.connectionConfig.poolPg === "object"
+                ? this.connectionConfig.poolPg
+                : {}),
             application_name: this.name,
             host: connectionString.hostname,
             port: parseInt(connectionString.port || "5432", 10),
@@ -204,10 +224,12 @@ export default class PostgresDB {
             database: connectionString.path.substr(1),
             connectionTimeoutMillis:
                 this.connectionConfig.connectionTimeoutMillis ||
-                PostgresDB.getParamsInfo().connectionTimeoutMillis.defaultValue,
+                (PostgresDB.getParamsInfo().connectionTimeoutMillis
+                    .defaultValue as number),
             idleTimeoutMillis:
                 this.connectionConfig.idleTimeoutMillis ||
-                PostgresDB.getParamsInfo().idleTimeoutMillis.defaultValue,
+                (PostgresDB.getParamsInfo().idleTimeoutMillis
+                    .defaultValue as number),
             max: this.connectionConfig.poolMax || 4,
             min: this.connectionConfig.poolMin || 0,
         });
@@ -262,7 +284,7 @@ export default class PostgresDB {
     public onClose(conn?: pg.Client | pg.PoolClient): Promise<void> {
         if (conn) {
             return (conn as pg.PoolClient).release
-                ? new Promise((resolve) => {
+                ? new Promise<void>((resolve) => {
                       (conn as pg.PoolClient).release();
                       resolve();
                   })
@@ -432,7 +454,7 @@ export default class PostgresDB {
                     ),
                     stream,
                 };
-                await new Promise((resolve, reject) => {
+                await new Promise<void>((resolve, reject) => {
                     let isData = false;
                     stream.once("end", () => {
                         if (isData) {

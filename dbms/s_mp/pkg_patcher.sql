@@ -7,7 +7,7 @@ CREATE SCHEMA pkg_patcher AUTHORIZATION s_mp;
 CREATE OR REPLACE FUNCTION pkg_patcher.p_clear_attr(pv_class character varying, pj_json jsonb)
  RETURNS void
  LANGUAGE plpgsql
- SECURITY DEFINER
+
  SET search_path TO 'pkg_patcher', 's_mt', 'public'
 AS $function$
 declare
@@ -54,7 +54,7 @@ COMMENT ON FUNCTION pkg_patcher.p_clear_attr(pv_class character varying, pj_json
 CREATE OR REPLACE FUNCTION pkg_patcher.p_merge_object(pk_id character varying, pk_class character varying, pk_parent character varying, pv_name character varying, pn_order bigint, pk_query character varying, pv_description character varying, pv_displayed character varying, pv_modify character varying, pk_provider character varying, pk_user character varying, pt_change timestamp with time zone)
  RETURNS void
  LANGUAGE plpgsql
- SECURITY DEFINER
+
  SET search_path TO 'public', 'pkg', 'pkg_patcher', 's_mt'
 AS $function$
 declare
@@ -136,20 +136,28 @@ COMMENT ON FUNCTION pkg_patcher.p_merge_object(pk_id character varying, pk_class
 CREATE OR REPLACE FUNCTION pkg_patcher.p_merge_object_attr(pk_id character varying, pk_object character varying, pk_class_attr character varying, pv_value character varying, pk_user character varying, pt_change timestamp with time zone, pv_attr character varying DEFAULT NULL::character varying)
  RETURNS void
  LANGUAGE plpgsql
- SECURITY DEFINER
+
  SET search_path TO 'public', 'pkg', 'pkg_patcher', 's_mt'
 AS $function$
 declare
   -- переменные пакета
   gv_error sessvarstr;
-  vv_class_id varchar;
+  vv_class_id varchar := pk_class_attr;
+  vv_value varchar := pv_value;
 begin
   gv_error = sessvarstr_declare('pkg', 'gv_error', '');
   perform pkg.p_reset_response();
 
+  if pv_attr = 'orderproperty' then
+    vv_value := jsonb_build_array(jsonb_build_object('property', pv_value, 'direction', 'ASC'))::text;
+    select ck_id 
+      into vv_class_id
+    from s_mt.t_class_attr where ck_class in (select ck_id from s_mt.t_class_attr where ck_id = pk_class_attr) and ck_attr = 'order';
+  end if;
+
   UPDATE s_mt.t_object_attr
      SET (ck_object, ck_class_attr, cv_value, ck_user, ct_change) =
-         (pk_object, pk_class_attr, pv_value, pk_user, pt_change)
+         (pk_object, vv_class_id, vv_value, pk_user, pt_change)
    where ck_id = pk_id;
   
   if found then
@@ -158,7 +166,7 @@ begin
 
   select ck_id 
     into vv_class_id
-  from s_mt.t_class_attr where ck_id = pk_class_attr;
+  from s_mt.t_class_attr where ck_id = vv_class_id;
 
   if vv_class_id is null and pv_attr is not null then
     select ck_id 
@@ -167,7 +175,7 @@ begin
   
     UPDATE s_mt.t_object_attr
       SET (ck_object, cv_value, ck_user, ct_change) =
-          (pk_object, pv_value, pk_user, pt_change)
+          (pk_object, vv_value, pk_user, pt_change)
     where ck_class_attr = vv_class_id;
   
     if found then
@@ -188,7 +196,7 @@ begin
   begin
     INSERT INTO s_mt.t_object_attr
       (ck_id, ck_object, ck_class_attr, cv_value, ck_user, ct_change)
-      VALUES (pk_id, pk_object, vv_class_id, pv_value, pk_user, pt_change)
+      VALUES (pk_id, pk_object, vv_class_id, vv_value, pk_user, pt_change)
     ON CONFLICT ON CONSTRAINT cin_c_object_attr_1 do update set ck_object = excluded.ck_object, ck_class_attr = excluded.ck_class_attr, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
   exception
     when others then
@@ -209,20 +217,28 @@ COMMENT ON FUNCTION pkg_patcher.p_merge_object_attr(varchar,varchar,varchar,varc
 CREATE OR REPLACE FUNCTION pkg_patcher.p_merge_page_object_attr(pk_id character varying, pk_page_object character varying, pk_class_attr character varying, pv_value character varying, pk_user character varying, pt_change timestamp with time zone, pv_attr character varying DEFAULT NULL::character varying)
  RETURNS void
  LANGUAGE plpgsql
- SECURITY DEFINER
+
  SET search_path TO 'public', 'pkg', 'pkg_patcher', 's_mt'
 AS $function$
 declare
   -- переменные пакета
   gv_error sessvarstr;
-  vv_class_id varchar;
+  vv_class_id varchar := pk_class_attr;
+  vv_value varchar := pv_value;
 begin
   gv_error = sessvarstr_declare('pkg', 'gv_error', '');
   perform pkg.p_reset_response();
 
+  if pv_attr = 'orderproperty' then
+    vv_value := jsonb_build_array(jsonb_build_object('property', pv_value, 'direction', 'ASC'))::text;
+    select ck_id 
+      into vv_class_id
+    from s_mt.t_class_attr where ck_class in (select ck_class from s_mt.t_class_attr where ck_id = pk_class_attr) and ck_attr = 'order';
+  end if;
+
   UPDATE s_mt.t_page_object_attr
      SET (ck_page_object, ck_class_attr, cv_value, ck_user, ct_change) =
-         (pk_page_object, pk_class_attr, pv_value, pk_user, pt_change)
+         (vv_class_id, pk_class_attr, vv_value, pk_user, pt_change)
    where ck_id = pk_id;
   
   if found then
@@ -247,7 +263,7 @@ begin
 
     UPDATE s_mt.t_page_object_attr
       SET (ck_page_object, cv_value, ck_user, ct_change) =
-          (pk_page_object, pv_value, pk_user, pt_change)
+          (pk_page_object, vv_value, pk_user, pt_change)
     where ck_class_attr = vv_class_id;
   
     if found then
@@ -268,7 +284,7 @@ begin
   begin
     INSERT INTO s_mt.t_page_object_attr
       (ck_id, ck_page_object, ck_class_attr, cv_value, ck_user, ct_change)
-      VALUES (pk_id, pk_page_object, vv_class_id, pv_value, pk_user, pt_change)
+      VALUES (pk_id, pk_page_object, vv_class_id, vv_value, pk_user, pt_change)
     ON CONFLICT ON CONSTRAINT cin_c_page_object_attr_1 do update set ck_page_object = excluded.ck_page_object, ck_class_attr = excluded.ck_class_attr, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
   exception
     when others then
@@ -289,7 +305,7 @@ COMMENT ON FUNCTION pkg_patcher.p_merge_page_object_attr(varchar,varchar,varchar
 CREATE OR REPLACE FUNCTION pkg_patcher.p_update_localization()
  RETURNS void
  LANGUAGE plpgsql
- SECURITY DEFINER
+
  SET search_path TO 'pkg_patcher', 's_mt', 'public'
 AS $function$
 declare
@@ -452,7 +468,7 @@ COMMENT ON FUNCTION pkg_patcher.p_update_localization() IS 'Перевод ат�
 CREATE OR REPLACE FUNCTION pkg_patcher.p_remove_page(pk_page character varying)
  RETURNS void
  LANGUAGE plpgsql
- SECURITY DEFINER
+
  SET search_path TO 'public', 'pkg', 'pkg_patcher', 's_mt'
 AS $function$
 declare
@@ -645,7 +661,6 @@ COMMENT ON FUNCTION pkg_patcher.p_remove_page(varchar) IS 'Удаляем стр
 CREATE OR REPLACE FUNCTION pkg_patcher.p_delete_dup_localization()
  RETURNS void
  LANGUAGE plpgsql
- SECURITY DEFINER
  SET search_path TO 'pkg_patcher', 's_mt', 'public'
 AS $function$
 declare
@@ -780,7 +795,6 @@ ALTER FUNCTION pkg_patcher.p_lock_patch(pk_id uuid) OWNER TO s_mp;
 CREATE OR REPLACE FUNCTION pkg_patcher.p_find_static_in_meta_localization()
  RETURNS void
  LANGUAGE plpgsql
- SECURITY DEFINER
  SET search_path TO 'pkg_patcher', 's_mt', 'public'
 AS $function$
 declare
@@ -845,7 +859,6 @@ COMMENT ON FUNCTION pkg_patcher.p_find_static_in_meta_localization() IS 'Раз�
 CREATE OR REPLACE FUNCTION pkg_patcher.p_merge_page_action(pk_id character varying, pk_page character varying, pr_type character varying, pn_action bigint, pk_user character varying, pt_change timestamp with time zone)
  RETURNS void
  LANGUAGE plpgsql
- SECURITY DEFINER
  SET search_path TO 'public', 'pkg', 'pkg_patcher', 's_mt'
 AS $function$
 declare
@@ -892,3 +905,78 @@ $function$
 ;
 
 COMMENT ON FUNCTION pkg_patcher.p_merge_page_action(pk_id character varying, pk_page character varying, pr_type character varying, pn_action bigint, pk_user character varying, pt_change timestamp with time zone) IS 'Обновление доступов страницы';
+
+
+CREATE FUNCTION pkg_patcher.p_change_role_connect_user(pv_connect_user VARCHAR, pv_table_schema VARCHAR) RETURNS void
+    LANGUAGE plpgsql
+    SET search_path TO '${user.table}', 'pkg_patcher', 'public'
+    AS $$
+declare
+  rec record;
+begin
+  for rec in (select 'GRANT USAGE ON SCHEMA ' || nspname || ' TO ' || pv_connect_user || ';' as alter_cmd 
+    from pg_catalog.pg_namespace 
+    where lower(nspname) like 'pkg_json_%') loop
+    EXECUTE rec.alter_cmd;
+  end loop;
+  
+  EXECUTE format('GRANT USAGE ON SCHEMA %s TO %s', pv_table_schema, pv_connect_user);
+
+  for rec in (select
+    'GRANT SELECT ON TABLE ' || schemaname || '.' || tablename || ' TO ' || pv_connect_user || ';' as alter_cmd 
+    from
+        pg_catalog.pg_tables
+    where
+    lower(schemaname) = lower(pv_table_schema)) loop
+    EXECUTE rec.alter_cmd;
+  end loop;
+
+  for rec in (select
+    'GRANT EXECUTE ON FUNCTION ' || nsp.nspname || '.' || p.proname || '(' || pg_get_function_identity_arguments(p.oid)|| ') TO ' || pv_connect_user || ';' as alter_cmd 
+    from
+        pg_proc p
+    join pg_namespace nsp on
+        p.pronamespace = nsp.oid
+    where
+        lower(nsp.nspname) like 'pkg_json_%') loop
+    EXECUTE rec.alter_cmd;
+  end loop;
+end;
+$$;
+
+CREATE FUNCTION pkg_patcher.p_change_role_update_user(pv_update_user VARCHAR, pv_table_schema VARCHAR) RETURNS void
+    LANGUAGE plpgsql
+    SET search_path TO '${user.table}', 'pkg_patcher', 'public'
+    AS $$
+declare
+  rec record;
+begin
+  for rec in (select 'ALTER SCHEMA ' || nspname || ' OWNER TO ' || pv_update_user || ';' as alter_cmd 
+    from pg_catalog.pg_namespace 
+    where lower(nspname) like 'pkg_%') loop
+    EXECUTE rec.alter_cmd;
+  end loop;
+
+  EXECUTE format('GRANT USAGE ON SCHEMA %s TO %s', pv_table_schema, pv_update_user);
+
+  for rec in (select
+    'GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE ' || schemaname || '.' || tablename || ' TO ' || pv_update_user || ';' as alter_cmd 
+    from
+        pg_catalog.pg_tables
+    where
+    lower(schemaname) = lower(pv_table_schema)) loop
+    EXECUTE rec.alter_cmd;
+  end loop;
+
+  for rec in (select
+    'ALTER FUNCTION ' || nsp.nspname || '.' || p.proname || '(' || pg_get_function_identity_arguments(p.oid)|| ') OWNER TO ' || pv_update_user || ';'  as alter_cmd
+    from
+        pg_proc p
+    join pg_namespace nsp on
+        p.pronamespace = nsp.oid
+    where
+        lower(nsp.nspname) like 'pkg_%') loop
+    EXECUTE rec.alter_cmd;
+  end loop;
+end;
+$$;
