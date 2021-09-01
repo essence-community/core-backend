@@ -137,7 +137,7 @@ export default class AdminAction {
                                 .filter(filterFilesData(gateContext)),
                         ),
                     ),
-            gtgetconfproviders: (gateContext: IContext) =>
+            gtgetconfproviders: (gateContext: IContext) => 
                 this.dbProviders.find().then((docs) =>
                     Promise.resolve(
                         docs
@@ -150,6 +150,17 @@ export default class AdminAction {
                                 ),
                                 cct_params: undefined,
                                 ck_d_plugin: val.ck_d_plugin.toLowerCase(),
+                            }))
+                            .sort(sortFilesData(gateContext))
+                            .filter(filterFilesData(gateContext)),
+                    ),
+                ),
+            gtgetinitedproviders: (gateContext: IContext) => 
+                this.dbProviders.find().then((docs) =>
+                    Promise.resolve(
+                        [{ck_id: "all"}, ...docs]
+                            .map((val) => ({
+                                ck_id: val.ck_id,
                             }))
                             .sort(sortFilesData(gateContext))
                             .filter(filterFilesData(gateContext)),
