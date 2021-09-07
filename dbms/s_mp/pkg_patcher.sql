@@ -150,9 +150,25 @@ begin
 
   if pv_attr = 'orderproperty' then
     vv_value := jsonb_build_array(jsonb_build_object('property', pv_value, 'direction', 'ASC'))::text;
-    select ck_id 
+    select ca.ck_id 
       into vv_class_id
-    from s_mt.t_class_attr where ck_class in (select ck_id from s_mt.t_class_attr where ck_id = pk_class_attr) and ck_attr = 'order';
+      from s_mt.t_class_attr ca
+     where ca.ck_class in (select to2.ck_class from s_mt.t_object to2 where to2.ck_id = pk_object)
+       and ca.ck_attr = 'order';
+  end if;
+ 
+  if pv_attr = 'orderdirection' then
+    select ca.ck_id 
+      into vv_class_id
+      from s_mt.t_class_attr ca
+     where ca.ck_class in (select to2.ck_class from s_mt.t_object to2 where to2.ck_id = pk_object)
+       and ca.ck_attr = 'order';
+      
+    select jsonb_build_array(jsonb_build_object('property', cv_value::jsonb#>>'{0,property}', 'direction', pv_value))::text
+      into vv_value
+      from s_mt.t_object_attr oa
+     where oa.ck_object  = pk_object
+       and oa.ck_class_attr = vv_class_id;
   end if;
 
   UPDATE s_mt.t_object_attr
@@ -231,9 +247,25 @@ begin
 
   if pv_attr = 'orderproperty' then
     vv_value := jsonb_build_array(jsonb_build_object('property', pv_value, 'direction', 'ASC'))::text;
-    select ck_id 
+    select ca.ck_id 
       into vv_class_id
-    from s_mt.t_class_attr where ck_class in (select ck_class from s_mt.t_class_attr where ck_id = pk_class_attr) and ck_attr = 'order';
+      from s_mt.t_class_attr ca
+     where ca.ck_class in (select to2.ck_class from s_mt.t_object to2 where to2.ck_id in (select tpo2.ck_object from s_mt.t_page_object tpo2 where tpo2.ck_id = pk_page_object))
+       and ca.ck_attr = 'order';
+  end if;
+ 
+  if pv_attr = 'orderdirection' then
+    select ca.ck_id 
+      into vv_class_id
+      from s_mt.t_class_attr ca
+     where ca.ck_class in (select to2.ck_class from s_mt.t_object to2 where to2.ck_id in (select tpo2.ck_object from s_mt.t_page_object tpo2 where tpo2.ck_id = pk_page_object))
+       and ca.ck_attr = 'order';
+      
+    select jsonb_build_array(jsonb_build_object('property', cv_value::jsonb#>>'{0,property}', 'direction', pv_value))::text
+      into vv_value
+      from s_mt.t_object_attr oa
+     where oa.ck_object  = pk_object
+       and oa.ck_class_attr = vv_class_id;
   end if;
 
   UPDATE s_mt.t_page_object_attr
