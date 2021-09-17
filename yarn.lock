@@ -7927,11 +7927,11 @@ xlsx-stream-reader@^1.1.0:
     unzipper "^0.10.11"
 
 xml-crypto@^1.4.0:
-  version "1.5.3"
-  resolved "https://registry.yarnpkg.com/xml-crypto/-/xml-crypto-1.5.3.tgz#a8f500b90f0dfaf0efa3331c345ecb0fff993c34"
-  integrity sha512-uHkmpUtX15xExe5iimPmakAZN+6CqIvjmaJTy4FwqGzaTjrKRBNeqMh8zGEzVNgW0dk6beFYpyQSgqV/J6C5xA==
+  version "1.5.4"
+  resolved "https://registry.yarnpkg.com/xml-crypto/-/xml-crypto-1.5.4.tgz#f204086120565fa8f186fc6f05492f9a71cb72ca"
+  integrity sha512-0MP/Tgrvjeqy4IXJ2pGrlSh5LHol70TLtAkyqkr2bmU5iv0M7UBihTstsa3eKE0jbagigElBDBN0d7L05oJL0A==
   dependencies:
-    xmldom "0.1.27"
+    xmldom "^0.6.0"
     xpath "0.0.27"
 
 xml-crypto@^2.0.0:
@@ -7995,6 +7995,11 @@ xmldom@0.1.27:
   version "0.1.27"
   resolved "https://registry.yarnpkg.com/xmldom/-/xmldom-0.1.27.tgz#d501f97b3bdb403af8ef9ecc20573187aadac0e9"
   integrity sha1-1QH5ezvbQDr4757MIFcxh6rawOk=
+
+xmldom@^0.6.0:
+  version "0.6.0"
+  resolved "https://registry.yarnpkg.com/xmldom/-/xmldom-0.6.0.tgz#43a96ecb8beece991cef382c08397d82d4d0c46f"
+  integrity sha512-iAcin401y58LckRZ0TkI4k0VSM1Qg0KGSc3i8rU+xrxe19A/BN1zHyVSJY7uoutVlaTSzYyk/v5AmkewAP7jtg==
 
 xpath@0.0.27:
   version "0.0.27"
