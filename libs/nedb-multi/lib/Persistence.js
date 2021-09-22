@@ -5,7 +5,7 @@
  * * Persistence.persistNewState(newDocs, callback) where newDocs is an array of documents and callback has signature err
  */
 
-const storage = require("nedb/lib/storage"),
+const storage = require("./Storage"),
     TOML = require("@iarna/toml"),
     YAML = require("js-yaml"),
     noop = require("lodash/noop"),
@@ -133,9 +133,7 @@ class Persistence {
                 break;
             default:
                 throw new Error(
-                    `Can't use the Node Webkit relative path for platform ${
-                        process.platform
-                    }`,
+                    `Can't use the Node Webkit relative path for platform ${process.platform}`,
                 );
         }
 

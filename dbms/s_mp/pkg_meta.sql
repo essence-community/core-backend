@@ -3059,6 +3059,63 @@ ALTER FUNCTION pkg_meta.p_refresh_page_object(pk_page character varying) OWNER T
 
 COMMENT ON FUNCTION pkg_meta.p_refresh_page_object(pk_page character varying) IS 'Перепривязка объетов страницы';
 
+CREATE FUNCTION pkg_meta.p_modify_query(pv_action character varying, INOUT pot_query s_mt.t_query) RETURNS s_mt.t_query
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 's_mt', 'pkg_meta', 'public'
+    AS $$
+declare
+  -- переменные пакета
+  i sessvarstr;
+  u sessvarstr;
+  d sessvarstr;
+  gv_error sessvarstr;
+
+  -- переменные функции
+  vk_d_data_type VARCHAR;
+  rec record;
+begin
+   -- инициализация/получение переменных пакета
+  i = sessvarstr_declare('pkg', 'i', 'I');
+  u = sessvarstr_declare('pkg', 'u', 'U');
+  d = sessvarstr_declare('pkg', 'd', 'D');
+  gv_error = sessvarstr_declare('pkg', 'gv_error', '');
+
+  -- код функции
+  if pv_action = d::varchar then
+    /*Проверки на удаление*/
+    /*Удаление*/
+    delete from s_mt.t_query where ck_id = pot_query.ck_id;
+  else
+    /* Блок "Проверка переданных данных" */
+    if pot_query.ck_id is null then
+      perform pkg.p_set_error(2);
+    end if;
+
+    if nullif(gv_error::varchar, '') is not null then
+       return;
+    end if;
+
+    if pv_action = i::varchar then
+      insert into s_mt.t_query values (pot_query.*);
+    elsif pv_action = u::varchar then
+      update s_mt.t_query set
+        (cc_query, ck_provider, cr_type, cr_access, cn_action, cv_description, ck_user, ct_change) = 
+        (pot_query.cc_query, pot_query.ck_provider, pot_query.cr_type, pot_query.cr_access, pot_query.cn_action, pot_query.cv_description, pot_query.ck_user, pot_query.ct_change)
+      where ck_id = pot_query.ck_id;
+      if not found then
+        perform pkg.p_set_error(504);
+      end if;
+    end if;
+    null;
+  end if;
+end;
+$$;
+
+
+ALTER FUNCTION pkg_meta.p_modify_query(pv_action character varying, INOUT pot_query s_mt.t_query) OWNER TO s_mp;
+
+COMMENT ON FUNCTION pkg_meta.p_modify_query(pv_action character varying, INOUT pot_query s_mt.t_query) IS 'Создание/обновление/удаление сервисов';
+
 CREATE FUNCTION pkg_meta.p_lock_attr(pk_id character varying) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 's_mt', 'pkg_meta', 'public'

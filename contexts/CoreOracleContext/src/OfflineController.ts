@@ -169,7 +169,7 @@ export default class OfflineController implements ICoreController {
             );
         }
         const pageObject = (gateContext.params.page_object || "").toLowerCase();
-        const caActions = gateContext.session.data.ca_actions || [];
+        const caActions = gateContext.session.userData.ca_actions || [];
         return this.tempTable.dbModifyAction
             .findOne(
                 {
@@ -347,7 +347,8 @@ export default class OfflineController implements ICoreController {
     }
     public async findQuery(gateContext: IContext, name: string): Promise<any> {
         const caActions =
-            (gateContext.session && gateContext.session.data.ca_actions) || [];
+            (gateContext.session && gateContext.session.userData.ca_actions) ||
+            [];
         const pageObject = (gateContext.params.page_object || "").toLowerCase();
         return this.tempTable.dbQuery
             .findOne(

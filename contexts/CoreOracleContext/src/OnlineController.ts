@@ -116,7 +116,7 @@ export default class OnlineController implements ICoreController {
             );
         }
         const pageObject = (gateContext.params.page_object || "").toLowerCase();
-        const caActions = gateContext.session.data.ca_actions || [];
+        const caActions = gateContext.session.userData.ca_actions || [];
         return this.controller.onlineFindModify(
             gateContext,
             pageObject,
@@ -135,7 +135,8 @@ export default class OnlineController implements ICoreController {
         name: string,
     ): Promise<IContextPluginResult> {
         const caActions =
-            (gateContext.session && gateContext.session.data.ca_actions) || [];
+            (gateContext.session && gateContext.session.userData.ca_actions) ||
+            [];
         const pageObject = (gateContext.params.page_object || "").toLowerCase();
         return this.controller.onlineFindQuery(name, pageObject, caActions);
     }

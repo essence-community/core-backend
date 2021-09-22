@@ -4,6 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const copyDir = require("copy-dir");
 const { exec } = require("child_process");
+const crypto = require("crypto");
 const homeDir = __dirname;
 const packageJson = JSON.parse(fs.readFileSync("./package.json"));
 const serverJson = JSON.parse(fs.readFileSync("./server/package.json"));
@@ -18,17 +19,24 @@ packageJson.scripts = {
     server: "nodemon",
     installSvc: "node server/installSvcWin.js",
 };
+const shasum = crypto.createHash("sha1");
+const buf = Buffer.alloc(8);
+crypto.randomFillSync(buf).toString("hex");
+shasum.update(buf);
+
 packageJson.nodemonConfig = {
     ignore: ["libs/**", "node_modules/**", "server/plugins/**"],
     env: {
         NLS_LANG: "American_America.UTF8",
         NLS_DATE_FORMAT: "dd.mm.yyyy",
         NLS_TIMESTAMP_FORMAT: 'dd.mm.yyyy"T"hh:mi:ss',
+        SESSION_SECRET: shasum.digest("hex"),
     },
     ext: "js",
     delay: "10000",
     watch: false,
 };
+
 function list(val) {
     return val.toUpperCase().split(",");
 }
@@ -658,7 +666,14 @@ gulp.task("packageJson", async () => {
         path.join(homeDir, "bin", "server", "package.json"),
         JSON.stringify(serverJson, null, 4),
     );
-    fs.writeFileSync(path.join(homeDir, "bin", 'yarn.lock'), fs.readFileSync(path.join(homeDir, 'yarn.lock')));
+    fs.writeFileSync(
+        path.join(homeDir, "bin", "yarn.lock"),
+        fs.readFileSync(path.join(homeDir, "yarn.lock")),
+    );
+});
+
+gulp.task("clear", async () => {
+    de;
 });
 
 gulp.task(

@@ -11,11 +11,11 @@ import { isEmpty } from "@ungate/plugininf/lib/util/Util";
 import { initParams } from "@ungate/plugininf/lib/util/Util";
 import AdminAction from "./AdminAction";
 import AdminModify from "./AdminModify";
+import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
 
 export = class AdminGate extends NullProvider {
     public static getParamsInfo(): IParamsInfo {
         return {
-            ...NullProvider.getParamsInfo(),
             cctBuckets: {
                 name: "Настройки хранилища",
                 type: "string",
@@ -28,9 +28,13 @@ export = class AdminGate extends NullProvider {
     }
     private adminAction: AdminAction;
     private adminModify: AdminModify;
-    constructor(name: string, params: ICCTParams) {
-        super(name, params);
-        this.params = initParams(AdminGate.getParamsInfo(), params);
+    constructor(
+        name: string,
+        params: ICCTParams,
+        authController: IAuthController,
+    ) {
+        super(name, params, authController);
+        this.params = initParams(AdminGate.getParamsInfo(), this.params);
         this.adminAction = new AdminAction(name, this.params);
         this.adminModify = new AdminModify(name, this.params);
     }

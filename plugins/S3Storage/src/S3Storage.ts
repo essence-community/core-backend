@@ -13,7 +13,7 @@ import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
 import * as AWS from "aws-sdk";
 import * as fs from "fs";
 import { forEach, isObject } from "lodash";
-import { uuid as uuidv4 } from "uuidv4";
+import { v4 as uuidv4 } from "uuid";
 
 export default class S3Storage extends NullPlugin {
     public static getParamsInfo(): IParamsInfo {
@@ -57,7 +57,7 @@ export default class S3Storage extends NullPlugin {
     private clients: AWS.S3;
     constructor(name: string, params: ICCTParams) {
         super(name, params);
-        this.params = initParams(S3Storage.getParamsInfo(), params);
+        this.params = initParams(S3Storage.getParamsInfo(), this.params);
         const endpoint = new AWS.Endpoint("http://s3.amazonaws.com");
         const credentials = new AWS.Credentials({
             accessKeyId: this.params.cvKeyId,

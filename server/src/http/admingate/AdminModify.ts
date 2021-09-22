@@ -25,10 +25,8 @@ export default class AdminModify {
     }
 
     public async init(): Promise<void> {
-        this.modify.dbUsers = await Property.getUsers();
         this.modify.dbContexts = await Property.getContext();
         this.modify.dbEvents = await Property.getEvents();
-        this.modify.dbSessions = await Property.getSessions();
         this.modify.dbProviders = await Property.getProviders();
         this.modify.dbSchedulers = await Property.getSchedulers();
         this.modify.dbPlugins = await Property.getPlugins();

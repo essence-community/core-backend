@@ -42,7 +42,7 @@ begin
   -- вызовем метод копирования объекта
   perform pkg_meta.p_copy_object(vot_object.ck_id, vot_object.ck_parent);
   -- логируем данные
-  perform pkg_log.p_save(pv_user, pv_session, pc_json, 't_object', vot_object.ck_id, vv_action);
+  perform pkg_log.p_save(pv_user, pv_session, pc_json, 'pkg_json_meta.f_copy_object', vot_object.ck_id, vv_action);
   return '{"ck_id":"' || vot_object.ck_id || '","cv_error":' || pkg.p_form_response() || '}';
 end;
 $$;
@@ -95,7 +95,7 @@ begin
   --проверяем и сохраняем данные
   pot_attr := pkg_meta.p_modify_attr(vv_action, pot_attr);
   --логируем данные
-  perform pkg_log.p_save(pv_user, pk_session, pc_json, 't_attr', pot_attr.ck_id, vv_action);
+  perform pkg_log.p_save(pv_user, pk_session, pc_json, 'pkg_json_meta.f_modify_attr', pot_attr.ck_id, vv_action);
   return '{"ck_id":"' || coalesce(pot_attr.ck_id, '') || '","cv_error":' || pkg.p_form_response() || '}';
 end;
 $$;
@@ -147,7 +147,7 @@ begin
   --проверяем и сохраняем данные
   pot_class := pkg_meta.p_modify_class(vv_action, pot_class);
   --логируем данные
-  perform pkg_log.p_save(pv_user, pk_session, pc_json, 't_class', pot_class.ck_id::varchar, vv_action);
+  perform pkg_log.p_save(pv_user, pk_session, pc_json, 'pkg_json_meta.f_modify_class', pot_class.ck_id::varchar, vv_action);
   return '{"ck_id":"' || coalesce(pot_class.ck_id, '') || '","cv_error":' || pkg.p_form_response() || '}';
 end;
 $$;
@@ -394,7 +394,7 @@ begin
   --проверяем и сохраняем данные
   vot_object := pkg_meta.p_modify_object(vv_action, vot_object);
   --Логируем данные
-  perform pkg_log.p_save(pv_user, pk_session, pc_json, 't_object', vot_object.ck_id, vv_action);
+  perform pkg_log.p_save(pv_user, pk_session, pc_json, 'pkg_json_meta.f_modify_object', vot_object.ck_id, vv_action);
   return '{"ck_id":"' || coalesce(vot_object.ck_id, '') || '","cv_error":' || pkg.p_form_response() || '}';
 end;
 $$;
@@ -446,7 +446,7 @@ begin
   --проверяем и сохраняем данные
   vot_object_attr := pkg_meta.p_modify_object_attr(vv_action, vot_object_attr);
   --Логируем данные
-  perform pkg_log.p_save(pv_user, pk_session, pc_json, 't_object_attr', vot_object_attr.ck_id::varchar, vv_action);
+  perform pkg_log.p_save(pv_user, pk_session, pc_json, 'pkg_json_meta.f_modify_object_attr', vot_object_attr.ck_id::varchar, vv_action);
   return '{"ck_id":"' || coalesce(vot_object_attr.ck_id, '') || '","cv_error":' || pkg.p_form_response() || '}';
 end;
 $$;
@@ -704,7 +704,7 @@ begin
   --проверяем и сохраняем данные
   vot_page_object_attr := pkg_meta.p_modify_page_object_attr(vv_action, vot_page_object_attr);
   --Логируем данные
-  perform pkg_log.p_save(pv_user, pk_session, pc_json, 't_object_attr', vot_page_object_attr.ck_id::varchar, vv_action);
+  perform pkg_log.p_save(pv_user, pk_session, pc_json, 'pkg_json_meta.f_modify_page_object_attr', vot_page_object_attr.ck_id::varchar, vv_action);
   return '{"ck_id":"' || coalesce(vot_page_object_attr.ck_id, '') || '","cv_error":' || pkg.p_form_response() || '}';
 end;
 $$;
@@ -912,14 +912,13 @@ begin
   perform pkg_meta.p_refresh_page_object(pot_page.ck_id);
 
   -- логируем данные
-  perform pkg_log.p_save(pv_user, pv_session, pc_json, 't_page_object', pot_page.ck_id::varchar, vv_action);
+  perform pkg_log.p_save(pv_user, pv_session, pc_json, 'pkg_json_meta.f_refresh_page_object', pot_page.ck_id::varchar, vv_action);
   return '{"ck_id":"' || coalesce(pot_page.ck_id, '') || '","cv_error":' || pkg.p_form_response() || '}';
 end;
 $$;
 
 
 ALTER FUNCTION pkg_json_meta.f_refresh_page_object(pv_user character varying, pv_session character varying, pc_json jsonb) OWNER TO s_mp;
-
 
 CREATE FUNCTION pkg_json_meta.f_modify_page_all(pv_user character varying, pk_session character varying, pc_json jsonb) RETURNS character varying
     LANGUAGE plpgsql SECURITY DEFINER
@@ -944,18 +943,20 @@ begin
   gv_error = sessvarstr_declare('pkg', 'gv_error', '');
   gl_warning = sessvari_declare('pkg', 'gl_warning', 0);
   i = sessvarstr_declare('pkg', 'i', 'I');
+
   -- код функции
   --обнулим глобальные переменные с перечнем ошибок/предупреждений/информационных сообщений
   perform pkg.p_reset_response();
   --JSON -> rowtype
   vv_action = (pc_json#>>'{service,cv_action}');  
   perform gl_warning == (pc_json#>>'{service,cl_warning}')::bigint;
-
+  
   --проверка прав доступа
   perform pkg_access.p_check_access(pv_user, vk_main);
   if nullif(gv_error::varchar, '') is not null then
     return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}'; --ошибка прав доступа.
   end if;
+
   for rec in (
     select
         ja.ck_id,
@@ -1062,3 +1063,66 @@ end;
 $$;
 
 ALTER FUNCTION pkg_json_meta.f_modify_page_all(pv_user character varying, pv_session character varying, pc_json jsonb) OWNER TO s_mp;
+
+CREATE FUNCTION pkg_json_meta.f_modify_query(pv_user character varying, pk_session character varying, pc_json jsonb) RETURNS character varying
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'pkg_json_meta', 'public'
+    AS $$
+declare
+  -- переменные пакета
+  gv_error sessvarstr;
+  u sessvarstr;
+
+  -- переменные функции
+  pot_query  s_mt.t_query;
+  vj_data   jsonb;
+  vv_action varchar(1);
+  vk_main   varchar(32);
+begin
+  -- инициализация/получение переменных пакета
+  gv_error = sessvarstr_declare('pkg', 'gv_error', '');
+  u = sessvarstr_declare('pkg', 'u', 'U');
+
+  -- код функции
+  --обнулим глобальные переменные с перечнем ошибок/предупреждений/информационных сообщений
+  perform pkg.p_reset_response();
+  --JSON -> rowtype
+  /*
+  ck_id varchar(255) NOT NULL, -- Имя запроса
+	cc_query text NULL, -- Текст запроса
+	ck_provider varchar(32) NOT NULL DEFAULT 'null'::character varying, -- ИД провайдера
+	ck_user varchar(150) NOT NULL, -- ИД пользователя
+	ct_change timestamptz NOT NULL, -- Дата последнего изменения
+	cr_type varchar(20) NOT NULL, -- Тип запроса:¶select - запрос на выборку данных¶dml - модификация данных¶auth - авторизация¶file_download - скачивание файла¶file_upload - загрузка файла на сервер¶report - сервис универсальной печати
+	cr_access varchar(10) NOT NULL, -- Проверка доступа (что будет проверяться на шлюзе при выполнении запроса): po_session = page_object и сессию, session - только сессию, free - без проверки доступа (не использовать этот вариант без согласования)
+	cn_action int8 NULL, -- Номер действия
+	cv_description varchar(2000) NOT NULL DEFAULT 'Необходимо актуализировать'::character varying, -- Описание сервиса
+  */
+  vj_data := COALESCE(pc_json#>'{data,cct_data}', pc_json#>'{data}');
+  pot_query.ck_id = nullif(trim(vj_data#>>'{ck_id}'), '');
+  pot_query.cc_query = nullif(vj_data#>>'{cc_query}', '');
+  pot_query.ck_provider = nullif(trim(vj_data#>>'{ck_provider}'), '');
+  pot_query.cr_type = nullif(trim(vj_data#>>'{cr_type}'), '');
+  pot_query.cr_access = nullif(trim(vj_data#>>'{cr_access}'), '');
+  pot_query.cn_action = nullif(trim(vj_data#>>'{cn_action}'), '')::bigint;
+  pot_query.cv_description = coalesce(nullif(trim(vj_data#>>'{cv_description}'), ''), 'Необходимо актуализировать');
+  pot_query.ck_user = pv_user;
+  pot_query.ct_change = CURRENT_TIMESTAMP;
+  vv_action = (pc_json#>>'{service,cv_action}');
+
+  --проверка прав доступа
+  perform pkg_access.p_check_access(pv_user, vk_main);
+  if nullif(gv_error::varchar, '') is not null then
+    return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}'; --ошибка прав доступа.
+  end if;
+
+  --проверяем и сохраняем данные
+  pot_query := pkg_meta.p_modify_query(vv_action, pot_query);
+  --логируем данные
+  perform pkg_log.p_save(pv_user, pk_session, pc_json, 'pkg_json_meta.f_modify_query', pot_query.ck_id, vv_action);
+  return '{"ck_id":"' || coalesce(pot_query.ck_id, '') || '","cv_error":' || pkg.p_form_response() || '}';
+end;
+$$;
+
+
+ALTER FUNCTION pkg_json_meta.f_modify_query(pv_user character varying, pk_session character varying, pc_json jsonb) OWNER TO s_mp;

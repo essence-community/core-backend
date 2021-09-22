@@ -13,6 +13,7 @@ import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
 import { isObject } from "lodash";
 import IOracleController from "./IOracleController";
 import { IParamOracle } from "./OracleDb.types";
+import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
 const Property = ((global as any) as IGlobalObject).property;
 const wsQuerySQL =
     "select cc_query from t_query where upper(ck_id) = upper(:query)";
@@ -23,17 +24,22 @@ export default class CoreOracle implements IOracleController {
     public name: string;
     private dbUsers: ILocalDB;
     private dbCache: ILocalDB;
-    constructor(name: string, params: IParamOracle, dataSource: OracleDB) {
+    constructor(
+        name: string,
+        params: IParamOracle,
+        dataSource: OracleDB,
+        private authController: IAuthController,
+    ) {
         this.name = name;
         this.params = params;
         this.dataSource = dataSource;
     }
     public async init(): Promise<void> {
         if (!this.dbUsers) {
-            this.dbUsers = await Property.getUsers();
+            this.dbUsers = this.authController.getUserDb();
         }
         if (!this.dbCache) {
-            this.dbCache = await Property.getCache();
+            this.dbCache = this.authController.getCacheDb();
         }
     }
     public async getConnection(context: IContext): Promise<Connection> {
@@ -194,12 +200,34 @@ export default class CoreOracle implements IOracleController {
                               );
                               return false;
                           }
+                          if (!Array.isArray(item.ca_actions)) {
+                              if (
+                                  typeof item.ca_actions === "string" &&
+                                  (item.ca_actions as any).startsWith("[")
+                              ) {
+                                  item.ca_actions = JSON.parse(item.ca_actions);
+                              } else {
+                                  item.ca_actions = [];
+                              }
+                          }
                           (item.ca_actions || []).forEach((action) => {
                               userActions.push({
                                   ck_user: item.ck_id,
                                   cn_action: action,
                               });
                           });
+                          if (!Array.isArray(item.ca_department)) {
+                              if (
+                                  typeof item.ca_department === "string" &&
+                                  (item.ca_department as any).startsWith("[")
+                              ) {
+                                  item.ca_department = JSON.parse(
+                                      item.ca_department,
+                                  );
+                              } else {
+                                  item.ca_department = [];
+                              }
+                          }
                           (item.ca_department || []).forEach((dep) => {
                               userDepartments.push({
                                   ck_department: dep,

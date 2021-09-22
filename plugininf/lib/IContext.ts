@@ -2,6 +2,7 @@
  * Created by artemov_i on 04.12.2018.
  */
 import * as http from "http";
+import { Session } from "express-session";
 import Connection from "./db/Connection";
 import IContextPlugin from "./IContextPlugin";
 import IProvider from "./IProvider";
@@ -61,6 +62,11 @@ export interface IRequest extends http.IncomingMessage {
         | Buffer;
     params?: IParam;
     preParams: IParam;
+    sessionID?: string;
+    session: Session & {
+        gsession: ISession;
+        [key: string]: any;
+    };
 }
 export default interface IContext {
     readonly hash: string;

@@ -3,8 +3,7 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import { IRufusLogger } from "rufus";
-import { Readable } from "stream";
-import { uuid as uuidv4 } from "uuidv4";
+import { v4 as uuidv4 } from "uuid";
 import { IPluginParams, IStorage } from "./AssetsStorage.types";
 
 export class DirStorage implements IStorage {

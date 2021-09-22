@@ -11,7 +11,6 @@ import { isEmpty } from "@ungate/plugininf/lib/util/Util";
 import * as fs from "fs";
 import { forEach, noop } from "lodash";
 import Constants from "../../core/Constants";
-import GateSession from "../../core/session/GateSession";
 import PluginController, { IPlugins } from "./PluginController";
 
 interface IActionOptions {
@@ -55,10 +54,13 @@ class ActionController {
             plugins,
         );
         if (resPlugin) {
-            session = await GateSession.createSession(
-                null,
-                "plugin",
-                resPlugin,
+            session = await gateContext.gateContextPlugin.authController.createSession(
+                {
+                    context: gateContext,
+                    idUser: resPlugin.idUser,
+                    nameProvider: `plugin_${resPlugin.namePlugin}`,
+                    userData: resPlugin.dataUser,
+                },
             );
         }
         if (!session) {
@@ -76,7 +78,7 @@ class ActionController {
                     gateContext.error(e);
                 }
             }
-            if (!data || isEmpty(data.ck_user)) {
+            if (!data || isEmpty(data.idUser)) {
                 throw new ErrorException(ErrorGate.AUTH_DENIED);
             }
             if (
@@ -87,8 +89,9 @@ class ActionController {
                 )
             ) {
                 session = await (provider as NullAuthProvider).createSession(
-                    data.ck_user,
-                    data.data,
+                    gateContext,
+                    data.idUser,
+                    data.dataUser,
                 );
             }
         }

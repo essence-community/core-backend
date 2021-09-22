@@ -78,6 +78,8 @@ const utils = {
     util,
     Object,
     Array,
+    encodeURIComponent,
+    decodeURIComponent,
 };
 
 function parseOperations(
@@ -269,7 +271,7 @@ export const parse = (src: string, withTokens = false): IParseReturnType => {
     } catch (error) {
         logger.error(error.message, error);
 
-        return error;
+        throw error;
     }
 
     return {

@@ -29,7 +29,7 @@ export async function getLocalDb(
     return TempTable.get(name) || LocalProperty.get(name);
 }
 
-function loadProperty(name, isTemp: boolean = false): Promise<ILocalDB> {
+export function loadProperty(name, isTemp: boolean = false): Promise<ILocalDB> {
     return new Promise(async (resolve, reject) => {
         if (LocalProperty.has(name) || TempTable.has(name)) {
             return resolve(
@@ -56,7 +56,7 @@ function loadProperty(name, isTemp: boolean = false): Promise<ILocalDB> {
                     err.message = `Ошибка инициализации ${name}\n${err.message}`;
                     return reject(err);
                 }
-                db.persistence.setAutocompactionInterval(5000);
+                //db.persistence.setAutocompactionInterval(5000);
                 const localDb = new NeDBImpl(name, db, isTemp);
                 if (isTemp) {
                     TempTable.set(name, localDb);
@@ -112,14 +112,11 @@ class BuildProperty {
     public getSchedulers(): Promise<ILocalDB> {
         return loadProperty("t_schedulers");
     }
-    public getCache(): Promise<ILocalDB> {
-        return loadProperty("tt_cache", true);
+    public getCache(name: string): Promise<ILocalDB> {
+        return loadProperty(`tt_cache_${name}`, true);
     }
-    public getUsers(): Promise<ILocalDB> {
-        return loadProperty("tt_users", true);
-    }
-    public getSessions(): Promise<ILocalDB> {
-        return loadProperty("tt_sessions", true);
+    public getUsers(name: string): Promise<ILocalDB> {
+        return loadProperty(`tt_users_${name}`, true);
     }
 }
 ((global as any) as IGlobalObject).createTempTable = (name) => {

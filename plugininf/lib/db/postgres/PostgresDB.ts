@@ -1,5 +1,6 @@
 import { forEach, isObject, noop } from "lodash";
 import * as pg from "pg";
+// @ts-ignore
 import * as QueryStream from "pg-query-stream";
 import { IRufusLogger } from "rufus";
 import { Readable, Transform, TransformCallback } from "stream";
@@ -48,6 +49,7 @@ export interface IPostgresDBConfig {
     user?: string;
     password?: string;
     lvl_logger?: string;
+    poolPg?: string | Record<string, any>;
 }
 interface IParams {
     [key: string]: string | boolean | number | IObjectParam;
@@ -99,6 +101,12 @@ export default class PostgresDB {
                 name: "Время выполнения запроса",
                 type: "integer",
             },
+            poolPg: {
+                name: "Extra Postgres param",
+                type: "long_string",
+                defaultValue: "{}",
+                description: "https://node-postgres.com/api/pool",
+            },
             lvl_logger: {
                 displayField: "ck_id",
                 name: "Level logger",
@@ -139,6 +147,15 @@ export default class PostgresDB {
         if (!this.connectionConfig.connectString) {
             throw new Error(
                 "Не указан параметр connectString при вызове констуктора",
+            );
+        }
+        if (
+            typeof this.connectionConfig.poolPg === "string" &&
+            this.connectionConfig.poolPg.startsWith("{") &&
+            this.connectionConfig.poolPg.endsWith("}")
+        ) {
+            this.connectionConfig.poolPg = JSON.parse(
+                this.connectionConfig.poolPg,
             );
         }
         this.log = Logger.getLogger(`PostgresDB ${name}`);
@@ -196,6 +213,9 @@ export default class PostgresDB {
         const [user, pass] = (connectionString.auth || "").split(":");
         /* tslint:disable:object-literal-sort-keys */
         const pool = new pg.Pool({
+            ...(typeof this.connectionConfig.poolPg === "object"
+                ? this.connectionConfig.poolPg
+                : {}),
             application_name: this.name,
             host: connectionString.hostname,
             port: parseInt(connectionString.port || "5432", 10),

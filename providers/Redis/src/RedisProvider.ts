@@ -7,6 +7,8 @@ import { IParamsProvider } from "@ungate/plugininf/lib/NullProvider";
 import { ClientOpts, RedisClient, createClient } from "redis";
 import { initParams } from "@ungate/plugininf/lib/util/Util";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
+import ICCTParams from "@ungate/plugininf/lib/ICCTParams";
+import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
 
 interface IProviderParam extends ClientOpts, IParamsProvider {}
 
@@ -59,7 +61,6 @@ export class RedisProvider extends NullProvider {
     public static getParamsInfo(): IParamsInfo {
         /* tslint:disable:object-literal-sort-keys */
         return {
-            ...NullProvider.getParamsInfo(),
             host: {
                 name: "Хост",
                 type: "string",
@@ -130,9 +131,13 @@ export class RedisProvider extends NullProvider {
         /* tslint:enable:object-literal-sort-keys */
     }
     public params: IProviderParam;
-    constructor(name, params) {
-        super(name, params);
-        this.params = initParams(RedisProvider.getParamsInfo(), params);
+    constructor(
+        name: string,
+        params: ICCTParams,
+        authController: IAuthController,
+    ) {
+        super(name, params, authController);
+        this.params = initParams(RedisProvider.getParamsInfo(), this.params);
     }
     private getClient() {
         return createClient({

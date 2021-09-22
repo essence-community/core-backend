@@ -329,6 +329,7 @@ export const sqlPageVariable =
     "    vp.ck_id,\n" +
     "    vp.ck_page,\n" +
     "    vp.cv_name,\n" +
+    "    vp.cv_value,\n" +
     "    vp.cv_description,\n" +
     "    vp.ck_user,\n" +
     "    vp.ct_change\n" +

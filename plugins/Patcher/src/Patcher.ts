@@ -19,7 +19,7 @@ import * as fs from "fs";
 import * as moment from "moment";
 import * as path from "path";
 import { Readable } from "stream";
-import { uuid } from "uuidv4";
+import { v4 as uuid } from "uuid";
 import { patchAuth } from "./auth/AuthPatch";
 import { DirStorage } from "./DirStorage";
 import { patchIntegr } from "./integr/IntegrPatch";
@@ -226,8 +226,8 @@ export class Patcher extends NullPlugin implements IStorage {
                 sendProcess({
                     command: "sendNotification",
                     data: {
-                        ckUser: gateContext.session.ck_id,
-                        nameProvider: gateContext.session.ck_d_provider,
+                        ckUser: gateContext.session.idUser,
+                        nameProvider: gateContext.session.nameProvider,
                         text: JSON.stringify([
                             {
                                 data: {

@@ -5,5 +5,6 @@ export default interface IProviderConfig {
     cv_description?: string;
     cl_autoload: number;
     ck_d_plugin: string;
+    ck_context?: string;
     cct_params?: ICCTParams;
 }

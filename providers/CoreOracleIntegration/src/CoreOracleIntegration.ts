@@ -16,6 +16,7 @@ import { isObject, noop } from "lodash";
 import * as moment from "moment";
 import * as request from "request";
 import * as URL from "url";
+import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
 
 interface IResultSequence {
     res?: IResultProvider;
@@ -27,7 +28,6 @@ export default class CoreOracleIntegration extends NullProvider {
     public static getParamsInfo(): IParamsInfo {
         return {
             ...OracleDB.getParamsInfo(),
-            ...NullProvider.getParamsInfo(),
             proxy: {
                 name: "Прокси сервер",
                 type: "string",
@@ -39,12 +39,16 @@ export default class CoreOracleIntegration extends NullProvider {
         };
     }
     public dataSource: OracleDB;
-    constructor(name: string, params: ICCTParams) {
-        super(name, params);
-        this.params = {
-            ...this.params,
-            ...initParams(CoreOracleIntegration.getParamsInfo(), params),
-        };
+    constructor(
+        name: string,
+        params: ICCTParams,
+        authController: IAuthController,
+    ) {
+        super(name, params, authController);
+        this.params = initParams(
+            CoreOracleIntegration.getParamsInfo(),
+            this.params,
+        );
         this.dataSource = new OracleDB(`${this.name}_provider`, {
             connectString: this.params.connectString,
             maxRows: this.params.maxRows,
@@ -79,8 +83,8 @@ export default class CoreOracleIntegration extends NullProvider {
                 const inParam: any = {};
                 if (context.session) {
                     inParam.sess_session = context.session.session;
-                    Object.keys(context.session.data).forEach((key) => {
-                        inParam[`sess_${key}`] = context.session.data[key];
+                    Object.keys(context.session.userData).forEach((key) => {
+                        inParam[`sess_${key}`] = context.session.userData[key];
                     });
                 }
                 return conn

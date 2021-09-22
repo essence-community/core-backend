@@ -14,12 +14,19 @@ class SchedulersNode {
                     conf.ck_d_plugin.toLowerCase(),
                 );
                 if (pluginClass) {
-                    const plugin = new pluginClass(
-                        conf.ck_id,
-                        conf.cct_params,
-                        conf.cv_cron,
-                        !!conf.cl_enable,
-                    );
+                    const plugin = pluginClass.default
+                        ? new pluginClass.default(
+                              conf.ck_id,
+                              conf.cct_params,
+                              conf.cv_cron,
+                              !!conf.cl_enable,
+                          )
+                        : new pluginClass(
+                              conf.ck_id,
+                              conf.cct_params,
+                              conf.cv_cron,
+                              !!conf.cl_enable,
+                          );
                     return plugin.init().then(
                         () => {
                             PluginManager.setGateScheduler(conf.ck_id, plugin);

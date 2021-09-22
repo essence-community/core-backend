@@ -1,6 +1,6 @@
 {
     "name": "@ungate/server",
-    "version": "2.6.5",
+    "version": "2.7.0",
     "description": "Шлюз проекта CORE",
     "main": "index.js",
     "author": "Ivan Artemov (honyrik@gmail.com)",
@@ -19,10 +19,12 @@
         "cors": "^2.8.5",
         "cron": "^1.7.2",
         "errio": "^1.2.2",
+        "express-session": "^1.17.2",
         "js2xmlparser": "^4.0.0",
         "lodash": "^4.17.15",
         "moment": "^2.24.0",
         "moment-timezone": "^0.5.27",
+        "mongodb": "^3.6.9",
         "msgpack-lite": "^0.1.26",
         "multiparty": "^4.2.1",
         "nedb": "^1.8.0",
@@ -35,7 +37,8 @@
         "rufus": "^0.5.7",
         "soap": "^0.30.0",
         "through": "^2.3.8",
-        "uuidv4": "^6.0.7",
+        "typeorm": "^0.2.34",
+        "uuid": "^8.3.2",
         "websocket": "^1.0.31"
     },
     "devDependencies": {
@@ -45,6 +48,7 @@
         "@types/body-parser": "^1.17.0",
         "@types/compression": "^0.0.36",
         "@types/cors": "^2.8.10",
+        "@types/express-session": "^1.17.3",
         "@types/jsonstream": "^0.8.30",
         "@types/moment": "^2.13.0",
         "@types/moment-timezone": "^0.5.10",
@@ -56,6 +60,7 @@
         "@types/request": "^2.48.1",
         "@types/through": "^0.0.29",
         "@types/type-is": "^1.6.2",
+        "@types/uuid": "^8.3.0",
         "@types/uuidv4": "^2.0.0",
         "@types/websocket": "^0.0.40"
     }

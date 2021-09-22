@@ -1,22 +1,30 @@
-const rpc = require('./Rpc');
-const constants = require('nedb-multi/lib/constants');
+const rpc = require("./Rpc");
+const constants = require("nedb-multi/lib/constants");
 
 module.exports = class PersistenceProxy {
+    constructor(socket, options) {
+        this.socket = socket;
+        this.options = options;
+    }
 
-  constructor(socket, options) {
-    this.socket = socket;
-    this.options = options;
-  }
+    setAutocompactionInterval(interval) {
+        rpc(
+            this.socket,
+            this.options,
+            constants.PERSISTENCE_SET_AUTOCOMPACTION_INTERVAL,
+            [interval],
+        );
+    }
 
-  setAutocompactionInterval(interval) {
-    rpc(this.socket, this.options, constants.PERSISTENCE_SET_AUTOCOMPACTION_INTERVAL, [interval]);
-  }
+    stopAutocompaction() {
+        rpc(
+            this.socket,
+            this.options,
+            constants.PERSISTENCE_STOP_AUTOCOMPACTION,
+        );
+    }
 
-  stopAutocompaction() {
-    rpc(this.socket, this.options, constants.PERSISTENCE_STOP_AUTOCOMPACTION);
-  }
-
-  compactDatafile() {
-    rpc(this.socket, this.options, constants.PERSISTENCE_COMPACT_DATAFILE);
-  }
+    compactDatafile() {
+        rpc(this.socket, this.options, constants.PERSISTENCE_COMPACT_DATAFILE);
+    }
 };

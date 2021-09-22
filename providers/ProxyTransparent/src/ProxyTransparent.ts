@@ -23,7 +23,6 @@ const keysJson = ["total", "data", "metaData", "success"];
 export default class ProxyTransparent extends NullProvider {
     public static getParamsInfo(): IParamsInfo {
         return {
-            ...NullProvider.getParamsInfo(),
             gateUrl: {
                 name: "Ссылка на проксируемый шлюз",
                 required: true,

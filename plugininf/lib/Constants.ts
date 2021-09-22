@@ -91,6 +91,11 @@ export class Constants {
     /** Сервис выхода */
     public QUERY_LOGOUT = "logout";
 
+    /** Сервис выхода */
+    public SESSION_SECRET =
+        process.env.SESSION_SECRET ||
+        "9cb564113f96325c37b9e43280eebfb6723176b65db38627c85f763d32c20fa8";
+
     constructor() {
         this.RESERVED_PARAMS = [
             this.ACTION_PARAM,

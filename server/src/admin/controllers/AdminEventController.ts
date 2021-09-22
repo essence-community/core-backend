@@ -117,7 +117,6 @@ class AdminEventController {
         rows.push(Property.getServers().then((db) => sendAllDate(conn, db)));
         rows.push(Property.getSchedulers().then((db) => sendAllDate(conn, db)));
         rows.push(Property.getEvents().then((db) => sendAllDate(conn, db)));
-        rows.push(Property.getSessions().then((db) => sendAllDate(conn, db)));
         rows.push(Property.getQuery().then((db) => sendAllDate(conn, db)));
         return Promise.all(rows);
     }

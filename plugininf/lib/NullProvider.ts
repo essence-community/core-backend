@@ -1,5 +1,6 @@
 import * as moment from "moment";
 import { IRufusLogger } from "rufus";
+import { IAuthController } from "./IAuthController";
 import ICCTParams from "./ICCTParams";
 import { IParamsInfo } from "./ICCTParams";
 import IContext from "./IContext";
@@ -74,9 +75,15 @@ export default abstract class NullProvider implements IProvider {
     public name: string;
     public params: IParamsProvider;
     public log: IRufusLogger;
-    constructor(name: string, params: ICCTParams) {
+    public authController: IAuthController;
+    constructor(
+        name: string,
+        params: ICCTParams,
+        authController: IAuthController,
+    ) {
         this.name = name;
         this.params = initParams(NullProvider.getParamsInfo(), params);
+        this.authController = authController;
         this.log = Logger.getLogger(`Provider ${name}`);
         if (
             typeof this.params === "object" &&

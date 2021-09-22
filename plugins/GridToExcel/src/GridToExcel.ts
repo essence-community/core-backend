@@ -29,6 +29,7 @@ interface IColumn {
 interface IJsonBc {
     cv_description?: string;
     cv_displayed?: string;
+    excelname?: string;
     columns: IColumn[];
 }
 export default class GridToExcel extends NullPlugin {
@@ -62,11 +63,14 @@ export default class GridToExcel extends NullPlugin {
             await this.jsReport.init();
             this.isPreInit = false;
         }
+        if (isEmpty(gateContext.params.jsonbc)) {
+            return;
+        }
         const jsonbc: IJsonBc = JSON.parse(gateContext.params.jsonbc);
         if (isEmpty(jsonbc.columns)) {
             return;
         }
-        const excelName = gateContext.params.excelname || "export_excel";
+        const excelName = gateContext.params.excelname || jsonbc.excelname || "export_excel";
         const rows = await ReadStreamToArray(result.data);
         const configRender = {
             template: {

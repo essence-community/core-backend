@@ -248,7 +248,9 @@ export default class RequestContext implements IContext {
             this.params[Constants.QUERYNAME_PARAM] || ""
         ).toLocaleLowerCase();
         delete this.params[Constants.QUERYNAME_PARAM];
-        this._sessionId = this.params[Constants.SESSION_PARAM];
+        this._sessionId = decodeURIComponent(
+            this.params[Constants.SESSION_PARAM],
+        );
         delete this.params[Constants.SESSION_PARAM];
         this._providerName = (
             this.params[Constants.PROVIDER_PARAM] || ""

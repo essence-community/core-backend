@@ -6,9 +6,11 @@ select qu.ck_id, qu.cv_description, qu.ck_page
           from t_query q
           join t_dynamic_report r
             on q.ck_id = r.ck_query
-         where q.cn_action in (select cn_action
-                                 from tt_user_action
-                                where ck_user = :sess_ck_id)
+         where q.cn_action in (
+                    select tss.cv_value::bigint as cn_action from s_mt.t_sys_setting tss where tss.ck_id = ''g_sys_anonymous_action''
+                    union all
+                    select value::bigint as cn_action from jsonb_array_elements_text(:sess_ca_actions::jsonb)
+                )
            and q.cr_type = ''report'') as qu
  where &FILTER
  order by &SORT', 'meta', '-11', '2019-07-23 06:52:27+03', 'select', 'po_session', NULL, 'Список запросов универсальной печати')

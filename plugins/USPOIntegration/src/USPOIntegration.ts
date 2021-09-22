@@ -65,7 +65,7 @@ export default class USPOIntegration extends NullPlugin {
     constructor(name: string, params: ICCTParams) {
         super(name, params);
         this.name = name;
-        this.params = initParams(USPOIntegration.getParamsInfo(), params);
+        this.params = initParams(USPOIntegration.getParamsInfo(), this.params);
         this.params.queryNotification = this.params.queryNotification.toLowerCase();
         this.runReport = `${this.params.urlReceiver}/accept`;
         this.reportDelete = `${this.params.urlReceiver}/queue-delete`;
@@ -101,7 +101,7 @@ export default class USPOIntegration extends NullPlugin {
                             .add(1, "day")
                             .format("YYYY-MM-DDTHH:mm:ss"),
                         cl_sent: 0,
-                        ck_user: jsonData.session.ck_id,
+                        ck_user: jsonData.session.idUser,
                         cv_message: json.incomingData.params.export_excel
                             ? JSON.stringify(
                                   json.status === "success"
@@ -188,7 +188,7 @@ export default class USPOIntegration extends NullPlugin {
                     );
                 }
                 json.session = {
-                    ...gateContext.session.data,
+                    ...gateContext.session.userData,
                     session: gateContext.sessionId,
                 };
                 const runReport = url.parse(this.runReport, true);
@@ -206,7 +206,7 @@ export default class USPOIntegration extends NullPlugin {
                     reportId: json.data.ck_report,
                     reportName: json.data.cv_filename,
                     session: gateContext.sessionId,
-                    user: gateContext.session.data.ck_id,
+                    user: gateContext.session.userData.ck_id,
                 });
                 return this.executePrintServer(
                     gateContext,
@@ -283,7 +283,7 @@ export default class USPOIntegration extends NullPlugin {
                 const postData = JSON.stringify({
                     queueId: json.data.ck_id,
                     session: gateContext.sessionId,
-                    user: gateContext.session.data.ck_id,
+                    user: gateContext.session.userData.ck_id,
                 });
                 return this.executePrintServer(
                     gateContext,
@@ -381,7 +381,7 @@ export default class USPOIntegration extends NullPlugin {
             limit: params.maxExcelRows,
             method: "POST",
             session: {
-                ...gateContext.session.data,
+                ...gateContext.session.userData,
                 session: gateContext.sessionId,
             },
             stream: false,

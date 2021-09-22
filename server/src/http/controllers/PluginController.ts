@@ -6,7 +6,9 @@ import IPlugin, { IPluginRequestContext } from "@ungate/plugininf/lib/IPlugin";
 import IQuery, { IGateQuery } from "@ungate/plugininf/lib/IQuery";
 import IResult from "@ungate/plugininf/lib/IResult";
 import ISession from "@ungate/plugininf/lib/ISession";
-import NullAuthProvider from "@ungate/plugininf/lib/NullAuthProvider";
+import NullAuthProvider, {
+    IAuthResult,
+} from "@ungate/plugininf/lib/NullAuthProvider";
 import { isEmpty } from "@ungate/plugininf/lib/util/Util";
 
 export interface IPlugins {
@@ -129,35 +131,45 @@ class PluginController {
     public applyPluginBeforeSession(
         gateContext: IContext,
         plugins: IPlugins[],
-    ): Promise<IObjectParam | null> {
+    ): Promise<(IAuthResult & { namePlugin: string }) | null> {
         if (plugins.length) {
-            let res = null;
             return plugins
                 .slice(1)
                 .reduce(
                     (prom, plugin) =>
                         prom.then((result) => {
                             if (!isEmpty(result)) {
-                                res = result;
+                                return result;
                             }
                             gateContext.trace(
                                 `plugin ${plugin.plugin.name} execute beforeSession`,
                             );
-                            return res
-                                ? Promise.resolve(res)
-                                : plugin.plugin.beforeSession(
-                                      gateContext,
-                                      plugins[0].context,
-                                  );
+                            return plugin.plugin
+                                .beforeSession(gateContext, plugins[0].context)
+                                .then((res) =>
+                                    isEmpty(res)
+                                        ? null
+                                        : ({
+                                              ...res,
+                                              namePlugin:
+                                                  plugins[0].plugin.name,
+                                          } as IAuthResult & {
+                                              namePlugin: string;
+                                          }),
+                                );
                         }),
-                    plugins[0].plugin.beforeSession(
-                        gateContext,
-                        plugins[0].context,
-                    ),
+                    plugins[0].plugin
+                        .beforeSession(gateContext, plugins[0].context)
+                        .then((res) =>
+                            isEmpty(res)
+                                ? null
+                                : ({
+                                      ...res,
+                                      namePlugin: plugins[0].plugin.name,
+                                  } as IAuthResult & { namePlugin: string }),
+                        ),
                 )
-                .then((result) =>
-                    Promise.resolve(isEmpty(result) ? res : result),
-                );
+                .then((result) => (isEmpty(result) ? null : result));
         }
         return Promise.resolve(null);
     }
@@ -343,6 +355,26 @@ class PluginController {
             );
         }
         return Promise.resolve(session);
+    }
+
+    public applyCheckQuery(
+        gateContext: IContext,
+        query: IGateQuery,
+        providers: NullAuthProvider[] = [],
+    ): Promise<void> {
+        if (providers.length) {
+            return providers.slice(1).reduce(
+                (prom, provider) =>
+                    prom.then(() => {
+                        gateContext.trace(
+                            `providerAuth ${provider.name} execute checkQuery`,
+                        );
+                        return provider.checkQuery(gateContext, query);
+                    }),
+                providers[0].checkQuery(gateContext, query),
+            );
+        }
+        return Promise.resolve();
     }
 }
 

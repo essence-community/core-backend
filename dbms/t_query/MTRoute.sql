@@ -98,7 +98,7 @@ union all /* выберем их дочернии элементы в рекур
 ot_action as (
     select tss.cv_value::bigint as cn_action from s_mt.t_sys_setting tss where tss.ck_id = ''g_sys_anonymous_action''
     union all
-    select cn_action from tt_user_action where ck_user = :sess_ck_id
+    select value::bigint as cn_action from jsonb_array_elements_text(:sess_ca_actions::jsonb)
 ),
 t2 as(
     select
@@ -116,10 +116,10 @@ union all /* выберем их родителей в рекурсивном з
         t2.ck_parent = p.ck_id
 ),
 t3 as(
-    select
-        distinct p.*
+   select distinct
+        op.*
     from
-        t2 p
+      t2 op
 )
 select
     op.ck_id,
@@ -127,16 +127,15 @@ select
     op.cr_type,
     op.cv_name,
     op.cn_order,
-    op.cl_menu,
+    case when op.cl_menu>0 and not exists(select 1 from t3 m where m.ck_parent = op.ck_id and m.cl_menu=1) and exists(select 1 from t3 m where m.ck_parent = op.ck_id) then 0 else op.cl_menu end as cl_menu,
     op.cl_static,
     op.cv_url,
     op.ck_icon,
-    op.ck_id,
     op.ck_view,
     op.cv_app_url,
     op.cv_icon_name,
     op.cv_icon_font,
-    case when not exists(select 1 from t2 m where m.ck_parent = op.ck_id) then ''true'' else ''false'' end as leaf,
+    case when not exists(select 1 from t3 m where m.ck_parent = op.ck_id) then ''true'' else ''false'' end as leaf,
     op.root,
     op.cn_action_edit
 from

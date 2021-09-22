@@ -80,7 +80,7 @@ export default class OfflineController implements ICoreController {
         const ckPageObject = json.filter?.ck_page_object;
         const caActions = [
             this.params.anonymousAction,
-            ...(gateContext.session?.data.ca_actions || []),
+            ...(gateContext.session?.userData.ca_actions || []),
         ];
         const row = await this.tempTable.dbObject.findOne(
             {
@@ -112,7 +112,7 @@ export default class OfflineController implements ICoreController {
         const pageObject = (gateContext.params.page_object || "").toLowerCase();
         const caActions = [
             this.params.anonymousAction,
-            ...(gateContext.session?.data.ca_actions || []),
+            ...(gateContext.session?.userData.ca_actions || []),
         ];
         return this.tempTable.dbModifyAction
             .findOne(
@@ -225,7 +225,7 @@ export default class OfflineController implements ICoreController {
     public async findQuery(gateContext: IContext, name: string): Promise<any> {
         const caActions = [
             this.params.anonymousAction,
-            ...(gateContext.session?.data.ca_actions || []),
+            ...(gateContext.session?.userData.ca_actions || []),
         ];
         const pageObject = (gateContext.params.page_object || "").toLowerCase();
         return this.tempTable.dbQuery
