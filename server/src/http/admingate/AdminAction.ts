@@ -137,11 +137,19 @@ export default class AdminAction {
                                 .filter(filterFilesData(gateContext)),
                         ),
                     ),
-            gtgetconfproviders: (gateContext: IContext) => 
-                this.dbProviders.find().then((docs) =>
+            gtgetconfproviders: (gateContext: IContext) => {
+                const json = JSON.parse(gateContext.query.inParams.json, (key, value) => {
+                    if (value === null) {
+                        return undefined;
+                    }
+                    return value;
+                });
+                return this.dbProviders.find().then((docs) =>
                     Promise.resolve(
-                        docs
-                            .map((val) => ({
+                        [...(json?.filter?.g_providers_add_all === 'all' ? [{
+                            ck_id: 'all',
+                        }] : []), ...docs]
+                            .map((val) => (json?.filter?.g_providers_add_all === 'all' ? {ck_id: val.ck_id} : {
                                 ...val,
                                 cv_params: this.ParamsToString(
                                     PluginManager.getGateProviderClass,
@@ -154,7 +162,8 @@ export default class AdminAction {
                             .sort(sortFilesData(gateContext))
                             .filter(filterFilesData(gateContext)),
                     ),
-                ),
+                );
+            },
             gtgetinitedproviders: (gateContext: IContext) => 
                 this.dbProviders.find().then((docs) =>
                     Promise.resolve(

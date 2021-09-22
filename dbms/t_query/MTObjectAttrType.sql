@@ -14,5 +14,5 @@ select t.ck_id,
                ''Все'',
                ''все атрибуты'') t 
  order by t.ck_id', 'meta', '20783', '2019-11-21 10:59:49.352201+03', 'select', 'po_session', NULL, 'Необходимо актуализировать')
-on conflict (ck_id) do update set cc_query = excluded.cc_query, ck_provider = excluded.ck_provider, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cr_type = excluded.cr_type, cr_access = excluded.cr_access;
+on conflict (ck_id) do update set cc_query = excluded.cc_query, ck_provider = excluded.ck_provider, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cr_type = excluded.cr_type, cr_access = excluded.cr_access, cn_action = excluded.cn_action, cv_description = excluded.cv_description;
 

@@ -17,6 +17,7 @@ begin
   return (select jsonb_build_object('ck_page_object', po.ck_id,
                                     'ck_object', o.ck_id,
                                     'cl_dataset', c.cl_dataset,
+                                    'ck_class', o.ck_class,
                                     'cv_name', o.cv_name,
                                     'cv_displayed', o.cv_displayed,
                                     'cv_description', o.cv_description,
