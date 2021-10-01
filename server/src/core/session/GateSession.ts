@@ -1,7 +1,10 @@
 import ILocalDB from "@ungate/plugininf/lib/db/local/ILocalDB";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
-import ISession, { IUserData } from "@ungate/plugininf/lib/ISession";
+import ISession, {
+    IUserData,
+    IUserDbData,
+} from "@ungate/plugininf/lib/ISession";
 import Logger from "@ungate/plugininf/lib/Logger";
 import * as crypto from "crypto";
 import { v4 as uuidv4 } from "uuid";
@@ -14,6 +17,7 @@ import { IRufusLogger } from "rufus";
 import NotificationController from "../../http/controllers/NotificationController";
 import {
     IAuthController,
+    ICacheDb,
     ICreateSessionParam,
 } from "@ungate/plugininf/lib/IAuthController";
 import { ISessionStore } from "@ungate/plugininf/lib/IAuthController";
@@ -26,9 +30,9 @@ import { noop } from "lodash";
 import * as moment from "moment-timezone";
 
 export class GateSession implements IAuthController {
-    private dbUsers: ILocalDB;
+    private dbUsers: ILocalDB<IUserDbData>;
     private store: ISessionStore;
-    private dbCache: ILocalDB;
+    private dbCache: ILocalDB<ICacheDb>;
     private logger: IRufusLogger;
     public updateUserInfo: typeof NotificationController.updateUserInfo;
     private params: IContextParams;
@@ -151,7 +155,7 @@ export class GateSession implements IAuthController {
             idUser,
             userData: userData as any,
             session: signed,
-            ...sessionData,
+            sessionData,
         };
         context.request.session.cookie.originalMaxAge = sessionDuration * 60000;
         context.request.session.cookie.maxAge = sessionDuration * 60000;
@@ -192,8 +196,9 @@ export class GateSession implements IAuthController {
             context &&
             context.request.session &&
             context.request.session.gsession &&
-            (context.request.session.gsession.typeCheckAuth === "cookie" ||
-                context.request.session.gsession.typeCheckAuth ===
+            (context.request.session.gsession.sessionData.typeCheckAuth ===
+                "cookie" ||
+                context.request.session.gsession.sessionData.typeCheckAuth ===
                     "cookieorsession")
         ) {
             return context.request.session.gsession;
@@ -211,7 +216,7 @@ export class GateSession implements IAuthController {
                         if (
                             !data ||
                             !data.gsession ||
-                            (data.gsession.typeCheckAuth ===
+                            (data.gsession.sessionData.typeCheckAuth ===
                                 "cookieandsession" &&
                                 !isNotification)
                         ) {
@@ -366,7 +371,7 @@ export class GateSession implements IAuthController {
         return null;
     }
 
-    public getUserDb(): ILocalDB {
+    public getUserDb(): ILocalDB<IUserDbData> {
         return this.dbUsers;
     }
 
@@ -374,7 +379,7 @@ export class GateSession implements IAuthController {
         return this.store;
     }
 
-    public getCacheDb(): ILocalDB {
+    public getCacheDb(): ILocalDB<ICacheDb> {
         return this.dbCache;
     }
 
@@ -388,7 +393,7 @@ export class GateSession implements IAuthController {
             const userActions = [];
             const userDepartments = [];
             data.forEach((row) => {
-                const item = row.data || {};
+                const item: Partial<IUserData> = row.data || {};
                 if (!Array.isArray(item.ca_actions)) {
                     if (
                         typeof item.ca_actions === "string" &&

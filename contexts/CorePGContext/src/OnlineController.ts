@@ -19,6 +19,7 @@ import { IRufusLogger } from "rufus";
 import { safePipe } from "@ungate/plugininf/lib/stream/Util";
 import { Transform } from "stream";
 import { TempTable } from "./TempTable";
+import { IPageData } from "./CoreContext.types";
 
 export default class OnlineController implements ICoreController {
     public params: ICoreParams;
@@ -446,7 +447,7 @@ export default class OnlineController implements ICoreController {
             .then(
                 (res) =>
                     new Promise((resolve, reject) => {
-                        const data: Record<string, any> = {};
+                        const data: Record<string, IPageData> = {};
                         res.stream.on("error", (err) =>
                             reject(new Error(err.message)),
                         );

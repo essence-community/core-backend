@@ -18,18 +18,26 @@ import { noop, toString } from "lodash";
 import { Transform } from "stream";
 import CoreContext from "./CoreContext";
 import { ICoreParams } from "./CoreContext";
+import {
+    IMessageData,
+    ISysSettingData,
+    IActionData,
+    IModifyData,
+    IQueryData,
+    IPageData,
+} from "./CoreContext.types";
 import ICoreController from "./ICoreController";
 const logger = Logger.getLogger("OfflineController");
 const createTempTable = ((global as any) as IGlobalObject).createTempTable;
 
 export interface ITempTable {
-    dbPage: ILocalDB;
-    dbQuery: ILocalDB;
-    dbQueryAction: ILocalDB;
-    dbModify: ILocalDB;
-    dbModifyAction: ILocalDB;
-    dbMessage: ILocalDB;
-    dbSysSettings: ILocalDB;
+    dbPage: ILocalDB<IPageData>;
+    dbQuery: ILocalDB<IQueryData>;
+    dbQueryAction: ILocalDB<IActionData>;
+    dbModify: ILocalDB<IModifyData>;
+    dbModifyAction: ILocalDB<IActionData>;
+    dbMessage: ILocalDB<IMessageData>;
+    dbSysSettings: ILocalDB<ISysSettingData>;
 }
 
 export default class OfflineController implements ICoreController {
@@ -425,7 +433,7 @@ export default class OfflineController implements ICoreController {
             .then(
                 (res) =>
                     new Promise((resolve, reject) => {
-                        const data = {};
+                        const data: Record<string, IPageData> = {};
                         res.stream.on("error", (err) =>
                             reject(new Error(err.message)),
                         );
@@ -744,7 +752,7 @@ export default class OfflineController implements ICoreController {
             .then(
                 (res) =>
                     new Promise<void>((resolve, reject) => {
-                        const data = {};
+                        const data: Record<string, IPageData> = {};
                         res.stream.on("error", (err) =>
                             reject(new Error(err.message)),
                         );
@@ -1040,17 +1048,17 @@ export default class OfflineController implements ICoreController {
         return value;
     }
     private async initTempDb() {
-        const dbPage = await createTempTable(`tt_page_${this.name}`);
-        const dbQuery = await createTempTable(`tt_query_${this.name}`);
-        const dbQueryAction = await createTempTable(
+        const dbPage = await createTempTable<any>(`tt_page_${this.name}`);
+        const dbQuery = await createTempTable<any>(`tt_query_${this.name}`);
+        const dbQueryAction = await createTempTable<any>(
             `tt_query_action_${this.name}`,
         );
-        const dbModify = await createTempTable(`tt_modify_${this.name}`);
-        const dbModifyAction = await createTempTable(
+        const dbModify = await createTempTable<any>(`tt_modify_${this.name}`);
+        const dbModifyAction = await createTempTable<any>(
             `tt_modify_action_${this.name}`,
         );
-        const dbMessage = await createTempTable(`tt_message_${this.name}`);
-        const dbSysSettings = await createTempTable(
+        const dbMessage = await createTempTable<any>(`tt_message_${this.name}`);
+        const dbSysSettings = await createTempTable<any>(
             `tt_sys_settings_${this.name}`,
         );
         this.tempTable = {

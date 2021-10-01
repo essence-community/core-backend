@@ -5,7 +5,6 @@ import BreakException from "@ungate/plugininf/lib/errors/BreakException";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
 import IContext from "@ungate/plugininf/lib/IContext";
-import IGlobalObject from "@ungate/plugininf/lib/IGlobalObject";
 import IQuery, { IGateQuery } from "@ungate/plugininf/lib/IQuery";
 import { IResultProvider } from "@ungate/plugininf/lib/IResult";
 import { IUserData } from "@ungate/plugininf/lib/ISession";
@@ -13,8 +12,11 @@ import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
 import { isObject } from "lodash";
 import IOracleController from "./IOracleController";
 import { IParamOracle } from "./OracleDb.types";
-import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
-const Property = ((global as any) as IGlobalObject).property;
+import {
+    IAuthController,
+    ICacheDb,
+} from "@ungate/plugininf/lib/IAuthController";
+import { IUserDbData } from "@ungate/plugininf/lib/ISession";
 const wsQuerySQL =
     "select cc_query from t_query where upper(ck_id) = upper(:query)";
 
@@ -22,8 +24,8 @@ export default class CoreOracle implements IOracleController {
     public dataSource: OracleDB;
     public params: IParamOracle;
     public name: string;
-    private dbUsers: ILocalDB;
-    private dbCache: ILocalDB;
+    private dbUsers: ILocalDB<IUserDbData>;
+    private dbCache: ILocalDB<ICacheDb>;
     constructor(
         name: string,
         params: IParamOracle,
@@ -191,7 +193,7 @@ export default class CoreOracle implements IOracleController {
                 ? this.dbUsers.find().then(async (usersRows) => {
                       let errRow;
                       const result = usersRows.every((userRow) => {
-                          const item = userRow.data as IUserData;
+                          const item: Partial<IUserData> = userRow;
                           if (!isObject(item)) {
                               gateContext.error(`Bad tt_user data ${userRow}`);
                               errRow = new ErrorException(

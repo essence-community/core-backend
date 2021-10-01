@@ -88,11 +88,11 @@ class ActionController {
                     data,
                 )
             ) {
-                session = await (provider as NullAuthProvider).createSession(
-                    gateContext,
-                    data.idUser,
-                    data.dataUser,
-                );
+                session = await (provider as NullAuthProvider).createSession({
+                    context: gateContext,
+                    idUser: data.idUser,
+                    userData: data.dataUser as any,
+                });
             }
         }
         if (!session) {

@@ -32,7 +32,7 @@ export interface IContextParams extends ICCTParams {
     maxPostSize: number;
     lvl_logger: string;
     cors?: {
-        origin: string | RegExp | boolean | Array<string | RegExp>;
+        origin: string | RegExp | boolean | (string | RegExp)[];
         methods?: string | string[];
         allowedHeaders?: string | string[];
         exposedHeaders?: string | string[];

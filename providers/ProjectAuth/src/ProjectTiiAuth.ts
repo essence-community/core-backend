@@ -15,6 +15,7 @@ import { ReadStreamToArray } from "@ungate/plugininf/lib/stream/Util";
 import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
 import * as moment from "moment";
 import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
+import { IUserDbData } from "@ungate/plugininf/lib/ISession";
 const Property = ((global as any) as IGlobalObject).property;
 
 export default class ProjectTiiAuth extends NullAuthProvider {
@@ -26,7 +27,7 @@ export default class ProjectTiiAuth extends NullAuthProvider {
 
     public dataSource: OracleDB;
 
-    private dbUsers: ILocalDB;
+    private dbUsers: ILocalDB<IUserDbData>;
     constructor(
         name: string,
         params: ICCTParams,

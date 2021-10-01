@@ -7,6 +7,7 @@ import * as MSG from "msgpack-lite";
 import * as websocket from "websocket";
 import Constants from "../../core/Constants";
 import Property, { getLocalDb } from "../../core/property/Property";
+import IServerConfig from "../../core/property/IServerConfig";
 const logger = Logger.getLogger("AdminEventController");
 const TIMEOUT_CONNECT = 15000;
 
@@ -14,7 +15,10 @@ interface IServersConnect {
     [key: string]: websocket.connection;
 }
 
-function sendAllDate(conn: websocket.connection, db: ILocalDB): Promise<void> {
+function sendAllDate(
+    conn: websocket.connection,
+    db: ILocalDB<any>,
+): Promise<void> {
     return db.find().then(async (docs) => {
         conn.sendBytes(
             MSG.encode({
@@ -38,7 +42,7 @@ class AdminEventController {
     private server: https.Server;
     private serversSend: IServersConnect = {};
     private serversReceive: IServersConnect = {};
-    private dbServers: ILocalDB;
+    private dbServers: ILocalDB<IServerConfig>;
     public async init(): Promise<void> {
         if (
             !(

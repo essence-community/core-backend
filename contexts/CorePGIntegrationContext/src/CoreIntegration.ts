@@ -27,7 +27,7 @@ export default class CoreIntegration extends NullContext {
             },
         };
     }
-    private dbQuery: ILocalDB;
+    private dbQuery: ILocalDB<Record<string, any>>;
     private dataSource: PostgresDB;
     private caller: any;
     constructor(

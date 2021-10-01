@@ -180,21 +180,21 @@ export class RedisProvider extends NullProvider {
                         return reject(err);
                     }
                     if (redisQuery.result_eval) {
-                        const res = new Function(
+                        const data = new Function(
                             "result",
                             redisQuery.result_eval,
                         );
                         return resolve({
-                            stream: ResultStream(res(val)),
+                            stream: ResultStream(data(val)),
                         });
                     }
                     if (redisQuery.path_res) {
-                        const res = deepFind(
+                        const data = deepFind(
                             val,
                             redisQuery.path_res.split("."),
                         );
                         return resolve({
-                            stream: ResultStream(res),
+                            stream: ResultStream(data),
                         });
                     }
                     return resolve({
@@ -223,12 +223,12 @@ export class RedisProvider extends NullProvider {
                         return reject(err);
                     }
                     if (redisQuery.path_res) {
-                        const res = deepFind(
+                        const data = deepFind(
                             val,
                             redisQuery.path_res.split("."),
                         );
                         return resolve({
-                            stream: ResultStream(res),
+                            stream: ResultStream(data),
                         });
                     }
                     return resolve({

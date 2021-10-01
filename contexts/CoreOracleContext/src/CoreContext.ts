@@ -19,6 +19,7 @@ import ICoreController from "./ICoreController";
 import OfflineController from "./OfflineController";
 import OnlineController from "./OnlineController";
 import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
+import { IUserDbData } from "@ungate/plugininf/lib/ISession";
 const logger = Logger.getLogger("CoreContext");
 const Mask = ((global as any) as IGlobalObject).maskgate;
 const createTempTable = ((global as any) as IGlobalObject).createTempTable;
@@ -126,10 +127,7 @@ export default class CoreContext extends NullContext {
     }
     private controller: ICoreController;
     private dataSource: OracleDB;
-    private dbUsers: ILocalDB;
-    private dbDepartments: ILocalDB;
-    private sysSettings =
-        "select s.ck_id, s.cv_value, s.cv_description from s_mt.t_sys_setting s";
+    private dbUsers: ILocalDB<IUserDbData>;
     constructor(
         name: string,
         params: ICCTParams,
@@ -173,7 +171,6 @@ export default class CoreContext extends NullContext {
 
     public async init(reload?: boolean): Promise<void> {
         this.dbUsers = await createTempTable("tt_users");
-        this.dbDepartments = await createTempTable("tt_departments");
         return this.controller.init(reload);
     }
     public initContext(gateContext: IContext): Promise<IContextPluginResult> {

@@ -3,22 +3,21 @@ import ILocalDB from "@ungate/plugininf/lib/db/local/ILocalDB";
 import BreakException from "@ungate/plugininf/lib/errors/BreakException";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
+import { ICacheDb } from "@ungate/plugininf/lib/IAuthController";
 import IContext from "@ungate/plugininf/lib/IContext";
-import IGlobalObject from "@ungate/plugininf/lib/IGlobalObject";
 import IQuery from "@ungate/plugininf/lib/IQuery";
 import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
 import { IResultProvider } from "@ungate/plugininf/lib/IResult";
-import { IUserData } from "@ungate/plugininf/lib/ISession";
+import { IUserData, IUserDbData } from "@ungate/plugininf/lib/ISession";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
 import { isObject } from "lodash";
 import IPostgreSQLController from "./IPostgreSQLController";
-const Property = ((global as any) as IGlobalObject).property;
 const wsQuerySQL =
     "select cc_query from t_query where upper(ck_id) = upper(:query)";
 
 export default class CorePG extends IPostgreSQLController {
-    private dbUsers: ILocalDB;
-    private dbCache: ILocalDB;
+    private dbUsers: ILocalDB<IUserDbData>;
+    private dbCache: ILocalDB<ICacheDb>;
     public async init(): Promise<void> {
         if (!this.dbUsers) {
             this.dbUsers = this.authController.getUserDb();

@@ -8,6 +8,7 @@ import NullAuthProvider from "@ungate/plugininf/lib/NullAuthProvider";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
 import { isEmpty } from "@ungate/plugininf/lib/util/Util";
 import { noop } from "lodash";
+import IProviderConfig from "../../core/property/IProviderConfig";
 import Constants from "../../core/Constants";
 import PluginManager from "../../core/pluginmanager/PluginManager";
 import IQueryConfig from "../../core/property/IQueryConfig";
@@ -18,14 +19,15 @@ import Mask from "../Mask";
 import ActionController from "./ActionController";
 import PluginController from "./PluginController";
 import ResultController from "./ResultController";
+import IPluginConfig from "../../core/property/IPluginConfig";
 /**
  * Created by artemov_i on 04.12.2018.
  */
 
 class MainController {
-    public providerDb: ILocalDB;
-    public queryDb: ILocalDB;
-    public pluginDb: ILocalDB;
+    public providerDb: ILocalDB<IProviderConfig>;
+    public queryDb: ILocalDB<IQueryConfig>;
+    public pluginDb: ILocalDB<IPluginConfig>;
     public async init() {
         this.providerDb = await Property.getProviders();
         this.pluginDb = await Property.getPlugins();

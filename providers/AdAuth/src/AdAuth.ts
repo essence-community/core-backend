@@ -350,7 +350,7 @@ export default class AdAuth extends NullAuthProvider {
                     },
                     true,
                 )
-                .then(async (userData = {}) => {
+                .then(async (userData) => {
                     const data = this.params.adMapUserAttr.reduce(
                         (obj, { inKey, outKey }) => ({
                             ...obj,
@@ -375,7 +375,11 @@ export default class AdAuth extends NullAuthProvider {
                     if (isUserData) {
                         return resolve(data);
                     }
-                    return this.createSession(data.ck_id, data)
+                    return this.createSession({
+                        context,
+                        idUser: data.ck_id,
+                        userData: data,
+                    })
                         .then((res) =>
                             this.authController.loadSession(res.session),
                         )

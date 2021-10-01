@@ -283,12 +283,11 @@ export default class KeyCloakAuth extends NullAuthProvider {
                 dataUser.userData,
             );
             await this.authController.updateHashAuth();
-            const sess = await this.createSession(
-                gateContext,
-                dataUser.idUser,
-                dataUser.userData,
-                this.params.sessionDuration,
-            );
+            const sess = await this.createSession({
+                context: gateContext,
+                idUser: dataUser.idUser,
+                userData: dataUser.userData,
+            });
             if (sess) {
                 throw new BreakException({
                     type: "success",

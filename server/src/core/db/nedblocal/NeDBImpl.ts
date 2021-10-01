@@ -1,10 +1,16 @@
 import * as nedb from "@ungate/nedb-multi";
-import ILocalDB, { IParamLocal } from "@ungate/plugininf/lib/db/local/ILocalDB";
+import ILocalDB, {
+    Document,
+    FilterQuery,
+    InsertDoc,
+    RemoveOptions,
+    UpdateQuery,
+} from "@ungate/plugininf/lib/db/local/ILocalDB";
 import { sendProcess } from "@ungate/plugininf/lib/util/ProcessSender";
 import { isEmpty } from "@ungate/plugininf/lib/util/Util";
 import { isArray } from "lodash";
 
-export class NeDBImpl implements ILocalDB {
+export class NeDBImpl<T> implements ILocalDB<T> {
     public dbname: string;
     public db: nedb.INeDb;
     public isTemp: boolean;
@@ -15,9 +21,9 @@ export class NeDBImpl implements ILocalDB {
         this.isTemp = isTemp;
     }
 
-    public find(object: IParamLocal = {}): Promise<IParamLocal[]> {
+    public find(filter?: FilterQuery<Document<T>>): Promise<Document<T>[]> {
         return new Promise((resolve, reject) => {
-            this.db.find(object, (err, docs) => {
+            this.db.find(filter, (err, docs) => {
                 if (err) {
                     err.message += ` db ${this.dbname}`;
                     return reject(err);
@@ -33,11 +39,11 @@ export class NeDBImpl implements ILocalDB {
     }
 
     public findOne(
-        object: IParamLocal,
+        filter: FilterQuery<Document<T>>,
         noErrorNotFound: boolean,
-    ): Promise<IParamLocal | null> {
+    ): Promise<Document<T> | null> {
         return new Promise((resolve, reject) => {
-            this.db.findOne(object, (err, doc) => {
+            this.db.findOne(filter, (err, doc) => {
                 let res = null;
                 if (err) {
                     err.message += ` db ${this.dbname}`;
@@ -57,7 +63,9 @@ export class NeDBImpl implements ILocalDB {
         });
     }
 
-    public insert(object: IParamLocal | IParamLocal[]): Promise<void> {
+    public insert(
+        object: InsertDoc<Document<T>> | InsertDoc<Document<T>>[],
+    ): Promise<void> {
         return new Promise((resolve, reject) => {
             if (isArray(object)) {
                 Promise.all(object.map((item) => this.insert(item)))
@@ -65,13 +73,15 @@ export class NeDBImpl implements ILocalDB {
                     .catch((err) => reject(err));
                 return;
             }
-            if (!isEmpty((object as IParamLocal).ck_id)) {
-                (object as IParamLocal)._id = (object as IParamLocal).ck_id;
+            if (!isEmpty(object.ck_id)) {
+                // @ts-ignore
+                object._id = object.ck_id;
             }
-            if (!isEmpty((object as IParamLocal)._id)) {
+            if (!isEmpty(object._id)) {
                 this.update(
+                    // @ts-ignore
                     {
-                        _id: (object as IParamLocal)._id,
+                        _id: object._id,
                     },
                     {
                         $set: object,
@@ -103,22 +113,22 @@ export class NeDBImpl implements ILocalDB {
     }
 
     public update(
-        object1: IParamLocal,
-        object2,
+        filter: FilterQuery<Document<T>>,
+        update: UpdateQuery<Document<T>>,
         opts = { multi: false, upsert: false, returnUpdatedDocs: true },
     ): Promise<void> {
         sendProcess({
             command: "sendAllServerCallDb",
             data: {
                 action: "update",
-                args: [object1, object2, opts],
+                args: [filter, update, opts],
                 isTemp: this.isTemp,
                 name: this.dbname,
             },
             target: "clusterAdmin",
         });
         return new Promise((resolve, reject) => {
-            this.db.update(object1, object2, opts, (err) => {
+            this.db.update(filter, update, opts, (err) => {
                 if (err) {
                     err.message += ` db ${this.dbname}`;
                     return reject(err);
@@ -128,19 +138,22 @@ export class NeDBImpl implements ILocalDB {
         });
     }
 
-    public remove(object1: IParamLocal, object2 = {}): Promise<void> {
+    public remove(
+        filter: FilterQuery<Document<T>>,
+        options?: RemoveOptions,
+    ): Promise<void> {
         sendProcess({
             command: "sendAllServerCallDb",
             data: {
                 action: "remove",
-                args: [object1, object2],
+                args: [filter, options],
                 isTemp: this.isTemp,
                 name: this.dbname,
             },
             target: "clusterAdmin",
         });
         return new Promise((resolve, reject) => {
-            this.db.remove(object1, object2, (err) => {
+            this.db.remove(filter, options, (err) => {
                 if (err) {
                     err.message += ` db ${this.dbname}`;
                     return reject(err);
@@ -150,9 +163,9 @@ export class NeDBImpl implements ILocalDB {
         });
     }
 
-    public count(object: IParamLocal = {}): Promise<number> {
+    public count(filter: FilterQuery<Document<T>>): Promise<number> {
         return new Promise((resolve, reject) => {
-            this.db.count(object, (err, count) => {
+            this.db.count(filter, (err, count) => {
                 if (err) {
                     err.message += ` db ${this.dbname}`;
                     return reject(err);

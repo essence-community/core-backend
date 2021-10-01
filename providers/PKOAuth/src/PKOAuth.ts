@@ -19,6 +19,7 @@ import * as ActiveDirectory from "activedirectory";
 import { X509 } from "jsrsasign";
 import { isObject, uniq } from "lodash";
 import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
+import { IUserDbData } from "@ungate/plugininf/lib/ISession";
 
 const Property = ((global as any) as IGlobalObject).property;
 const BASIC_PATTERN = "Basic";
@@ -71,7 +72,7 @@ export default class PKOAuth extends NullAuthProvider {
 
     public dataSource: PostgresDB;
 
-    private dbUsers: ILocalDB;
+    private dbUsers: ILocalDB<IUserDbData>;
     private ad: ActiveDirectory;
     private mapUserAttr: IObjectParam = {};
     private mapGroupActions: IObjectParam = {};
@@ -422,7 +423,7 @@ export default class PKOAuth extends NullAuthProvider {
                     },
                     true,
                 )
-                .then(async (userData = {}) => {
+                .then(async (userData) => {
                     const data = Object.keys(this.mapUserAttr).reduce(
                         (obj, val) => ({
                             ...obj,
@@ -455,7 +456,11 @@ export default class PKOAuth extends NullAuthProvider {
                     if (session) {
                         return resolve(session);
                     }
-                    return this.createSession(data.ck_id, data)
+                    return this.createSession({
+                        context: gateContext,
+                        idUser: data.ck_id,
+                        userData: data,
+                    })
                         .then((res) =>
                             this.authController.loadSession(res.session),
                         )

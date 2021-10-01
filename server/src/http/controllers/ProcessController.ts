@@ -1,17 +1,14 @@
-import ILocalDB from "@ungate/plugininf/lib/db/local/ILocalDB";
 import IObjectParam from "@ungate/plugininf/lib/IObjectParam";
 import Logger from "@ungate/plugininf/lib/Logger";
 import { noop } from "lodash";
 import PluginManager from "../../core/pluginmanager/PluginManager";
-import Property from "../../core/property";
 import Mask from "../Mask";
 import NotificationController from "./NotificationController";
 const log = Logger.getLogger("ProcessController");
 
 class ProcessController {
-    private dbProvider: ILocalDB;
     public async init() {
-        this.dbProvider = await Property.getProviders();
+        return;
     }
     public async getWsUsers(data: IObjectParam): Promise<any> {
         return {

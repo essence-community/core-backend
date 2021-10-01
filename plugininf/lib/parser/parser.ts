@@ -12,7 +12,7 @@ import {
     LogicalExpression,
     UnaryExpression,
     Statement,
-    Function,
+    Function as IFunction,
 } from "estree";
 import Logger from "../Logger";
 import { isEmpty } from "../util/Util";
@@ -83,7 +83,7 @@ const utils = {
 };
 
 function parseOperations(
-    expression: Expression | Pattern | Super | Function | Statement,
+    expression: Expression | Pattern | Super | IFunction | Statement,
     values: IValues,
 ): any {
     if (!expression) {
@@ -124,12 +124,13 @@ function parseOperations(
             return parseOperations(expression.right, values);
         case "ObjectExpression":
             return expression.properties.reduce(
-                (acc: IValues, property: Property) => {
+                (acc: IValues, prop: Property) => {
                     // @ts-ignore
-                    property.key.isMember = true;
-                    acc[
-                        parseOperations(property.key, values)
-                    ] = parseOperations(property.value, values);
+                    prop.key.isMember = true;
+                    acc[parseOperations(prop.key, values)] = parseOperations(
+                        prop.value,
+                        values,
+                    );
 
                     return acc;
                 },
@@ -237,14 +238,14 @@ function parseOperations(
             return (...ags) =>
                 parseOperations(expression.body, {
                     get: (key) => {
-                        const res = ags.reduce((resParam, val, ind) => {
+                        const resArrow = ags.reduce((resParam, val, ind) => {
                             // @ts-ignore
                             resParam[expression.params[ind]?.name] = val;
                             return resParam;
                         }, {});
-                        if (Object.keys(res).length) {
+                        if (Object.keys(resArrow).length) {
                             return (
-                                res[key] ||
+                                resArrow[key] ||
                                 (values.get
                                     ? values.get(key, true)
                                     : values[key])

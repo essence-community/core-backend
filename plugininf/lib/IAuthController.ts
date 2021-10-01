@@ -3,7 +3,7 @@ import ILocalDB from "./db/local/ILocalDB";
 import IContext from "./IContext";
 import IObjectParam from "./IObjectParam";
 import ISession from "./ISession";
-import { IUserData, ISessionData } from "./ISession";
+import { IUserData, ISessionData, IUserDbData } from "./ISession";
 
 export interface ICreateSessionParam {
     context: IContext;
@@ -20,6 +20,11 @@ export interface ISessionStore extends Store {
         sessionId?: string | string[],
         isExpired?: boolean,
     ): Promise<{ [sid: string]: ISessionData } | null>;
+}
+
+export interface ICacheDb {
+    ck_id: string;
+    [key: string]: any;
 }
 
 export interface IAuthController {
@@ -73,12 +78,12 @@ export interface IAuthController {
      * Локальная база пользователей
      * @returns user db
      */
-    getUserDb(): ILocalDB;
+    getUserDb(): ILocalDB<IUserDbData>;
     /**
-     * Локальная база пользователей
-     * @returns user db
+     * Локальная база temp
+     * @returns temp db
      */
-    getCacheDb(): ILocalDB;
+    getCacheDb(): ILocalDB<ICacheDb>;
 
     getSessionStore(): ISessionStore;
     /**

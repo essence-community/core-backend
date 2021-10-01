@@ -1,4 +1,3 @@
-import IObjectParam from "./IObjectParam";
 import { SessionData } from "express-session";
 
 /**
@@ -10,20 +9,30 @@ export default interface ISession {
     idUser: string;
     nameProvider: string;
     userData: IUserData;
-    typeCheckAuth?:
-        | "cookie"
-        | "session"
-        | "cookieandsession"
-        | "cookieorsession";
+    sessionData: {
+        [key: string]: any;
+        typeCheckAuth?:
+            | "cookie"
+            | "session"
+            | "cookieandsession"
+            | "cookieorsession";
+    };
 }
 
 export interface IUserData {
     ca_actions: any[];
+    // @deprecated
     ca_department?: any[];
     ck_id: any;
     ck_dept?: any;
     cv_timezone?: string;
     [key: string]: any;
+}
+
+export interface IUserDbData {
+    ck_d_provider: string;
+    ck_id: string;
+    data: IUserData;
 }
 
 export interface ISessionData extends SessionData {

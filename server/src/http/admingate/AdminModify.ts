@@ -17,7 +17,7 @@ export default class AdminModify {
     public params: ICCTParams;
     public name: string;
     public riakAction: RiakAction;
-    modify: Record<string, ILocalDB> = {};
+    modify: Record<string, ILocalDB<any>> = {};
     constructor(name: string, params: ICCTParams) {
         this.name = name;
         this.params = params;
@@ -84,7 +84,7 @@ export default class AdminModify {
         });
     }
 
-    private async callLocalDb(localDb: ILocalDB, json: IObjectParam) {
+    private async callLocalDb(localDb: ILocalDB<any>, json: IObjectParam) {
         delete json.data.cv_params;
         switch (json.service.cv_action.toLowerCase()) {
             case "i": {

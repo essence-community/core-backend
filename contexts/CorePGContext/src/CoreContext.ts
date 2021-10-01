@@ -22,6 +22,7 @@ import OfflineController from "./OfflineController";
 import OnlineController from "./OnlineController";
 import { TempTable } from "./TempTable";
 import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
+import { IUserDbData } from "@ungate/plugininf/lib/ISession";
 const logger = Logger.getLogger("CoreContext");
 const Mask = ((global as any) as IGlobalObject).maskgate;
 const createTempTable = ((global as any) as IGlobalObject).createTempTable;
@@ -147,7 +148,7 @@ export default class CoreContext extends NullContext {
     public params: ICoreParams;
     private controller: ICoreController;
     private dataSource: PostgresDB;
-    private dbUsers: ILocalDB;
+    private dbUsers: ILocalDB<IUserDbData>;
     private tempTable: TempTable;
     constructor(
         name: string,

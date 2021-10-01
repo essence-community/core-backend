@@ -15,10 +15,10 @@ import NullAuthProvider, {
 } from "@ungate/plugininf/lib/NullAuthProvider";
 import { ReadStreamToArray } from "@ungate/plugininf/lib/stream/Util";
 import { initParams, isEmpty, debounce } from "@ungate/plugininf/lib/util/Util";
-import { noop } from "lodash";
-import { isObject } from "util";
+import { noop, isObject } from "lodash";
 import ISession from "@ungate/plugininf/lib/ISession";
 import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
+import { IUserDbData } from "@ungate/plugininf/lib/ISession";
 const Property = ((global as any) as IGlobalObject).property;
 
 const MAX_WAIT_RELOAD = 5000;
@@ -48,7 +48,7 @@ export default class CoreAuthPg extends NullAuthProvider {
     public dataSource: PostgresDB;
     public params: IParamsProvider;
 
-    private dbUsers: ILocalDB;
+    private dbUsers: ILocalDB<IUserDbData>;
     private eventConnect: Connection;
     private reloadTemp = debounce(() => {
         this.initTemp().then(noop, (err) => this.log.error(err));
@@ -83,19 +83,12 @@ export default class CoreAuthPg extends NullAuthProvider {
                 if (context.params.connect_guest === "true") {
                     const {
                         session: sessGuest,
-                        ...sessDataGuest
-                    }: any = await this.createSession(
+                    }: any = await this.createSession({
                         context,
-                        this.params.guestAccount,
-                        {},
-                        this.params.sessionDuration,
-                    );
-                    return {
                         idUser: this.params.guestAccount,
-                        nameProvider: this.name,
-                        userData: sessDataGuest,
-                        session: sessGuest,
-                    };
+                        userData: {} as any,
+                    });
+                    return this.authController.loadSession(sessGuest);
                 }
                 return session;
             };

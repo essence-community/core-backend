@@ -23,18 +23,25 @@ import NullPlugin from "@ungate/plugininf/lib/NullPlugin";
 import NullScheduler from "@ungate/plugininf/lib/NullScheduler";
 import NullEvent from "@ungate/plugininf/lib/NullEvent";
 import NullAuthProvider from "@ungate/plugininf/lib/NullAuthProvider";
+import IContextConfig from "../../core/property/IContextConfig";
+import IProviderConfig from "../../core/property/IProviderConfig";
+import IPluginConfig from "../../core/property/IPluginConfig";
+import IQueryConfig from "../../core/property/IQueryConfig";
+import IServerConfig from "../../core/property/IServerConfig";
+import IShedulerConfig from "../../core/property/IShedulerConfig";
+import IEventConfig from "../../core/property/IEventConfig";
 
 export default class AdminAction {
     public params: ICCTParams;
     public name: string;
     public riakAction: RiakAction;
-    public dbContexts: ILocalDB;
-    public dbEvents: ILocalDB;
-    public dbProviders: ILocalDB;
-    public dbSchedulers: ILocalDB;
-    public dbPlugins: ILocalDB;
-    public dbQuerys: ILocalDB;
-    public dbServers: ILocalDB;
+    public dbContexts: ILocalDB<IContextConfig>;
+    public dbEvents: ILocalDB<IEventConfig>;
+    public dbProviders: ILocalDB<IProviderConfig>;
+    public dbSchedulers: ILocalDB<IShedulerConfig>;
+    public dbPlugins: ILocalDB<IPluginConfig>;
+    public dbQuerys: ILocalDB<IQueryConfig>;
+    public dbServers: ILocalDB<IServerConfig>;
     constructor(name: string, params: ICCTParams) {
         this.name = name;
         this.params = params;
@@ -137,7 +144,7 @@ export default class AdminAction {
                                 .filter(filterFilesData(gateContext)),
                         ),
                     ),
-            gtgetconfproviders: (gateContext: IContext) => 
+            gtgetconfproviders: (gateContext: IContext) =>
                 this.dbProviders.find().then((docs) =>
                     Promise.resolve(
                         docs
@@ -155,10 +162,10 @@ export default class AdminAction {
                             .filter(filterFilesData(gateContext)),
                     ),
                 ),
-            gtgetinitedproviders: (gateContext: IContext) => 
+            gtgetinitedproviders: (gateContext: IContext) =>
                 this.dbProviders.find().then((docs) =>
                     Promise.resolve(
-                        [{ck_id: "all"}, ...docs]
+                        [{ ck_id: "all" }, ...docs]
                             .map((val) => ({
                                 ck_id: val.ck_id,
                             }))

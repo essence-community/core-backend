@@ -7,5 +7,5 @@ export default interface IGlobalObject extends NodeJS.Global {
      * Создание или загрузка ранее созданой темповой таблицы
      * @param name наименование
      */
-    createTempTable(name: string): Promise<ILocalDB>;
+    createTempTable<T>(name: string): Promise<ILocalDB<T>>;
 }
