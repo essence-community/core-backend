@@ -3,7 +3,7 @@ import { ParserDbf } from "./ParserDbf";
 
 export class ExtractorDbf extends EventEmitter {
     private dbf: ParserDbf;
-    private packRows: number;
+    protected packRows: number;
     private pack: any[] = [];
     private isEventRead: boolean = false;
     private flag: number = 0;

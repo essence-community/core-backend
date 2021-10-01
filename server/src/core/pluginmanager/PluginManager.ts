@@ -287,6 +287,27 @@ class PluginManager {
         return GateProvider[context][key];
     }
 
+    public findGateProvider(context?: string, key?: string): IProvider[] {
+        if (context && key && GateProvider[context]) {
+            if (key === "all") {
+                return Object.values(GateProvider[context]);
+            }
+            return GateProvider[context][key] ? [GateProvider[context][key]] : [];
+        }
+        if (key) {
+            return Object.values(GateProvider).reduce((res, val) => {
+                if (key === "all") {
+                    return res.concat(Object.values(val));
+                }
+                if (val[key]) {
+                    res.push(val[key])
+                }
+                return res
+            }, []);
+        }
+        return [];
+    }
+
     public getGateAuthProviders(context: string) {
         return Object.values(GateProvider[context]).filter(
             (provider: NullAuthProvider) => provider.isAuth,

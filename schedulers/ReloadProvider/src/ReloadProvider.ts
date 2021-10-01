@@ -9,7 +9,24 @@ export default class ReloadProvider extends NullScheduler {
             providerName: {
                 name: "Наименование провайдера",
                 required: true,
-                type: "string",
+                type: "combo",
+                query: "GTGetInitedProviders",
+                displayField: "ck_id",
+                valueField: [{ in: "ck_id" }],
+                querymode: "local",
+                queryparam: "ck_id",
+                idproperty: "ck_id",
+            },
+            contextName: {
+                name: "Наименование контекста",
+                required: true,
+                type: "combo",
+                query: "GTGetConfigs",
+                displayField: "ck_id",
+                valueField: [{ in: "ck_id" }],
+                querymode: "local",
+                queryparam: "ck_id",
+                idproperty: "ck_id",
             },
         };
     }
@@ -30,6 +47,7 @@ export default class ReloadProvider extends NullScheduler {
             command: "reloadProvider",
             data: {
                 name: this.params.providerName,
+                nameContext: this.params.contextName,
             },
             target: "cluster",
         });

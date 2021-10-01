@@ -1,5 +1,3 @@
-import IGlobalObject from "@ungate/plugininf/lib/IGlobalObject";
-import * as moment from "moment-timezone";
 import * as os from "os";
 import * as path from "path";
 

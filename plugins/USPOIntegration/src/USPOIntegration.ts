@@ -60,7 +60,7 @@ export default class USPOIntegration extends NullPlugin {
 
     private runReport;
     private reportDelete;
-    private runDelayedPrint;
+    protected runDelayedPrint;
     private reportStatus;
     constructor(name: string, params: ICCTParams) {
         super(name, params);

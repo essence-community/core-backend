@@ -180,8 +180,6 @@ export class GateSession implements IAuthController {
         sessionId?: string,
         isNotification = false,
     ): Promise<ISession | null> {
-        const now = new Date();
-
         if (
             context &&
             sessionId &&
@@ -465,7 +463,7 @@ export class GateSession implements IAuthController {
      * Получение соли
      * @returns hash salt
      */
-    private getHashSalt(): string {
+    public getHashSalt(): string {
         let hashSalt = Constants.HASH_SALT;
         if (!hashSalt) {
             const hashLocalSalt = Constants.APP_START_TIME.toString(16);
@@ -497,69 +495,5 @@ export class GateSession implements IAuthController {
 
         valBuffer.write(val);
         return crypto.timingSafeEqual(macBuffer, valBuffer) ? str : false;
-    }
-
-    /**
-     * Рандомное значение
-     * @returns random
-     */
-    private generateRandom(): Promise<string> {
-        return new Promise((resolve, reject) => {
-            const buf = Buffer.alloc(10);
-            crypto.randomFill(buf, (err, newBuf) => {
-                if (err) {
-                    return reject(err);
-                }
-                return resolve(newBuf.toString("hex"));
-            });
-        });
-    }
-
-    /**
-     * Создание сессии
-     * @param id - ид сессии
-     * @returns сессия
-     */
-    private async generateIdSession(id: string | number): Promise<string> {
-        return new Promise((resolve, reject) => {
-            let buf = "";
-            this.generateRandom()
-                .then((rnd) => {
-                    buf += rnd;
-                    buf += this.getHashSalt();
-                    return this.sha256(buf);
-                })
-                .then((str) => {
-                    buf += str;
-                    return this.generateRandom();
-                })
-                .then((rnd) => {
-                    buf += rnd;
-                    buf += id;
-                    return this.generateRandom();
-                })
-                .then((rnd) => {
-                    buf += rnd;
-                    return this.generateRandom();
-                })
-                .then((rnd) => {
-                    buf += rnd;
-                    return this.generateRandom();
-                })
-                .then((rnd) => {
-                    buf += rnd;
-                    return this.sha256(buf);
-                })
-                .then((hash) => {
-                    buf = hash;
-                    const sessionId = buf.toUpperCase();
-                    this.logger.trace(`generated session id: ${sessionId}`);
-                    return resolve(sessionId);
-                })
-                .catch((err) => {
-                    this.logger.error(err);
-                    return reject(err);
-                });
-        });
     }
 }

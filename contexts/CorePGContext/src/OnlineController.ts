@@ -438,7 +438,6 @@ export default class OnlineController implements ICoreController {
         caActions: any[],
         version: "1" | "2" | "3",
     ): Promise<any> {
-        const self = this;
         return this.dataSource
             .executeStmt(this.pageFindSql, null, {
                 ck_page: ckPage,

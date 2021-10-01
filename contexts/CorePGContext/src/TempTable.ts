@@ -176,7 +176,6 @@ export class TempTable {
      * Кэширование всех страниц
      */
     public loadPages(): Promise<void> {
-        const self = this;
         return this.dataSource
             .executeStmt(
                 this.pageSql,

@@ -21,30 +21,30 @@ class ProcessController {
      * @return {[type]}      [description]
      */
     public async reloadProvider(data) {
-        const provider = PluginManager.getGateProvider(
+        const providers = PluginManager.findGateProvider(
             data.nameContext,
             data.name,
         );
-        if (provider) {
+        if (providers.length) {
             log.info(
                 `Start init provider ${data.name} process: ${process.env.UNGATE_HTTP_ID}`,
             );
             Mask.mask(data.session)
                 .then(() =>
-                    provider.init(true).then(
+                    Promise.all(providers.map((provider) => provider.init(true).then(
                         () => {
                             log.info(
                                 `End init provider ${data.name} process: ${process.env.UNGATE_HTTP_ID}`,
                             );
-                            return Mask.unmask(data.session);
+                            return;
                         },
                         (err) => {
                             log.error(err);
-                            return Mask.unmask(data.session);
+                            return;
                         },
-                    ),
+                    ))),
                 )
-                .then(noop)
+                .then(() => Mask.unmask(data.session))
                 .catch(() => Mask.unmask(data.session));
         }
     }

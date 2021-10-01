@@ -4,7 +4,7 @@ import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
 import { IResultProvider } from "@ungate/plugininf/lib/IResult";
 import IParamsInfo from "@ungate/plugininf/lib/ICCTParams";
 import { IParamsProvider } from "@ungate/plugininf/lib/NullProvider";
-import { ClientOpts, RedisClient, createClient } from "redis";
+import { ClientOpts, createClient } from "redis";
 import { initParams } from "@ungate/plugininf/lib/util/Util";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
 import ICCTParams from "@ungate/plugininf/lib/ICCTParams";

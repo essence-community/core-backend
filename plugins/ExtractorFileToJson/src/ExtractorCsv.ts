@@ -30,7 +30,7 @@ export interface ICsvOptions {
 
 export class ExtractorCsv extends EventEmitter {
     private csv: any;
-    private packRows: number;
+    protected packRows: number;
     private pack: any[] = [];
     private isEventRead: boolean = false;
     private flag: number = 0;

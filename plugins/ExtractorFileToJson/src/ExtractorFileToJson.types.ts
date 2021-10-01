@@ -1,4 +1,3 @@
-import ICCTParams from "@ungate/plugininf/lib/ICCTParams";
 export interface IPluginParams {
     cvTypeStorage: "riak" | "aws" | "dir";
     cvPath?: string;

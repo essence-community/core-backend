@@ -5,7 +5,6 @@ import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
 import ICCTParams, { IParamsInfo } from "@ungate/plugininf/lib/ICCTParams";
 import IContext from "@ungate/plugininf/lib/IContext";
-import IGlobalObject from "@ungate/plugininf/lib/IGlobalObject";
 import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
 import IQuery from "@ungate/plugininf/lib/IQuery";
 import NullAuthProvider, {
@@ -16,7 +15,6 @@ import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
 import * as moment from "moment";
 import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
 import { IUserDbData } from "@ungate/plugininf/lib/ISession";
-const Property = ((global as any) as IGlobalObject).property;
 
 export default class CoreAuthOracle extends NullAuthProvider {
     public static getParamsInfo(): IParamsInfo {

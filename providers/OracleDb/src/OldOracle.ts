@@ -20,7 +20,7 @@ export default class OldOracle implements IOracleController {
         name: string,
         params: IParamOracle,
         dataSource: OracleDB,
-        private authController: IAuthController,
+        protected authController: IAuthController,
     ) {
         this.name = name;
         this.params = params;

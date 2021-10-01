@@ -39,7 +39,7 @@ class AdminEventController {
     private cert: string;
     private ca: string;
     private wsServer: websocket.server;
-    private server: https.Server;
+    protected server: https.Server;
     private serversSend: IServersConnect = {};
     private serversReceive: IServersConnect = {};
     private dbServers: ILocalDB<IServerConfig>;

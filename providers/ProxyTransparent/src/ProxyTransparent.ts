@@ -13,7 +13,7 @@ import {
 import { isEmpty } from "@ungate/plugininf/lib/util/Util";
 import * as fs from "fs";
 import * as JSONStream from "JSONStream";
-import { isArray, isBoolean, isObject } from "lodash";
+import { isArray, isBoolean } from "lodash";
 import * as QueryString from "query-string";
 import * as request from "request";
 import * as url from "url";

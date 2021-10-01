@@ -5,7 +5,6 @@ import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
 import ICCTParams, { IParamsInfo } from "@ungate/plugininf/lib/ICCTParams";
 import IContext from "@ungate/plugininf/lib/IContext";
-import IGlobalObject from "@ungate/plugininf/lib/IGlobalObject";
 import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
 import IQuery from "@ungate/plugininf/lib/IQuery";
 import { IResultProvider } from "@ungate/plugininf/lib/IResult";
@@ -19,7 +18,6 @@ import { noop, isObject } from "lodash";
 import ISession from "@ungate/plugininf/lib/ISession";
 import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
 import { IUserDbData } from "@ungate/plugininf/lib/ISession";
-const Property = ((global as any) as IGlobalObject).property;
 
 const MAX_WAIT_RELOAD = 5000;
 
