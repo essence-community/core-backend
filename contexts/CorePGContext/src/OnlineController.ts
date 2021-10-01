@@ -322,6 +322,17 @@ export default class OnlineController implements ICoreController {
                                       [],
                                   )),
                         ];
+                        if (chunk.jt_form_message && cvErrors.includes("error")) {
+                            gateContext.connection
+                                        .rollback()
+                                        .then(() => callback(null, chunk))
+                                        .catch((err) => {
+                                            gateContext.warn(err.message, err);
+                                            callback(null, chunk);
+                                            return Promise.resolve();
+                                        });
+                                    return;
+                        }
                         self.tempTable
                             .findMessage(cvErrors, {
                                 cr_type: "error",
@@ -340,9 +351,21 @@ export default class OnlineController implements ICoreController {
                                 }
                                 callback(null, chunk);
                             });
+                    } else if (!isEmpty(chunk.jt_message) && !isEmpty(chunk.jt_message.error)) {
+                        gateContext.connection
+                            .rollback()
+                            .then(() => callback(null, chunk))
+                            .catch((err) => {
+                                gateContext.warn(err.message, err);
+                                callback(null, chunk);
+                                return Promise.resolve();
+                            });
                     } else {
                         callback(null, chunk);
                     }
+                    rTransform._transform = (function(chunk, encode, callback) {
+                        callback(null, chunk);
+                    }).bind(rTransform);
                 },
             });
             result.data = safePipe(result.data, rTransform);
