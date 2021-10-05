@@ -4,12 +4,7 @@ import Logger from "@ungate/plugininf/lib/Logger";
 import { ISessionData } from "@ungate/plugininf/lib/ISession";
 import { IRufusLogger } from "rufus";
 import { ISessionStore } from "@ungate/plugininf/lib/IAuthController";
-import {
-    Connection,
-    IsNull,
-    LessThan,
-    MoreThanOrEqual,
-} from "typeorm";
+import { Connection, IsNull, LessThan, MoreThanOrEqual } from "typeorm";
 import { SessionModel } from "./typeorm/entries/SessionModel";
 
 export interface IPTypeOrmSessionStore {
@@ -62,7 +57,7 @@ export class TypeOrmSessionStore extends Store implements ISessionStore {
                     },
                 ],
             })
-            .then((val) => cb(null, val.data))
+            .then((val) => cb(null, val ? val.data : undefined))
             .catch((err) => cb(err));
     }
     set(ck_id, data, cb: any = (err) => (err ? this.logger.error(err) : null)) {

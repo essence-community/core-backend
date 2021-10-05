@@ -336,7 +336,10 @@ export default class KeyCloakAuth extends NullAuthProvider {
                             userData: dataUser.userData,
                         });
 
-                        return this.authController.loadSession(gateContext, sess.session);
+                        return this.authController.loadSession(
+                            gateContext,
+                            sess.session,
+                        );
                     }
                     gateContext.request.session.gsession.userData = {
                         ...gateContext.request.session.gsession.userData,
