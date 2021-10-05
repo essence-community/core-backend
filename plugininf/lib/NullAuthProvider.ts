@@ -141,11 +141,12 @@ export default abstract class NullAuthProvider extends NullProvider {
                 ? JSON.parse(userData.ca_actions)
                 : userData.ca_actions;
         }
-        const dataUser = await this.authController.getDataUser(
-            idUser,
-            this.name,
-            isAccessErrorNotFound,
-        );
+        const dataUser =
+            (await this.authController.getDataUser(
+                idUser,
+                this.name,
+                isAccessErrorNotFound,
+            )) || {};
         const session = await this.authController.createSession({
             context,
             idUser,

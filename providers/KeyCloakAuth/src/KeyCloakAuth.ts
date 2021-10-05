@@ -20,6 +20,7 @@ import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
 import { uniq } from "lodash";
 import * as fs from "fs";
 import { Constant } from "@ungate/plugininf/lib/Constants";
+import * as Token from "keycloak-connect/middleware/auth-utils/token";
 
 const FLAG_REDIRECT = "jl_keycloak_auth_callback";
 const USE_REDIRECT = "jl_keycloak_use_redirect";
@@ -287,6 +288,7 @@ export default class KeyCloakAuth extends NullAuthProvider {
                 context: gateContext,
                 idUser: dataUser.idUser,
                 userData: dataUser.userData,
+                isAccessErrorNotFound: false,
             });
             if (sess) {
                 throw new BreakException({
@@ -316,10 +318,7 @@ export default class KeyCloakAuth extends NullAuthProvider {
 
             return GrantAttacher(gateContext, this.keyCloak)
                 .then(async () => {
-                    if (
-                        session &&
-                        !(gateContext.request as IRequestExtra).kauth.grant
-                    ) {
+                    if (!(gateContext.request as IRequestExtra).kauth.grant) {
                         throw new Error("Not Auth");
                     }
                     const dataUser = await this.generateUserData(gateContext);
@@ -334,6 +333,7 @@ export default class KeyCloakAuth extends NullAuthProvider {
                             context: gateContext,
                             idUser: dataUser.idUser,
                             userData: dataUser.userData,
+                            isAccessErrorNotFound: false,
                         });
 
                         return this.authController.loadSession(
@@ -349,7 +349,7 @@ export default class KeyCloakAuth extends NullAuthProvider {
                         ...session.userData,
                         ...dataUser.userData,
                     };
-                    this.authController.addUser(
+                    await this.authController.addUser(
                         dataUser.idUser,
                         this.name,
                         dataUser.userData,
@@ -383,8 +383,9 @@ export default class KeyCloakAuth extends NullAuthProvider {
             grant.access_token,
         );
         const idUser =
-            (grant.access_token as any).content[this.params.idKey] ||
-            userInfo[this.params.idKey];
+            (grant.access_token as Token).content[this.params.idKey] ||
+            userInfo[this.params.idKey] ||
+            (grant.access_token as Token).content.sub;
         const dataUser = {
             ca_actions: [],
             ck_id: idUser,
