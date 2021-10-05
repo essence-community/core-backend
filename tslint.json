@@ -7,7 +7,7 @@
     "jsRules": {},
     "rules": {
         "interface-name": false,
-        "no-unused-variable": [true, {"ignore-pattern": "^_"}]
+        "no-unused-variable": [true, { "ignore-pattern": "^_" }]
     },
     "rulesDirectory": []
 }

@@ -292,7 +292,9 @@ class PluginManager {
             if (key === "all") {
                 return Object.values(GateProvider[context]);
             }
-            return GateProvider[context][key] ? [GateProvider[context][key]] : [];
+            return GateProvider[context][key]
+                ? [GateProvider[context][key]]
+                : [];
         }
         if (key) {
             return Object.values(GateProvider).reduce((res, val) => {
@@ -300,9 +302,9 @@ class PluginManager {
                     return res.concat(Object.values(val));
                 }
                 if (val[key]) {
-                    res.push(val[key])
+                    res.push(val[key]);
                 }
-                return res
+                return res;
             }, []);
         }
         return [];

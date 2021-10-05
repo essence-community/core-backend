@@ -47,7 +47,7 @@ export class NeDbSessionStore extends Store implements ISessionStore {
     }
 
     get(ck_id, cb: any = (err) => (err ? this.logger.error(err) : null)) {
-        this.logger.debug("GET %s", ck_id);
+        this.logger.trace("GET %s", ck_id);
         const now = new Date();
         this.db
             .findOne(
@@ -73,7 +73,7 @@ export class NeDbSessionStore extends Store implements ISessionStore {
             );
     }
     set(ck_id, data, cb: any = (err) => (err ? this.logger.error(err) : null)) {
-        this.logger.debug("SET %s data %j", ck_id, data);
+        this.logger.trace("SET %s data %j", ck_id, data);
         this.db
             .update(
                 { ck_id },
@@ -95,7 +95,7 @@ export class NeDbSessionStore extends Store implements ISessionStore {
             );
     }
     destroy(ck_id, cb: any = (err) => (err ? this.logger.error(err) : null)) {
-        this.logger.debug("DESTROY %s", ck_id);
+        this.logger.trace("DESTROY %s", ck_id);
         this.db
             .update(
                 { ck_id },
@@ -113,7 +113,7 @@ export class NeDbSessionStore extends Store implements ISessionStore {
         sess,
         cb: any = (err) => (err ? this.logger.error(err) : null),
     ) {
-        this.logger.debug("TOUCH %s data %j", ck_id, sess);
+        this.logger.trace("TOUCH %s data %j", ck_id, sess);
         if (!sess.gsession) {
             return cb();
         }
@@ -161,7 +161,7 @@ export class NeDbSessionStore extends Store implements ISessionStore {
     }
 
     all(cb: any = (err) => (err ? this.logger.error(err) : null)) {
-        this.logger.debug("ALL");
+        this.logger.trace("ALL");
         this.db
             .find({
                 isDelete: {
@@ -223,7 +223,7 @@ export class NeDbSessionStore extends Store implements ISessionStore {
     }
 
     length(cb: any = (err) => (err ? this.logger.error(err) : null)) {
-        this.logger.debug("LENGTH");
+        this.logger.trace("LENGTH");
         this.db
             .count({
                 isDelete: {
@@ -237,7 +237,7 @@ export class NeDbSessionStore extends Store implements ISessionStore {
     }
 
     clear(cb: any = (err) => (err ? this.logger.error(err) : null)) {
-        this.logger.debug("CLEAR");
+        this.logger.trace("CLEAR");
         this.db
             .update(
                 {

@@ -31,18 +31,22 @@ class ProcessController {
             );
             Mask.mask(data.session)
                 .then(() =>
-                    Promise.all(providers.map((provider) => provider.init(true).then(
-                        () => {
-                            log.info(
-                                `End init provider ${data.name} process: ${process.env.UNGATE_HTTP_ID}`,
-                            );
-                            return;
-                        },
-                        (err) => {
-                            log.error(err);
-                            return;
-                        },
-                    ))),
+                    Promise.all(
+                        providers.map((provider) =>
+                            provider.init(true).then(
+                                () => {
+                                    log.info(
+                                        `End init provider ${data.name} process: ${process.env.UNGATE_HTTP_ID}`,
+                                    );
+                                    return;
+                                },
+                                (err) => {
+                                    log.error(err);
+                                    return;
+                                },
+                            ),
+                        ),
+                    ),
                 )
                 .then(() => Mask.unmask(data.session))
                 .catch(() => Mask.unmask(data.session));

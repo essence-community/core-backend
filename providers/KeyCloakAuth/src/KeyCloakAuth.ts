@@ -305,7 +305,12 @@ export default class KeyCloakAuth extends NullAuthProvider {
                 gateContext.params[this.params.adminPathParam],
             );
             throw new BreakException("break");
-        } else if (gateContext.request.session[TOKEN_KEY]) {
+        } else if (
+            gateContext.request.session[TOKEN_KEY] ||
+            gateContext.request.headers.authorization
+                ?.toLocaleLowerCase()
+                .indexOf("bearer ") > -1
+        ) {
             gateContext.debug("KeyCloak Init grant");
             (gateContext.request as IRequestExtra).kauth = {};
 

@@ -52,13 +52,13 @@ export interface IContextParams extends ICCTParams {
         typeStore: "nedb" | "typeorm";
         typeorm: {
             type: string;
-            name: string;
             host: string;
             port: number;
-            username: string;
-            password: string;
-            database: string;
-            typeOrmExtra: string;
+            username?: string;
+            password?: string;
+            database?: string;
+            typeOrmExtra?: string;
+            extra?: string;
         };
         cookie: {
             secure: boolean | string;

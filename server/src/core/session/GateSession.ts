@@ -28,6 +28,10 @@ import RequestContext from "../request/RequestContext";
 import { debounce } from "@ungate/plugininf/lib/util/Util";
 import { noop } from "lodash";
 import * as moment from "moment-timezone";
+import { ConnectionManager } from "typeorm";
+import * as path from "path";
+import { TypeOrmSessionStore } from "./store/TypeOrmSessionStore";
+import { TypeOrmLogger } from "@ungate/plugininf/lib/db/TypeOrmLogger";
 
 export class GateSession implements IAuthController {
     private dbUsers: ILocalDB<IUserDbData>;
@@ -59,18 +63,43 @@ export class GateSession implements IAuthController {
             this.name,
             this.params,
         );
-        this.dbUsers = await Property.getUsers(this.name);
-        this.store =
-            this.params.paramSession.typeStore === "nedb"
-                ? new NeDbSessionStore({
-                      nameContext: this.name,
-                      ttl: this.params.paramSession.cookie.maxAge,
-                  })
-                : new NeDbSessionStore({
-                      nameContext: this.name,
-                      ttl: this.params.paramSession.cookie.maxAge,
-                  });
+        if (this.params.paramSession.typeStore === "nedb") {
+            this.store = new NeDbSessionStore({
+                nameContext: this.name,
+                ttl: this.params.paramSession.cookie.maxAge,
+            });
+        } else if (this.params.paramSession.typeStore === "typeorm") {
+            const connectionManager = new ConnectionManager();
+            const connection = connectionManager.create({
+                ...this.params.paramSession.typeorm,
+                extra: this.params.paramSession.typeorm.extra
+                    ? JSON.parse(this.params.paramSession.typeorm.extra)
+                    : undefined,
+                synchronize: true,
+                ...(this.params.paramSession.typeorm.typeOrmExtra
+                    ? JSON.parse(this.params.paramSession.typeorm.typeOrmExtra)
+                    : {}),
+                name: `session_store_${this.name}`,
+                logging: true,
+                logger: new TypeOrmLogger(`${this.name}:session_store`),
+                entities: [
+                    path.join(
+                        __dirname,
+                        "store",
+                        "typeorm",
+                        "entries",
+                        "*{.ts,.js}",
+                    ),
+                ],
+            });
+            this.store = new TypeOrmSessionStore({
+                connection,
+                nameContext: this.name,
+                ttl: this.params.paramSession.cookie.maxAge,
+            });
+        }
         await this.store.init();
+        this.dbUsers = await Property.getUsers(this.name);
         this.dbCache = await Property.getCache(this.name);
         this.logger.info("Inited AuthController %s", this.name);
     }

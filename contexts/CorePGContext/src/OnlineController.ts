@@ -322,16 +322,19 @@ export default class OnlineController implements ICoreController {
                                       [],
                                   )),
                         ];
-                        if (chunk.jt_form_message && cvErrors.includes("error")) {
+                        if (
+                            chunk.jt_form_message &&
+                            cvErrors.includes("error")
+                        ) {
                             gateContext.connection
-                                        .rollback()
-                                        .then(() => callback(null, chunk))
-                                        .catch((err) => {
-                                            gateContext.warn(err.message, err);
-                                            callback(null, chunk);
-                                            return Promise.resolve();
-                                        });
-                                    return;
+                                .rollback()
+                                .then(() => callback(null, chunk))
+                                .catch((err) => {
+                                    gateContext.warn(err.message, err);
+                                    callback(null, chunk);
+                                    return Promise.resolve();
+                                });
+                            return;
                         }
                         self.tempTable
                             .findMessage(cvErrors, {
@@ -351,7 +354,10 @@ export default class OnlineController implements ICoreController {
                                 }
                                 callback(null, chunk);
                             });
-                    } else if (!isEmpty(chunk.jt_message) && !isEmpty(chunk.jt_message.error)) {
+                    } else if (
+                        !isEmpty(chunk.jt_message) &&
+                        !isEmpty(chunk.jt_message.error)
+                    ) {
                         gateContext.connection
                             .rollback()
                             .then(() => callback(null, chunk))
@@ -363,9 +369,9 @@ export default class OnlineController implements ICoreController {
                     } else {
                         callback(null, chunk);
                     }
-                    rTransform._transform = (function(chunk, encode, callback) {
+                    rTransform._transform = function (chunk, encode, callback) {
                         callback(null, chunk);
-                    }).bind(rTransform);
+                    }.bind(rTransform);
                 },
             });
             result.data = safePipe(result.data, rTransform);
