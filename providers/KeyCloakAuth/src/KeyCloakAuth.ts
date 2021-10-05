@@ -323,6 +323,21 @@ export default class KeyCloakAuth extends NullAuthProvider {
                         throw new Error("Not Auth");
                     }
                     const dataUser = await this.generateUserData(gateContext);
+                    if (!session) {
+                        await this.authController.addUser(
+                            dataUser.idUser,
+                            this.name,
+                            dataUser.userData,
+                        );
+                        await this.authController.updateHashAuth();
+                        const sess = await this.createSession({
+                            context: gateContext,
+                            idUser: dataUser.idUser,
+                            userData: dataUser.userData,
+                        });
+
+                        return this.authController.loadSession(gateContext, sess.session);
+                    }
                     gateContext.request.session.gsession.userData = {
                         ...gateContext.request.session.gsession.userData,
                         ...dataUser.userData,
