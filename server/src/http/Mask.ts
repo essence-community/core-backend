@@ -3,14 +3,14 @@ import ISession from "@ungate/plugininf/lib/ISession";
 import Logger from "@ungate/plugininf/lib/Logger";
 import { debounce } from "@ungate/plugininf/lib/util/Util";
 import { isFunction, isObject, noop } from "lodash";
+import { IMask, TCallBack } from "@ungate/plugininf/lib/IMask";
 const logger = Logger.getLogger("Mask");
-type TCallBack = () => Promise<void>;
 interface IFObject {
     scope?: any;
     callback: TCallBack;
 }
 
-class BMask {
+class BMask implements IMask {
     private maskFlag: boolean = false;
     // tslint:disable-next-line:variable-name
     private _events: {

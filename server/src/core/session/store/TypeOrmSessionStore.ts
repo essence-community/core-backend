@@ -1,4 +1,4 @@
-import { SessionOptions, Store, Session } from "express-session";
+import { SessionOptions, Store } from "express-session";
 import { IStoreTypes } from "./Store.types";
 import Logger from "@ungate/plugininf/lib/Logger";
 import { ISessionData } from "@ungate/plugininf/lib/ISession";
@@ -38,20 +38,20 @@ export class TypeOrmSessionStore extends Store implements ISessionStore {
         return;
     }
 
-    get(ck_id, cb: any = (err) => (err ? this.logger.error(err) : null)) {
-        this.logger.trace("GET %s", ck_id);
+    get(id, cb: any = (err) => (err ? this.logger.error(err) : null)) {
+        this.logger.trace("GET %s", id);
         const now = new Date();
         this.connection
             .getRepository(SessionModel)
             .findOne({
                 where: [
                     {
-                        id: ck_id,
+                        id,
                         isDelete: IsNull(),
                         expire: MoreThanOrEqual(now),
                     },
                     {
-                        id: ck_id,
+                        id,
                         isDelete: false,
                         expire: MoreThanOrEqual(now),
                     },
@@ -60,12 +60,12 @@ export class TypeOrmSessionStore extends Store implements ISessionStore {
             .then((val) => cb(null, val ? val.data : undefined))
             .catch((err) => cb(err));
     }
-    set(ck_id, data, cb: any = (err) => (err ? this.logger.error(err) : null)) {
-        this.logger.trace("SET %s data %j", ck_id, data);
+    set(id, data, cb: any = (err) => (err ? this.logger.error(err) : null)) {
+        this.logger.trace("SET %s data %j", id, data);
         this.connection
             .getRepository(SessionModel)
             .save({
-                id: ck_id,
+                id,
                 data,
                 expire: new Date(
                     Date.now() +
@@ -79,12 +79,12 @@ export class TypeOrmSessionStore extends Store implements ISessionStore {
                 (err) => cb(err),
             );
     }
-    destroy(ck_id, cb: any = (err) => (err ? this.logger.error(err) : null)) {
-        this.logger.trace("DESTROY %s", ck_id);
+    destroy(id, cb: any = (err) => (err ? this.logger.error(err) : null)) {
+        this.logger.trace("DESTROY %s", id);
         this.connection
             .getRepository(SessionModel)
             .save({
-                id: ck_id,
+                id,
                 isDelete: true,
             })
             .then(
@@ -94,11 +94,11 @@ export class TypeOrmSessionStore extends Store implements ISessionStore {
     }
 
     touch(
-        ck_id,
+        id,
         sess,
         cb: any = (err) => (err ? this.logger.error(err) : null),
     ) {
-        this.logger.trace("TOUCH %s data %j", ck_id, sess);
+        this.logger.trace("TOUCH %s data %j", id, sess);
         if (!sess.gsession) {
             return cb();
         }
@@ -116,7 +116,7 @@ export class TypeOrmSessionStore extends Store implements ISessionStore {
                 data: sess,
             })
             .where({
-                id: ck_id,
+                id,
                 expire: LessThan(
                     new Date(
                         Date.now() -

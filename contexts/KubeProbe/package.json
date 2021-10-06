@@ -1,7 +1,7 @@
 {
-    "name": "@ungate-context/pgcontext",
+    "name": "@ungate-context/kube-probe",
     "version": "1.0.0",
-    "description": "Контекст конструктора в PostgresSQL",
+    "description": "Контекст kube-probe",
     "author": "Ivan Artemov (honyrik@gmail.com)",
     "license": "MIT",
     "private": true,
