@@ -8,6 +8,7 @@ import * as websocket from "websocket";
 import Constants from "../../core/Constants";
 import Property, { getLocalDb } from "../../core/property/Property";
 import IServerConfig from "../../core/property/IServerConfig";
+import { noop } from "lodash";
 const logger = Logger.getLogger("AdminEventController");
 const TIMEOUT_CONNECT = 15000;
 
@@ -15,7 +16,7 @@ interface IServersConnect {
     [key: string]: websocket.connection;
 }
 
-function sendAllDate(
+function sendAllDate (
     conn: websocket.connection,
     db: ILocalDB<any>,
 ): Promise<void> {
@@ -43,7 +44,7 @@ class AdminEventController {
     private serversSend: IServersConnect = {};
     private serversReceive: IServersConnect = {};
     private dbServers: ILocalDB<IServerConfig>;
-    public async init(): Promise<void> {
+    public async init (): Promise<void> {
         if (
             !(
                 fs.existsSync(Constants.GATE_ADMIN_CLUSTER_KEY) &&
@@ -103,17 +104,23 @@ class AdminEventController {
 
         this.wsServer.on("request", this.onRequest.bind(this));
         this.dbServers = await Property.getServers();
+        await this.connectServers();
+    }
+
+    public async connectServers (name?: string, first = false) {
         const configs = await this.dbServers.find({
-            ck_id: {
-                $ne: Constants.GATE_NODE_NAME,
-            },
+            ck_id: name
+                ? name
+                : {
+                      $ne: Constants.GATE_NODE_NAME,
+                  },
         });
         configs.forEach((conf) => {
-            this.onConnectServer(conf.ck_id, conf.cv_ip, conf.cn_port);
+            this.onConnectServer(conf.ck_id, conf.cv_ip, conf.cn_port, true);
         });
     }
 
-    public loadProperty(conn: websocket.connection) {
+    public loadProperty (conn: websocket.connection) {
         const rows = [];
         rows.push(Property.getProviders().then((db) => sendAllDate(conn, db)));
         rows.push(Property.getContext().then((db) => sendAllDate(conn, db)));
@@ -125,14 +132,14 @@ class AdminEventController {
         return Promise.all(rows);
     }
 
-    public async callDb(conn: websocket.connection, data) {
+    public async callDb (conn: websocket.connection, data) {
         const db = await getLocalDb(data.name, data.isTemp);
         if (db) {
             return db[data.action](...data.args);
         }
     }
 
-    public async sendServerCallDb(data) {
+    public async sendServerCallDb (data) {
         const conn = this.serversSend[data.server];
         if (!conn) {
             return;
@@ -150,7 +157,7 @@ class AdminEventController {
         );
     }
 
-    public async sendAllServerCallDb(data) {
+    public async sendAllServerCallDb (data) {
         const conns = Object.values(this.serversSend);
         if (conns.length === 0) {
             return;
@@ -170,7 +177,7 @@ class AdminEventController {
         });
     }
 
-    public async sendServerAdminCmd(data) {
+    public async sendServerAdminCmd (data) {
         const conn = this.serversSend[data.server];
         if (!conn) {
             return;
@@ -187,7 +194,7 @@ class AdminEventController {
         );
     }
 
-    public async callProcess(conn: websocket.connection, data) {
+    public async callProcess (conn: websocket.connection, data) {
         sendProcess({
             command: data.command,
             data: data.data,
@@ -195,7 +202,7 @@ class AdminEventController {
         });
     }
 
-    private onRequest(request) {
+    private onRequest (request) {
         const name = request.resourceURL.query.server;
         const connection: websocket.connection = request.accept(
             "adminevents",
@@ -224,13 +231,16 @@ class AdminEventController {
         });
     }
 
-    private onConnectServer(
+    private onConnectServer (
         name: string,
         ip: string,
         port: number = Constants.GATE_ADMIN_CLUSTER_PORT,
         first: boolean = true,
     ) {
         logger.info(`Connect to ${name} ${ip} ${port}`);
+        if (this.serversSend[name]) {
+            return;
+        }
         const client = new websocket.client({
             tlsOptions: {
                 ca: this.ca,
@@ -242,7 +252,10 @@ class AdminEventController {
         client.on("connectFailed", (error) => {
             logger.warn(error.message, error);
             setTimeout(
-                () => this.onConnectServer(name, ip, port, false),
+                () =>
+                    this.connectServers(name).then(noop, (err) =>
+                        logger.error(err),
+                    ),
                 TIMEOUT_CONNECT,
             );
         });
@@ -254,14 +267,20 @@ class AdminEventController {
                 logger.warn(error.message, error);
                 delete this.serversSend[name];
                 setTimeout(
-                    () => this.onConnectServer(name, ip, port, false),
+                    () =>
+                        this.connectServers(name, false).then(noop, (err) =>
+                            logger.error(err),
+                        ),
                     TIMEOUT_CONNECT,
                 );
             });
             connection.on("close", (code) => {
                 delete this.serversSend[name];
                 setTimeout(
-                    () => this.onConnectServer(name, ip, port, false),
+                    () =>
+                        this.connectServers(name, false).then(noop, (err) =>
+                            logger.error(err),
+                        ),
                     TIMEOUT_CONNECT,
                 );
             });
