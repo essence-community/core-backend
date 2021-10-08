@@ -212,7 +212,7 @@ export default class TokenAuth extends NullAuthProvider {
         sessionId: string,
         session: ISession,
     ): Promise<ISession> {
-        return GrantAttacher(gateContext, this.grantManager)
+        return GrantAttacher(this.name, gateContext, this.grantManager)
             .then(async (grant) => {
                 if (!grant) {
                     throw new Error("Not Auth");
