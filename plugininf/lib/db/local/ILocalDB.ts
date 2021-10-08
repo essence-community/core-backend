@@ -168,7 +168,7 @@ export default interface ILocalDB<T> {
         },
     ): Promise<void>;
     remove(
-        filter: FilterQuery<Document<T>>,
+        filter?: FilterQuery<Document<T>>,
         options?: RemoveOptions,
     ): Promise<void>;
     count(filter?: FilterQuery<Document<T>>): Promise<number>;

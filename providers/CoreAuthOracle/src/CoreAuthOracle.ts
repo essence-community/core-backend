@@ -25,7 +25,6 @@ export default class CoreAuthOracle extends NullAuthProvider {
 
     public dataSource: OracleDB;
 
-    private dbUsers: ILocalDB<IUserDbData>;
     constructor(
         name: string,
         params: ICCTParams,
@@ -116,9 +115,6 @@ export default class CoreAuthOracle extends NullAuthProvider {
         };
     }
     public async init(reload?: boolean): Promise<void> {
-        if (!this.dbUsers) {
-            this.dbUsers = this.authController.getUserDb();
-        }
         await this.dataSource.createPool();
         const users = {};
         this.log.trace("Cache users...");

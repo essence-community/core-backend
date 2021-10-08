@@ -1,0 +1,19 @@
+{
+    "name": "@ungate-provider/token-bearer-auth",
+    "version": "1.0.0",
+    "description": "Провайдер авторизации JWT Bearer",
+    "author": "Ivan Artemov (honyrik@gmail.com)",
+    "license": "MIT",
+    "dependencies": {
+        "@ungate/plugininf": "^1.0.0",
+        "axios": "^0.22.0",
+        "jwk-to-pem": "^2.0.5",
+        "keycloak-connect": "^14.0.0",
+        "lodash": "^4.17.15"
+    },
+    "devDependencies": {
+        "@types/jwk-to-pem": "^2.0.1",
+        "@types/keycloak-connect": "^7.0.0",
+        "@types/lodash": "^4.14.150"
+    }
+}

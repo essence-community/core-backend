@@ -257,7 +257,9 @@ export class KubeController {
             );
         if (pods && pods.length) {
             this.dbServer
-                .remove({})
+                .remove({
+                    $nin: [pods.map((pod) => ({ck_id: pod.ck_id}))],
+                })
                 .then(() => this.dbServer.insert(pods))
                 .then(noop, (err) => logger.error(err));
         }

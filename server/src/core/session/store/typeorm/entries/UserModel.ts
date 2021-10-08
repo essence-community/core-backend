@@ -1,20 +1,21 @@
+import { IUserData, IUserDbData } from '@ungate/plugininf/lib/ISession';
 import { Column, Entity, PrimaryColumn } from "typeorm";
 import { Audit } from "../../../../dao/Audit";
 
 @Entity("t_user")
-export class UserModel extends Audit {
+export class UserModel extends Audit implements IUserDbData {
     @PrimaryColumn({
         name: "ck_id",
         comment: "Идентификатор пользователя",
     })
-    id: string;
+    ["ck_id"]: string;
 
     @Column({
         name: "ck_d_provider",
         nullable: false,
         comment: "Индетификатор провайдера",
     })
-    provider: string;
+    ["ck_d_provider"]: string;
 
     @Column({
         name: "cct_data",
@@ -26,5 +27,5 @@ export class UserModel extends Audit {
             from: (value) => (value ? JSON.parse(value) : {}),
         },
     })
-    data: Record<string, any> = {};
+    data: IUserData;
 }

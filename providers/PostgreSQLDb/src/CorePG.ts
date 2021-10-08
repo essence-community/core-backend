@@ -158,7 +158,7 @@ export default class CorePG extends IPostgreSQLController {
                 ? this.dbUsers.find().then(async (usersRows) => {
                       let errRow;
                       const result = usersRows.every((userRow) => {
-                          const item = userRow.data as IUserData;
+                          const item = userRow.data || {} as IUserData;
                           if (!isObject(item)) {
                               gateContext.error(`Bad tt_user data ${userRow}`);
                               errRow = new ErrorException(

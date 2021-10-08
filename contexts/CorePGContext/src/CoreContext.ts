@@ -310,17 +310,23 @@ export default class CoreContext extends NullContext {
         }
         const json = JSON.parse(gateContext.params.json);
         return this.dbUsers
-            .update(
-                {
-                    ck_id: `${gateContext.session.idUser}:${gateContext.session.nameProvider}`,
-                },
-                {
-                    $set: {
-                        "data.ck_dept": json.data.ck_dept,
-                        "data.cv_timezone": json.data.cv_timezone || "+03:00",
+            .findOne({
+                ck_id: `${gateContext.session.idUser}:${gateContext.session.nameProvider}`,
+            }).then((value) => {
+                return this.dbUsers.update(
+                    {
+                        ck_id: `${gateContext.session.idUser}:${gateContext.session.nameProvider}`,
                     },
-                },
-            )
+                    {
+                        ...value,
+                        data: {
+                            ...value.data,
+                            "ck_dept": json.data.ck_dept,
+                            "cv_timezone": json.data.cv_timezone || "+03:00",
+                        }
+                    },
+                )
+            })
             .then(() =>
                 Promise.reject(
                     new BreakException({

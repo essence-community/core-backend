@@ -46,7 +46,6 @@ export default class CoreAuthPg extends NullAuthProvider {
     public dataSource: PostgresDB;
     public params: IParamsProvider;
 
-    private dbUsers: ILocalDB<IUserDbData>;
     private eventConnect: Connection;
     private reloadTemp = debounce(() => {
         this.initTemp().then(noop, (err) => this.log.error(err));
@@ -138,9 +137,6 @@ export default class CoreAuthPg extends NullAuthProvider {
         );
     }
     public async init(reload?: boolean): Promise<void> {
-        if (!this.dbUsers) {
-            this.dbUsers = this.authController.getUserDb();
-        }
         if (this.eventConnect) {
             await this.eventConnect.rollbackAndClose();
             this.eventConnect = null;

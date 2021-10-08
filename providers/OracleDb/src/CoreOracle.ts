@@ -193,7 +193,7 @@ export default class CoreOracle implements IOracleController {
                 ? this.dbUsers.find().then(async (usersRows) => {
                       let errRow;
                       const result = usersRows.every((userRow) => {
-                          const item: Partial<IUserData> = userRow;
+                          const item: Partial<IUserData> = userRow.data || {};
                           if (!isObject(item)) {
                               gateContext.error(`Bad tt_user data ${userRow}`);
                               errRow = new ErrorException(

@@ -7,7 +7,7 @@ export class CacheModel extends Audit {
         name: "ck_id",
         comment: "Идентификатор",
     })
-    id: string;
+    ["ck_id"]: string;
 
     @Column({
         name: "cct_data",

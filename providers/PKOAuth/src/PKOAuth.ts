@@ -69,8 +69,6 @@ export default class PKOAuth extends NullAuthProvider {
     }
 
     public dataSource: PostgresDB;
-
-    private dbUsers: ILocalDB<IUserDbData>;
     private ad: ActiveDirectory;
     private mapUserAttr: IObjectParam = {};
     private mapGroupActions: IObjectParam = {};
@@ -220,9 +218,6 @@ export default class PKOAuth extends NullAuthProvider {
         };
     }
     public async init(reload?: boolean): Promise<void> {
-        if (!this.dbUsers) {
-            this.dbUsers = this.authController.getUserDb();
-        }
         await this.dataSource.createPool();
         const users = {};
         return this.dataSource
