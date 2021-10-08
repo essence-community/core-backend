@@ -18,11 +18,11 @@ export class CacheStore implements ILocalDB<ICacheDb> {
     dbname: string;
     isTemp: boolean = false;
     connection: Connection;
-    constructor (name: string, conn: Connection) {
+    constructor(name: string, conn: Connection) {
         this.dbname = name;
         this.connection = conn;
     }
-    find (
+    find(
         filter?: FilterQuery<Document<ICache>>,
     ): Promise<Document<ICacheDb>[]> {
         const qb = this.connection
@@ -38,7 +38,7 @@ export class CacheStore implements ILocalDB<ICacheDb> {
             })),
         );
     }
-    findOne (
+    findOne(
         filter: FilterQuery<Document<ICache>>,
         noErrorNotFound?: boolean,
     ): Promise<Document<ICacheDb>> {
@@ -58,7 +58,7 @@ export class CacheStore implements ILocalDB<ICacheDb> {
                   ck_id,
               }));
     }
-    insert (
+    insert(
         newDoc: InsertDoc<Document<ICacheDb>> | InsertDoc<Document<ICacheDb>>[],
     ): Promise<void> {
         return this.connection.getRepository(CacheModel).save(
@@ -70,7 +70,7 @@ export class CacheStore implements ILocalDB<ICacheDb> {
             ) as any,
         );
     }
-    async update (
+    async update(
         filter: FilterQuery<Document<ICache>>,
         update: UpdateQuery<Document<ICacheDb>>,
         options?: {
@@ -91,7 +91,7 @@ export class CacheStore implements ILocalDB<ICacheDb> {
         });
         await qb.execute();
     }
-    async remove (
+    async remove(
         filter?: FilterQuery<Document<ICache>>,
         options?: RemoveOptions,
     ): Promise<void> {
@@ -105,7 +105,7 @@ export class CacheStore implements ILocalDB<ICacheDb> {
         await qb.execute();
         return;
     }
-    count (filter?: FilterQuery<Document<ICache>>): Promise<number> {
+    count(filter?: FilterQuery<Document<ICache>>): Promise<number> {
         const qb = this.connection
             .getRepository(CacheModel)
             .createQueryBuilder();

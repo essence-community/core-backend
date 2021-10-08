@@ -44,7 +44,7 @@ export class GateSession implements IAuthController {
     private params: IContextParams;
     private timezone: string;
 
-    constructor (
+    constructor(
         private name: string,
         params: IContextParams,
         private secret: string,
@@ -59,7 +59,7 @@ export class GateSession implements IAuthController {
         );
     }
 
-    public async init () {
+    public async init() {
         this.logger.debug(
             "Start Init AuthController %s params %j",
             this.name,
@@ -109,25 +109,25 @@ export class GateSession implements IAuthController {
         this.logger.info("Inited AuthController %s", this.name);
     }
 
-    public sha1 (buf): string {
+    public sha1(buf): string {
         const shasum = crypto.createHash("sha1");
         shasum.update(buf);
         return shasum.digest("hex");
     }
 
-    public static sha1 (buf): string {
+    public static sha1(buf): string {
         const shasum = crypto.createHash("sha1");
         shasum.update(buf);
         return shasum.digest("hex");
     }
 
-    public sha256 (buf): string {
+    public sha256(buf): string {
         const shasum = crypto.createHash("sha256");
         shasum.update(buf);
         return shasum.digest("hex");
     }
 
-    public static sha256 (buf): string {
+    public static sha256(buf): string {
         const shasum = crypto.createHash("sha256");
         shasum.update(buf);
         return shasum.digest("hex");
@@ -140,7 +140,7 @@ export class GateSession implements IAuthController {
      * @param data данные пользователя
      * @param sessionDuration время жизни сессии в минутах
      */
-    public createSession ({
+    public createSession({
         context,
         idUser,
         nameProvider,
@@ -209,7 +209,7 @@ export class GateSession implements IAuthController {
         });
     }
 
-    public async loadSession (
+    public async loadSession(
         context?: IContext,
         sessionId?: string,
         isNotification = false,
@@ -283,7 +283,7 @@ export class GateSession implements IAuthController {
      * Устаревание сессии
      * @param context {IContext}
      */
-    public logoutSession (context: RequestContext) {
+    public logoutSession(context: RequestContext) {
         return new Promise<void>((resolve, reject) => {
             if (context.request.session.gsession) {
                 context.request.session.cookie.expires = new Date();
@@ -305,7 +305,7 @@ export class GateSession implements IAuthController {
      * @param isExpired {boolean} Только истекшии
      * @returns {Promise}
      */
-    public findSessions (
+    public findSessions(
         sessionId: string | string[],
         isExpired: boolean = false,
     ): Promise<{ [sid: string]: ISessionData }> {
@@ -333,7 +333,7 @@ export class GateSession implements IAuthController {
      * @param nameProvider наименование провайдера
      * @param data Данные пользователя
      */
-    public addUser (
+    public addUser(
         idUser: string,
         nameProvider: string,
         data: IUserData,
@@ -383,7 +383,7 @@ export class GateSession implements IAuthController {
      * @param idUser индификатор пользователя
      * @param nameProvider наименование провайдера
      */
-    public async getDataUser (
+    public async getDataUser(
         idUser: string,
         nameProvider: string,
         isAccessErrorNotFound: boolean = false,
@@ -403,15 +403,15 @@ export class GateSession implements IAuthController {
         return null;
     }
 
-    public getUserDb (): ILocalDB<IUserDbData> {
+    public getUserDb(): ILocalDB<IUserDbData> {
         return this.dbUsers;
     }
 
-    public getSessionStore (): ISessionStore {
+    public getSessionStore(): ISessionStore {
         return this.store;
     }
 
-    public getCacheDb (): ILocalDB<ICacheDb> {
+    public getCacheDb(): ILocalDB<ICacheDb> {
         return this.dbCache;
     }
 
@@ -419,7 +419,7 @@ export class GateSession implements IAuthController {
      * Обновляем hash авторизации
      * @returns {Promise.<*>}
      */
-    public updateHashAuth () {
+    public updateHashAuth() {
         return this.dbUsers.find().then((data) => {
             const users = [];
             const userActions = [];
@@ -497,7 +497,7 @@ export class GateSession implements IAuthController {
      * Получение соли
      * @returns hash salt
      */
-    public getHashSalt (): string {
+    public getHashSalt(): string {
         let hashSalt = Constants.HASH_SALT;
         if (!hashSalt) {
             const hashLocalSalt = Constants.APP_START_TIME.toString(16);
@@ -510,7 +510,7 @@ export class GateSession implements IAuthController {
         return hashSalt;
     }
 
-    public sign (val: string, secret: string): string {
+    public sign(val: string, secret: string): string {
         return (
             val +
             "." +
@@ -521,7 +521,7 @@ export class GateSession implements IAuthController {
                 .replace(/\=+$/, "")
         );
     }
-    public unsign (val: string, secret: string): string | false {
+    public unsign(val: string, secret: string): string | false {
         const str = val.slice(0, val.lastIndexOf("."));
         const mac = this.sign(str, secret);
         const macBuffer = Buffer.from(mac);

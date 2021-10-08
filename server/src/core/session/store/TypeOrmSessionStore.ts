@@ -93,11 +93,7 @@ export class TypeOrmSessionStore extends Store implements ISessionStore {
             );
     }
 
-    touch(
-        id,
-        sess,
-        cb: any = (err) => (err ? this.logger.error(err) : null),
-    ) {
+    touch(id, sess, cb: any = (err) => (err ? this.logger.error(err) : null)) {
         this.logger.trace("TOUCH %s data %j", id, sess);
         if (!sess.gsession) {
             return cb();

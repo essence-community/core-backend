@@ -369,7 +369,7 @@ export default class OnlineController implements ICoreController {
                     } else {
                         callback(null, chunk);
                     }
-                    rTransform._transform = function (chunk, encode, callback) {
+                    rTransform._transform = function(chunk, encode, callback) {
                         callback(null, chunk);
                     }.bind(rTransform);
                 },

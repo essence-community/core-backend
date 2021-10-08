@@ -1,4 +1,11 @@
-import { Condition, DeleteOptions, LabelSelector, ListMeta, ObjectMeta, Time } from "../meta/v1";
+import {
+    Condition,
+    DeleteOptions,
+    LabelSelector,
+    ListMeta,
+    ObjectMeta,
+    Time,
+} from "../meta/v1";
 import { SELinuxOptions } from "../core/v1";
 /**
  * AllowedCSIDriver represents a single inline CSI Driver that is allowed to be used.

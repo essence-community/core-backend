@@ -312,7 +312,8 @@ export default class CoreContext extends NullContext {
         return this.dbUsers
             .findOne({
                 ck_id: `${gateContext.session.idUser}:${gateContext.session.nameProvider}`,
-            }).then((value) => {
+            })
+            .then((value) => {
                 return this.dbUsers.update(
                     {
                         ck_id: `${gateContext.session.idUser}:${gateContext.session.nameProvider}`,
@@ -321,11 +322,11 @@ export default class CoreContext extends NullContext {
                         ...value,
                         data: {
                             ...value.data,
-                            "ck_dept": json.data.ck_dept,
-                            "cv_timezone": json.data.cv_timezone || "+03:00",
-                        }
+                            ck_dept: json.data.ck_dept,
+                            cv_timezone: json.data.cv_timezone || "+03:00",
+                        },
                     },
-                )
+                );
             })
             .then(() =>
                 Promise.reject(

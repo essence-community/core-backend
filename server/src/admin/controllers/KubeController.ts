@@ -136,7 +136,7 @@ export class KubeController {
     private masterUrlApi: string;
     private token: string;
     private httpsAgent: HttpsAgent;
-    public async init () {
+    public async init() {
         this.dbServer = await Property.getServers();
         this.serverData = (await this.dbServer.findOne(
             {
@@ -189,13 +189,19 @@ export class KubeController {
                             return this.serverData;
                         }
                         if (!this.labels && result.data.metadata.labels) {
-                            this.labels = Object.entries(result.data.metadata.labels).reduce((res, [key, value]) => {
-                                res.push(`${key}=${value}`);
-                                return res;
-                            }, [] as string[]).join(",");
+                            this.labels = Object.entries(
+                                result.data.metadata.labels,
+                            )
+                                .reduce((res, [key, value]) => {
+                                    res.push(`${key}=${value}`);
+                                    return res;
+                                }, [] as string[])
+                                .join(",");
                         }
                         if (this.labels) {
-                            this.initKube().then(noop, (err) => logger.error(err));
+                            this.initKube().then(noop, (err) =>
+                                logger.error(err),
+                            );
                             this.readTimerKube = setInterval(
                                 () =>
                                     this.initKube().then(noop, (err) =>
@@ -219,10 +225,12 @@ export class KubeController {
                 );
         }
     }
-    private async initKube () {
+    private async initKube() {
         const pods: IServerConfig[] = await axios
             .get<PodList>(
-                `${this.masterUrlApi}/namespaces/${this.namespace}/pods?${qs.stringify({labelSelector: this.labels})}`,
+                `${this.masterUrlApi}/namespaces/${
+                    this.namespace
+                }/pods?${qs.stringify({ labelSelector: this.labels })}`,
                 {
                     headers: {
                         authorization: `Bearer ${this.token}`,
@@ -258,7 +266,7 @@ export class KubeController {
         if (pods && pods.length) {
             this.dbServer
                 .remove({
-                    $nin: [pods.map((pod) => ({ck_id: pod.ck_id}))],
+                    $nin: [pods.map((pod) => ({ ck_id: pod.ck_id }))],
                 })
                 .then(() => this.dbServer.insert(pods))
                 .then(noop, (err) => logger.error(err));

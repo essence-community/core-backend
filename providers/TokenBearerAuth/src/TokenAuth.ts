@@ -25,10 +25,10 @@ const FLAG_REDIRECT = "jl_keycloak_auth_callback";
 const USE_REDIRECT = "jl_keycloak_use_redirect";
 
 export default class TokenAuth extends NullAuthProvider {
-    public async init (reload?: boolean): Promise<void> {
+    public async init(reload?: boolean): Promise<void> {
         return;
     }
-    public static getParamsInfo (): IParamsInfo {
+    public static getParamsInfo(): IParamsInfo {
         return {
             redirectUrl: {
                 name: "Redirect Url",
@@ -170,7 +170,7 @@ export default class TokenAuth extends NullAuthProvider {
     }
     public params: ITokenAuthParams;
     private grantManager: GrantManager;
-    constructor (
+    constructor(
         name: string,
         params: ICCTParams,
         authController: IAuthController,
@@ -191,11 +191,13 @@ export default class TokenAuth extends NullAuthProvider {
                 .replace("-----END PUBLIC KEY-----", "")
                 .trim();
         }
-        Object.entries(this.params.grantManagerConfig).forEach(([key, value]) => {
-            if (isEmpty(value)) {
-                delete this.params.grantManagerConfig[key];
-            }
-        });
+        Object.entries(this.params.grantManagerConfig).forEach(
+            ([key, value]) => {
+                if (isEmpty(value)) {
+                    delete this.params.grantManagerConfig[key];
+                }
+            },
+        );
         this.grantManager = new GrantManager(this.params.grantManagerConfig);
     }
     /**
@@ -205,7 +207,7 @@ export default class TokenAuth extends NullAuthProvider {
      * @param sessionId
      * @param session
      */
-    public async afterSession (
+    public async afterSession(
         gateContext: IContext,
         sessionId: string,
         session: ISession,
@@ -215,7 +217,10 @@ export default class TokenAuth extends NullAuthProvider {
                 if (!grant) {
                     throw new Error("Not Auth");
                 }
-                const dataUser = await this.generateUserData(gateContext, grant);
+                const dataUser = await this.generateUserData(
+                    gateContext,
+                    grant,
+                );
                 if (!session) {
                     await this.authController.addUser(
                         dataUser.idUser,
@@ -261,16 +266,17 @@ export default class TokenAuth extends NullAuthProvider {
                 return session;
             });
     }
-    private async generateUserData (
+    private async generateUserData(
         context: IContext,
         grant: KeyCloak.Grant,
     ): Promise<{ userData: IUserData; idUser: string }> {
         const token: Token = grant.access_token;
-        const userInfo = this.grantManager.realmUrl && this.grantManager.userInfoUrl ? await this.grantManager.userInfo(
-            token ,
-        ) : token.content;
+        const userInfo =
+            this.grantManager.realmUrl && this.grantManager.userInfoUrl
+                ? await this.grantManager.userInfo(token)
+                : token.content;
         const idUser =
-        token.content[this.params.idKey] ||
+            token.content[this.params.idKey] ||
             userInfo[this.params.idKey] ||
             token.content.sub;
         const dataUser = {
@@ -311,7 +317,7 @@ export default class TokenAuth extends NullAuthProvider {
         dataUser.ca_actions = uniq(dataUser.ca_actions);
         return { userData: dataUser, idUser };
     }
-    private async redirectAccess (context: IContext): Promise<any> {
+    private async redirectAccess(context: IContext): Promise<any> {
         const redirectUrl = URL.parse(this.params.redirectUrl, true);
         redirectUrl.query[this.params.flagRedirect] = "1";
         if (context.params[USE_REDIRECT] === "1") {
@@ -321,9 +327,11 @@ export default class TokenAuth extends NullAuthProvider {
             context.response.end();
             throw new BreakException("break");
         }
-        throw new ErrorException(ErrorGate.REDIRECT_MESSAGE(URL.format(redirectUrl)));
+        throw new ErrorException(
+            ErrorGate.REDIRECT_MESSAGE(URL.format(redirectUrl)),
+        );
     }
-    public async checkQuery (
+    public async checkQuery(
         context: IContext,
         query: IGateQuery,
     ): Promise<void> {
@@ -338,7 +346,7 @@ export default class TokenAuth extends NullAuthProvider {
      * @param context
      * @param query
      */
-    public async processAuth (
+    public async processAuth(
         context: IContext,
         query: IGateQuery,
     ): Promise<IAuthResult> {
@@ -350,7 +358,7 @@ export default class TokenAuth extends NullAuthProvider {
      * @param context {IContext} Контекст вызова
      * @param query {IQuery} Запрос
      */
-    public async initContext (
+    public async initContext(
         context: IContext,
         query: IQuery = {},
     ): Promise<IQuery> {

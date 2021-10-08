@@ -201,8 +201,7 @@ export interface DeleteOptions {
  *
  * The exact format is defined in sigs.k8s.io/structured-merge-diff
  */
-export interface FieldsV1 {
-}
+export interface FieldsV1 {}
 /**
  * GroupVersion contains the "group/version" and "version" string of a version. It is made a struct to keep extensibility.
  */
@@ -425,8 +424,7 @@ export interface OwnerReference {
 /**
  * Patch is provided to give a concrete name and type to the Kubernetes PATCH request body.
  */
-export interface Patch {
-}
+export interface Patch {}
 /**
  * Preconditions must be fulfilled before an operation (update, delete, etc.) is carried out.
  */

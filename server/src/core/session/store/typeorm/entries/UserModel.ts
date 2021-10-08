@@ -1,4 +1,4 @@
-import { IUserData, IUserDbData } from '@ungate/plugininf/lib/ISession';
+import { IUserData, IUserDbData } from "@ungate/plugininf/lib/ISession";
 import { Column, Entity, PrimaryColumn } from "typeorm";
 import { Audit } from "../../../../dao/Audit";
 

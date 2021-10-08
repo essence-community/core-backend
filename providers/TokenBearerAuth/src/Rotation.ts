@@ -17,55 +17,69 @@ export class Rotation {
         this.lastTimeRequesTime = 0;
     }
 
-    retrieveJWKs (callback?: (err?: Error) => void) {
-        const url = this.certsUrl ? this.certsUrl : this.realmUrl + '/protocol/openid-connect/certs';
+    retrieveJWKs(callback?: (err?: Error) => void) {
+        const url = this.certsUrl
+            ? this.certsUrl
+            : this.realmUrl + "/protocol/openid-connect/certs";
         const options = URL.parse(url);
-        const promise = axios.get<{
-          keys?: jwkToPem.JWK,
-          error?: any,
-        }>(URL.format(options), {
-            validateStatus: () => true,
-            responseType: "json",
-          }).then((response) => {
-            if (response.status < 200 || response.status >= 300) {
-              throw new Error('Error fetching JWK Keys');
-            }
-            if (response.data.error) {
-              throw response.data.error
-            };
-            return response.data;
-          });
+        const promise = axios
+            .get<{
+                keys?: jwkToPem.JWK;
+                error?: any;
+            }>(URL.format(options), {
+                validateStatus: () => true,
+                responseType: "json",
+            })
+            .then((response) => {
+                if (response.status < 200 || response.status >= 300) {
+                    throw new Error("Error fetching JWK Keys");
+                }
+                if (response.data.error) {
+                    throw response.data.error;
+                }
+                return response.data;
+            });
         return nodeify(promise, callback);
-      }
-      getJWK (kid) {
-        let key = this.jwks.find((key) => { return (key as any).kid === kid; });
+    }
+    getJWK(kid) {
+        let key = this.jwks.find((key) => {
+            return (key as any).kid === kid;
+        });
         if (key) {
-          return new Promise((resolve, reject) => {
-            resolve(jwkToPem(key));
-          });
+            return new Promise((resolve, reject) => {
+                resolve(jwkToPem(key));
+            });
         }
         var self = this;
-      
+
         // check if we are allowed to send request
         var currentTime = new Date().getTime() / 1000;
-        if (currentTime > this.lastTimeRequesTime + this.minTimeBetweenJwksRequests) {
-          return this.retrieveJWKs()
-            .then(publicKeys => {
-              self.lastTimeRequesTime = currentTime;
-              self.jwks = publicKeys.keys;
-              var convertedKey = jwkToPem(self.jwks.find((key) => { return (key as any).kid === kid; }));
-              return convertedKey;
+        if (
+            currentTime >
+            this.lastTimeRequesTime + this.minTimeBetweenJwksRequests
+        ) {
+            return this.retrieveJWKs().then((publicKeys) => {
+                self.lastTimeRequesTime = currentTime;
+                self.jwks = publicKeys.keys;
+                var convertedKey = jwkToPem(
+                    self.jwks.find((key) => {
+                        return (key as any).kid === kid;
+                    }),
+                );
+                return convertedKey;
             });
         } else {
-          console.error('Not enough time elapsed since the last request, blocking the request');
+            console.error(
+                "Not enough time elapsed since the last request, blocking the request",
+            );
         }
-      }
-      clearCache () {
+    }
+    clearCache() {
         this.jwks.length = 0;
-      }
+    }
 }
 
 const nodeify = (promise, cb) => {
-  if (typeof cb !== 'function') return promise;
-  return promise.then((res) => cb(null, res)).catch((err) => cb(err));
+    if (typeof cb !== "function") return promise;
+    return promise.then((res) => cb(null, res)).catch((err) => cb(err));
 };

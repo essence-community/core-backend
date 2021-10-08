@@ -14,22 +14,22 @@ export class UserStore implements ILocalDB<IUserDbData> {
     dbname: string;
     isTemp: boolean = false;
     connection: Connection;
-    constructor (name: string, conn: Connection) {
+    constructor(name: string, conn: Connection) {
         this.dbname = name;
         this.connection = conn;
     }
-    find (
+    find(
         filter?: FilterQuery<Document<IUserDbData>>,
     ): Promise<Document<IUserDbData>[]> {
         const qb = this.connection
-                .getRepository(UserModel)
-                .createQueryBuilder();
-            Object.entries(filter || {}).forEach(([key, value]) => {
-                qb.andWhere(addFilter(value, key));
-            });
-            return qb.getMany();
+            .getRepository(UserModel)
+            .createQueryBuilder();
+        Object.entries(filter || {}).forEach(([key, value]) => {
+            qb.andWhere(addFilter(value, key));
+        });
+        return qb.getMany();
     }
-    findOne (
+    findOne(
         filter: FilterQuery<Document<IUserDbData>>,
         noErrorNotFound?: boolean,
     ): Promise<Document<IUserDbData>> {
@@ -39,18 +39,16 @@ export class UserStore implements ILocalDB<IUserDbData> {
         Object.entries(filter).forEach(([key, value]) => {
             qb.andWhere(addFilter(value, key));
         });
-        return noErrorNotFound
-            ? (qb.getOne())
-            : (qb.getOneOrFail());
+        return noErrorNotFound ? qb.getOne() : qb.getOneOrFail();
     }
-    insert (
+    insert(
         newDoc:
             | InsertDoc<Document<IUserDbData>>
             | InsertDoc<Document<IUserDbData>>[],
     ): Promise<void> {
         return this.connection.getRepository(UserModel).save(newDoc as any);
     }
-    async update (
+    async update(
         filter: FilterQuery<Document<IUserDbData>>,
         update: UpdateQuery<Document<IUserDbData>>,
         options?: {
@@ -69,7 +67,7 @@ export class UserStore implements ILocalDB<IUserDbData> {
         });
         await qb.execute();
     }
-    async remove (
+    async remove(
         filter?: FilterQuery<Document<IUserDbData>>,
         options?: RemoveOptions,
     ): Promise<void> {
@@ -83,7 +81,7 @@ export class UserStore implements ILocalDB<IUserDbData> {
         await qb.execute();
         return;
     }
-    count (filter?: FilterQuery<Document<IUserDbData>>): Promise<number> {
+    count(filter?: FilterQuery<Document<IUserDbData>>): Promise<number> {
         const qb = this.connection
             .getRepository(UserModel)
             .createQueryBuilder();

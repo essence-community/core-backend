@@ -2,7 +2,7 @@ import IContext from "@ungate/plugininf/lib/IContext";
 import { Grant } from "keycloak-connect";
 import { GrantManager } from "./GrantManager";
 
-export async function GrantAttacher (
+export async function GrantAttacher(
     gateContext: IContext,
     keycloak: GrantManager,
 ): Promise<Grant> {

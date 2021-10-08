@@ -221,7 +221,7 @@ export default class KeyCloakAuth extends NullAuthProvider {
             },
             this.params.keyCloakConfig,
         );
-        this.keyCloak.storeGrant = function (grant, request, response) {
+        this.keyCloak.storeGrant = function(grant, request, response) {
             if (this.stores.length < 2 || this.stores[0].get(request)) {
                 return;
             }

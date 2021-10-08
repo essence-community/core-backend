@@ -37,7 +37,7 @@ export interface ICoreParams extends IContextParams {
 }
 
 export default class CoreContext extends NullContext {
-    public static getParamsInfo (): IParamsInfo {
+    public static getParamsInfo(): IParamsInfo {
         return {
             debug: {
                 defaultValue: false,
@@ -89,7 +89,7 @@ export default class CoreContext extends NullContext {
         };
     }
 
-    public static accessDenied (): BreakException {
+    public static accessDenied(): BreakException {
         return new BreakException({
             data: ResultStream([
                 {
@@ -103,7 +103,7 @@ export default class CoreContext extends NullContext {
         });
     }
 
-    public static decodeType (doc: any): string {
+    public static decodeType(doc: any): string {
         switch (doc.cr_type) {
             case "select":
                 return "sql";
@@ -128,7 +128,7 @@ export default class CoreContext extends NullContext {
     private controller: ICoreController;
     private dataSource: OracleDB;
     private dbUsers: ILocalDB<IUserDbData>;
-    constructor (
+    constructor(
         name: string,
         params: ICCTParams,
         authController: IAuthController,
@@ -169,11 +169,11 @@ export default class CoreContext extends NullContext {
         Mask.on("beforechange", this.beforeMask, this);
     }
 
-    public async init (reload?: boolean): Promise<void> {
+    public async init(reload?: boolean): Promise<void> {
         this.dbUsers = await this.authController.getUserDb();
         return this.controller.init(reload);
     }
-    public initContext (gateContext: IContext): Promise<IContextPluginResult> {
+    public initContext(gateContext: IContext): Promise<IContextPluginResult> {
         if (!gateContext.queryName) {
             // Проверяем присутствие обязательных параметров
             throw new ErrorException(ErrorGate.REQUIRED_PARAM);
@@ -271,7 +271,7 @@ export default class CoreContext extends NullContext {
      * @param gateContext
      * @returns {*}
      */
-    public async modifyDefaultDepartment (gateContext: IContext): Promise<any> {
+    public async modifyDefaultDepartment(gateContext: IContext): Promise<any> {
         if (!gateContext.session) {
             return Promise.reject(new ErrorException(ErrorGate.REQUIRED_AUTH));
         }
@@ -313,14 +313,14 @@ export default class CoreContext extends NullContext {
             );
     }
 
-    public handleResult (
+    public handleResult(
         gateContext: IContext,
         result: IResult,
     ): Promise<IResult> {
         return this.controller.handleResult(gateContext, result);
     }
 
-    public async maskResult (): Promise<IResult> {
+    public async maskResult(): Promise<IResult> {
         const result = {
             data: ResultStream([
                 {
@@ -337,12 +337,12 @@ export default class CoreContext extends NullContext {
         return result as IResult;
     }
 
-    public destroy (): Promise<void> {
+    public destroy(): Promise<void> {
         Mask.un("beforechange", this.beforeMask, this);
         return this.controller.destroy();
     }
 
-    private beforeMask (newFlag: boolean, oldFlag: boolean, session: any = {}) {
+    private beforeMask(newFlag: boolean, oldFlag: boolean, session: any = {}) {
         logger.debug(
             `Check mask new: ${newFlag} old: ${oldFlag} session: ${JSON.stringify(
                 session,

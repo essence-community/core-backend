@@ -89,8 +89,7 @@ export interface StorageVersionList {
 /**
  * StorageVersionSpec is an empty spec.
  */
-export interface StorageVersionSpec {
-}
+export interface StorageVersionSpec {}
 /**
  * API server instances report the versions they can decode and the version they encode objects to when persisting objects in the backend.
  */

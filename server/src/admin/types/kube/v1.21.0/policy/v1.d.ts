@@ -1,4 +1,10 @@
-import { Condition, LabelSelector, ListMeta, ObjectMeta, Time } from "../meta/v1";
+import {
+    Condition,
+    LabelSelector,
+    ListMeta,
+    ObjectMeta,
+    Time,
+} from "../meta/v1";
 /**
  * PodDisruptionBudget is an object to define the max disruption that can be caused to a collection of pods
  */

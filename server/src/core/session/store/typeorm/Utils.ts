@@ -33,7 +33,7 @@ const QueryOperatorsStr = [
 ];
 const LogicalOperatorsStr = ["$not", "$or", "$and"];
 const AllOperastors = [...QueryOperatorsStr, LogicalOperatorsStr];
-export function addFilter<T, F> (
+export function addFilter<T, F>(
     value: FilterQuery<Document<T>>,
     key: string,
     parentKey?: string,

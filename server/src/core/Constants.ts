@@ -78,7 +78,7 @@ class Constants extends Constant {
         process.env.GATE_DEFAULT_TIMEZONE_DATE || "Etc/GMT-3";
 }
 const constants = new Constants();
-Date.prototype.toJSON = function () {
+Date.prototype.toJSON = function() {
     return moment(this)
         .clone()
         .tz(constants.DEFAULT_TIMEZONE_DATE)

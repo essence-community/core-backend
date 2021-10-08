@@ -239,8 +239,7 @@ export interface CustomResourceSubresourceScale {
 /**
  * CustomResourceSubresourceStatus defines how to serve the status subresource for CustomResources. Status is represented by the `.status` JSON path inside of a CustomResource. When set, * exposes a /status subresource for the custom resource * PUT requests to the /status subresource take a custom resource object, and ignore changes to anything except the status stanza * PUT/POST/PATCH requests to the custom resource ignore changes to the status stanza
  */
-export interface CustomResourceSubresourceStatus {
-}
+export interface CustomResourceSubresourceStatus {}
 /**
  * CustomResourceSubresources defines the status and scale subresources for CustomResources.
  */
@@ -273,8 +272,7 @@ export interface ExternalDocumentation {
 /**
  * JSON represents any valid JSON value. These types are supported: bool, int64, float64, string, []interface{}, map[string]interface{} and nil.
  */
-export interface JSON {
-}
+export interface JSON {}
 /**
  * JSONSchemaProps is a JSON-Schema following Specification Draft 4 (http://json-schema.org/).
  */
@@ -336,7 +334,9 @@ export interface JSONSchemaProps {
 /**
  * JSONSchemaPropsOrArray represents a value that can either be a JSONSchemaProps or an array of JSONSchemaProps. Mainly here for serialization purposes.
  */
-export declare type JSONSchemaPropsOrArray = JSONSchemaProps | JSONSchemaProps[];
+export declare type JSONSchemaPropsOrArray =
+    | JSONSchemaProps
+    | JSONSchemaProps[];
 /**
  * JSONSchemaPropsOrBool represents JSONSchemaProps or a boolean value. Defaults to true for the boolean property.
  */
