@@ -1,5 +1,5 @@
 import { SessionOptions, Store } from "express-session";
-import { IStoreTypes } from "./Store.types";
+import { IStoreTypes, IGateSession } from "./Store.types";
 import Logger from "@ungate/plugininf/lib/Logger";
 import { ISessionData } from "@ungate/plugininf/lib/ISession";
 import { IRufusLogger } from "rufus";
@@ -60,19 +60,25 @@ export class TypeOrmSessionStore extends Store implements ISessionStore {
             .then((val) => cb(null, val ? val.data : undefined))
             .catch((err) => cb(err));
     }
-    set(id, data, cb: any = (err) => (err ? this.logger.error(err) : null)) {
+    set(
+        id,
+        data: IGateSession,
+        cb: any = (err) => (err ? this.logger.error(err) : null),
+    ) {
         this.logger.trace("SET %s data %j", id, data);
         this.connection
             .getRepository(SessionModel)
             .save({
                 id,
                 data,
-                expire: new Date(
-                    Date.now() +
-                        (data.sessionDuration
-                            ? data.sessionDuration * 60000
-                            : this.ttl * 1000),
-                ),
+                expire:
+                    data.cookie.expires ||
+                    new Date(
+                        Date.now() +
+                            (data.sessionDuration
+                                ? data.sessionDuration * 60000
+                                : this.ttl * 1000),
+                    ),
             })
             .then(
                 () => cb(),
@@ -93,22 +99,55 @@ export class TypeOrmSessionStore extends Store implements ISessionStore {
             );
     }
 
-    touch(id, sess, cb: any = (err) => (err ? this.logger.error(err) : null)) {
+    touch(
+        id,
+        sess: IGateSession,
+        cb: any = (err) => (err ? this.logger.error(err) : null),
+    ) {
         this.logger.trace("TOUCH %s data %j", id, sess);
         if (!sess.gsession) {
             return cb();
+        }
+        const oldDate = sess.cookie.expires;
+        if (
+            oldDate &&
+            oldDate.getTime() <
+                new Date(
+                    Date.now() -
+                        (sess.sessionDuration
+                            ? sess.sessionDuration * 60000
+                            : this.ttl * 1000) *
+                            0.1,
+                ).getTime()
+        ) {
+            return cb();
+        } else {
+            sess.cookie.maxAge = sess.sessionDuration
+                ? sess.sessionDuration * 60000
+                : this.ttl * 1000;
+            sess.cookie.originalMaxAge = sess.sessionDuration
+                ? sess.sessionDuration * 60000
+                : this.ttl * 1000;
+            sess.cookie.expires = new Date(
+                Date.now() +
+                    (sess.sessionDuration
+                        ? sess.sessionDuration * 60000
+                        : this.ttl * 1000),
+            );
         }
         this.connection
             .getRepository(SessionModel)
             .createQueryBuilder("session")
             .update(SessionModel)
             .set({
-                expire: new Date(
-                    Date.now() +
-                        (sess.sessionDuration
-                            ? sess.sessionDuration * 60000
-                            : this.ttl * 1000),
-                ),
+                expire:
+                    sess.cookie.expires ||
+                    new Date(
+                        Date.now() +
+                            (sess.sessionDuration
+                                ? sess.sessionDuration * 60000
+                                : this.ttl * 1000),
+                    ),
                 data: sess,
             })
             .where({

@@ -7,6 +7,8 @@ import Grant from "keycloak-connect/middleware/auth-utils/grant";
 import Token from "keycloak-connect/middleware/auth-utils/token";
 import { Rotation } from "./Rotation";
 import { IGrantManagerConfig, IToken } from "./TokenAuth.types";
+import Logger from "@ungate/plugininf/lib/Logger";
+const logger = Logger.getLogger("GrantManager");
 
 export class GrantManager {
     public notBefore: number;
@@ -38,8 +40,8 @@ export class GrantManager {
     obtainDirectly(username, password, callback, scopeParam) {
         const params = {
             client_id: this.clientId,
-            username: username,
-            password: password,
+            username,
+            password,
             grant_type: "password",
             scope: scopeParam || "openid",
         };
@@ -51,7 +53,7 @@ export class GrantManager {
         const params = {
             client_session_state: sessionId,
             client_session_host: sessionHost,
-            code: code,
+            code,
             grant_type: "authorization_code",
             client_id: this.clientId,
         };
@@ -105,7 +107,7 @@ export class GrantManager {
                     "Bearer " + request.kauth.grant.access_token.token;
             }
         } else {
-            let header = request.headers.authorization;
+            const header = request.headers.authorization;
             let bearerToken;
 
             if (
@@ -137,15 +139,13 @@ export class GrantManager {
             permissions = [];
         }
 
-        for (let i = 0; i < permissions.length; i++) {
-            var resource = permissions[i];
-            var permission = resource.id;
+        for (const resource of permissions) {
+            let permission = resource.id;
 
             if (resource.scopes && resource.scopes.length > 0) {
                 permission += "#";
 
-                for (let j = 0; j < resource.scopes.length; j++) {
-                    var scope = resource.scopes[j];
+                for (const scope of resource.scopes) {
                     if (permission.indexOf("#") !== permission.length - 1) {
                         permission += ",";
                     }
@@ -160,9 +160,9 @@ export class GrantManager {
             params.permission.push(permission);
         }
 
-        let manager = this;
+        const manager = this;
 
-        var handler = (resolve, reject, json) => {
+        const handler = (resolve, reject, json) => {
             try {
                 if (
                     authzRequest.response_mode === "decision" ||
@@ -276,7 +276,7 @@ export class GrantManager {
             })
             .catch((err) => {
                 if (err.response) {
-                    console.log(err.response.data);
+                    logger.error(err.response.data);
                     throw new Error("Error fetching account");
                 }
                 throw err;
@@ -285,7 +285,7 @@ export class GrantManager {
         return nodeify(promise, callback);
     }
     getAccount() {
-        console.error(
+        logger.error(
             "GrantManager#getAccount is deprecated. See GrantManager#userInfo",
         );
         return this.userInfo.apply(this, arguments);
@@ -338,7 +338,7 @@ export class GrantManager {
             } else if (token.content.iss !== this.realmUrl) {
                 reject(new Error("invalid token (wrong ISS)"));
             } else {
-                var audienceData = Array.isArray(token.content.aud)
+                const audienceData = Array.isArray(token.content.aud)
                     ? token.content.aud
                     : [token.content.aud];
                 if (expectedType === "ID") {
@@ -412,13 +412,13 @@ export class GrantManager {
         });
     }
     validateGrant(grant) {
-        var self = this;
-        const validateGrantToken = (grant, tokenName, expectedType) => {
+        const self = this;
+        const validateGrantToken = (grantData, tokenName, expectedType) => {
             return new Promise<void>((resolve, reject) => {
                 // check the access token
-                this.validateToken(grant[tokenName], expectedType)
+                this.validateToken(grantData[tokenName], expectedType)
                     .then((token) => {
-                        grant[tokenName] = token;
+                        grantData[tokenName] = token;
                         resolve();
                     })
                     .catch((err) => {
@@ -432,7 +432,7 @@ export class GrantManager {
             });
         };
         return new Promise((resolve, reject) => {
-            var promises = [];
+            const promises = [];
             promises.push(validateGrantToken(grant, "access_token", "Bearer"));
             if (!self.bearerOnly) {
                 if (grant.id_token) {
@@ -515,7 +515,7 @@ const fetch = (manager: GrantManager, handler, options, params) => {
             })
             .then((res) => {
                 if (res.status < 200 || res.status > 299) {
-                    console.log(res.data);
+                    logger.warning(res.data);
                     return reject(
                         new Error(
                             res.status + ":" + http.STATUS_CODES[res.status],
@@ -526,7 +526,7 @@ const fetch = (manager: GrantManager, handler, options, params) => {
             })
             .catch((err) => {
                 if (err.response) {
-                    console.log(err.response.data);
+                    logger.error(err.response.data);
                     return reject(
                         new Error(
                             err.response.status +
@@ -541,17 +541,16 @@ const fetch = (manager: GrantManager, handler, options, params) => {
 };
 
 const getRedirectUrl = (request) => {
-    let host = request.hostname;
-    let headerHost = request.headers["x-forwarded-host"]
+    const host = request.hostname;
+    const [_headerHost, port = ""] = request.headers["x-forwarded-host"]
         ? request.headers["x-forwarded-host"].split(":")
         : request.headers.host.split(":");
     const xForwardedPath = request.headers["x-forwarded-path"] || "";
     const xForwardedAuth = request.headers["x-forwarded-auth"] || "";
-    let port = headerHost[1] || "";
-    let protocol = request.headers["x-forwarded-proto"] || request.protocol;
-    let hasQuery = ~(request.originalUrl || request.url).indexOf("?");
+    const protocol = request.headers["x-forwarded-proto"] || request.protocol;
+    const hasQuery = (request.originalUrl || request.url).indexOf("?") > -1;
 
-    let redirectUrl = xForwardedAuth
+    const redirectUrl = xForwardedAuth
         ? xForwardedAuth +
           (request.originalUrl || request.url).split("?")[0] +
           (hasQuery ? "&" : "?") +

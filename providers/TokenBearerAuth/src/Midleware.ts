@@ -2,20 +2,14 @@ import IContext from "@ungate/plugininf/lib/IContext";
 import { Grant } from "keycloak-connect";
 import { GrantManager } from "./GrantManager";
 
-export async function GrantAttacher (
+export async function GrantAttacher(
     name: string,
     gateContext: IContext,
     grantManager: GrantManager,
 ): Promise<Grant> {
-    let header = gateContext.request.headers.authorization;
+    const header = gateContext.request.headers.authorization;
     let accessToken;
-    if (
-        header &&
-        header
-            .substr(0, 7)
-            .toLowerCase()
-            .indexOf("bearer ") === 0
-    ) {
+    if (header && header.substr(0, 7).toLowerCase().indexOf("bearer ") === 0) {
         accessToken = JSON.stringify({
             access_token: header.substring(7),
         });

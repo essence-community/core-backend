@@ -369,9 +369,9 @@ export default class OnlineController implements ICoreController {
                     } else {
                         callback(null, chunk);
                     }
-                    rTransform._transform = function(chunk, encode, callback) {
-                        callback(null, chunk);
-                    }.bind(rTransform);
+                    rTransform._transform = ((childChunk, _encode, cb) => {
+                        cb(null, childChunk);
+                    }).bind(rTransform);
                 },
             });
             result.data = safePipe(result.data, rTransform);

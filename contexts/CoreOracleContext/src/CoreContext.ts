@@ -22,7 +22,6 @@ import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
 import { IUserDbData } from "@ungate/plugininf/lib/ISession";
 const logger = Logger.getLogger("CoreContext");
 const Mask = ((global as any) as IGlobalObject).maskgate;
-const createTempTable = ((global as any) as IGlobalObject).createTempTable;
 
 export interface ICoreParams extends IContextParams {
     debug: boolean;

@@ -283,6 +283,7 @@ export default class AdAuth extends NullAuthProvider {
                                     data.ck_id,
                                     this.name,
                                     data as any,
+                                    user.sAMAccountName,
                                 ),
                             );
                         });
@@ -344,7 +345,7 @@ export default class AdAuth extends NullAuthProvider {
                                 ck_d_provider: this.name,
                             },
                             {
-                                "data.cv_login": username,
+                                cv_login: username,
                             },
                         ],
                     },
@@ -370,6 +371,7 @@ export default class AdAuth extends NullAuthProvider {
                             data.ck_id,
                             this.name,
                             data,
+                            user.sAMAccountName,
                         );
                     }
                     if (isUserData) {

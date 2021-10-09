@@ -20,6 +20,7 @@
         "sourceType": "module"
     },
     "rules": {
+        "space-before-function-paren": [true, "never"],
         "global-require": 0,
         "no-underscore-dangle": 0,
         "one-var": 0,

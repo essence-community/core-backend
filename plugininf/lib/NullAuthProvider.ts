@@ -155,7 +155,7 @@ export default abstract class NullAuthProvider extends NullProvider {
             sessionDuration,
             sessionData: {
                 ...sessionData,
-                onlySession: this.params.onlySessio,
+                onlySession: this.params.onlySession,
                 typeCheckAuth: this.params.typeCheckAuth || "session",
             },
         });

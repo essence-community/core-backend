@@ -337,6 +337,7 @@ export class GateSession implements IAuthController {
         idUser: string,
         nameProvider: string,
         data: IUserData,
+        login = data?.cv_login,
     ): Promise<void> {
         if (isEmpty(data.cv_timezone)) {
             data.cv_timezone = this.timezone;
@@ -371,6 +372,7 @@ export class GateSession implements IAuthController {
             .insert({
                 ck_d_provider: nameProvider,
                 ck_id: `${idUser}:${nameProvider}`,
+                cv_login: login,
                 data,
             })
             .then(() => {

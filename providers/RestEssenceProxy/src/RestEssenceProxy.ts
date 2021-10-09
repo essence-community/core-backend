@@ -106,8 +106,9 @@ export default class RestEssenceProxy extends NullProvider {
             ...gateContext.params,
         };
         const urlGate = url.parse(
-            `${this.params.defaultGateUrl}/${query.queryStr ||
-                query.modifyMethod}`
+            `${this.params.defaultGateUrl}/${
+                query.queryStr || query.modifyMethod
+            }`
                 .replace("//", "/")
                 .replace(":/", "://"),
             true,

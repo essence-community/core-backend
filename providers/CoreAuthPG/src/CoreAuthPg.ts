@@ -1,5 +1,4 @@
 import Connection from "@ungate/plugininf/lib/db/Connection";
-import ILocalDB from "@ungate/plugininf/lib/db/local/ILocalDB";
 import PostgresDB from "@ungate/plugininf/lib/db/postgres";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
@@ -17,7 +16,6 @@ import { initParams, isEmpty, debounce } from "@ungate/plugininf/lib/util/Util";
 import { noop, isObject } from "lodash";
 import ISession from "@ungate/plugininf/lib/ISession";
 import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
-import { IUserDbData } from "@ungate/plugininf/lib/ISession";
 
 const MAX_WAIT_RELOAD = 5000;
 

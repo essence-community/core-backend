@@ -24,6 +24,7 @@ export interface IUserData {
     // @deprecated
     ca_department?: any[];
     ck_id: any;
+    cv_login?: string;
     ck_dept?: any;
     cv_timezone?: string;
     [key: string]: any;
@@ -32,6 +33,7 @@ export interface IUserData {
 export interface IUserDbData {
     ck_d_provider: string;
     ck_id: string;
+    cv_login?: string;
     data: IUserData;
 }
 

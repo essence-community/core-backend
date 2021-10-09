@@ -1,5 +1,4 @@
 import Connection from "@ungate/plugininf/lib/db/Connection";
-import ILocalDB from "@ungate/plugininf/lib/db/local/ILocalDB";
 import OracleDB from "@ungate/plugininf/lib/db/oracle";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
@@ -14,7 +13,6 @@ import { ReadStreamToArray } from "@ungate/plugininf/lib/stream/Util";
 import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
 import * as moment from "moment";
 import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
-import { IUserDbData } from "@ungate/plugininf/lib/ISession";
 
 export default class CoreAuthOracle extends NullAuthProvider {
     public static getParamsInfo(): IParamsInfo {

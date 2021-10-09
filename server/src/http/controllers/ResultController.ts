@@ -214,8 +214,10 @@ class ResultController {
                     gateContext.debug(
                         `Ответ: FileName: ${
                             data[Constants.FILE_NAME_COLUMN]
-                        }, FileMimeType: ${data[Constants.FILE_MIME_COLUMN] ||
-                            Constants.FILE_CONTENT_TYPE}`,
+                        }, FileMimeType: ${
+                            data[Constants.FILE_MIME_COLUMN] ||
+                            Constants.FILE_CONTENT_TYPE
+                        }`,
                     );
                 }
             } else {
@@ -379,11 +381,9 @@ class ResultController {
         if (result && result.type === "break") {
             gateContext.info(
                 `${gateContext.request.method}(${gateContext.actionName},${gateContext.queryName}` +
-                    `,${
-                        gateContext.providerName
-                    }) time execute ${(new Date().getTime() -
-                        gateContext.startTime) /
-                        1000}`,
+                    `,${gateContext.providerName}) time execute ${
+                        (new Date().getTime() - gateContext.startTime) / 1000
+                    }`,
             );
             return;
         }

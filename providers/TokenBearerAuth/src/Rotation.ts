@@ -2,7 +2,8 @@ import * as URL from "url";
 import * as jwkToPem from "jwk-to-pem";
 import axios from "axios";
 import { IRotationConfig } from "./TokenAuth.types";
-
+import Logger from "@ungate/plugininf/lib/Logger";
+const logger = Logger.getLogger("Rotation");
 export class Rotation {
     public realmUrl: string;
     public certsUrl: string;
@@ -42,18 +43,18 @@ export class Rotation {
         return nodeify(promise, callback);
     }
     getJWK(kid) {
-        let key = this.jwks.find((key) => {
-            return (key as any).kid === kid;
+        const key = this.jwks.find((keyChild) => {
+            return (keyChild as any).kid === kid;
         });
         if (key) {
             return new Promise((resolve, reject) => {
                 resolve(jwkToPem(key));
             });
         }
-        var self = this;
+        const self = this;
 
         // check if we are allowed to send request
-        var currentTime = new Date().getTime() / 1000;
+        const currentTime = new Date().getTime() / 1000;
         if (
             currentTime >
             this.lastTimeRequesTime + this.minTimeBetweenJwksRequests
@@ -61,15 +62,15 @@ export class Rotation {
             return this.retrieveJWKs().then((publicKeys) => {
                 self.lastTimeRequesTime = currentTime;
                 self.jwks = publicKeys.keys;
-                var convertedKey = jwkToPem(
-                    self.jwks.find((key) => {
-                        return (key as any).kid === kid;
+                const convertedKey = jwkToPem(
+                    self.jwks.find((keyChild) => {
+                        return (keyChild as any).kid === kid;
                     }),
                 );
                 return convertedKey;
             });
         } else {
-            console.error(
+            logger.error(
                 "Not enough time elapsed since the last request, blocking the request",
             );
         }

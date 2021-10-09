@@ -28,10 +28,10 @@ const PATH_CALLBACK = "jv_keycloak_path_callback";
 const TOKEN_KEY = "keycloak-token";
 
 export default class KeyCloakAuth extends NullAuthProvider {
-    public async init (reload?: boolean): Promise<void> {
+    public async init(reload?: boolean): Promise<void> {
         return;
     }
-    public static getParamsInfo (): IParamsInfo {
+    public static getParamsInfo(): IParamsInfo {
         return {
             redirectUrl: {
                 name: "Redirect Url",
@@ -187,7 +187,7 @@ export default class KeyCloakAuth extends NullAuthProvider {
     }
     public params: IKeyCloakAuthParams;
     private keyCloak: KeyCloak.Keycloak;
-    constructor (
+    constructor(
         name: string,
         params: ICCTParams,
         authController: IAuthController,
@@ -221,7 +221,7 @@ export default class KeyCloakAuth extends NullAuthProvider {
             },
             this.params.keyCloakConfig,
         );
-        this.keyCloak.storeGrant = function (grant, request, response) {
+        this.keyCloak.storeGrant = function(grant, request, response) {
             if (this.stores.length < 2 || this.stores[0].get(request)) {
                 return;
             }
@@ -242,7 +242,7 @@ export default class KeyCloakAuth extends NullAuthProvider {
      * @param sessionId
      * @param session
      */
-    public async afterSession (
+    public async afterSession(
         gateContext: IContext,
         sessionId: string,
         session: ISession,
@@ -289,6 +289,9 @@ export default class KeyCloakAuth extends NullAuthProvider {
                 idUser: dataUser.idUser,
                 userData: dataUser.userData,
                 isAccessErrorNotFound: false,
+                sessionData: {
+                    [`access_token`]: (grant.access_token as any)?.token,
+                },
             });
             if (sess) {
                 throw new BreakException({
@@ -335,6 +338,10 @@ export default class KeyCloakAuth extends NullAuthProvider {
                             idUser: dataUser.idUser,
                             userData: dataUser.userData,
                             isAccessErrorNotFound: false,
+                            sessionData: {
+                                [`access_token`]: (grant.access_token as any)
+                                    ?.token,
+                            },
                         });
 
                         return this.authController.loadSession(
@@ -376,7 +383,7 @@ export default class KeyCloakAuth extends NullAuthProvider {
         }
         return session;
     }
-    private async generateUserData (
+    private async generateUserData(
         grant: KeyCloak.Grant,
     ): Promise<{ userData: IUserData; idUser: string }> {
         const userInfo = await this.keyCloak.grantManager.userInfo(
@@ -424,7 +431,7 @@ export default class KeyCloakAuth extends NullAuthProvider {
         dataUser.ca_actions = uniq(dataUser.ca_actions);
         return { userData: dataUser, idUser };
     }
-    private async redirectAccess (context: IContext): Promise<any> {
+    private async redirectAccess(context: IContext): Promise<any> {
         const redirectUrl = URL.parse(this.params.redirectUrl, true);
         redirectUrl.query[this.params.flagRedirect] = "1";
         const loginUrl = this.keyCloak.loginUrl(
@@ -440,7 +447,7 @@ export default class KeyCloakAuth extends NullAuthProvider {
         }
         throw new ErrorException(ErrorGate.REDIRECT_MESSAGE(loginUrl));
     }
-    public async checkQuery (
+    public async checkQuery(
         context: IContext,
         query: IGateQuery,
     ): Promise<void> {
@@ -455,7 +462,7 @@ export default class KeyCloakAuth extends NullAuthProvider {
      * @param context
      * @param query
      */
-    public async processAuth (
+    public async processAuth(
         context: IContext,
         query: IGateQuery,
     ): Promise<IAuthResult> {
@@ -467,7 +474,7 @@ export default class KeyCloakAuth extends NullAuthProvider {
      * @param context {IContext} Контекст вызова
      * @param query {IQuery} Запрос
      */
-    public async initContext (
+    public async initContext(
         context: IContext,
         query: IQuery = {},
     ): Promise<IQuery> {

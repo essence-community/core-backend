@@ -11,7 +11,7 @@ import NullAuthProvider, {
 import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
 import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
 import * as KeyCloak from "keycloak-connect";
-import { ITokenAuthParams, IRequestExtra } from "./TokenAuth.types";
+import { ITokenAuthParams } from "./TokenAuth.types";
 import { GrantAttacher } from "./Midleware";
 import BreakException from "@ungate/plugininf/lib/errors/BreakException";
 import { uniq } from "lodash";
@@ -233,6 +233,10 @@ export default class TokenAuth extends NullAuthProvider {
                         idUser: dataUser.idUser,
                         userData: dataUser.userData,
                         isAccessErrorNotFound: false,
+                        sessionData: {
+                            [`access_token`]: (grant.access_token as any)
+                                ?.token,
+                        },
                     });
 
                     return this.authController.loadSession(

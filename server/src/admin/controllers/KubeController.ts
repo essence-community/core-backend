@@ -18,7 +18,7 @@ export class KubeController {
     Max time (in millis) to wait for a connection to the Kubernetes server. 
     If exceeded, an exception will be thrown 
     */
-    private connectTimeout = parseInt(
+    protected connectTimeout = parseInt(
         process.env.KUBERNETES_CONNECT_TIMEOUT || "5000",
         10,
     );
@@ -26,7 +26,7 @@ export class KubeController {
     /*
     Max time (in millis) to wait for a response from the Kubernetes server",   
     */
-    private readTimeout = parseInt(
+    protected readTimeout = parseInt(
         process.env.KUBERNETES_READ_TIMEOUT || "30000",
         10,
     );
@@ -34,7 +34,7 @@ export class KubeController {
     /*
     Max number of attempts to send discovery requests 
     */
-    private operationAttempts = parseInt(
+    protected operationAttempts = parseInt(
         process.env.KUBERNETES_OPERATION_ATTEMPTS || "3",
         10,
     );
@@ -42,7 +42,7 @@ export class KubeController {
     /*
     Time (in millis) between operation attempts 
     */
-    private operationSleep = parseInt(
+    protected operationSleep = parseInt(
         process.env.KUBERNETES_OPERATION_SLEEP || "5000",
         10,
     );
@@ -50,25 +50,26 @@ export class KubeController {
     /*
     https (default) or http. Used to send the initial discovery request to the Kubernetes server",       
     */
-    private masterProtocol = process.env.KUBERNETES_MASTER_PROTOCOL || "https";
+    protected masterProtocol =
+        process.env.KUBERNETES_MASTER_PROTOCOL || "https";
 
     /*
     The URL of the Kubernetes server process.env.KUBERNETES_SERVICE_HOST
     */
-    private masterHost = process.env.KUBERNETES_SERVICE_HOST;
+    protected masterHost = process.env.KUBERNETES_SERVICE_HOST;
 
     /*
     The port on which the Kubernetes server is listening 
     */
-    private masterPort = process.env.KUBERNETES_SERVICE_PORT;
+    protected masterPort = process.env.KUBERNETES_SERVICE_PORT;
 
     /*
     The version of the protocol to the Kubernetes server 
     */
-    private apiVersion = process.env.KUBERNETES_API_VERSION || "v1";
+    protected apiVersion = process.env.KUBERNETES_API_VERSION || "v1";
 
     /* namespace */
-    private namespace =
+    protected namespace =
         process.env.KUBERNETES_NAMESPACE ||
         process.env.OPENSHIFT_KUBE_PING_NAMESPACE ||
         "default";
@@ -76,41 +77,41 @@ export class KubeController {
     /*
     The labels to use in the discovery request to the Kubernetes server
     */
-    private labels =
+    protected labels =
         process.env.KUBERNETES_LABELS || process.env.OPENSHIFT_KUBE_PING_LABELS;
 
     /*
     Certificate to access the Kubernetes server 
     */
-    private clientCertFile = process.env.KUBERNETES_CLIENT_CERTIFICATE_FILE;
+    protected clientCertFile = process.env.KUBERNETES_CLIENT_CERTIFICATE_FILE;
 
     /*
     Client key file (store) 
     */
-    private clientKeyFile = process.env.KUBERNETES_CLIENT_KEY_FILE;
+    protected clientKeyFile = process.env.KUBERNETES_CLIENT_KEY_FILE;
 
     /*
     The password to access the client key store 
     */
-    private clientKeyPassword = process.env.KUBERNETES_CLIENT_KEY_PASSWORD;
+    protected clientKeyPassword = process.env.KUBERNETES_CLIENT_KEY_PASSWORD;
 
     /*
     The algorithm used by the client
     */
-    private clientKeyAlgo = process.env.KUBERNETES_CLIENT_KEY_ALGO || "RSA";
+    protected clientKeyAlgo = process.env.KUBERNETES_CLIENT_KEY_ALGO || "RSA";
 
     /*
     Location of certificate bundle used to verify the serving certificate of the apiserver. 
     If the specified file is unavailable, a warning message is issued.
     */
-    private caCertFile =
+    protected caCertFile =
         process.env.KUBERNETES_CA_CERTIFICATE_FILE ||
         "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt";
 
     /*
     Token file
     */
-    private saTokenFile =
+    protected saTokenFile =
         process.env.SA_TOKEN_FILE ||
         "/var/run/secrets/kubernetes.io/serviceaccount/token";
 
@@ -119,23 +120,23 @@ export class KubeController {
             cases (application level incompatibility) this causes problems. One might decide to split clusters to
             'old' and 'new' during that process
     */
-    private split_clusters_during_rolling_update =
+    protected splitClustersDuringRollingUpdate =
         process.env.KUBERNETES_SPLIT_CLUSTERS_DURING_ROLLING_UPDATE;
 
     /*
     Introduces similar behaviour to Kubernetes Services (using DNS) with publishNotReadyAddresses set to true.
             By default it's true
     */
-    private useNotReadyAddresses = process.env
+    protected useNotReadyAddresses = process.env
         .KUBERNETES_USE_NOT_READY_ADDRESSES
         ? process.env.KUBERNETES_USE_NOT_READY_ADDRESSES === "true"
         : true;
-    private dbServer: ILocalDB<IServerConfig>;
-    private serverData: IServerConfig;
-    private readTimerKube: NodeJS.Timeout;
-    private masterUrlApi: string;
-    private token: string;
-    private httpsAgent: HttpsAgent;
+    protected dbServer: ILocalDB<IServerConfig>;
+    protected serverData: IServerConfig;
+    protected readTimerKube: NodeJS.Timeout;
+    protected masterUrlApi: string;
+    protected token: string;
+    protected httpsAgent: HttpsAgent;
     public async init() {
         this.dbServer = await Property.getServers();
         this.serverData = (await this.dbServer.findOne(
@@ -225,7 +226,7 @@ export class KubeController {
                 );
         }
     }
-    private async initKube() {
+    protected async initKube() {
         const pods: IServerConfig[] = await axios
             .get<PodList>(
                 `${this.masterUrlApi}/namespaces/${

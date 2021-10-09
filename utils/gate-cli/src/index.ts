@@ -21,6 +21,7 @@ import { cliPostgreSql } from "./package/postgres";
         process.exit(0);
     },
     (err) => {
+        /* tslint:disable:no-console */
         // eslint-disable-next-line no-console
         console.error(err?.isNotStackTrace ? err.message : err);
         process.exit(1);

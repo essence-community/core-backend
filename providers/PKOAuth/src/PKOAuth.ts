@@ -1,5 +1,4 @@
 import Connection from "@ungate/plugininf/lib/db/Connection";
-import ILocalDB from "@ungate/plugininf/lib/db/local/ILocalDB";
 import PostgresDB from "@ungate/plugininf/lib/db/postgres";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
@@ -18,7 +17,6 @@ import * as ActiveDirectory from "activedirectory";
 import { X509 } from "jsrsasign";
 import { isObject, uniq } from "lodash";
 import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
-import { IUserDbData } from "@ungate/plugininf/lib/ISession";
 
 const BASIC_PATTERN = "Basic";
 const PASSWORD_PATTERN_NGINX_GSS = "bogus_auth_gss_passwd";
@@ -410,7 +408,7 @@ export default class PKOAuth extends NullAuthProvider {
                                 ck_d_provider: this.name,
                             },
                             {
-                                "data.cv_login": username,
+                                cv_login: username,
                             },
                         ],
                     },
@@ -437,6 +435,7 @@ export default class PKOAuth extends NullAuthProvider {
                             data.ck_id,
                             this.name,
                             data,
+                            userData.cv_login || user.sAMAccountName,
                         );
                     }
                     if (isUserData) {

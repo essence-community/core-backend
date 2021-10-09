@@ -37,11 +37,13 @@ export interface IAuthController {
      * @param idUser индификатор пользователя
      * @param nameProvider наименование провайдера
      * @param data Данные пользователя
+     * @param login Логин пользоаптеля если есть
      */
     addUser(
         idUser: string,
         nameProvider: string,
         data: IUserData,
+        login?: string,
     ): Promise<void>;
     /**
      * Получаем данные о пользователе

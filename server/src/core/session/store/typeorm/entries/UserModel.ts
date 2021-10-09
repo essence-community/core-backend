@@ -18,6 +18,13 @@ export class UserModel extends Audit implements IUserDbData {
     ["ck_d_provider"]: string;
 
     @Column({
+        name: "cv_login",
+        nullable: true,
+        comment: "Логин",
+    })
+    ["cv_login"]: string;
+
+    @Column({
         name: "cct_data",
         type: "text",
         nullable: false,

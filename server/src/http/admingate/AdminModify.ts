@@ -29,13 +29,13 @@ export default class AdminModify {
     public name: string;
     public riakAction: RiakAction;
     modify: Record<string, IModifyDb> = {};
-    constructor (name: string, params: ICCTParams) {
+    constructor(name: string, params: ICCTParams) {
         this.name = name;
         this.params = params;
         this.riakAction = new RiakAction(params);
     }
 
-    public async init (): Promise<void> {
+    public async init(): Promise<void> {
         this.modify.dbContexts = {
             db: await Property.getContext(),
             getParamsInfo: (data: IContextConfig) => {
@@ -84,7 +84,7 @@ export default class AdminModify {
         };
     }
 
-    public async checkModify (
+    public async checkModify(
         gateContext: IContext,
         query: IGateQuery,
     ): Promise<IObjectParam[]> {
@@ -121,36 +121,38 @@ export default class AdminModify {
         return [];
     }
 
-    deepChange (res, data, conf: IParamsInfo, keyPrefix) {
+    deepChange(res, data, conf: IParamsInfo, keyPrefix) {
         forEach(data, (val, key) => {
+            const confChild = (Array.isArray(data) ? conf : conf?.[key]);
             if (isObject(val) || Array.isArray(val)) {
                 this.deepChange(
                     res,
                     val,
-                    (conf[key] as any)?.childs,
+                    (conf?.[key] as any)?.childs,
                     `${keyPrefix}.${key}`,
                 );
-            } else if (conf[key].type === "password") {
+            } else if (confChild && confChild.type === "password") {
                 if (
                     val !==
                     "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
                 ) {
                     res[`${keyPrefix}.${key}`] = encryptPassword(val);
                 }
-            } else {
+            } else if (
+                val !==
+                "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
+            ) {
                 res[`${keyPrefix}.${key}`] = val;
             }
         });
     }
 
-    deepPassword (data, conf: IParamsInfo) {
+    deepPassword(data, conf: IParamsInfo) {
         forEach(data, (val, key) => {
+            const confChild = (Array.isArray(data) ? conf : conf?.[key]);
             if (isObject(val) || Array.isArray(val)) {
-                this.deepPassword(
-                    val,
-                    (conf[key] as any)?.childs,
-                );
-            } else if (conf[key].type === "password") {
+                this.deepPassword(val, (conf?.[key] as any)?.childs);
+            } else if (confChild && confChild.type === "password") {
                 if (
                     val !==
                     "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
@@ -161,7 +163,7 @@ export default class AdminModify {
         });
     }
 
-    private async callLocalDb (
+    private async callLocalDb(
         { db, getParamsInfo }: IModifyDb,
         json: IObjectParam,
     ) {
