@@ -28,10 +28,10 @@ const PATH_CALLBACK = "jv_keycloak_path_callback";
 const TOKEN_KEY = "keycloak-token";
 
 export default class KeyCloakAuth extends NullAuthProvider {
-    public async init(reload?: boolean): Promise<void> {
+    public async init (reload?: boolean): Promise<void> {
         return;
     }
-    public static getParamsInfo(): IParamsInfo {
+    public static getParamsInfo (): IParamsInfo {
         return {
             redirectUrl: {
                 name: "Redirect Url",
@@ -187,7 +187,7 @@ export default class KeyCloakAuth extends NullAuthProvider {
     }
     public params: IKeyCloakAuthParams;
     private keyCloak: KeyCloak.Keycloak;
-    constructor(
+    constructor (
         name: string,
         params: ICCTParams,
         authController: IAuthController,
@@ -221,7 +221,7 @@ export default class KeyCloakAuth extends NullAuthProvider {
             },
             this.params.keyCloakConfig,
         );
-        this.keyCloak.storeGrant = function(grant, request, response) {
+        this.keyCloak.storeGrant = function (grant, request, response) {
             if (this.stores.length < 2 || this.stores[0].get(request)) {
                 return;
             }
@@ -242,7 +242,7 @@ export default class KeyCloakAuth extends NullAuthProvider {
      * @param sessionId
      * @param session
      */
-    public async afterSession(
+    public async afterSession (
         gateContext: IContext,
         sessionId: string,
         session: ISession,
@@ -271,12 +271,12 @@ export default class KeyCloakAuth extends NullAuthProvider {
             gateContext.request.session.auth_redirect_uri = URL.format(
                 redirectUrl,
             );
-            await PostAuth(gateContext, this.keyCloak, data);
+            const grant = await PostAuth(gateContext, this.keyCloak, data);
             delete gateContext.request.session.auth_redirect_uri;
-            if (!(gateContext.request as IRequestExtra).kauth.grant) {
+            if (!grant) {
                 return this.redirectAccess(gateContext);
             }
-            const dataUser = await this.generateUserData(gateContext);
+            const dataUser = await this.generateUserData(grant);
 
             await this.authController.addUser(
                 dataUser.idUser,
@@ -310,18 +310,19 @@ export default class KeyCloakAuth extends NullAuthProvider {
         } else if (
             gateContext.request.session[TOKEN_KEY] ||
             gateContext.request.headers.authorization
-                ?.toLocaleLowerCase()
+                ?.substr(0, 7)
+                .toLowerCase()
                 .indexOf("bearer ") > -1
         ) {
             gateContext.debug("KeyCloak Init grant");
             (gateContext.request as IRequestExtra).kauth = {};
 
             return GrantAttacher(gateContext, this.keyCloak)
-                .then(async () => {
-                    if (!(gateContext.request as IRequestExtra).kauth.grant) {
+                .then(async (grant) => {
+                    if (!grant) {
                         throw new Error("Not Auth");
                     }
-                    const dataUser = await this.generateUserData(gateContext);
+                    const dataUser = await this.generateUserData(grant);
                     if (!session) {
                         await this.authController.addUser(
                             dataUser.idUser,
@@ -375,10 +376,9 @@ export default class KeyCloakAuth extends NullAuthProvider {
         }
         return session;
     }
-    private async generateUserData(
-        context: IContext,
+    private async generateUserData (
+        grant: KeyCloak.Grant,
     ): Promise<{ userData: IUserData; idUser: string }> {
-        const grant = (context.request as IRequestExtra).kauth.grant;
         const userInfo = await this.keyCloak.grantManager.userInfo(
             grant.access_token,
         );
@@ -424,7 +424,7 @@ export default class KeyCloakAuth extends NullAuthProvider {
         dataUser.ca_actions = uniq(dataUser.ca_actions);
         return { userData: dataUser, idUser };
     }
-    private async redirectAccess(context: IContext): Promise<any> {
+    private async redirectAccess (context: IContext): Promise<any> {
         const redirectUrl = URL.parse(this.params.redirectUrl, true);
         redirectUrl.query[this.params.flagRedirect] = "1";
         const loginUrl = this.keyCloak.loginUrl(
@@ -440,7 +440,7 @@ export default class KeyCloakAuth extends NullAuthProvider {
         }
         throw new ErrorException(ErrorGate.REDIRECT_MESSAGE(loginUrl));
     }
-    public async checkQuery(
+    public async checkQuery (
         context: IContext,
         query: IGateQuery,
     ): Promise<void> {
@@ -455,7 +455,7 @@ export default class KeyCloakAuth extends NullAuthProvider {
      * @param context
      * @param query
      */
-    public async processAuth(
+    public async processAuth (
         context: IContext,
         query: IGateQuery,
     ): Promise<IAuthResult> {
@@ -467,7 +467,7 @@ export default class KeyCloakAuth extends NullAuthProvider {
      * @param context {IContext} Контекст вызова
      * @param query {IQuery} Запрос
      */
-    public async initContext(
+    public async initContext (
         context: IContext,
         query: IQuery = {},
     ): Promise<IQuery> {

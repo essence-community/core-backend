@@ -263,7 +263,7 @@ export default class TokenAuth extends NullAuthProvider {
                 ) {
                     return this.redirectAccess(gateContext);
                 }
-                return session;
+                return null;
             });
     }
     private async generateUserData(
