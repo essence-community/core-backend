@@ -1,5 +1,6 @@
 import * as os from "os";
 import * as path from "path";
+import * as fs from "fs";
 
 export class Constants {
     /**
@@ -89,12 +90,59 @@ export class Constants {
     /** Сервис выхода */
     public QUERY_LOGOUT = "logout";
 
-    /** Сервис выхода */
+    /** Секрет для подписи сессии */
     public SESSION_SECRET =
         process.env.SESSION_SECRET ||
         "9cb564113f96325c37b9e43280eebfb6723176b65db38627c85f763d32c20fa8";
+    
+    /** PW для шифрования пароля */
+    public PW_KEY_SECRET: Buffer;
+    /** PW для шифрования пароля */
+    public PW_IV_SECRET =
+        Buffer.from(process.env.ESSSENCE_PW_IV || 'a290e34766b2afdca71948366cf73154eaaf880f141393c1d38542cb36a0370b', 'hex');
+    
+    public DEFAULT_ALG = process.env.ESSENCE_PW_DEFAULT_ALG || 'aes-256-cbc';
+    
+    /** PW Key RSA для шифрования пароля */
+    public PW_RSA_SECRET: string;
+    public PW_RSA_SECRET_PASSPHRASE: string;
+
+    public isUseEncrypt = false;
 
     constructor() {
+        let isUseEncrypt = false;
+        if (process.env.ESSSENCE_PW_KEY_SECRET) {
+            if (fs.existsSync(process.env.ESSSENCE_PW_KEY_SECRET)) {
+                this.PW_KEY_SECRET = fs.readFileSync(process.env.ESSSENCE_PW_KEY_SECRET);
+            } else {
+                this.PW_KEY_SECRET = Buffer.from(process.env.ESSSENCE_PW_KEY_SECRET);
+            }
+            isUseEncrypt = true;
+        }
+        if (process.env.ESSSENCE_PW_RSA) {
+            if (fs.existsSync( process.env.ESSSENCE_PW_RSA)) {
+                this.PW_RSA_SECRET = fs.readFileSync(process.env.ESSSENCE_PW_RSA).toString();
+            } else {
+                this.PW_RSA_SECRET = process.env.ESSSENCE_PW_RSA;
+            }
+            if (process.env.ESSSENCE_PW_RSA_PASSPHRASE) {
+                if (fs.existsSync(process.env.ESSSENCE_PW_RSA_PASSPHRASE)) {
+                    this.PW_RSA_SECRET_PASSPHRASE = fs.readFileSync(process.env.ESSSENCE_PW_RSA_PASSPHRASE).toString();
+                } else {
+                    this.PW_RSA_SECRET_PASSPHRASE = process.env.ESSSENCE_PW_RSA_PASSPHRASE;
+                }
+            }
+            
+            isUseEncrypt = true;
+        }
+        if (!process.env.ESSENCE_PW_DEFAULT_ALG) {
+            if (this.PW_RSA_SECRET) {
+                this.DEFAULT_ALG = "privatekey";
+            } else {
+                this.DEFAULT_ALG = 'aes-256-cbc';
+            }
+        }
+        this.isUseEncrypt = isUseEncrypt;
         this.RESERVED_PARAMS = [
             this.ACTION_PARAM,
             this.QUERYNAME_PARAM,

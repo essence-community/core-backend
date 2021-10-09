@@ -7,11 +7,14 @@ import * as fs from "fs";
 import { forEach, isArray, isString, toNumber, toString } from "lodash";
 import * as moment from "moment";
 import * as path from "path";
+import * as crypto from "crypto";
 import ErrorException from "../errors/ErrorException";
 import ErrorGate from "../errors/ErrorGate";
 import { IParamInfo, IParamsInfo } from "../ICCTParams";
 import ICCTParams from "../ICCTParams";
 import IContext from "../IContext";
+import Constant from '../Constants';
+import { RSA_PKCS1_PSS_PADDING } from "constants";
 
 export function isEmpty(value: any, allowEmptyString: boolean = false) {
     return (
@@ -25,14 +28,88 @@ export function dateBetween(date: Date, fromDate: Date, toDate: Date) {
     return date >= fromDate && date <= toDate;
 }
 
+function decryptAes(type: crypto.CipherCCMTypes | crypto.CipherGCMTypes, data: string): string {
+    const key = Constant.PW_KEY_SECRET;
+    const iv = Constant.PW_IV_SECRET;
+ 
+    const cipher = crypto.createDecipheriv(type, key, iv);
+
+    cipher.update(Buffer.from(data, 'hex'));
+    return cipher.final().toString();
+}
+
+function decryptUseKey(data: string): string {
+    return crypto.privateDecrypt({
+        key: Constant.PW_RSA_SECRET,
+        passphrase: Constant.PW_RSA_SECRET_PASSPHRASE,
+        padding: RSA_PKCS1_PSS_PADDING
+    }, Buffer.from(data, 'hex')).toString();
+}
+
+export function encryptAes(type: crypto.CipherCCMTypes | crypto.CipherGCMTypes, data: string): string {
+    const key = Constant.PW_KEY_SECRET;
+    const iv = Constant.PW_IV_SECRET;
+ 
+    const cipher = crypto.createCipheriv(type, key, iv);
+
+    cipher.update(Buffer.from(data));
+    return cipher.final().toString('hex');
+}
+
+export function encryptUseKey(data: string): string {
+    return crypto.privateEncrypt({
+        key: Constant.PW_RSA_SECRET,
+        passphrase: Constant.PW_RSA_SECRET_PASSPHRASE,
+        padding: RSA_PKCS1_PSS_PADDING
+    }, Buffer.from(data)).toString('hex');
+}
+
+export function encryptPassword(data: string): string {
+    if(!Constant.isUseEncrypt) {
+        return data;
+    }
+    switch(Constant.DEFAULT_ALG) {
+        case "privatekey":
+        return `{privatekey}${encryptPassword(data)}`;
+        default:
+        return `{${Constant.DEFAULT_ALG}}${encryptAes(Constant.DEFAULT_ALG as any, data)}`;
+    }
+}
+
+export function decryptPassword(value: string) {
+    if (isEmpty(value) || value.indexOf("{") !== 0 || !Constant.isUseEncrypt) {
+        return value
+    }
+    const endIndex = value.indexOf("}");
+    const type = value.substring(1, endIndex);
+    const hash = value.substring(endIndex+1);
+    switch(type) {
+        case 'aes-128-gcm':
+        case 'aes-192-gcm':
+        case 'aes-256-gcm':
+        case 'aes-128-ccm':
+        case 'aes-192-ccm':
+        case 'aes-256-ccm':
+        return decryptAes(type as any, hash);
+        case "privatekey": 
+        return decryptUseKey(hash);
+        default:
+        return value;
+    }
+}
+
 function parseParam(conf: IParamInfo, value: any) {
     switch (conf.type) {
         case "string":
         case "long_string":
-        case "password":
             return conf.checkvalue
-                ? conf.checkvalue(toString(value))
-                : toString(value);
+                    ? conf.checkvalue(toString(value))
+                    : toString(value);
+        case "password":
+            const decryptPass = decryptPassword(toString(value));
+            return conf.checkvalue
+                ? conf.checkvalue(decryptPass)
+                : decryptPass;
         case "boolean": {
             if (isString(value)) {
                 return conf.checkvalue
