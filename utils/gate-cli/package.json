@@ -12,16 +12,18 @@
         "gate-cli": "./bin/gate-cli"
     },
     "scripts": {
-        "start": "yarn build && ./bin/gate-cli",
+        "start": "yarn ts-node src/index.ts",
         "postinstall": "yarn build",
         "build": "tsc --project tsconfig.json",
         "build:publish": "tsc --project tsconfig.publish.json"
     },
     "license": "MIT",
     "dependencies": {
+        "dotenv": "^10.0.0",
         "typescript": "^3.8.3"
     },
     "devDependencies": {
-        "@essence-community/eslint-config-react": "^2.2.0"
+        "@essence-community/eslint-config-react": "^2.2.0",
+        "ts-node": "^10.2.1"
     }
 }

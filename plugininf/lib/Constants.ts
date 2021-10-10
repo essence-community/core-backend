@@ -1,6 +1,7 @@
 import * as os from "os";
 import * as path from "path";
 import * as fs from "fs";
+import { scryptSync } from "crypto";
 
 export class Constants {
     /**
@@ -105,7 +106,7 @@ export class Constants {
         process.env.ESSSENCE_PW_IV ||
             "a290e34766b2afdca71948366cf73154eaaf880f141393c1d38542cb36a0370b",
         "hex",
-    ).slice(0, 16);
+    );
 
     public DEFAULT_ALG = process.env.ESSENCE_PW_DEFAULT_ALG || "aes-256-cbc";
 
@@ -135,6 +136,12 @@ export class Constants {
                         process.env.ESSSENCE_PW_SALT;
                 }
             }
+            if (this.PW_IV_SECRET.length > 16) {
+                this.PW_IV_SECRET = this.PW_IV_SECRET.slice(0,16);
+            } else if (this.PW_IV_SECRET.length < 16) {
+                this.PW_IV_SECRET = scryptSync(this.PW_IV_SECRET, 
+                    this.PW_SALT_SECRET, 16);
+            }
             isUseEncrypt = true;
         }
         if (process.env.ESSSENCE_PW_RSA) {
@@ -155,7 +162,6 @@ export class Constants {
                         process.env.ESSSENCE_PW_RSA_PASSPHRASE;
                 }
             }
-
             isUseEncrypt = true;
         }
         if (!process.env.ESSENCE_PW_DEFAULT_ALG) {

@@ -55,13 +55,29 @@ export const deleteFolderRecursive = (pathDir: string) => {
         fs.unlinkSync(pathDir);
     }
 };
+(rl as any)._writeToOutput = function _writeToOutput(stringToWrite) {
+    if (!(rl as any).stdoutMuted || (rl as any).questionStr == stringToWrite) {
+        (rl as any).output.write(stringToWrite);
+    } else {
+        (rl as any).output.write("*");
+    }   
+  };
 export const questionReadline = (
     question: string,
     defaultValue?: string,
+    hidden = false,
 ): Promise<string | undefined> => {
     // eslint-disable-next-line compat/compat
     return new Promise((resolve) => {
+        (rl as any).stdoutMuted = hidden;
+        (rl as any).questionStr = question;
+        readline.cursorTo(process.stdout, 0, 0);
         rl.question(question, (answer?: string) => {
+            (rl as any).stdoutMuted = false;
+            (rl as any).questionStr = null;
+            if (hidden) {
+                (rl as any).history = (rl as any).history.slice(1);
+            }
             if (
                 isEmpty(answer ? answer.trim() : answer) &&
                 !isEmpty(defaultValue)

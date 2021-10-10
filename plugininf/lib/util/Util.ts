@@ -16,7 +16,7 @@ import IContext from "../IContext";
 import Constant from "../Constants";
 import { RSA_PKCS1_PSS_PADDING } from "constants";
 
-export function isEmpty(value: any, allowEmptyString: boolean = false) {
+export function isEmpty (value: any, allowEmptyString: boolean = false) {
     return (
         value == null ||
         (allowEmptyString ? false : value === "") ||
@@ -24,16 +24,19 @@ export function isEmpty(value: any, allowEmptyString: boolean = false) {
     );
 }
 
-export function dateBetween(date: Date, fromDate: Date, toDate: Date) {
+export function dateBetween (date: Date, fromDate: Date, toDate: Date) {
     return date >= fromDate && date <= toDate;
 }
 
-function decryptAes(
+function decryptAes (
     type: crypto.CipherCCMTypes | crypto.CipherGCMTypes,
     data: string,
 ): string {
-    const key = crypto.scryptSync(Constant.PW_KEY_SECRET, 
-        Constant.PW_SALT_SECRET, 32);
+    const key = crypto.scryptSync(
+        Constant.PW_KEY_SECRET,
+        Constant.PW_SALT_SECRET,
+        32,
+    );
     const iv = Constant.PW_IV_SECRET;
 
     const cipher = crypto.createDecipheriv(type, key, iv);
@@ -42,25 +45,32 @@ function decryptAes(
     return cipher.final().toString();
 }
 
-function decryptUseKey(data: string): string {
+function decryptUseKey (data: string): string {
     return crypto
         .privateDecrypt(
             {
                 key: Constant.PW_RSA_SECRET,
                 passphrase: Constant.PW_RSA_SECRET_PASSPHRASE,
-                padding: RSA_PKCS1_PSS_PADDING,
             },
             Buffer.from(data, "hex"),
         )
         .toString();
 }
 
-export function encryptAes(
+export function encryptAes (
     type: crypto.CipherCCMTypes | crypto.CipherGCMTypes,
     data: string,
 ): string {
-    const key = crypto.scryptSync(Constant.PW_KEY_SECRET, 
-        Constant.PW_SALT_SECRET, 32);
+    if (!Constant.PW_KEY_SECRET) {
+        throw new Error(
+            "Not found key, need init environment ESSSENCE_PW_KEY_SECRET",
+        );
+    }
+    const key = crypto.scryptSync(
+        Constant.PW_KEY_SECRET,
+        Constant.PW_SALT_SECRET,
+        32,
+    );
     const iv = Constant.PW_IV_SECRET;
 
     const cipher = crypto.createCipheriv(type, key, iv);
@@ -69,36 +79,68 @@ export function encryptAes(
     return cipher.final().toString("hex");
 }
 
-export function encryptUseKey(data: string): string {
+export function encryptUseKey (data: string): string {
+    if (!Constant.PW_RSA_SECRET) {
+        throw new Error(
+            "Not found private key, need init environment ESSSENCE_PW_RSA",
+        );
+    }
     return crypto
-        .privateEncrypt(
+        .publicEncrypt(
             {
                 key: Constant.PW_RSA_SECRET,
                 passphrase: Constant.PW_RSA_SECRET_PASSPHRASE,
-                padding: RSA_PKCS1_PSS_PADDING,
-            },
+            } as any,
             Buffer.from(data),
         )
         .toString("hex");
 }
-
-export function encryptPassword(data: string): string {
+/**
+ * Encrypt password
+ * @param data 
+ * @param type 
+ * @returns 
+ */
+export function encryptPassword (
+    data: string,
+    type = Constant.DEFAULT_ALG,
+): string {
     if (!Constant.isUseEncrypt) {
         return data;
     }
-    switch (Constant.DEFAULT_ALG) {
-        case "privatekey":
-            return `{privatekey}${encryptPassword(data)}`;
+    switch (type) {
+        case "privatekey": {
+            if (!Constant.PW_RSA_SECRET) {
+                return data;
+            }
+            return `{privatekey}${encryptUseKey(data)}`;
+        }
+        case "aes-128-gcm":
+        case "aes-192-gcm":
+        case "aes-256-gcm":
+        case "aes-128-ccm":
+        case "aes-192-ccm":
+        case "aes-256-ccm":
+        case "aes-128-cbc":
+        case "aes-192-cbc":
+        case "aes-256-cbc": {
+            if (!Constant.PW_KEY_SECRET) {
+                return data;
+            }
+            return `{${type}}${encryptAes(type as any, data)}`;
+        }
         default:
-            return `{${Constant.DEFAULT_ALG}}${encryptAes(
-                Constant.DEFAULT_ALG as any,
-                data,
-            )}`;
+            return data;
     }
 }
 
-export function decryptPassword(value: string) {
-    if (typeof value !== "string" || isEmpty(value) || value.indexOf("{") !== 0 || !Constant.isUseEncrypt) {
+export function decryptPassword (value: string) {
+    if (
+        typeof value !== "string" ||
+        isEmpty(value) ||
+        value.indexOf("{") !== 0 ||
+        !Constant.isUseEncrypt
+    ) {
         return value;
     }
     const endIndex = value.indexOf("}");
@@ -122,7 +164,7 @@ export function decryptPassword(value: string) {
     }
 }
 
-function parseParam(conf: IParamInfo, value: any) {
+function parseParam (conf: IParamInfo, value: any) {
     switch (conf.type) {
         case "string":
         case "long_string":
@@ -198,7 +240,7 @@ function parseParam(conf: IParamInfo, value: any) {
  * @param param Параметры
  * @returns params Объект с параметрами
  */
-export function initParams(
+export function initParams (
     conf: IParamsInfo,
     param: ICCTParams = {},
     isExcludeRequire: boolean = false,
@@ -267,7 +309,7 @@ export interface IRecordFilter {
     property: string;
     value: any;
 }
-export function sortFilesData(
+export function sortFilesData (
     gateContext: IContext,
 ): (a: any, b: any) => number {
     if (isEmpty(gateContext.params.json)) {
@@ -371,7 +413,7 @@ export function sortFilesData(
     return (obj1: any, obj2: any): number => +(obj1 > obj2);
 }
 
-export function filterFilesData(gateContext: IContext): (a: any) => boolean {
+export function filterFilesData (gateContext: IContext): (a: any) => boolean {
     if (isEmpty(gateContext.params.json)) {
         return () => true;
     }
@@ -551,7 +593,7 @@ type TDebounce = (...arg) => void;
  * @param f {Function} Функция которая должна вызваться
  * @param t {number} Время в милиссекундах
  */
-export function throttle(f: TDebounce, t: number) {
+export function throttle (f: TDebounce, t: number) {
     let lastCall;
     return (...args) => {
         const previousCall = lastCall;
@@ -576,7 +618,7 @@ export interface IDebounce extends TDebounce {
  * @param f {Function} Функция которая должна вызваться
  * @param t {number} Время в милиссекундах
  */
-export function debounce(f: TDebounce, t: number): IDebounce {
+export function debounce (f: TDebounce, t: number): IDebounce {
     let lastCallTimer = null;
     let lastCall = null;
     const fn = (...args) => {
