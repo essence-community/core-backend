@@ -85,7 +85,7 @@ export class Constants {
     }
 }
 export const Constant = new Constants();
-function decryptAes (
+function decryptAes(
     type: crypto.CipherCCMTypes | crypto.CipherGCMTypes,
     data: string,
 ): string {
@@ -102,7 +102,7 @@ function decryptAes (
     return cipher.final().toString();
 }
 
-function decryptUseKey (data: string): string {
+function decryptUseKey(data: string): string {
     return crypto
         .privateDecrypt(
             {
@@ -114,7 +114,7 @@ function decryptUseKey (data: string): string {
         .toString();
 }
 
-export function encryptAes (
+export function encryptAes(
     type: crypto.CipherCCMTypes | crypto.CipherGCMTypes,
     data: string,
 ): string {
@@ -136,7 +136,7 @@ export function encryptAes (
     return cipher.final().toString("hex");
 }
 
-export function encryptUseKey (data: string): string {
+export function encryptUseKey(data: string): string {
     if (!Constant.PW_RSA_SECRET) {
         throw new Error(
             "Not found private key, need init environment ESSSENCE_PW_RSA",
@@ -153,7 +153,7 @@ export function encryptUseKey (data: string): string {
         .toString("hex");
 }
 
-export function encryptPassword (
+export function encryptPassword(
     data: string,
     type: string = Constant.DEFAULT_ALG,
 ): string {
@@ -178,7 +178,7 @@ export function encryptPassword (
     }
 }
 
-export function decryptPassword (value: string) {
+export function decryptPassword(value: string) {
     if (
         typeof value !== "string" ||
         isEmpty(value) ||
@@ -210,14 +210,16 @@ export function decryptPassword (value: string) {
     }
 }
 
-export async function decryptPWCli () {
+export async function decryptPWCli() {
     const encPw = await questionReadline("Encrypt password: ", null, true);
     if (!isEmpty(encPw)) {
         const descPW = decryptPassword(encPw);
+        /* tslint:disable:no-console */
+        // eslint-disable-next-line no-console
         console.log("\nDecrypt password: %s", descPW);
     }
 }
-export async function encryptPWCli () {
+export async function encryptPWCli() {
     const type = await questionReadline(
         "- privatekey\n" +
             "- aes-128-gcm\n" +
@@ -235,6 +237,8 @@ export async function encryptPWCli () {
     const pw = await questionReadline("Password: ", null, true);
     if (!isEmpty(pw)) {
         const descPW = encryptPassword(pw, type || undefined);
+        /* tslint:disable:no-console */
+        // eslint-disable-next-line no-console
         console.log("\nEncrypt password: %s", descPW);
     }
 }

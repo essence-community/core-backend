@@ -14,9 +14,8 @@ import { IParamInfo, IParamsInfo } from "../ICCTParams";
 import ICCTParams from "../ICCTParams";
 import IContext from "../IContext";
 import Constant from "../Constants";
-import { RSA_PKCS1_PSS_PADDING } from "constants";
 
-export function isEmpty (value: any, allowEmptyString: boolean = false) {
+export function isEmpty(value: any, allowEmptyString: boolean = false) {
     return (
         value == null ||
         (allowEmptyString ? false : value === "") ||
@@ -24,11 +23,11 @@ export function isEmpty (value: any, allowEmptyString: boolean = false) {
     );
 }
 
-export function dateBetween (date: Date, fromDate: Date, toDate: Date) {
+export function dateBetween(date: Date, fromDate: Date, toDate: Date) {
     return date >= fromDate && date <= toDate;
 }
 
-function decryptAes (
+function decryptAes(
     type: crypto.CipherCCMTypes | crypto.CipherGCMTypes,
     data: string,
 ): string {
@@ -45,7 +44,7 @@ function decryptAes (
     return cipher.final().toString();
 }
 
-function decryptUseKey (data: string): string {
+function decryptUseKey(data: string): string {
     return crypto
         .privateDecrypt(
             {
@@ -57,7 +56,7 @@ function decryptUseKey (data: string): string {
         .toString();
 }
 
-export function encryptAes (
+export function encryptAes(
     type: crypto.CipherCCMTypes | crypto.CipherGCMTypes,
     data: string,
 ): string {
@@ -79,7 +78,7 @@ export function encryptAes (
     return cipher.final().toString("hex");
 }
 
-export function encryptUseKey (data: string): string {
+export function encryptUseKey(data: string): string {
     if (!Constant.PW_RSA_SECRET) {
         throw new Error(
             "Not found private key, need init environment ESSSENCE_PW_RSA",
@@ -101,7 +100,7 @@ export function encryptUseKey (data: string): string {
  * @param type 
  * @returns 
  */
-export function encryptPassword (
+export function encryptPassword(
     data: string,
     type = Constant.DEFAULT_ALG,
 ): string {
@@ -134,7 +133,7 @@ export function encryptPassword (
     }
 }
 
-export function decryptPassword (value: string) {
+export function decryptPassword(value: string) {
     if (
         typeof value !== "string" ||
         isEmpty(value) ||
@@ -164,7 +163,7 @@ export function decryptPassword (value: string) {
     }
 }
 
-function parseParam (conf: IParamInfo, value: any) {
+function parseParam(conf: IParamInfo, value: any) {
     switch (conf.type) {
         case "string":
         case "long_string":
@@ -240,7 +239,7 @@ function parseParam (conf: IParamInfo, value: any) {
  * @param param Параметры
  * @returns params Объект с параметрами
  */
-export function initParams (
+export function initParams(
     conf: IParamsInfo,
     param: ICCTParams = {},
     isExcludeRequire: boolean = false,
@@ -309,7 +308,7 @@ export interface IRecordFilter {
     property: string;
     value: any;
 }
-export function sortFilesData (
+export function sortFilesData(
     gateContext: IContext,
 ): (a: any, b: any) => number {
     if (isEmpty(gateContext.params.json)) {
@@ -413,7 +412,7 @@ export function sortFilesData (
     return (obj1: any, obj2: any): number => +(obj1 > obj2);
 }
 
-export function filterFilesData (gateContext: IContext): (a: any) => boolean {
+export function filterFilesData(gateContext: IContext): (a: any) => boolean {
     if (isEmpty(gateContext.params.json)) {
         return () => true;
     }
@@ -593,7 +592,7 @@ type TDebounce = (...arg) => void;
  * @param f {Function} Функция которая должна вызваться
  * @param t {number} Время в милиссекундах
  */
-export function throttle (f: TDebounce, t: number) {
+export function throttle(f: TDebounce, t: number) {
     let lastCall;
     return (...args) => {
         const previousCall = lastCall;
@@ -618,7 +617,7 @@ export interface IDebounce extends TDebounce {
  * @param f {Function} Функция которая должна вызваться
  * @param t {number} Время в милиссекундах
  */
-export function debounce (f: TDebounce, t: number): IDebounce {
+export function debounce(f: TDebounce, t: number): IDebounce {
     let lastCallTimer = null;
     let lastCall = null;
     const fn = (...args) => {

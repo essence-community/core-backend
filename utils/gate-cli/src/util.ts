@@ -56,6 +56,7 @@ export const deleteFolderRecursive = (pathDir: string) => {
     }
 };
 (rl as any)._writeToOutput = function _writeToOutput(stringToWrite) {
+    /* tslint:disable:triple-equals */
     if (!(rl as any).stdoutMuted || (rl as any).questionStr == stringToWrite) {
         (rl as any).output.write(stringToWrite);
     } else {
