@@ -9,13 +9,15 @@ import ILocalDB, {
 import { sendProcess } from "@ungate/plugininf/lib/util/ProcessSender";
 import { isEmpty } from "@ungate/plugininf/lib/util/Util";
 import { isArray } from "lodash";
+import { EventEmitter } from "events";
 
-export class NeDBImpl<T> implements ILocalDB<T> {
+export class NeDBImpl<T> extends EventEmitter implements ILocalDB<T> {
     public dbname: string;
     public db: nedb.INeDb;
     public isTemp: boolean;
 
     constructor(dbname: string, db: nedb.INeDb, isTemp: boolean) {
+        super();
         this.dbname = dbname;
         this.db = db;
         this.isTemp = isTemp;
@@ -91,21 +93,23 @@ export class NeDBImpl<T> implements ILocalDB<T> {
                     .then(() => resolve())
                     .catch((err) => reject(err));
             } else {
-                sendProcess({
-                    command: "sendAllServerCallDb",
-                    data: {
-                        action: "insert",
-                        args: [object],
-                        isTemp: this.isTemp,
-                        name: this.dbname,
-                    },
-                    target: "clusterAdmin",
-                });
+                this.emit("insert", object);
                 this.db.insert(object, (err) => {
                     if (err) {
                         err.message += ` db ${this.dbname}`;
                         return reject(err);
                     }
+                    this.emit("inserted", object);
+                    sendProcess({
+                        command: "sendAllServerCallDb",
+                        data: {
+                            action: "insert",
+                            args: [object],
+                            isTemp: this.isTemp,
+                            name: this.dbname,
+                        },
+                        target: "clusterAdmin",
+                    });
                     return resolve();
                 });
             }
@@ -117,22 +121,30 @@ export class NeDBImpl<T> implements ILocalDB<T> {
         update: UpdateQuery<Document<T>>,
         opts = { multi: false, upsert: false, returnUpdatedDocs: true },
     ): Promise<void> {
-        sendProcess({
-            command: "sendAllServerCallDb",
-            data: {
-                action: "update",
-                args: [filter, update, opts],
-                isTemp: this.isTemp,
-                name: this.dbname,
-            },
-            target: "clusterAdmin",
-        });
         return new Promise((resolve, reject) => {
-            this.db.update(filter, update, opts, (err) => {
+            const options = {
+                multi: false,
+                upsert: false,
+                returnUpdatedDocs: true,
+                ...opts,
+            };
+            this.emit("update", filter, update, options);
+            this.db.update(filter, update, options, (err) => {
                 if (err) {
                     err.message += ` db ${this.dbname}`;
                     return reject(err);
                 }
+                this.emit("updated", filter, update, options);
+                sendProcess({
+                    command: "sendAllServerCallDb",
+                    data: {
+                        action: "update",
+                        args: [filter, update, options],
+                        isTemp: this.isTemp,
+                        name: this.dbname,
+                    },
+                    target: "clusterAdmin",
+                });
                 return resolve();
             });
         });
@@ -140,24 +152,27 @@ export class NeDBImpl<T> implements ILocalDB<T> {
 
     public remove(
         filter: FilterQuery<Document<T>>,
-        options?: RemoveOptions,
+        opts: RemoveOptions = { multi: true },
     ): Promise<void> {
-        sendProcess({
-            command: "sendAllServerCallDb",
-            data: {
-                action: "remove",
-                args: [filter, options],
-                isTemp: this.isTemp,
-                name: this.dbname,
-            },
-            target: "clusterAdmin",
-        });
         return new Promise((resolve, reject) => {
+            const options = { multi: false, ...opts };
+            this.emit("remove", filter, options);
             this.db.remove(filter, options, (err) => {
                 if (err) {
                     err.message += ` db ${this.dbname}`;
                     return reject(err);
                 }
+                this.emit("removed", filter, options);
+                sendProcess({
+                    command: "sendAllServerCallDb",
+                    data: {
+                        action: "remove",
+                        args: [filter, options],
+                        isTemp: this.isTemp,
+                        name: this.dbname,
+                    },
+                    target: "clusterAdmin",
+                });
                 return resolve();
             });
         });

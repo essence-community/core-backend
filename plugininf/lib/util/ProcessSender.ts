@@ -59,39 +59,38 @@ export function initProcess(
         | "localDbNode"
         | "schedulerNode",
 ) {
-    process.on("message", async (message) => {
+    process.on("message", async (message: ISenderOptions) => {
         if (
-            logger.isDebugEnabled() &&
-            (message as ISenderOptions).target &&
-            (message as ISenderOptions).command !== "sendAllServerCallDb"
+            logger.isTraceEnabled() &&
+            message.target &&
+            message.command !== "sendAllServerCallDb"
         ) {
-            logger.debug(
+            logger.trace(
                 `Process target ${target} receive pid: ${
                     process.pid
                 } message ${JSON.stringify(message)}`,
             );
         }
         if (
-            (message as ISenderOptions).target === target &&
-            (message as ISenderOptions).id !== process.pid &&
-            controller[(message as ISenderOptions).command]
+            message.target === target &&
+            message.id !== process.pid &&
+            controller[message.command]
         ) {
             if (
-                "object" === typeof (message as ISenderOptions).data &&
-                (message as ISenderOptions).data.type === "Buffer"
+                "object" === typeof message.data &&
+                message.data.type === "Buffer"
             ) {
-                (message as ISenderOptions).data = MSG.decode(
-                    Buffer.from((message as ISenderOptions).data.data),
-                );
+                message.data = MSG.decode(Buffer.from(message.data.data));
             }
-            const data = await controller[
-                (message as ISenderOptions).command
-            ].call(controller, (message as ISenderOptions).data);
-            if ((message as ISenderOptions).callback) {
+            const data = await controller[message.command].call(
+                controller,
+                message.data,
+            );
+            if (message.callback) {
                 sendProcess({
-                    ...(message as ISenderOptions).callback,
+                    ...message.callback,
                     data: {
-                        ...(message as ISenderOptions).callback.data,
+                        ...message.callback.data,
                         ...data,
                     },
                 });

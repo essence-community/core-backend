@@ -123,7 +123,7 @@ export default class AdminModify {
 
     deepChange(res, data, conf: IParamsInfo, keyPrefix) {
         forEach(data, (val, key) => {
-            const confChild = (Array.isArray(data) ? conf : conf?.[key]);
+            const confChild = Array.isArray(data) ? conf : conf?.[key];
             if (isObject(val) || Array.isArray(val)) {
                 this.deepChange(
                     res,
@@ -149,7 +149,7 @@ export default class AdminModify {
 
     deepPassword(data, conf: IParamsInfo) {
         forEach(data, (val, key) => {
-            const confChild = (Array.isArray(data) ? conf : conf?.[key]);
+            const confChild = Array.isArray(data) ? conf : conf?.[key];
             if (isObject(val) || Array.isArray(val)) {
                 this.deepPassword(val, (conf?.[key] as any)?.childs);
             } else if (confChild && confChild.type === "password") {

@@ -6,7 +6,11 @@
     },
     "jsRules": {},
     "rules": {
-        "space-before-function-paren": [true, {"anonymous": "never", "named": "never", "asyncArrow": "always"}],
+        "adjacent-overload-signatures": false,
+        "space-before-function-paren": [
+            true,
+            { "anonymous": "never", "named": "never", "asyncArrow": "always" }
+        ],
         "interface-name": false,
         "no-unused-variable": [true, { "ignore-pattern": "^_" }]
     },

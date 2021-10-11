@@ -99,8 +99,9 @@ export class Constants {
     /** PW для шифрования пароля */
     public PW_KEY_SECRET: string;
     /** SALT для шифрования пароля */
-    public PW_SALT_SECRET: string = process.env.ESSSENCE_PW_SALT ||
-    "bf359e3e7beb05473be3b0acb8e36adb597b9e34";
+    public PW_SALT_SECRET: string =
+        process.env.ESSSENCE_PW_SALT ||
+        "bf359e3e7beb05473be3b0acb8e36adb597b9e34";
     /** PW для шифрования пароля */
     public PW_IV_SECRET = Buffer.from(
         process.env.ESSSENCE_PW_IV ||
@@ -120,9 +121,9 @@ export class Constants {
         let isUseEncrypt = false;
         if (process.env.ESSSENCE_PW_KEY_SECRET) {
             if (fs.existsSync(process.env.ESSSENCE_PW_KEY_SECRET)) {
-                this.PW_KEY_SECRET = fs.readFileSync(
-                    process.env.ESSSENCE_PW_KEY_SECRET,
-                ).toString();
+                this.PW_KEY_SECRET = fs
+                    .readFileSync(process.env.ESSSENCE_PW_KEY_SECRET)
+                    .toString();
             } else {
                 this.PW_KEY_SECRET = process.env.ESSSENCE_PW_KEY_SECRET;
             }
@@ -132,15 +133,17 @@ export class Constants {
                         .readFileSync(process.env.ESSSENCE_PW_SALT)
                         .toString();
                 } else {
-                    this.PW_SALT_SECRET =
-                        process.env.ESSSENCE_PW_SALT;
+                    this.PW_SALT_SECRET = process.env.ESSSENCE_PW_SALT;
                 }
             }
             if (this.PW_IV_SECRET.length > 16) {
-                this.PW_IV_SECRET = this.PW_IV_SECRET.slice(0,16);
+                this.PW_IV_SECRET = this.PW_IV_SECRET.slice(0, 16);
             } else if (this.PW_IV_SECRET.length < 16) {
-                this.PW_IV_SECRET = scryptSync(this.PW_IV_SECRET, 
-                    this.PW_SALT_SECRET, 16);
+                this.PW_IV_SECRET = scryptSync(
+                    this.PW_IV_SECRET,
+                    this.PW_SALT_SECRET,
+                    16,
+                );
             }
             isUseEncrypt = true;
         }

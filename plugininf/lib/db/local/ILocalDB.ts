@@ -1,3 +1,4 @@
+import { EventEmitter } from "events";
 export type Document<T> = T & {
     ck_id?: string;
     _id?: string;
@@ -147,7 +148,7 @@ export type RemoveOptions = {
 /**
  * Created by artemov_i on 04.12.2018.
  */
-export default interface ILocalDB<T> {
+export default interface ILocalDB<T> extends EventEmitter {
     dbname: string;
     isTemp: boolean;
     find(filter?: FilterQuery<Document<T>>): Promise<Document<T>[]>;
@@ -158,6 +159,18 @@ export default interface ILocalDB<T> {
     insert(
         newDoc: InsertDoc<Document<T>> | InsertDoc<Document<T>>[],
     ): Promise<void>;
+    on(
+        event: "insert" | "inserted",
+        listener: (
+            newDoc: InsertDoc<Document<T>> | InsertDoc<Document<T>>[],
+        ) => void,
+    ): this;
+    once(
+        event: "insert" | "inserted",
+        listener: (
+            newDoc: InsertDoc<Document<T>> | InsertDoc<Document<T>>[],
+        ) => void,
+    ): this;
     update(
         filter: FilterQuery<Document<T>>,
         update: UpdateQuery<Document<T>>,
@@ -167,9 +180,47 @@ export default interface ILocalDB<T> {
             upsert?: boolean;
         },
     ): Promise<void>;
+    on(
+        event: "update" | "updated",
+        listener: (
+            filter: FilterQuery<Document<T>>,
+            update: UpdateQuery<Document<T>>,
+            options?: {
+                multi?: boolean;
+                returnUpdatedDocs?: boolean;
+                upsert?: boolean;
+            },
+        ) => void,
+    ): this;
+    once(
+        event: "update" | "updated",
+        listener: (
+            filter: FilterQuery<Document<T>>,
+            update: UpdateQuery<Document<T>>,
+            options?: {
+                multi?: boolean;
+                returnUpdatedDocs?: boolean;
+                upsert?: boolean;
+            },
+        ) => void,
+    ): this;
     remove(
         filter?: FilterQuery<Document<T>>,
         options?: RemoveOptions,
     ): Promise<void>;
+    on(
+        event: "remove" | "removed",
+        listener: (
+            filter?: FilterQuery<Document<T>>,
+            options?: RemoveOptions,
+        ) => void,
+    ): this;
+    once(
+        event: "remove" | "removed",
+        listener: (
+            filter?: FilterQuery<Document<T>>,
+            options?: RemoveOptions,
+        ) => void,
+    ): this;
     count(filter?: FilterQuery<Document<T>>): Promise<number>;
 }

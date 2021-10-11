@@ -96,9 +96,9 @@ export function encryptUseKey(data: string): string {
 }
 /**
  * Encrypt password
- * @param data 
- * @param type 
- * @returns 
+ * @param data
+ * @param type
+ * @returns
  */
 export function encryptPassword(
     data: string,

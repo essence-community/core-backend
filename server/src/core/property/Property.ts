@@ -13,6 +13,7 @@ import IServerConfig from "./IServerConfig";
 import IQueryConfig from "./IQueryConfig";
 import IPluginConfig from "./IPluginConfig";
 import IProviderConfig from "./IProviderConfig";
+import { IDBSessionData } from "../session/store/NeDbSessionStore";
 let DataStore;
 const LocalProperty: Map<string, ILocalDB<any>> = new Map();
 const TempTable: Map<string, ILocalDB<any>> = new Map();
@@ -129,6 +130,9 @@ class BuildProperty {
     }
     public getUsers(name: string): Promise<ILocalDB<IUserDbData>> {
         return loadProperty<IUserDbData>(`tt_users_${name}`, true);
+    }
+    public getSession(name: string): Promise<ILocalDB<IDBSessionData>> {
+        return loadProperty<IDBSessionData>(`tt_sessions_${name}`, true);
     }
 }
 ((global as any) as IGlobalObject).createTempTable = (name) => {

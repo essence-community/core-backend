@@ -35,6 +35,11 @@ import { TypeOrmLogger } from "@ungate/plugininf/lib/db/TypeOrmLogger";
 import { UserStore } from "./store/typeorm/UserStore";
 import { CacheStore } from "./store/typeorm/CacheStore";
 
+const REPLICA_TIMEOUT = parseInt(
+    process.env.KUBERNETES_REPLICA_TIMEOUT || "0",
+    10,
+);
+
 export class GateSession implements IAuthController {
     private dbUsers: ILocalDB<IUserDbData>;
     private store: ISessionStore;
@@ -72,6 +77,21 @@ export class GateSession implements IAuthController {
             });
             this.dbUsers = await Property.getUsers(this.name);
             this.dbCache = await Property.getCache(this.name);
+            if (
+                process.env.KUBERNETES_SERVICE_HOST &&
+                process.env.KUBERNETES_SERVICE_PORT
+            ) {
+                this.saveSession = (context: IContext) => {
+                    return new Promise<void>((resolve, reject) => {
+                        context.request.session.save((errChild) => {
+                            if (errChild) {
+                                return reject(errChild);
+                            }
+                            setTimeout(resolve, REPLICA_TIMEOUT);
+                        });
+                    });
+                };
+            }
         } else if (this.params.paramSession.typeStore === "typeorm") {
             const connectionManager = new ConnectionManager();
             const connection = connectionManager.create({
@@ -107,6 +127,17 @@ export class GateSession implements IAuthController {
         await this.store.init();
 
         this.logger.info("Inited AuthController %s", this.name);
+    }
+
+    public saveSession(context: IContext): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            context.request.session.save((errChild) => {
+                if (errChild) {
+                    return reject(errChild);
+                }
+                return resolve();
+            });
+        });
     }
 
     public sha1(buf): string {
@@ -196,17 +227,10 @@ export class GateSession implements IAuthController {
         context.request.session.cookie.expires = new Date(
             Date.now() + sessionDuration * 6000,
         );
-        return new Promise((resolve, reject) => {
-            context.request.session.save((err) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve({
-                    ...userData,
-                    session: signed,
-                });
-            });
-        });
+        return this.saveSession(context).then(() => ({
+            ...userData,
+            session: signed,
+        }));
     }
 
     public async loadSession(
@@ -260,14 +284,10 @@ export class GateSession implements IAuthController {
                                 .forEach(([key, value]) => {
                                     context.request.session[key] = value;
                                 });
-                            context.request.session.save((errChild) => {
-                                if (errChild) {
-                                    return reject(errChild);
-                                }
-                                return resolve(
-                                    context.request.session.gsession,
-                                );
-                            });
+                            this.saveSession(context).then(
+                                () => resolve(context.request.session.gsession),
+                                reject,
+                            );
                             return;
                         }
                         return resolve((data as any).gsession);

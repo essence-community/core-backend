@@ -9,12 +9,14 @@ import { IUserDbData } from "@ungate/plugininf/lib/ISession";
 import { Connection } from "typeorm";
 import { UserModel } from "./entries/UserModel";
 import { addFilter } from "./Utils";
+import { EventEmitter } from "events";
 
-export class UserStore implements ILocalDB<IUserDbData> {
+export class UserStore extends EventEmitter implements ILocalDB<IUserDbData> {
     dbname: string;
     isTemp: boolean = false;
     connection: Connection;
     constructor(name: string, conn: Connection) {
+        super();
         this.dbname = name;
         this.connection = conn;
     }
@@ -46,17 +48,24 @@ export class UserStore implements ILocalDB<IUserDbData> {
             | InsertDoc<Document<IUserDbData>>
             | InsertDoc<Document<IUserDbData>>[],
     ): Promise<void> {
-        return this.connection.getRepository(UserModel).save(newDoc as any);
+        this.emit("insert", newDoc);
+        return this.connection
+            .getRepository(UserModel)
+            .save(newDoc as any)
+            .then(() => {
+                this.emit("inserted", newDoc);
+            });
     }
     async update(
         filter: FilterQuery<Document<IUserDbData>>,
         update: UpdateQuery<Document<IUserDbData>>,
-        options?: {
+        options: {
             multi?: boolean;
             returnUpdatedDocs?: boolean;
             upsert?: boolean;
-        },
+        } = { multi: false, upsert: false, returnUpdatedDocs: true },
     ): Promise<void> {
+        this.emit("update", filter, update, options);
         const qb = this.connection
             .getRepository(UserModel)
             .createQueryBuilder()
@@ -66,11 +75,14 @@ export class UserStore implements ILocalDB<IUserDbData> {
             qb.andWhere(addFilter(value, key));
         });
         await qb.execute();
+        this.emit("updated", filter, update, options);
+        return;
     }
     async remove(
         filter?: FilterQuery<Document<IUserDbData>>,
-        options?: RemoveOptions,
+        options: RemoveOptions = { multi: true },
     ): Promise<void> {
+        this.emit("remove", filter, options);
         const qb = this.connection
             .getRepository(UserModel)
             .createQueryBuilder()
@@ -79,6 +91,7 @@ export class UserStore implements ILocalDB<IUserDbData> {
             qb.andWhere(addFilter(value, key));
         });
         await qb.execute();
+        this.emit("removed", filter, options);
         return;
     }
     count(filter?: FilterQuery<Document<IUserDbData>>): Promise<number> {

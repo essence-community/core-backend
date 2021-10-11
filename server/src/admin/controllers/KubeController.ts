@@ -138,7 +138,7 @@ export class KubeController {
     protected token: string;
     protected httpsAgent: HttpsAgent;
     private getAllPodsUrl: string;
-    public async init () {
+    public async init() {
         this.dbServer = await Property.getServers();
         this.serverData = (await this.dbServer.findOne(
             {
@@ -226,7 +226,7 @@ export class KubeController {
 
                         return {
                             ck_id: Constants.GATE_NODE_NAME,
-                            cv_ip: result.data.status.hostIP,
+                            cv_ip: result.data.status.podIP,
                             cn_port: Constants.GATE_ADMIN_CLUSTER_PORT,
                         };
                     },
@@ -236,16 +236,12 @@ export class KubeController {
                         return this.serverData;
                     },
                 );
-            this.dbServer.insert(
-                this.serverData,
-            );
+            this.dbServer.insert(this.serverData);
         } else {
-            this.dbServer.insert(
-                this.serverData,
-            );
+            this.dbServer.insert(this.serverData);
         }
     }
-    protected async initKube () {
+    protected async initKube() {
         const pods: IServerConfig[] = await axios
             .get<PodList>(this.getAllPodsUrl, {
                 headers: {
@@ -275,7 +271,7 @@ export class KubeController {
                     }
                     return result.data.items.map((pod) => ({
                         ck_id: pod.metadata.name,
-                        cv_ip: pod.status.hostIP,
+                        cv_ip: pod.status.podIP,
                         cn_port: Constants.GATE_ADMIN_CLUSTER_PORT,
                     }));
                 },
@@ -285,11 +281,14 @@ export class KubeController {
                 },
             );
         if (pods && pods.length) {
+            this.dbServer.insert(pods).then(noop, (err) => logger.error(err));
+
             this.dbServer
                 .remove({
-                    $nin: [pods.map((pod) => ({ ck_id: pod.ck_id }))],
+                    ck_id: {
+                        $nin: pods.map((value) => value.ck_id),
+                    },
                 })
-                .then(() => this.dbServer.insert(pods))
                 .then(noop, (err) => logger.error(err));
         }
 

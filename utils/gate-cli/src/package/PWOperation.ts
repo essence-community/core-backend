@@ -24,7 +24,7 @@ export class Constants {
 
     public isUseEncrypt = false;
 
-    constructor () {
+    constructor() {
         let isUseEncrypt = false;
         if (process.env.ESSSENCE_PW_KEY_SECRET) {
             if (fs.existsSync(process.env.ESSSENCE_PW_KEY_SECRET)) {
@@ -107,7 +107,7 @@ function decryptUseKey(data: string): string {
         .privateDecrypt(
             {
                 key: Constant.PW_RSA_SECRET,
-                passphrase: Constant.PW_RSA_SECRET_PASSPHRASE
+                passphrase: Constant.PW_RSA_SECRET_PASSPHRASE,
             },
             Buffer.from(data, "hex"),
         )
@@ -146,7 +146,7 @@ export function encryptUseKey(data: string): string {
         .publicEncrypt(
             {
                 key: Constant.PW_RSA_SECRET,
-                passphrase: Constant.PW_RSA_SECRET_PASSPHRASE
+                passphrase: Constant.PW_RSA_SECRET_PASSPHRASE,
             },
             Buffer.from(data),
         )

@@ -61,8 +61,8 @@ export const deleteFolderRecursive = (pathDir: string) => {
         (rl as any).output.write(stringToWrite);
     } else {
         (rl as any).output.write("*");
-    }   
-  };
+    }
+};
 export const questionReadline = (
     question: string,
     defaultValue?: string,

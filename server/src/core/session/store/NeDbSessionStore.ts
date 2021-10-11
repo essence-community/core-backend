@@ -1,14 +1,14 @@
 /* tslint:disable:variable-name */
 import { SessionOptions, Store } from "express-session";
 import ILocalDB from "@ungate/plugininf/lib/db/local/ILocalDB";
-import { loadProperty } from "../../property/Property";
+import Property from "../../property/Property";
 import { IStoreTypes, IGateSession } from "./Store.types";
 import Logger from "@ungate/plugininf/lib/Logger";
 import { ISessionData } from "@ungate/plugininf/lib/ISession";
 import { IRufusLogger } from "rufus";
 import { ISessionStore } from "@ungate/plugininf/lib/IAuthController";
 
-interface IDBSessionData {
+export interface IDBSessionData {
     ck_id: string;
     isDelete?: boolean;
     expiredAt: any;
@@ -33,10 +33,7 @@ export class NeDbSessionStore extends Store implements ISessionStore {
     }
 
     init() {
-        return loadProperty<IDBSessionData>(
-            `tt_sessions_${this.name}`,
-            true,
-        ).then((db) => {
+        return Property.getSession(this.name).then((db) => {
             this.db = db;
             this.emit("connect");
             return;

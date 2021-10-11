@@ -4,7 +4,7 @@ import AdminEventController from "./controllers/AdminEventController";
 import KubeController from "./controllers/KubeController";
 const logger = Logger.getLogger("Admin");
 
-initProcess(AdminEventController, "clusterAdmin");
+initProcess(AdminEventController.command, "clusterAdmin");
 Promise.all([AdminEventController.init(), KubeController.init()]).then(
     () => logger.info("Init Admin Notification Server"),
     (err) =>
