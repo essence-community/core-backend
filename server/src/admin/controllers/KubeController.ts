@@ -137,7 +137,8 @@ export class KubeController {
     protected masterUrlApi: string;
     protected token: string;
     protected httpsAgent: HttpsAgent;
-    public async init() {
+    private getAllPodsUrl: string;
+    public async init () {
         this.dbServer = await Property.getServers();
         this.serverData = (await this.dbServer.findOne(
             {
@@ -153,7 +154,7 @@ export class KubeController {
         if (this.masterHost && this.masterPort) {
             this.masterUrlApi = `${this.masterProtocol}://${this.masterHost}:${this.masterPort}/api/${this.apiVersion}`;
             this.token = fs.readFileSync(this.saTokenFile).toString();
-            this.readTimerKube = setTimeout(this.initKube, this.operationSleep);
+            logger.trace("Init Kube Watch url %s", this.masterUrlApi);
             if (
                 fs.existsSync(this.clientCertFile) ||
                 fs.existsSync(this.clientKeyFile)
@@ -171,21 +172,26 @@ export class KubeController {
                     timeout: this.connectTimeout,
                 });
             }
+            const getPodData = `${this.masterUrlApi}/namespaces/${this.namespace}/pods/${Constants.GATE_NODE_NAME}`;
             this.serverData = await axios
-                .get<Pod>(
-                    `${this.masterUrlApi}/namespaces/${this.namespace}/pods/${Constants.GATE_NODE_NAME}`,
-                    {
-                        headers: {
-                            authorization: `Bearer ${this.token}`,
-                        },
-                        httpsAgent: this.httpsAgent,
-                        validateStatus: () => true,
-                        timeout: this.readTimeout,
-                        responseType: "json",
+                .get<Pod>(getPodData, {
+                    headers: {
+                        authorization: `Bearer ${this.token}`,
                     },
-                )
+                    httpsAgent: this.httpsAgent,
+                    validateStatus: () => true,
+                    timeout: this.readTimeout,
+                    responseType: "json",
+                })
                 .then(
                     (result) => {
+                        logger.trace(
+                            "Get Info Pod %s url %s\nstatus: %s\ndata:\n%j",
+                            Constants.GATE_NODE_NAME,
+                            getPodData,
+                            result.status,
+                            result.data,
+                        );
                         if (result.status >= 400 && result.status < 500) {
                             return this.serverData;
                         }
@@ -199,7 +205,13 @@ export class KubeController {
                                 }, [] as string[])
                                 .join(",");
                         }
+                        logger.trace("Get Labels", this.labels);
                         if (this.labels) {
+                            this.getAllPodsUrl = `${
+                                this.masterUrlApi
+                            }/namespaces/${this.namespace}/pods?${qs.stringify({
+                                labelSelector: this.labels,
+                            })}`;
                             this.initKube().then(noop, (err) =>
                                 logger.error(err),
                             );
@@ -224,25 +236,41 @@ export class KubeController {
                         return this.serverData;
                     },
                 );
+            this.dbServer.update(
+                {
+                    ck_id: Constants.GATE_NODE_NAME,
+                },
+                this.serverData,
+                { upsert: true },
+            );
+        } else {
+            this.dbServer.update(
+                {
+                    ck_id: Constants.GATE_NODE_NAME,
+                },
+                this.serverData,
+                { upsert: true },
+            );
         }
     }
-    protected async initKube() {
+    protected async initKube () {
         const pods: IServerConfig[] = await axios
-            .get<PodList>(
-                `${this.masterUrlApi}/namespaces/${
-                    this.namespace
-                }/pods?${qs.stringify({ labelSelector: this.labels })}`,
-                {
-                    headers: {
-                        authorization: `Bearer ${this.token}`,
-                    },
-                    httpsAgent: this.httpsAgent,
-                    validateStatus: () => true,
-                    timeout: this.readTimeout,
+            .get<PodList>(this.getAllPodsUrl, {
+                headers: {
+                    authorization: `Bearer ${this.token}`,
                 },
-            )
+                httpsAgent: this.httpsAgent,
+                validateStatus: () => true,
+                timeout: this.readTimeout,
+            })
             .then(
                 (result) => {
+                    logger.trace(
+                        "Get info Pods url %s\nstatus:%s\ndata:\n%j",
+                        this.getAllPodsUrl,
+                        result.status,
+                        result.data,
+                    );
                     if (
                         (result.status >= 400 && result.status < 500) ||
                         !result.data ||
