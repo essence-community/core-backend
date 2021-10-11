@@ -236,20 +236,12 @@ export class KubeController {
                         return this.serverData;
                     },
                 );
-            this.dbServer.update(
-                {
-                    ck_id: Constants.GATE_NODE_NAME,
-                },
+            this.dbServer.insert(
                 this.serverData,
-                { upsert: true },
             );
         } else {
-            this.dbServer.update(
-                {
-                    ck_id: Constants.GATE_NODE_NAME,
-                },
+            this.dbServer.insert(
                 this.serverData,
-                { upsert: true },
             );
         }
     }
