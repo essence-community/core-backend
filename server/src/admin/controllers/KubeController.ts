@@ -152,7 +152,7 @@ export class KubeController {
 
         if (this.masterHost && this.masterPort) {
             this.masterUrlApi = `${this.masterProtocol}://${this.masterHost}:${this.masterPort}/api/${this.apiVersion}`;
-            this.token = fs.readdirSync(this.saTokenFile).toString();
+            this.token = fs.readFileSync(this.saTokenFile).toString();
             this.readTimerKube = setTimeout(this.initKube, this.operationSleep);
             if (
                 fs.existsSync(this.clientCertFile) ||
