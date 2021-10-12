@@ -1,6 +1,6 @@
 --liquibase formatted sql
 --changeset artemov_i:init_#user.connect# dbms:oracle splitStatements:false stripComments:false
-create user ${user.connect} identified by ${user.connect}
+create user ${user.connect} identified by ${user.connect.pw}
   default tablespace USERS
   temporary tablespace TEMP
   profile DEFAULT

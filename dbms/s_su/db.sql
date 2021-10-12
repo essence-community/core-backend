@@ -8,7 +8,7 @@ CREATE ROLE s_su WITH
 
 ALTER USER s_su WITH PASSWORD 's_su';
 
-CREATE DATABASE core
+CREATE DATABASE core_meta
     WITH 
     OWNER = s_su
     ENCODING = 'UTF8'

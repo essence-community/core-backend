@@ -1,5 +1,5 @@
 --liquibase formatted sql
---changeset artemov_i:init_db_#name.db# dbms:postgresql runInTransaction:false splitStatements:false stripComments:false
+--changeset artemov_i:init_db_core_meta dbms:postgresql runInTransaction:false splitStatements:false stripComments:false
 CREATE DATABASE ${name.db}
     WITH 
     OWNER = ${user.admin}
@@ -10,7 +10,7 @@ CREATE DATABASE ${name.db}
     TABLESPACE = pg_default
     CONNECTION LIMIT = -1;
 
---changeset artemov_i:init_role_#name.db# dbms:postgresql splitStatements:false stripComments:false
+--changeset artemov_i:init_role_core_meta dbms:postgresql splitStatements:false stripComments:false
 CREATE ROLE ${user.update} WITH
   NOLOGIN
   NOSUPERUSER
@@ -29,3 +29,4 @@ CREATE ROLE ${user.connect} WITH
 
 ALTER ROLE ${user.connect} SET search_path TO public, ${user.table}, pg_catalog;
 ALTER USER ${user.connect} WITH PASSWORD '${user.connect.pw}';
+
