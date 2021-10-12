@@ -148,6 +148,7 @@ export default class RestTransformProxy extends NullProvider {
                 : 660000,
             headers: {},
             responseType: "stream",
+            validateStatus: () => true,
         };
         optionsRequest.forEach((key) => {
             if (Object.prototype.hasOwnProperty.call(config, key)) {
@@ -311,9 +312,10 @@ export default class RestTransformProxy extends NullProvider {
 
             params.httpAgent = new HttpAgent(httpAgent);
         }
+
         if (this.log.isDebugEnabled()) {
             this.log.debug(
-                `proxy request params: ${JSON.stringify(params).substr(
+                `Request: proxy params:\n${JSON.stringify(params).substr(
                     0,
                     4000,
                 )}`,
@@ -328,9 +330,7 @@ export default class RestTransformProxy extends NullProvider {
             };
             if (gateContext.isDebugEnabled()) {
                 gateContext.debug(
-                    `Response proxy headers: ${JSON.stringify(
-                        response.headers,
-                    )}`,
+                    "Response: Status: %s,  proxy headers:\n%j", response.status, response.headers
                 );
             }
             if (validHeader.find((key) => ctHeader.startsWith(key))) {

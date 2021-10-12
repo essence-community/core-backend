@@ -126,6 +126,7 @@ export default class RestEssenceProxy extends NullProvider {
             url: url.format(urlGate),
             headers: {},
             responseType: "stream",
+            validateStatus: () => true,
         };
 
         defaultHeader.forEach((item) => {
@@ -277,7 +278,7 @@ export default class RestEssenceProxy extends NullProvider {
         }
         if (this.log.isDebugEnabled()) {
             this.log.debug(
-                `proxy request params: ${JSON.stringify(params).substr(
+                `Request: proxy params: ${JSON.stringify(params).substr(
                     0,
                     4000,
                 )}`,
@@ -285,7 +286,7 @@ export default class RestEssenceProxy extends NullProvider {
         }
 
         return new Promise(async (resolve, reject) => {
-            let response = null;
+            let response: axios.AxiosResponse<any> = null;
             try {
                 response = await axios.default.request(params);
             } catch (err) {
@@ -319,18 +320,21 @@ export default class RestEssenceProxy extends NullProvider {
                     );
                 }
             }
+            if (gateContext.isDebugEnabled()) {
+                gateContext.debug(
+                    "Response: Status: %s,  proxy headers:\n%j", response.status, response.headers
+                );
+            }
+            if (response?.status === 403) {
+                return reject(
+                    new ErrorException(ErrorGate.REQUIRED_AUTH),
+                );
+            }
             const ctHeader =
                 response.headers["content-type"] || "application/json";
             const rheaders = {
                 ...response.headers,
             };
-            if (gateContext.isDebugEnabled()) {
-                gateContext.debug(
-                    `Response proxy headers: ${JSON.stringify(
-                        response.headers,
-                    )}`,
-                );
-            }
 
             response.data.on("error", (err) => {
                 if (err) {
