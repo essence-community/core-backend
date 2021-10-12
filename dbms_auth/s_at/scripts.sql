@@ -89,5 +89,5 @@ INSERT INTO s_at.t_account_role (ck_id,ck_role,ck_user,ct_change,ck_account)
 DELETE FROM s_at.t_account_role tar WHERE tar.ck_account = '4fd05ca9-3a9e-4d66-82df-886dfa082113' and tar.ck_role = 'ea196953-643d-4666-9a0d-b37689837e2f';
 
 --changeset artemov_i:add_logical_delete dbms:postgresql
-ALTER TABLE s_at.t_account ADD cl_deleted smallint NOT NULL DEFAULT 0::smalint;
+ALTER TABLE s_at.t_account ADD cl_deleted smallint NOT NULL DEFAULT 0::smallint;
 COMMENT ON COLUMN s_at.t_account.cl_deleted IS 'Признак удаления';
