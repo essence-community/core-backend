@@ -137,9 +137,16 @@ begin
 
   -- код функции
   if pv_action = d::varchar then
-  	delete from s_at.t_account_info where ck_account = pot_account.ck_id;
-    delete from s_at.t_account_role where ck_account = pot_account.ck_id;
-    delete from s_at.t_account where ck_id = pot_account.ck_id;
+  	-- delete from s_at.t_account_info where ck_account = pot_account.ck_id;
+    -- delete from s_at.t_account_role where ck_account = pot_account.ck_id;
+    -- delete from s_at.t_account where ck_id = pot_account.ck_id;
+    update s_at.t_account
+     set (cl_deleted,ck_user,ct_change) = 
+     (1::smalint,pot_account.ck_user,pot_account.ct_change)
+     where ck_id = pot_account.ck_id;
+    if not found then
+      perform pkg.p_set_error(504);
+    end if;
     return;
   end if;
   if pot_account.cv_login is null then
@@ -201,24 +208,24 @@ begin
   end if;
   if pot_account.cv_hash_password is null then
      update s_at.t_account
-     set (cv_login,cv_name,cv_surname,cv_patronymic,cv_email,cv_timezone,ck_user,ct_change) = 
-     (pot_account.cv_login,pot_account.cv_name,pot_account.cv_surname,pot_account.cv_patronymic,pot_account.cv_email,pot_account.cv_timezone,pot_account.ck_user,pot_account.ct_change)
+     set (cv_login,cv_name,cv_surname,cv_patronymic,cv_email,cv_timezone,cl_deleted,ck_user,ct_change) = 
+     (pot_account.cv_login,pot_account.cv_name,pot_account.cv_surname,pot_account.cv_patronymic,pot_account.cv_email,pot_account.cv_timezone,pot_account.cl_deleted,pot_account.ck_user,pot_account.ct_change)
      where ck_id = pot_account.ck_id;
   else
  	   pot_account.cv_salt := substring(encode(digest(pot_account.cv_login || pot_account.ct_change::varchar, 'sha256'), 'hex'), 0, 11);
      pot_account.cv_hash_password := pkg_account.f_create_hash(pot_account.cv_salt, pot_account.cv_hash_password);
      update s_at.t_account
-     set (cv_login,cv_salt,cv_hash_password,cv_name,cv_surname,cv_patronymic,cv_email,cv_timezone,ck_user,ct_change) = 
-     (pot_account.cv_login,pot_account.cv_salt,pot_account.cv_hash_password,pot_account.cv_name,pot_account.cv_surname,pot_account.cv_patronymic,pot_account.cv_email,pot_account.cv_timezone,pot_account.ck_user,pot_account.ct_change)
+     set (cv_login,cv_salt,cv_hash_password,cv_name,cv_surname,cv_patronymic,cv_email,cv_timezone,cl_deleted,ck_user,ct_change) = 
+     (pot_account.cv_login,pot_account.cv_salt,pot_account.cv_hash_password,pot_account.cv_name,pot_account.cv_surname,pot_account.cv_patronymic,pot_account.cv_email,pot_account.cv_timezone,pot_account.cl_deleted,pot_account.ck_user,pot_account.ct_change)
      where ck_id = pot_account.ck_id;
   end if;
 
   if pct_account_info is not null then
-      insert into s_at.t_account (ck_account, ck_d_info, cv_value, ck_user, ct_change)
-      select pot_account.ck_id, t.ck_d_info, t.cv_value, pot_account.ck_user, pot_account.ct_change 
+      insert into s_at.t_account (ck_account, ck_d_info, cv_value, cl_deleted, ck_user, ct_change)
+      select pot_account.ck_id, t.ck_d_info, t.cv_value, pot_account.ck_user, pot_account.cl_deleted, pot_account.ct_change 
       from jsonb_to_recordset(pct_account_info) as t(ck_d_info varchar, cv_value varchar)
       on conflict(ck_account,ck_d_info) 
-      DO UPDATE SET ck_account = EXCLUDED.ck_account, cv_value = EXCLUDED.cv_value, ck_user = EXCLUDED.ck_user, ct_change = EXCLUDED.ct_change;
+      DO UPDATE SET ck_account = EXCLUDED.ck_account, cv_value = EXCLUDED.cv_value, cl_deleted = EXCLUDED.cl_deleted, ck_user = EXCLUDED.ck_user, ct_change = EXCLUDED.ct_change;
   end if;
 end;$BODY$;
 

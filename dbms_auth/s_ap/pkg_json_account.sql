@@ -238,6 +238,7 @@ begin
   vot_account.cv_email = nullif(trim(pc_json#>>'{data,cv_email}'), '');
   vot_account.cv_patronymic = nullif(trim(pc_json#>>'{data,cv_patronymic}'), '');
   vot_account.cv_timezone = coalesce(nullif(trim(pc_json#>>'{data,cv_timezone}'), ''), '+03:00');
+  vot_account.cl_deleted = coalesce(nullif(trim(pc_json#>>'{data,cl_deleted}'), ''), '0')::smalint;
   vot_account.ck_user = pv_user;
   vot_account.ct_change = CURRENT_TIMESTAMP;
   vv_action = trim(pc_json#>>'{service,cv_action}');

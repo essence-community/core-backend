@@ -290,3 +290,7 @@ CREATE TYPE ot_copy_object AS (
     cv_modify text,
     ck_provider varchar(32),
     cn_level int8);
+
+--changeset artemov_i:added-auth-url dbms:postgresql
+INSERT INTO s_mt.t_sys_setting (ck_id,cv_value,ck_user,ct_change,cv_description)
+	VALUES ('g_sys_auth_url','/auth','4fd05ca9-3a9e-4d66-82df-886dfa082113','2021-10-12 12:10:31.709','URL авторизации');
