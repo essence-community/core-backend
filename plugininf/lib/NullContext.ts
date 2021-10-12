@@ -183,12 +183,6 @@ export default abstract class NullContext implements IContextPlugin {
                                 ],
                                 defaultValue: "postgres",
                             },
-                            name: {
-                                name: "Session store typeorm name",
-                                type: "string",
-                                required: true,
-                                defaultValue: "session",
-                            },
                             host: {
                                 name: "Session store typeorm host",
                                 type: "string",
@@ -196,7 +190,7 @@ export default abstract class NullContext implements IContextPlugin {
                                 defaultValue: "localhost",
                             },
                             port: {
-                                name: "Session store typeorm name",
+                                name: "Session store typeorm port",
                                 type: "integer",
                                 required: true,
                             },
@@ -211,11 +205,16 @@ export default abstract class NullContext implements IContextPlugin {
                             database: {
                                 name: "Session store typeorm database",
                                 type: "string",
-                                required: true,
                             },
                             typeOrmExtra: {
                                 name: "Session store typeorm extraParam",
                                 description: "JSON extra param",
+                                type: "long_string",
+                                defaultValue: "{}",
+                            },
+                            extra: {
+                                name: "Session store typeorm extra driver",
+                                description: "JSON extra driver param",
                                 type: "long_string",
                                 defaultValue: "{}",
                             },

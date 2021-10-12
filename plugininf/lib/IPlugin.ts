@@ -3,7 +3,6 @@
  */
 import BreakException from "./errors/BreakException";
 import ErrorException from "./errors/ErrorException";
-import ICCTParams from "./ICCTParams";
 import IContext from "./IContext";
 import IObjectParam from "./IObjectParam";
 import IQuery, { IGateQuery } from "./IQuery";

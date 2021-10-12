@@ -1,4 +1,3 @@
-import { Readable } from "stream";
 import { IFile } from "@ungate/plugininf/lib/IContext";
 
 export interface IPluginParams {

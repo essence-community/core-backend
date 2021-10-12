@@ -8,7 +8,7 @@ import { v4 as uuidv4 } from "uuid";
 import { IPluginParams } from "./ExtractorFileToJson.types";
 export class DirStorage {
     private params: IPluginParams;
-    private logger: IRufusLogger;
+    protected logger: IRufusLogger;
     private UPLOAD_DIR: string = process.env.GATE_UPLOAD_DIR || os.tmpdir();
     constructor(params: IPluginParams, logger: IRufusLogger) {
         this.params = params;

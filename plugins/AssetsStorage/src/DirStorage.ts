@@ -8,7 +8,7 @@ import { IPluginParams, IStorage } from "./AssetsStorage.types";
 
 export class DirStorage implements IStorage {
     private params: IPluginParams;
-    private logger: IRufusLogger;
+    protected logger: IRufusLogger;
     private UPLOAD_DIR: string = process.env.GATE_UPLOAD_DIR || os.tmpdir();
     constructor(params: IPluginParams, logger: IRufusLogger) {
         this.params = params;

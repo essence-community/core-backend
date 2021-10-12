@@ -70,7 +70,8 @@ export default class GridToExcel extends NullPlugin {
         if (isEmpty(jsonbc.columns)) {
             return;
         }
-        const excelName = gateContext.params.excelname || jsonbc.excelname || "export_excel";
+        const excelName =
+            gateContext.params.excelname || jsonbc.excelname || "export_excel";
         const rows = await ReadStreamToArray(result.data);
         const configRender = {
             template: {

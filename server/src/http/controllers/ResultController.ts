@@ -29,7 +29,7 @@ class ResultController {
         let first = true;
         let total = 0;
         const ResultTransform = through(
-            function (data) {
+            function(data) {
                 let resultData = data;
                 if (first) {
                     resultData = `{"success":${
@@ -40,7 +40,7 @@ class ResultController {
                 total += 1;
                 this.queue(resultData);
             },
-            function () {
+            function() {
                 this.queue(
                     `,"metaData": ${JSON.stringify({
                         ...metaData,
@@ -95,7 +95,7 @@ class ResultController {
         let first = true;
         const self = this;
         const ResultTransform = through(
-            function (data) {
+            function(data) {
                 let xml = js2xmlparser.parse(
                     "data",
                     Object.entries(data).reduce(
@@ -138,7 +138,7 @@ class ResultController {
                 }
                 this.queue(xml);
             },
-            function () {
+            function() {
                 const metaData = js2xmlparser.parse(
                     "metaData",
                     {

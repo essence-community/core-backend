@@ -7,6 +7,8 @@ import IProvider from "@ungate/plugininf/lib/IProvider";
 import IScheduler from "@ungate/plugininf/lib/IScheduler";
 import Logger from "@ungate/plugininf/lib/Logger";
 import NullAuthProvider from "@ungate/plugininf/lib/NullAuthProvider";
+import NullContext from "@ungate/plugininf/lib/NullContext";
+import { initParams } from "@ungate/plugininf/lib/util/Util";
 import * as fs from "fs";
 import Constants from "../Constants";
 import IPluginConfig from "../property/IPluginConfig";
@@ -231,7 +233,7 @@ class PluginManager {
                                   ],
                               ]
                             : Object.entries(GateContext)
-                        ).forEach(([name, value]) => {
+                        ).forEach(([name, value]: [string, IContextPlugin]) => {
                             GateProvider[name][doc.ck_id] = PluginClass.default
                                 ? new PluginClass.default(
                                       doc.ck_id,
@@ -283,6 +285,29 @@ class PluginManager {
 
     public getGateProvider(context: string, key: string): IProvider {
         return GateProvider[context][key];
+    }
+
+    public findGateProvider(context?: string, key?: string): IProvider[] {
+        if (context && key && GateProvider[context]) {
+            if (key === "all") {
+                return Object.values(GateProvider[context]);
+            }
+            return GateProvider[context][key]
+                ? [GateProvider[context][key]]
+                : [];
+        }
+        if (key) {
+            return Object.values(GateProvider).reduce((res, val) => {
+                if (key === "all") {
+                    return res.concat(Object.values(val));
+                }
+                if (val[key]) {
+                    res.push(val[key]);
+                }
+                return res;
+            }, []);
+        }
+        return [];
     }
 
     public getGateAuthProviders(context: string) {
@@ -455,9 +480,13 @@ class PluginManager {
                 const PluginClass =
                     GateContextClass[doc.ck_d_plugin.toLowerCase()];
                 if (PluginClass) {
+                    const params = initParams(
+                        NullContext.getParamsInfo(),
+                        doc.cct_params,
+                    );
                     const authController = new GateSession(
                         doc.ck_id,
-                        doc.cct_params,
+                        params,
                         GateSession.sha1(
                             `${doc.ck_id}_session_${Constants.SESSION_SECRET}`,
                         ),

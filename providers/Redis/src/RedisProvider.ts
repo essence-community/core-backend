@@ -4,7 +4,7 @@ import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
 import { IResultProvider } from "@ungate/plugininf/lib/IResult";
 import IParamsInfo from "@ungate/plugininf/lib/ICCTParams";
 import { IParamsProvider } from "@ungate/plugininf/lib/NullProvider";
-import { ClientOpts, RedisClient, createClient } from "redis";
+import { ClientOpts, createClient } from "redis";
 import { initParams } from "@ungate/plugininf/lib/util/Util";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
 import ICCTParams from "@ungate/plugininf/lib/ICCTParams";
@@ -180,21 +180,21 @@ export class RedisProvider extends NullProvider {
                         return reject(err);
                     }
                     if (redisQuery.result_eval) {
-                        const res = new Function(
+                        const data = new Function(
                             "result",
                             redisQuery.result_eval,
                         );
                         return resolve({
-                            stream: ResultStream(res(val)),
+                            stream: ResultStream(data(val)),
                         });
                     }
                     if (redisQuery.path_res) {
-                        const res = deepFind(
+                        const data = deepFind(
                             val,
                             redisQuery.path_res.split("."),
                         );
                         return resolve({
-                            stream: ResultStream(res),
+                            stream: ResultStream(data),
                         });
                     }
                     return resolve({
@@ -223,12 +223,12 @@ export class RedisProvider extends NullProvider {
                         return reject(err);
                     }
                     if (redisQuery.path_res) {
-                        const res = deepFind(
+                        const data = deepFind(
                             val,
                             redisQuery.path_res.split("."),
                         );
                         return resolve({
-                            stream: ResultStream(res),
+                            stream: ResultStream(data),
                         });
                     }
                     return resolve({

@@ -1,0 +1,11 @@
+{
+    "name": "@ungate-context/kube-probe",
+    "version": "1.0.0",
+    "description": "Контекст kube-probe",
+    "author": "Ivan Artemov (honyrik@gmail.com)",
+    "license": "MIT",
+    "private": true,
+    "dependencies": {
+        "@ungate/plugininf": "^1.0.0"
+    }
+}

@@ -26,7 +26,6 @@ import ResultController from "./controllers/ResultController";
 import { initParams } from "@ungate/plugininf/lib/util/Util";
 import NullContext from "@ungate/plugininf/lib/NullContext";
 import { IContextParams } from "@ungate/plugininf/lib/IContextPlugin";
-import { NeDbSessionStore } from "../core/session/store/NeDbSessionStore";
 import { GateSession } from "../core/session/GateSession";
 const log = Logger.getLogger("HttpServer");
 

@@ -1,6 +1,5 @@
 import Connection from "@ungate/plugininf/lib/db/Connection";
 import PostgresDB from "@ungate/plugininf/lib/db/postgres";
-import ICCTParams from "@ungate/plugininf/lib/ICCTParams";
 import IContext from "@ungate/plugininf/lib/IContext";
 import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
 import IQuery from "@ungate/plugininf/lib/IQuery";

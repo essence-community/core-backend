@@ -13,18 +13,25 @@ export interface IMetaData {
         | IMetaData
         | IMetaData[];
 }
-export interface IResult {
+export interface IResultBase {
     type:
+        | "break"
         | "success"
         | "false"
         | "error"
         | "file"
         | "binary"
-        | "attachment"
-        | "break";
-    data: Readable;
+        | "attachment";
+    data?: Readable;
     metaData?: IMetaData;
 }
+export interface IResultWithData extends IResultBase {
+    type: "success" | "false" | "error" | "file" | "binary" | "attachment";
+    data: Readable;
+}
+
+export type IResult = IResultWithData | IResultBase;
+
 export default IResult;
 export interface IResultProvider {
     stream: Readable;

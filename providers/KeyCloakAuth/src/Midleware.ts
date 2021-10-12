@@ -8,16 +8,16 @@ export async function PostAuth(
     gateContext: IContext,
     keycloak: KeyCloak.Keycloak,
     data: IKeyCloakAuthParam,
-) {
+): Promise<KeyCloak.Grant | null> {
     const request = gateContext.request as IRequestExtra;
 
     //  During the check SSO process the Keycloak server answered the user is not logged in
     if (data.query.error === "login_required") {
-        return;
+        return null;
     }
 
     if (data.query.error) {
-        return;
+        return null;
     }
 
     return keycloak
@@ -33,17 +33,19 @@ export async function PostAuth(
             } catch (err) {
                 throw err;
             }
+            return grant;
         });
 }
 
 export async function GrantAttacher(
     gateContext: IContext,
     keycloak: KeyCloak.Keycloak,
-) {
+): Promise<KeyCloak.Grant> {
     return keycloak
         .getGrant(gateContext.request as any, gateContext.response as any)
         .then((grant) => {
             (gateContext.request as any).kauth.grant = grant;
+            return grant;
         });
 }
 

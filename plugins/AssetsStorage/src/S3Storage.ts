@@ -4,7 +4,6 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import { IRufusLogger } from "rufus";
-import { Readable } from "stream";
 import { v4 as uuidv4 } from "uuid";
 import { IStorage, IPluginParams } from "./AssetsStorage.types";
 

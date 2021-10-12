@@ -20,6 +20,7 @@ import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
 import { uniq } from "lodash";
 import * as fs from "fs";
 import { Constant } from "@ungate/plugininf/lib/Constants";
+import * as Token from "keycloak-connect/middleware/auth-utils/token";
 
 const FLAG_REDIRECT = "jl_keycloak_auth_callback";
 const USE_REDIRECT = "jl_keycloak_use_redirect";
@@ -220,7 +221,7 @@ export default class KeyCloakAuth extends NullAuthProvider {
             },
             this.params.keyCloakConfig,
         );
-        this.keyCloak.storeGrant = function (grant, request, response) {
+        this.keyCloak.storeGrant = function(grant, request, response) {
             if (this.stores.length < 2 || this.stores[0].get(request)) {
                 return;
             }
@@ -270,12 +271,12 @@ export default class KeyCloakAuth extends NullAuthProvider {
             gateContext.request.session.auth_redirect_uri = URL.format(
                 redirectUrl,
             );
-            await PostAuth(gateContext, this.keyCloak, data);
+            const grant = await PostAuth(gateContext, this.keyCloak, data);
             delete gateContext.request.session.auth_redirect_uri;
-            if (!(gateContext.request as IRequestExtra).kauth.grant) {
+            if (!grant) {
                 return this.redirectAccess(gateContext);
             }
-            const dataUser = await this.generateUserData(gateContext);
+            const dataUser = await this.generateUserData(grant);
 
             await this.authController.addUser(
                 dataUser.idUser,
@@ -283,12 +284,15 @@ export default class KeyCloakAuth extends NullAuthProvider {
                 dataUser.userData,
             );
             await this.authController.updateHashAuth();
-            const sess = await this.createSession(
-                gateContext,
-                dataUser.idUser,
-                dataUser.userData,
-                this.params.sessionDuration,
-            );
+            const sess = await this.createSession({
+                context: gateContext,
+                idUser: dataUser.idUser,
+                userData: dataUser.userData,
+                isAccessErrorNotFound: false,
+                sessionData: {
+                    [`access_token`]: (grant.access_token as any)?.token,
+                },
+            });
             if (sess) {
                 throw new BreakException({
                     type: "success",
@@ -306,19 +310,45 @@ export default class KeyCloakAuth extends NullAuthProvider {
                 gateContext.params[this.params.adminPathParam],
             );
             throw new BreakException("break");
-        } else if (gateContext.request.session[TOKEN_KEY]) {
+        } else if (
+            gateContext.request.session[TOKEN_KEY] ||
+            gateContext.request.headers.authorization
+                ?.substr(0, 7)
+                .toLowerCase()
+                .indexOf("bearer ") > -1
+        ) {
             gateContext.debug("KeyCloak Init grant");
             (gateContext.request as IRequestExtra).kauth = {};
 
             return GrantAttacher(gateContext, this.keyCloak)
-                .then(async () => {
-                    if (
-                        session &&
-                        !(gateContext.request as IRequestExtra).kauth.grant
-                    ) {
+                .then(async (grant) => {
+                    if (!grant) {
                         throw new Error("Not Auth");
                     }
-                    const dataUser = await this.generateUserData(gateContext);
+                    const dataUser = await this.generateUserData(grant);
+                    if (!session) {
+                        await this.authController.addUser(
+                            dataUser.idUser,
+                            this.name,
+                            dataUser.userData,
+                        );
+                        await this.authController.updateHashAuth();
+                        const sess = await this.createSession({
+                            context: gateContext,
+                            idUser: dataUser.idUser,
+                            userData: dataUser.userData,
+                            isAccessErrorNotFound: false,
+                            sessionData: {
+                                [`access_token`]: (grant.access_token as any)
+                                    ?.token,
+                            },
+                        });
+
+                        return this.authController.loadSession(
+                            gateContext,
+                            sess.session,
+                        );
+                    }
                     gateContext.request.session.gsession.userData = {
                         ...gateContext.request.session.gsession.userData,
                         ...dataUser.userData,
@@ -327,7 +357,7 @@ export default class KeyCloakAuth extends NullAuthProvider {
                         ...session.userData,
                         ...dataUser.userData,
                     };
-                    this.authController.addUser(
+                    await this.authController.addUser(
                         dataUser.idUser,
                         this.name,
                         dataUser.userData,
@@ -354,15 +384,15 @@ export default class KeyCloakAuth extends NullAuthProvider {
         return session;
     }
     private async generateUserData(
-        context: IContext,
+        grant: KeyCloak.Grant,
     ): Promise<{ userData: IUserData; idUser: string }> {
-        const grant = (context.request as IRequestExtra).kauth.grant;
         const userInfo = await this.keyCloak.grantManager.userInfo(
             grant.access_token,
         );
         const idUser =
-            (grant.access_token as any).content[this.params.idKey] ||
-            userInfo[this.params.idKey];
+            (grant.access_token as Token).content[this.params.idKey] ||
+            userInfo[this.params.idKey] ||
+            (grant.access_token as Token).content.sub;
         const dataUser = {
             ca_actions: [],
             ck_id: idUser,

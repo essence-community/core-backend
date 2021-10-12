@@ -6,7 +6,7 @@ import * as XlsxStreamReader from "xlsx-stream-reader";
 const TIMEOUT = 1000;
 export class ExtractorXlsx extends EventEmitter {
     private xlsx: XlsxStreamReader;
-    private packRows: number;
+    protected packRows: number;
     private pack: any[] = [];
     private isEnd: boolean = false;
     private flag: number = 0;

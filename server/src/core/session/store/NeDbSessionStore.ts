@@ -1,15 +1,22 @@
 /* tslint:disable:variable-name */
 import { SessionOptions, Store } from "express-session";
 import ILocalDB from "@ungate/plugininf/lib/db/local/ILocalDB";
-import { loadProperty } from "../../property/Property";
-import { IStoreTypes } from "./Store.types";
+import Property from "../../property/Property";
+import { IStoreTypes, IGateSession } from "./Store.types";
 import Logger from "@ungate/plugininf/lib/Logger";
 import { ISessionData } from "@ungate/plugininf/lib/ISession";
 import { IRufusLogger } from "rufus";
 import { ISessionStore } from "@ungate/plugininf/lib/IAuthController";
 
+export interface IDBSessionData {
+    ck_id: string;
+    isDelete?: boolean;
+    expiredAt: any;
+    data: IGateSession;
+}
+
 export class NeDbSessionStore extends Store implements ISessionStore {
-    db: ILocalDB;
+    db: ILocalDB<IDBSessionData>;
     name: string;
     ttl: number;
     private logger: IRufusLogger;
@@ -26,7 +33,7 @@ export class NeDbSessionStore extends Store implements ISessionStore {
     }
 
     init() {
-        return loadProperty(`tt_sessions_${this.name}`, true).then((db) => {
+        return Property.getSession(this.name).then((db) => {
             this.db = db;
             this.emit("connect");
             return;
@@ -34,7 +41,7 @@ export class NeDbSessionStore extends Store implements ISessionStore {
     }
 
     get(ck_id, cb: any = (err) => (err ? this.logger.error(err) : null)) {
-        this.logger.debug("GET %s", ck_id);
+        this.logger.trace("GET %s", ck_id);
         const now = new Date();
         this.db
             .findOne(
@@ -59,20 +66,26 @@ export class NeDbSessionStore extends Store implements ISessionStore {
                 (err) => cb(err),
             );
     }
-    set(ck_id, data, cb: any = (err) => (err ? this.logger.error(err) : null)) {
-        this.logger.debug("SET %s data %j", ck_id, data);
+    set(
+        ck_id,
+        data: IGateSession,
+        cb: any = (err) => (err ? this.logger.error(err) : null),
+    ) {
+        this.logger.trace("SET %s data %j", ck_id, data);
         this.db
             .update(
                 { ck_id },
                 {
                     ck_id,
                     data,
-                    expiredAt: new Date(
-                        Date.now() +
-                            (data.sessionDuration
-                                ? data.sessionDuration * 60000
-                                : this.ttl * 1000),
-                    ),
+                    expiredAt:
+                        data.cookie.expires ||
+                        new Date(
+                            Date.now() +
+                                (data.sessionDuration
+                                    ? data.sessionDuration * 60000
+                                    : this.ttl * 1000),
+                        ),
                 },
                 { multi: false, upsert: true },
             )
@@ -82,7 +95,7 @@ export class NeDbSessionStore extends Store implements ISessionStore {
             );
     }
     destroy(ck_id, cb: any = (err) => (err ? this.logger.error(err) : null)) {
-        this.logger.debug("DESTROY %s", ck_id);
+        this.logger.trace("DESTROY %s", ck_id);
         this.db
             .update(
                 { ck_id },
@@ -97,12 +110,39 @@ export class NeDbSessionStore extends Store implements ISessionStore {
 
     touch(
         ck_id,
-        sess,
+        sess: IGateSession,
         cb: any = (err) => (err ? this.logger.error(err) : null),
     ) {
-        this.logger.debug("TOUCH %s data %j", ck_id, sess);
+        this.logger.trace("TOUCH %s data %j", ck_id, sess);
         if (!sess.gsession) {
             return cb();
+        }
+        const oldDate = sess.cookie.expires;
+        if (
+            oldDate &&
+            oldDate.getTime() <
+                new Date(
+                    Date.now() -
+                        (sess.sessionDuration
+                            ? sess.sessionDuration * 60000
+                            : this.ttl * 1000) *
+                            0.1,
+                ).getTime()
+        ) {
+            return cb();
+        } else {
+            sess.cookie.maxAge = sess.sessionDuration
+                ? sess.sessionDuration * 60000
+                : this.ttl * 1000;
+            sess.cookie.originalMaxAge = sess.sessionDuration
+                ? sess.sessionDuration * 60000
+                : this.ttl * 1000;
+            sess.cookie.expires = new Date(
+                Date.now() +
+                    (sess.sessionDuration
+                        ? sess.sessionDuration * 60000
+                        : this.ttl * 1000),
+            );
         }
         this.db
             .update(
@@ -131,12 +171,14 @@ export class NeDbSessionStore extends Store implements ISessionStore {
                 },
                 {
                     ck_id,
-                    expiredAt: new Date(
-                        Date.now() +
-                            (sess.sessionDuration
-                                ? sess.sessionDuration * 60000
-                                : this.ttl * 1000),
-                    ),
+                    expiredAt:
+                        sess.cookie.expires ||
+                        new Date(
+                            Date.now() +
+                                (sess.sessionDuration
+                                    ? sess.sessionDuration * 60000
+                                    : this.ttl * 1000),
+                        ),
                     data: sess,
                 },
                 { multi: false, upsert: false },
@@ -148,7 +190,7 @@ export class NeDbSessionStore extends Store implements ISessionStore {
     }
 
     all(cb: any = (err) => (err ? this.logger.error(err) : null)) {
-        this.logger.debug("ALL");
+        this.logger.trace("ALL");
         this.db
             .find({
                 isDelete: {
@@ -210,7 +252,7 @@ export class NeDbSessionStore extends Store implements ISessionStore {
     }
 
     length(cb: any = (err) => (err ? this.logger.error(err) : null)) {
-        this.logger.debug("LENGTH");
+        this.logger.trace("LENGTH");
         this.db
             .count({
                 isDelete: {
@@ -224,7 +266,7 @@ export class NeDbSessionStore extends Store implements ISessionStore {
     }
 
     clear(cb: any = (err) => (err ? this.logger.error(err) : null)) {
-        this.logger.debug("CLEAR");
+        this.logger.trace("CLEAR");
         this.db
             .update(
                 {

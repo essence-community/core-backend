@@ -7,11 +7,13 @@ import * as fs from "fs";
 import { forEach, isArray, isString, toNumber, toString } from "lodash";
 import * as moment from "moment";
 import * as path from "path";
+import * as crypto from "crypto";
 import ErrorException from "../errors/ErrorException";
 import ErrorGate from "../errors/ErrorGate";
 import { IParamInfo, IParamsInfo } from "../ICCTParams";
 import ICCTParams from "../ICCTParams";
 import IContext from "../IContext";
+import Constant from "../Constants";
 
 export function isEmpty(value: any, allowEmptyString: boolean = false) {
     return (
@@ -25,14 +27,153 @@ export function dateBetween(date: Date, fromDate: Date, toDate: Date) {
     return date >= fromDate && date <= toDate;
 }
 
+function decryptAes(
+    type: crypto.CipherCCMTypes | crypto.CipherGCMTypes,
+    data: string,
+): string {
+    const key = crypto.scryptSync(
+        Constant.PW_KEY_SECRET,
+        Constant.PW_SALT_SECRET,
+        32,
+    );
+    const iv = Constant.PW_IV_SECRET;
+
+    const cipher = crypto.createDecipheriv(type, key, iv);
+
+    cipher.update(Buffer.from(data, "hex"));
+    return cipher.final().toString();
+}
+
+function decryptUseKey(data: string): string {
+    return crypto
+        .privateDecrypt(
+            {
+                key: Constant.PW_RSA_SECRET,
+                passphrase: Constant.PW_RSA_SECRET_PASSPHRASE,
+            },
+            Buffer.from(data, "hex"),
+        )
+        .toString();
+}
+
+export function encryptAes(
+    type: crypto.CipherCCMTypes | crypto.CipherGCMTypes,
+    data: string,
+): string {
+    if (!Constant.PW_KEY_SECRET) {
+        throw new Error(
+            "Not found key, need init environment ESSSENCE_PW_KEY_SECRET",
+        );
+    }
+    const key = crypto.scryptSync(
+        Constant.PW_KEY_SECRET,
+        Constant.PW_SALT_SECRET,
+        32,
+    );
+    const iv = Constant.PW_IV_SECRET;
+
+    const cipher = crypto.createCipheriv(type, key, iv);
+
+    cipher.update(Buffer.from(data));
+    return cipher.final().toString("hex");
+}
+
+export function encryptUseKey(data: string): string {
+    if (!Constant.PW_RSA_SECRET) {
+        throw new Error(
+            "Not found private key, need init environment ESSSENCE_PW_RSA",
+        );
+    }
+    return crypto
+        .publicEncrypt(
+            {
+                key: Constant.PW_RSA_SECRET,
+                passphrase: Constant.PW_RSA_SECRET_PASSPHRASE,
+            } as any,
+            Buffer.from(data),
+        )
+        .toString("hex");
+}
+/**
+ * Encrypt password
+ * @param data
+ * @param type
+ * @returns
+ */
+export function encryptPassword(
+    data: string,
+    type = Constant.DEFAULT_ALG,
+): string {
+    if (!Constant.isUseEncrypt) {
+        return data;
+    }
+    switch (type) {
+        case "privatekey": {
+            if (!Constant.PW_RSA_SECRET) {
+                return data;
+            }
+            return `{privatekey}${encryptUseKey(data)}`;
+        }
+        case "aes-128-gcm":
+        case "aes-192-gcm":
+        case "aes-256-gcm":
+        case "aes-128-ccm":
+        case "aes-192-ccm":
+        case "aes-256-ccm":
+        case "aes-128-cbc":
+        case "aes-192-cbc":
+        case "aes-256-cbc": {
+            if (!Constant.PW_KEY_SECRET) {
+                return data;
+            }
+            return `{${type}}${encryptAes(type as any, data)}`;
+        }
+        default:
+            return data;
+    }
+}
+
+export function decryptPassword(value: string) {
+    if (
+        typeof value !== "string" ||
+        isEmpty(value) ||
+        value.indexOf("{") !== 0 ||
+        !Constant.isUseEncrypt
+    ) {
+        return value;
+    }
+    const endIndex = value.indexOf("}");
+    const type = value.substring(1, endIndex);
+    const hash = value.substring(endIndex + 1);
+    switch (type) {
+        case "aes-128-gcm":
+        case "aes-192-gcm":
+        case "aes-256-gcm":
+        case "aes-128-ccm":
+        case "aes-192-ccm":
+        case "aes-256-ccm":
+        case "aes-128-cbc":
+        case "aes-192-cbc":
+        case "aes-256-cbc":
+            return decryptAes(type as any, hash);
+        case "privatekey":
+            return decryptUseKey(hash);
+        default:
+            return value;
+    }
+}
+
 function parseParam(conf: IParamInfo, value: any) {
     switch (conf.type) {
         case "string":
         case "long_string":
-        case "password":
             return conf.checkvalue
                 ? conf.checkvalue(toString(value))
                 : toString(value);
+        case "password": {
+            const decryptPass = decryptPassword(toString(value));
+            return conf.checkvalue ? conf.checkvalue(decryptPass) : decryptPass;
+        }
         case "boolean": {
             if (isString(value)) {
                 return conf.checkvalue
@@ -86,8 +227,10 @@ function parseParam(conf: IParamInfo, value: any) {
                     return res;
                 }, {}),
             );
-        default:
-            return conf.checkvalue ? conf.checkvalue(value) : value;
+        default: {
+            const decryptPass = decryptPassword(value);
+            return conf.checkvalue ? conf.checkvalue(decryptPass) : decryptPass;
+        }
     }
 }
 /**

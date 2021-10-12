@@ -19,6 +19,7 @@ import { IRufusLogger } from "rufus";
 import { safePipe } from "@ungate/plugininf/lib/stream/Util";
 import { Transform } from "stream";
 import { TempTable } from "./TempTable";
+import { IPageData } from "./CoreContext.types";
 
 export default class OnlineController implements ICoreController {
     public params: ICoreParams;
@@ -321,6 +322,20 @@ export default class OnlineController implements ICoreController {
                                       [],
                                   )),
                         ];
+                        if (
+                            chunk.jt_form_message &&
+                            cvErrors.includes("error")
+                        ) {
+                            gateContext.connection
+                                .rollback()
+                                .then(() => callback(null, chunk))
+                                .catch((err) => {
+                                    gateContext.warn(err.message, err);
+                                    callback(null, chunk);
+                                    return Promise.resolve();
+                                });
+                            return;
+                        }
                         self.tempTable
                             .findMessage(cvErrors, {
                                 cr_type: "error",
@@ -339,9 +354,24 @@ export default class OnlineController implements ICoreController {
                                 }
                                 callback(null, chunk);
                             });
+                    } else if (
+                        !isEmpty(chunk.jt_message) &&
+                        !isEmpty(chunk.jt_message.error)
+                    ) {
+                        gateContext.connection
+                            .rollback()
+                            .then(() => callback(null, chunk))
+                            .catch((err) => {
+                                gateContext.warn(err.message, err);
+                                callback(null, chunk);
+                                return Promise.resolve();
+                            });
                     } else {
                         callback(null, chunk);
                     }
+                    rTransform._transform = ((childChunk, _encode, cb) => {
+                        cb(null, childChunk);
+                    }).bind(rTransform);
                 },
             });
             result.data = safePipe(result.data, rTransform);
@@ -437,7 +467,6 @@ export default class OnlineController implements ICoreController {
         caActions: any[],
         version: "1" | "2" | "3",
     ): Promise<any> {
-        const self = this;
         return this.dataSource
             .executeStmt(this.pageFindSql, null, {
                 ck_page: ckPage,
@@ -446,7 +475,7 @@ export default class OnlineController implements ICoreController {
             .then(
                 (res) =>
                     new Promise((resolve, reject) => {
-                        const data: Record<string, any> = {};
+                        const data: Record<string, IPageData> = {};
                         res.stream.on("error", (err) =>
                             reject(new Error(err.message)),
                         );

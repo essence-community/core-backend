@@ -105,7 +105,7 @@ export default class AssetsStorage extends NullPlugin {
             },
         };
     }
-    private clients: AWS.S3;
+    protected clients: AWS.S3;
     public params: IPluginParams;
     private controler: IStorage;
     constructor(name: string, params: ICCTParams) {

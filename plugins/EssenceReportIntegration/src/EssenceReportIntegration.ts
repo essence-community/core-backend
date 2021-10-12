@@ -55,8 +55,8 @@ export default class EssenceReportIntegration extends NullPlugin {
 
     private executeReport;
     private storeReport;
-    private runDelayedPrint;
-    private reportStatus;
+    protected runDelayedPrint;
+    protected reportStatus;
     constructor(name: string, params: ICCTParams) {
         super(name, params);
         this.name = name;

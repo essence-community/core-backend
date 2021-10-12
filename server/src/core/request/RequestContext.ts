@@ -14,9 +14,8 @@ import ISession from "@ungate/plugininf/lib/ISession";
 import Logger from "@ungate/plugininf/lib/Logger";
 import * as crypto from "crypto";
 import * as http from "http";
-import { noop, forEach } from "lodash";
+import { noop } from "lodash";
 import Constants from "../Constants";
-import * as path from "path";
 import * as fs from "fs";
 const log = Logger.getLogger("RequestContext");
 function prePareMsg(context: RequestContext, str: string): string {

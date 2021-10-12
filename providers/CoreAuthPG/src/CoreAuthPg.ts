@@ -1,11 +1,9 @@
 import Connection from "@ungate/plugininf/lib/db/Connection";
-import ILocalDB from "@ungate/plugininf/lib/db/local/ILocalDB";
 import PostgresDB from "@ungate/plugininf/lib/db/postgres";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
 import ICCTParams, { IParamsInfo } from "@ungate/plugininf/lib/ICCTParams";
 import IContext from "@ungate/plugininf/lib/IContext";
-import IGlobalObject from "@ungate/plugininf/lib/IGlobalObject";
 import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
 import IQuery from "@ungate/plugininf/lib/IQuery";
 import { IResultProvider } from "@ungate/plugininf/lib/IResult";
@@ -15,11 +13,9 @@ import NullAuthProvider, {
 } from "@ungate/plugininf/lib/NullAuthProvider";
 import { ReadStreamToArray } from "@ungate/plugininf/lib/stream/Util";
 import { initParams, isEmpty, debounce } from "@ungate/plugininf/lib/util/Util";
-import { noop } from "lodash";
-import { isObject } from "util";
+import { noop, isObject } from "lodash";
 import ISession from "@ungate/plugininf/lib/ISession";
 import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
-const Property = ((global as any) as IGlobalObject).property;
 
 const MAX_WAIT_RELOAD = 5000;
 
@@ -48,7 +44,6 @@ export default class CoreAuthPg extends NullAuthProvider {
     public dataSource: PostgresDB;
     public params: IParamsProvider;
 
-    private dbUsers: ILocalDB;
     private eventConnect: Connection;
     private reloadTemp = debounce(() => {
         this.initTemp().then(noop, (err) => this.log.error(err));
@@ -83,19 +78,12 @@ export default class CoreAuthPg extends NullAuthProvider {
                 if (context.params.connect_guest === "true") {
                     const {
                         session: sessGuest,
-                        ...sessDataGuest
-                    }: any = await this.createSession(
+                    }: any = await this.createSession({
                         context,
-                        this.params.guestAccount,
-                        {},
-                        this.params.sessionDuration,
-                    );
-                    return {
                         idUser: this.params.guestAccount,
-                        nameProvider: this.name,
-                        userData: sessDataGuest,
-                        session: sessGuest,
-                    };
+                        userData: {} as any,
+                    });
+                    return this.authController.loadSession(sessGuest);
                 }
                 return session;
             };
@@ -147,9 +135,6 @@ export default class CoreAuthPg extends NullAuthProvider {
         );
     }
     public async init(reload?: boolean): Promise<void> {
-        if (!this.dbUsers) {
-            this.dbUsers = this.authController.getUserDb();
-        }
         if (this.eventConnect) {
             await this.eventConnect.rollbackAndClose();
             this.eventConnect = null;

@@ -7,6 +7,15 @@ import { IRufusLogger } from "rufus";
 import IGlobalObject from "@ungate/plugininf/lib/IGlobalObject";
 import { IPropertyContext } from "./ICoreController";
 import { isEmpty } from "@ungate/plugininf/lib/util/Util";
+import {
+    IPageData,
+    IQueryData,
+    IActionData,
+    IModifyData,
+    IMessageData,
+    ISysSettingData,
+    IObjectData,
+} from "./CoreContext.types";
 const createTempTable = ((global as any) as IGlobalObject).createTempTable;
 
 export class TempTable {
@@ -90,14 +99,14 @@ export class TempTable {
         "       m.cv_text\n" +
         "  from t_message m\n" +
         " order by m.ck_id asc";
-    public dbPage: ILocalDB;
-    public dbQuery: ILocalDB;
-    public dbQueryAction: ILocalDB;
-    public dbModify: ILocalDB;
-    public dbModifyAction: ILocalDB;
-    public dbMessage: ILocalDB;
-    public dbSysSettings: ILocalDB;
-    public dbObject: ILocalDB;
+    public dbPage: ILocalDB<IPageData>;
+    public dbQuery: ILocalDB<IQueryData>;
+    public dbQueryAction: ILocalDB<IActionData>;
+    public dbModify: ILocalDB<IModifyData>;
+    public dbModifyAction: ILocalDB<IActionData>;
+    public dbMessage: ILocalDB<IMessageData>;
+    public dbSysSettings: ILocalDB<ISysSettingData>;
+    public dbObject: ILocalDB<IObjectData>;
     private dataSource: PostgresDB;
     public params: ICoreParams;
     public logger: IRufusLogger;
@@ -167,7 +176,6 @@ export class TempTable {
      * Кэширование всех страниц
      */
     public loadPages(): Promise<void> {
-        const self = this;
         return this.dataSource
             .executeStmt(
                 this.pageSql,
@@ -181,7 +189,7 @@ export class TempTable {
             .then(
                 (res) =>
                     new Promise((resolve, reject) => {
-                        const data = {};
+                        const data: Record<string, IPageData> = {};
                         res.stream.on("error", (err) =>
                             reject(new Error(err.message)),
                         );

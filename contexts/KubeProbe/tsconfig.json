@@ -1,5 +1,7 @@
 {
     "compilerOptions": {
+        "baseUrl": ".",
+        "paths": { "*": ["@types"] },
         "types": ["node"],
         "lib": ["es2018"],
         "target": "ES2018",

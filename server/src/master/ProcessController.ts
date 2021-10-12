@@ -7,13 +7,15 @@ import * as fs from "fs";
 import { deleteFolderRecursive } from "@ungate/plugininf/lib/util/Util";
 const logger = Logger.getLogger("master");
 
-const checkMessage = (nodes: INode, name: string, id) => (message) => {
+const checkMessage = (nodes: INode, name: string, id) => (
+    message: ISenderOptions,
+) => {
     if (
-        logger.isDebugEnabled() &&
-        (message as ISenderOptions).target &&
-        (message as ISenderOptions).command !== "sendAllServerCallDb"
+        logger.isTraceEnabled() &&
+        message.target &&
+        message.command !== "sendAllServerCallDb"
     ) {
-        logger.debug(
+        logger.trace(
             `Process receive nameNode: ${name} pid: ${id} message ${JSON.stringify(
                 message,
             )}`,

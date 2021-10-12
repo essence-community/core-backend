@@ -1,21 +1,31 @@
 import * as nedb from "@ungate/nedb-multi";
 import ILocalDB from "@ungate/plugininf/lib/db/local/ILocalDB";
+import { ICacheDb } from "@ungate/plugininf/lib/IAuthController";
 import IGlobalObject from "@ungate/plugininf/lib/IGlobalObject";
+import { IUserDbData } from "@ungate/plugininf/lib/ISession";
 import * as path from "path";
 import Constants from "../Constants";
 import { NeDBImpl } from "../db/nedblocal/NeDBImpl";
+import IContextConfig from "./IContextConfig";
+import IEventConfig from "./IEventConfig";
+import IShedulerConfig from "./IShedulerConfig";
+import IServerConfig from "./IServerConfig";
+import IQueryConfig from "./IQueryConfig";
+import IPluginConfig from "./IPluginConfig";
+import IProviderConfig from "./IProviderConfig";
+import { IDBSessionData } from "../session/store/NeDbSessionStore";
 let DataStore;
-const LocalProperty: Map<string, ILocalDB> = new Map();
-const TempTable: Map<string, ILocalDB> = new Map();
+const LocalProperty: Map<string, ILocalDB<any>> = new Map();
+const TempTable: Map<string, ILocalDB<any>> = new Map();
 
 /*class ErrorLoadPropert extends Error {
     public isNotExist: boolean = false;
 }*/
 
-export async function getLocalDb(
+export async function getLocalDb<T>(
     name: string,
     isTemp?: boolean,
-): Promise<ILocalDB> {
+): Promise<ILocalDB<T>> {
     if (
         typeof isTemp === "undefined" &&
         LocalProperty.has(name) &&
@@ -29,7 +39,10 @@ export async function getLocalDb(
     return TempTable.get(name) || LocalProperty.get(name);
 }
 
-export function loadProperty(name, isTemp: boolean = false): Promise<ILocalDB> {
+export function loadProperty<T>(
+    name,
+    isTemp: boolean = false,
+): Promise<ILocalDB<T>> {
     return new Promise(async (resolve, reject) => {
         if (LocalProperty.has(name) || TempTable.has(name)) {
             return resolve(
@@ -56,8 +69,8 @@ export function loadProperty(name, isTemp: boolean = false): Promise<ILocalDB> {
                     err.message = `Ошибка инициализации ${name}\n${err.message}`;
                     return reject(err);
                 }
-                //db.persistence.setAutocompactionInterval(5000);
-                const localDb = new NeDBImpl(name, db, isTemp);
+                // db.persistence.setAutocompactionInterval(5000);
+                const localDb = new NeDBImpl<T>(name, db, isTemp);
                 if (isTemp) {
                     TempTable.set(name, localDb);
                     return resolve(localDb);
@@ -88,35 +101,38 @@ export function loadProperty(name, isTemp: boolean = false): Promise<ILocalDB> {
     });
 }
 class BuildProperty {
-    public getConfig(): Promise<ILocalDB> {
-        return loadProperty("t_config");
+    public getConfig(): Promise<ILocalDB<Record<string, string>>> {
+        return loadProperty<Record<string, string>>("t_config");
     }
-    public getContext(): Promise<ILocalDB> {
-        return loadProperty("t_context");
+    public getContext(): Promise<ILocalDB<IContextConfig>> {
+        return loadProperty<IContextConfig>("t_context");
     }
-    public getProviders(): Promise<ILocalDB> {
-        return loadProperty("t_providers");
+    public getProviders(): Promise<ILocalDB<IProviderConfig>> {
+        return loadProperty<IProviderConfig>("t_providers");
     }
-    public getPlugins(): Promise<ILocalDB> {
-        return loadProperty("t_plugins");
+    public getPlugins(): Promise<ILocalDB<IPluginConfig>> {
+        return loadProperty<IPluginConfig>("t_plugins");
     }
-    public getQuery(): Promise<ILocalDB> {
-        return loadProperty("t_query");
+    public getQuery(): Promise<ILocalDB<IQueryConfig>> {
+        return loadProperty<IQueryConfig>("t_query");
     }
-    public getServers(): Promise<ILocalDB> {
-        return loadProperty("t_servers");
+    public getServers(): Promise<ILocalDB<IServerConfig>> {
+        return loadProperty<IServerConfig>("t_servers");
     }
-    public getEvents(): Promise<ILocalDB> {
-        return loadProperty("t_events");
+    public getEvents(): Promise<ILocalDB<IEventConfig>> {
+        return loadProperty<IEventConfig>("t_events");
     }
-    public getSchedulers(): Promise<ILocalDB> {
-        return loadProperty("t_schedulers");
+    public getSchedulers(): Promise<ILocalDB<IShedulerConfig>> {
+        return loadProperty<IShedulerConfig>("t_schedulers");
     }
-    public getCache(name: string): Promise<ILocalDB> {
-        return loadProperty(`tt_cache_${name}`, true);
+    public getCache(name: string): Promise<ILocalDB<ICacheDb>> {
+        return loadProperty<ICacheDb>(`tt_cache_${name}`, true);
     }
-    public getUsers(name: string): Promise<ILocalDB> {
-        return loadProperty(`tt_users_${name}`, true);
+    public getUsers(name: string): Promise<ILocalDB<IUserDbData>> {
+        return loadProperty<IUserDbData>(`tt_users_${name}`, true);
+    }
+    public getSession(name: string): Promise<ILocalDB<IDBSessionData>> {
+        return loadProperty<IDBSessionData>(`tt_sessions_${name}`, true);
     }
 }
 ((global as any) as IGlobalObject).createTempTable = (name) => {

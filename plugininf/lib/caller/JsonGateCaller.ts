@@ -9,7 +9,6 @@ import ICCTParams, { IParamsInfo } from "../ICCTParams";
 import IContext from "../IContext";
 import IObjectParam from "../IObjectParam";
 import { IResultProvider } from "../IResult";
-import { safePipe } from "../stream/Util";
 import { isEmpty } from "../util/Util";
 
 export default class JsonGateCaller {

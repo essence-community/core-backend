@@ -12,7 +12,7 @@ import ISession from "./ISession";
 import NullProvider from "./NullProvider";
 import { IParamsProvider } from "./NullProvider";
 import { isEmpty } from "./util/Util";
-import { IAuthController } from "./IAuthController";
+import { IAuthController, ICreateSessionParam } from "./IAuthController";
 import { initParams } from "@ungate/plugininf/lib/util/Util";
 
 export interface IAuthResult {
@@ -118,33 +118,44 @@ export default abstract class NullAuthProvider extends NullProvider {
     public arrayInParams(val: any[]) {
         return val;
     }
-    public async createSession(
-        context: IContext,
-        idUser: string,
-        data: IObjectParam = {},
-        sessionDuration: number = this.params.sessionDuration || 60,
-        isAccessErrorNotFound: boolean = false,
-    ): Promise<IObjectParam> {
+    public async createSession({
+        context,
+        idUser,
+        userData = {} as any,
+        sessionDuration = this.params.sessionDuration || 60,
+        isAccessErrorNotFound = false,
+        sessionData = {},
+    }: Omit<
+        ICreateSessionParam,
+        "nameProvider" | "sessionData" | "sessionDuration"
+    > & {
+        isAccessErrorNotFound?: boolean;
+        sessionData?: Record<string, any>;
+        sessionDuration?: number;
+    }): Promise<IObjectParam> {
         if (isEmpty(idUser)) {
             throw new ErrorException(ErrorGate.AUTH_DENIED);
         }
-        if (data.ca_actions) {
-            data.ca_actions = isString(data.ca_actions)
-                ? JSON.parse(data.ca_actions)
-                : data.ca_actions;
+        if (userData.ca_actions) {
+            userData.ca_actions = isString(userData.ca_actions)
+                ? JSON.parse(userData.ca_actions)
+                : userData.ca_actions;
         }
-        const dataUser = await this.authController.getDataUser(
-            idUser,
-            this.name,
-            isAccessErrorNotFound,
-        );
+        const dataUser =
+            (await this.authController.getDataUser(
+                idUser,
+                this.name,
+                isAccessErrorNotFound,
+            )) || {};
         const session = await this.authController.createSession({
             context,
             idUser,
             nameProvider: this.name,
-            userData: { ...dataUser, ...data },
+            userData: { ...dataUser, ...userData },
             sessionDuration,
             sessionData: {
+                ...sessionData,
+                onlySession: this.params.onlySession,
                 typeCheckAuth: this.params.typeCheckAuth || "session",
             },
         });

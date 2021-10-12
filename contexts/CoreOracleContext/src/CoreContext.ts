@@ -19,9 +19,9 @@ import ICoreController from "./ICoreController";
 import OfflineController from "./OfflineController";
 import OnlineController from "./OnlineController";
 import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
+import { IUserDbData } from "@ungate/plugininf/lib/ISession";
 const logger = Logger.getLogger("CoreContext");
 const Mask = ((global as any) as IGlobalObject).maskgate;
-const createTempTable = ((global as any) as IGlobalObject).createTempTable;
 
 export interface ICoreParams extends IContextParams {
     debug: boolean;
@@ -126,10 +126,7 @@ export default class CoreContext extends NullContext {
     }
     private controller: ICoreController;
     private dataSource: OracleDB;
-    private dbUsers: ILocalDB;
-    private dbDepartments: ILocalDB;
-    private sysSettings =
-        "select s.ck_id, s.cv_value, s.cv_description from s_mt.t_sys_setting s";
+    private dbUsers: ILocalDB<IUserDbData>;
     constructor(
         name: string,
         params: ICCTParams,
@@ -172,8 +169,7 @@ export default class CoreContext extends NullContext {
     }
 
     public async init(reload?: boolean): Promise<void> {
-        this.dbUsers = await createTempTable("tt_users");
-        this.dbDepartments = await createTempTable("tt_departments");
+        this.dbUsers = await this.authController.getUserDb();
         return this.controller.init(reload);
     }
     public initContext(gateContext: IContext): Promise<IContextPluginResult> {
@@ -283,17 +279,24 @@ export default class CoreContext extends NullContext {
         }
         const json = JSON.parse(gateContext.params.json);
         return this.dbUsers
-            .update(
-                {
-                    ck_id: `${gateContext.session.idUser}:${gateContext.session.nameProvider}`,
-                },
-                {
-                    $set: {
-                        "data.ck_dept": json.data.ck_dept,
-                        "data.cv_timezone": json.data.cv_timezone || "+03:00",
+            .findOne({
+                ck_id: `${gateContext.session.idUser}:${gateContext.session.nameProvider}`,
+            })
+            .then((value) => {
+                return this.dbUsers.update(
+                    {
+                        ck_id: `${gateContext.session.idUser}:${gateContext.session.nameProvider}`,
                     },
-                },
-            )
+                    {
+                        ...value,
+                        data: {
+                            ...value.data,
+                            ck_dept: json.data.ck_dept,
+                            cv_timezone: json.data.cv_timezone || "+03:00",
+                        },
+                    },
+                );
+            })
             .then(() =>
                 Promise.reject(
                     new BreakException({

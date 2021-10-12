@@ -27,7 +27,7 @@ export default class CoreOracleIntegration extends NullContext {
             },
         };
     }
-    private dbQuery: ILocalDB;
+    private dbQuery: ILocalDB<Record<string, any>>;
     private dataSource: OracleDB;
     private caller: any;
     constructor(

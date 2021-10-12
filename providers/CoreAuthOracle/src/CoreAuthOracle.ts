@@ -1,11 +1,9 @@
 import Connection from "@ungate/plugininf/lib/db/Connection";
-import ILocalDB from "@ungate/plugininf/lib/db/local/ILocalDB";
 import OracleDB from "@ungate/plugininf/lib/db/oracle";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
 import ICCTParams, { IParamsInfo } from "@ungate/plugininf/lib/ICCTParams";
 import IContext from "@ungate/plugininf/lib/IContext";
-import IGlobalObject from "@ungate/plugininf/lib/IGlobalObject";
 import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
 import IQuery from "@ungate/plugininf/lib/IQuery";
 import NullAuthProvider, {
@@ -15,7 +13,6 @@ import { ReadStreamToArray } from "@ungate/plugininf/lib/stream/Util";
 import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
 import * as moment from "moment";
 import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
-const Property = ((global as any) as IGlobalObject).property;
 
 export default class CoreAuthOracle extends NullAuthProvider {
     public static getParamsInfo(): IParamsInfo {
@@ -26,7 +23,6 @@ export default class CoreAuthOracle extends NullAuthProvider {
 
     public dataSource: OracleDB;
 
-    private dbUsers: ILocalDB;
     constructor(
         name: string,
         params: ICCTParams,
@@ -117,9 +113,6 @@ export default class CoreAuthOracle extends NullAuthProvider {
         };
     }
     public async init(reload?: boolean): Promise<void> {
-        if (!this.dbUsers) {
-            this.dbUsers = this.authController.getUserDb();
-        }
         await this.dataSource.createPool();
         const users = {};
         this.log.trace("Cache users...");

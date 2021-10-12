@@ -22,10 +22,9 @@ import OfflineController from "./OfflineController";
 import OnlineController from "./OnlineController";
 import { TempTable } from "./TempTable";
 import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
+import { IUserDbData } from "@ungate/plugininf/lib/ISession";
 const logger = Logger.getLogger("CoreContext");
 const Mask = ((global as any) as IGlobalObject).maskgate;
-const createTempTable = ((global as any) as IGlobalObject).createTempTable;
-
 export interface ICoreParams extends IContextParams {
     debug: boolean;
     anonymousAction: number;
@@ -147,7 +146,7 @@ export default class CoreContext extends NullContext {
     public params: ICoreParams;
     private controller: ICoreController;
     private dataSource: PostgresDB;
-    private dbUsers: ILocalDB;
+    private dbUsers: ILocalDB<IUserDbData>;
     private tempTable: TempTable;
     constructor(
         name: string,
@@ -311,17 +310,24 @@ export default class CoreContext extends NullContext {
         }
         const json = JSON.parse(gateContext.params.json);
         return this.dbUsers
-            .update(
-                {
-                    ck_id: `${gateContext.session.idUser}:${gateContext.session.nameProvider}`,
-                },
-                {
-                    $set: {
-                        "data.ck_dept": json.data.ck_dept,
-                        "data.cv_timezone": json.data.cv_timezone || "+03:00",
+            .findOne({
+                ck_id: `${gateContext.session.idUser}:${gateContext.session.nameProvider}`,
+            })
+            .then((value) => {
+                return this.dbUsers.update(
+                    {
+                        ck_id: `${gateContext.session.idUser}:${gateContext.session.nameProvider}`,
                     },
-                },
-            )
+                    {
+                        ...value,
+                        data: {
+                            ...value.data,
+                            ck_dept: json.data.ck_dept,
+                            cv_timezone: json.data.cv_timezone || "+03:00",
+                        },
+                    },
+                );
+            })
             .then(() =>
                 Promise.reject(
                     new BreakException({

@@ -1,14 +1,12 @@
 import { IFile } from "@ungate/plugininf/lib/IContext";
 import * as fs from "fs";
-import * as os from "os";
 import * as path from "path";
 import { IRufusLogger } from "rufus";
 import { Readable } from "stream";
 import { IPluginParams, IStorage } from "./Patcher.types";
 export class DirStorage implements IStorage {
     private params: IPluginParams;
-    private logger: IRufusLogger;
-    private UPLOAD_DIR: string = process.env.GATE_UPLOAD_DIR || os.tmpdir();
+    protected logger: IRufusLogger;
     constructor(params: IPluginParams, logger: IRufusLogger) {
         this.params = params;
         this.logger = logger;

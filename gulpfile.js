@@ -5,6 +5,7 @@ const path = require("path");
 const copyDir = require("copy-dir");
 const { exec } = require("child_process");
 const crypto = require("crypto");
+const glob = require("glob");
 const homeDir = __dirname;
 const packageJson = JSON.parse(fs.readFileSync("./package.json"));
 const serverJson = JSON.parse(fs.readFileSync("./server/package.json"));
@@ -39,6 +40,26 @@ packageJson.nodemonConfig = {
 
 function list(val) {
     return val.toUpperCase().split(",");
+}
+function cmdExec(
+    command,
+    options = {
+        env: process.env,
+        cwd: __dirname,
+    },
+) {
+    return new Promise((resolve, reject) => {
+        exec(command, options, (error, stdout, stderr) => {
+            if (error) {
+                error.message += `\n${stdout ? stdout : ""}\n${
+                    stderr ? stderr : ""
+                }`;
+
+                return reject(error);
+            }
+            resolve({ stdout, stderr });
+        });
+    });
 }
 const copyDirAsync = (...args) =>
     new Promise((resolve, reject) =>
@@ -672,8 +693,44 @@ gulp.task("packageJson", async () => {
     );
 });
 
-gulp.task("clear", async () => {
-    de;
+gulp.task("tslint:fix:all", async () => {
+    const files = (
+        await new Promise((resolve, reject) => {
+            glob("**/tsconfig.json", (err, files) => {
+                if (err) {
+                    return reject(err);
+                }
+                return resolve(files);
+            });
+        })
+    ).filter(
+        (file) =>
+            file.indexOf("bin") === -1 && file.indexOf("node_modules") === -1,
+    );
+    return files.slice(1).reduce(
+        (promise, file) => {
+            return promise.then(() =>
+                cmdExec(`yarn tslint --project "${file}" --fix`).then(
+                    ({ stdout, stderr }) => {
+                        console.log(stdout);
+                        if (stderr) {
+                            console.error(stderr);
+                        }
+                        return;
+                    },
+                ),
+            );
+        },
+        cmdExec(`yarn tslint --project "${files[0]}" --fix`).then(
+            ({ stdout, stderr }) => {
+                console.log(stdout);
+                if (stderr) {
+                    console.error(stderr);
+                }
+                return;
+            },
+        ),
+    );
 });
 
 gulp.task(

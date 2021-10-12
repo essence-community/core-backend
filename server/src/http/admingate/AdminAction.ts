@@ -23,25 +23,32 @@ import NullPlugin from "@ungate/plugininf/lib/NullPlugin";
 import NullScheduler from "@ungate/plugininf/lib/NullScheduler";
 import NullEvent from "@ungate/plugininf/lib/NullEvent";
 import NullAuthProvider from "@ungate/plugininf/lib/NullAuthProvider";
+import IContextConfig from "../../core/property/IContextConfig";
+import IProviderConfig from "../../core/property/IProviderConfig";
+import IPluginConfig from "../../core/property/IPluginConfig";
+import IQueryConfig from "../../core/property/IQueryConfig";
+import IServerConfig from "../../core/property/IServerConfig";
+import IShedulerConfig from "../../core/property/IShedulerConfig";
+import IEventConfig from "../../core/property/IEventConfig";
 
 export default class AdminAction {
     public params: ICCTParams;
     public name: string;
     public riakAction: RiakAction;
-    public dbContexts: ILocalDB;
-    public dbEvents: ILocalDB;
-    public dbProviders: ILocalDB;
-    public dbSchedulers: ILocalDB;
-    public dbPlugins: ILocalDB;
-    public dbQuerys: ILocalDB;
-    public dbServers: ILocalDB;
-    constructor(name: string, params: ICCTParams) {
+    public dbContexts: ILocalDB<IContextConfig>;
+    public dbEvents: ILocalDB<IEventConfig>;
+    public dbProviders: ILocalDB<IProviderConfig>;
+    public dbSchedulers: ILocalDB<IShedulerConfig>;
+    public dbPlugins: ILocalDB<IPluginConfig>;
+    public dbQuerys: ILocalDB<IQueryConfig>;
+    public dbServers: ILocalDB<IServerConfig>;
+    constructor (name: string, params: ICCTParams) {
         this.name = name;
         this.params = params;
         this.riakAction = new RiakAction(params);
     }
 
-    public async init(): Promise<void> {
+    public async init (): Promise<void> {
         this.dbContexts = await Property.getContext();
         this.dbEvents = await Property.getEvents();
         this.dbProviders = await Property.getProviders();
@@ -51,7 +58,7 @@ export default class AdminAction {
         this.dbServers = await Property.getServers();
     }
     /* tslint:disable:object-literal-sort-keys */
-    public get handlers() {
+    public get handlers () {
         return {
             gtresetdefaultconfig: (gateContext: IContext) =>
                 gateContext.gateContextPlugin.init(true).then(() =>
@@ -138,36 +145,48 @@ export default class AdminAction {
                         ),
                     ),
             gtgetconfproviders: (gateContext: IContext) => {
-                const json = JSON.parse(gateContext.query.inParams.json, (key, value) => {
-                    if (value === null) {
-                        return undefined;
-                    }
-                    return value;
-                });
+                const json = JSON.parse(
+                    gateContext.query.inParams.json,
+                    (key, value) => {
+                        if (value === null) {
+                            return undefined;
+                        }
+                        return value;
+                    },
+                );
                 return this.dbProviders.find().then((docs) =>
-                    Promise.resolve(
-                        [...(json?.filter?.g_providers_add_all === 'all' ? [{
-                            ck_id: 'all',
-                        }] : []), ...docs]
-                            .map((val) => (json?.filter?.g_providers_add_all === 'all' ? {ck_id: val.ck_id} : {
-                                ...val,
-                                cv_params: this.ParamsToString(
-                                    PluginManager.getGateProviderClass,
-                                    val.ck_d_plugin,
-                                    val.cct_params,
-                                ),
-                                cct_params: undefined,
-                                ck_d_plugin: val.ck_d_plugin.toLowerCase(),
-                            }))
-                            .sort(sortFilesData(gateContext))
-                            .filter(filterFilesData(gateContext)),
-                    ),
+                    ([
+                        ...(json?.filter?.g_providers_add_all === "all"
+                            ? [
+                                  {
+                                      ck_id: "all",
+                                  },
+                              ]
+                            : []),
+                        ...docs,
+                    ] as any)
+                        .map((val) =>
+                            json?.filter?.g_providers_add_all === "all"
+                                ? { ck_id: val.ck_id }
+                                : {
+                                      ...val,
+                                      cv_params: this.ParamsToString(
+                                          PluginManager.getGateProviderClass,
+                                          val.ck_d_plugin,
+                                          val.cct_params,
+                                      ),
+                                      cct_params: undefined,
+                                      ck_d_plugin: val.ck_d_plugin.toLowerCase(),
+                                  },
+                        )
+                        .sort(sortFilesData(gateContext))
+                        .filter(filterFilesData(gateContext)),
                 );
             },
-            gtgetinitedproviders: (gateContext: IContext) => 
+            gtgetinitedproviders: (gateContext: IContext) =>
                 this.dbProviders.find().then((docs) =>
                     Promise.resolve(
-                        [{ck_id: "all"}, ...docs]
+                        [{ ck_id: "all" }, ...docs]
                             .map((val) => ({
                                 ck_id: val.ck_id,
                             }))
@@ -409,7 +428,7 @@ export default class AdminAction {
         };
     }
 
-    public ParamsToString(method: any, ckDPlugin: string, cctParams = {}) {
+    public ParamsToString (method: any, ckDPlugin: string, cctParams = {}) {
         const PClass = method(ckDPlugin.toLowerCase());
         let params = {};
         if (PClass && PClass.getParamsInfo) {
@@ -431,7 +450,7 @@ export default class AdminAction {
      * @param db
      * @returns
      */
-    public async loadSetting(
+    public async loadSetting (
         gateContext: IContext,
         column: string,
         method,
@@ -504,7 +523,7 @@ export default class AdminAction {
         return Promise.resolve([]);
     }
 
-    private checkData(name: string, conf: IParamInfo, params = {}) {
+    private checkData (name: string, conf: IParamInfo, params = {}) {
         switch (conf.type) {
             case "string":
             case "long_string": {
@@ -583,7 +602,7 @@ export default class AdminAction {
      * @param [params]
      * @returns
      */
-    public createFields(
+    public createFields (
         gateContext: IContext,
         name: string,
         ckPage: number | string,

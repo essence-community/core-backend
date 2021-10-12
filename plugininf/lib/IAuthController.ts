@@ -3,7 +3,7 @@ import ILocalDB from "./db/local/ILocalDB";
 import IContext from "./IContext";
 import IObjectParam from "./IObjectParam";
 import ISession from "./ISession";
-import { IUserData, ISessionData } from "./ISession";
+import { IUserData, ISessionData, IUserDbData } from "./ISession";
 
 export interface ICreateSessionParam {
     context: IContext;
@@ -22,6 +22,11 @@ export interface ISessionStore extends Store {
     ): Promise<{ [sid: string]: ISessionData } | null>;
 }
 
+export interface ICacheDb {
+    ck_id: string;
+    [key: string]: any;
+}
+
 export interface IAuthController {
     /**
      * Обновляем кеш о юзерах
@@ -32,11 +37,13 @@ export interface IAuthController {
      * @param idUser индификатор пользователя
      * @param nameProvider наименование провайдера
      * @param data Данные пользователя
+     * @param login Логин пользоаптеля если есть
      */
     addUser(
         idUser: string,
         nameProvider: string,
         data: IUserData,
+        login?: string,
     ): Promise<void>;
     /**
      * Получаем данные о пользователе
@@ -73,12 +80,12 @@ export interface IAuthController {
      * Локальная база пользователей
      * @returns user db
      */
-    getUserDb(): ILocalDB;
+    getUserDb(): ILocalDB<IUserDbData>;
     /**
-     * Локальная база пользователей
-     * @returns user db
+     * Локальная база temp
+     * @returns temp db
      */
-    getCacheDb(): ILocalDB;
+    getCacheDb(): ILocalDB<ICacheDb>;
 
     getSessionStore(): ISessionStore;
     /**

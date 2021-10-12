@@ -1,11 +1,9 @@
 import Connection from "@ungate/plugininf/lib/db/Connection";
-import ILocalDB from "@ungate/plugininf/lib/db/local/ILocalDB";
 import PostgresDB from "@ungate/plugininf/lib/db/postgres";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
 import ICCTParams, { IParamsInfo } from "@ungate/plugininf/lib/ICCTParams";
 import IContext from "@ungate/plugininf/lib/IContext";
-import IGlobalObject from "@ungate/plugininf/lib/IGlobalObject";
 import IObjectParam from "@ungate/plugininf/lib/IObjectParam";
 import IQuery from "@ungate/plugininf/lib/IQuery";
 import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
@@ -20,7 +18,6 @@ import { X509 } from "jsrsasign";
 import { isObject, uniq } from "lodash";
 import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
 
-const Property = ((global as any) as IGlobalObject).property;
 const BASIC_PATTERN = "Basic";
 const PASSWORD_PATTERN_NGINX_GSS = "bogus_auth_gss_passwd";
 
@@ -70,8 +67,6 @@ export default class PKOAuth extends NullAuthProvider {
     }
 
     public dataSource: PostgresDB;
-
-    private dbUsers: ILocalDB;
     private ad: ActiveDirectory;
     private mapUserAttr: IObjectParam = {};
     private mapGroupActions: IObjectParam = {};
@@ -221,9 +216,6 @@ export default class PKOAuth extends NullAuthProvider {
         };
     }
     public async init(reload?: boolean): Promise<void> {
-        if (!this.dbUsers) {
-            this.dbUsers = this.authController.getUserDb();
-        }
         await this.dataSource.createPool();
         const users = {};
         return this.dataSource
@@ -416,13 +408,13 @@ export default class PKOAuth extends NullAuthProvider {
                                 ck_d_provider: this.name,
                             },
                             {
-                                "data.cv_login": username,
+                                cv_login: username,
                             },
                         ],
                     },
                     true,
                 )
-                .then(async (userData = {}) => {
+                .then(async (userData) => {
                     const data = Object.keys(this.mapUserAttr).reduce(
                         (obj, val) => ({
                             ...obj,
@@ -443,6 +435,7 @@ export default class PKOAuth extends NullAuthProvider {
                             data.ck_id,
                             this.name,
                             data,
+                            userData.cv_login || user.sAMAccountName,
                         );
                     }
                     if (isUserData) {
@@ -455,7 +448,11 @@ export default class PKOAuth extends NullAuthProvider {
                     if (session) {
                         return resolve(session);
                     }
-                    return this.createSession(data.ck_id, data)
+                    return this.createSession({
+                        context: gateContext,
+                        idUser: data.ck_id,
+                        userData: data,
+                    })
                         .then((res) =>
                             this.authController.loadSession(res.session),
                         )

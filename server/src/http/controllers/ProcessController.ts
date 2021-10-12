@@ -1,17 +1,14 @@
-import ILocalDB from "@ungate/plugininf/lib/db/local/ILocalDB";
 import IObjectParam from "@ungate/plugininf/lib/IObjectParam";
 import Logger from "@ungate/plugininf/lib/Logger";
 import { noop } from "lodash";
 import PluginManager from "../../core/pluginmanager/PluginManager";
-import Property from "../../core/property";
 import Mask from "../Mask";
 import NotificationController from "./NotificationController";
 const log = Logger.getLogger("ProcessController");
 
 class ProcessController {
-    private dbProvider: ILocalDB;
     public async init() {
-        this.dbProvider = await Property.getProviders();
+        return;
     }
     public async getWsUsers(data: IObjectParam): Promise<any> {
         return {
@@ -24,30 +21,34 @@ class ProcessController {
      * @return {[type]}      [description]
      */
     public async reloadProvider(data) {
-        const provider = PluginManager.getGateProvider(
+        const providers = PluginManager.findGateProvider(
             data.nameContext,
             data.name,
         );
-        if (provider) {
+        if (providers.length) {
             log.info(
                 `Start init provider ${data.name} process: ${process.env.UNGATE_HTTP_ID}`,
             );
             Mask.mask(data.session)
                 .then(() =>
-                    provider.init(true).then(
-                        () => {
-                            log.info(
-                                `End init provider ${data.name} process: ${process.env.UNGATE_HTTP_ID}`,
-                            );
-                            return Mask.unmask(data.session);
-                        },
-                        (err) => {
-                            log.error(err);
-                            return Mask.unmask(data.session);
-                        },
+                    Promise.all(
+                        providers.map((provider) =>
+                            provider.init(true).then(
+                                () => {
+                                    log.info(
+                                        `End init provider ${data.name} process: ${process.env.UNGATE_HTTP_ID}`,
+                                    );
+                                    return;
+                                },
+                                (err) => {
+                                    log.error(err);
+                                    return;
+                                },
+                            ),
+                        ),
                     ),
                 )
-                .then(noop)
+                .then(() => Mask.unmask(data.session))
                 .catch(() => Mask.unmask(data.session));
         }
     }

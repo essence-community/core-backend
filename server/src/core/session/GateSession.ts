@@ -1,7 +1,10 @@
 import ILocalDB from "@ungate/plugininf/lib/db/local/ILocalDB";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
-import ISession, { IUserData } from "@ungate/plugininf/lib/ISession";
+import ISession, {
+    IUserData,
+    IUserDbData,
+} from "@ungate/plugininf/lib/ISession";
 import Logger from "@ungate/plugininf/lib/Logger";
 import * as crypto from "crypto";
 import { v4 as uuidv4 } from "uuid";
@@ -14,6 +17,7 @@ import { IRufusLogger } from "rufus";
 import NotificationController from "../../http/controllers/NotificationController";
 import {
     IAuthController,
+    ICacheDb,
     ICreateSessionParam,
 } from "@ungate/plugininf/lib/IAuthController";
 import { ISessionStore } from "@ungate/plugininf/lib/IAuthController";
@@ -24,11 +28,22 @@ import RequestContext from "../request/RequestContext";
 import { debounce } from "@ungate/plugininf/lib/util/Util";
 import { noop } from "lodash";
 import * as moment from "moment-timezone";
+import { ConnectionManager } from "typeorm";
+import * as path from "path";
+import { TypeOrmSessionStore } from "./store/TypeOrmSessionStore";
+import { TypeOrmLogger } from "@ungate/plugininf/lib/db/TypeOrmLogger";
+import { UserStore } from "./store/typeorm/UserStore";
+import { CacheStore } from "./store/typeorm/CacheStore";
+
+const REPLICA_TIMEOUT = parseInt(
+    process.env.KUBERNETES_REPLICA_TIMEOUT || "0",
+    10,
+);
 
 export class GateSession implements IAuthController {
-    private dbUsers: ILocalDB;
+    private dbUsers: ILocalDB<IUserDbData>;
     private store: ISessionStore;
-    private dbCache: ILocalDB;
+    private dbCache: ILocalDB<ICacheDb>;
     private logger: IRufusLogger;
     public updateUserInfo: typeof NotificationController.updateUserInfo;
     private params: IContextParams;
@@ -55,20 +70,74 @@ export class GateSession implements IAuthController {
             this.name,
             this.params,
         );
-        this.dbUsers = await Property.getUsers(this.name);
-        this.store =
-            this.params.paramSession.typeStore === "nedb"
-                ? new NeDbSessionStore({
-                      nameContext: this.name,
-                      ttl: this.params.paramSession.cookie.maxAge,
-                  })
-                : new NeDbSessionStore({
-                      nameContext: this.name,
-                      ttl: this.params.paramSession.cookie.maxAge,
-                  });
+        if (this.params.paramSession.typeStore === "nedb") {
+            this.store = new NeDbSessionStore({
+                nameContext: this.name,
+                ttl: this.params.paramSession.cookie.maxAge,
+            });
+            this.dbUsers = await Property.getUsers(this.name);
+            this.dbCache = await Property.getCache(this.name);
+            if (
+                process.env.KUBERNETES_SERVICE_HOST &&
+                process.env.KUBERNETES_SERVICE_PORT
+            ) {
+                this.saveSession = (context: IContext) => {
+                    return new Promise<void>((resolve, reject) => {
+                        context.request.session.save((errChild) => {
+                            if (errChild) {
+                                return reject(errChild);
+                            }
+                            setTimeout(resolve, REPLICA_TIMEOUT);
+                        });
+                    });
+                };
+            }
+        } else if (this.params.paramSession.typeStore === "typeorm") {
+            const connectionManager = new ConnectionManager();
+            const connection = connectionManager.create({
+                ...this.params.paramSession.typeorm,
+                extra: this.params.paramSession.typeorm.extra
+                    ? JSON.parse(this.params.paramSession.typeorm.extra)
+                    : undefined,
+                synchronize: true,
+                ...(this.params.paramSession.typeorm.typeOrmExtra
+                    ? JSON.parse(this.params.paramSession.typeorm.typeOrmExtra)
+                    : {}),
+                name: `session_store_${this.name}`,
+                logging: true,
+                logger: new TypeOrmLogger(`${this.name}:session_store`),
+                entities: [
+                    path.join(
+                        __dirname,
+                        "store",
+                        "typeorm",
+                        "entries",
+                        "*{.ts,.js}",
+                    ),
+                ],
+            });
+            this.store = new TypeOrmSessionStore({
+                connection,
+                nameContext: this.name,
+                ttl: this.params.paramSession.cookie.maxAge,
+            });
+            this.dbUsers = new UserStore(this.name, connection);
+            this.dbCache = new CacheStore(this.name, connection);
+        }
         await this.store.init();
-        this.dbCache = await Property.getCache(this.name);
+
         this.logger.info("Inited AuthController %s", this.name);
+    }
+
+    public saveSession(context: IContext): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            context.request.session.save((errChild) => {
+                if (errChild) {
+                    return reject(errChild);
+                }
+                return resolve();
+            });
+        });
     }
 
     public sha1(buf): string {
@@ -151,24 +220,17 @@ export class GateSession implements IAuthController {
             idUser,
             userData: userData as any,
             session: signed,
-            ...sessionData,
+            sessionData,
         };
         context.request.session.cookie.originalMaxAge = sessionDuration * 60000;
         context.request.session.cookie.maxAge = sessionDuration * 60000;
         context.request.session.cookie.expires = new Date(
             Date.now() + sessionDuration * 6000,
         );
-        return new Promise((resolve, reject) => {
-            context.request.session.save((err) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve({
-                    ...userData,
-                    session: signed,
-                });
-            });
-        });
+        return this.saveSession(context).then(() => ({
+            ...userData,
+            session: signed,
+        }));
     }
 
     public async loadSession(
@@ -176,8 +238,6 @@ export class GateSession implements IAuthController {
         sessionId?: string,
         isNotification = false,
     ): Promise<ISession | null> {
-        const now = new Date();
-
         if (
             context &&
             sessionId &&
@@ -192,8 +252,9 @@ export class GateSession implements IAuthController {
             context &&
             context.request.session &&
             context.request.session.gsession &&
-            (context.request.session.gsession.typeCheckAuth === "cookie" ||
-                context.request.session.gsession.typeCheckAuth ===
+            (context.request.session.gsession.sessionData.typeCheckAuth ===
+                "cookie" ||
+                context.request.session.gsession.sessionData.typeCheckAuth ===
                     "cookieorsession")
         ) {
             return context.request.session.gsession;
@@ -211,7 +272,7 @@ export class GateSession implements IAuthController {
                         if (
                             !data ||
                             !data.gsession ||
-                            (data.gsession.typeCheckAuth ===
+                            (data.gsession.sessionData.typeCheckAuth ===
                                 "cookieandsession" &&
                                 !isNotification)
                         ) {
@@ -223,14 +284,10 @@ export class GateSession implements IAuthController {
                                 .forEach(([key, value]) => {
                                     context.request.session[key] = value;
                                 });
-                            context.request.session.save((errChild) => {
-                                if (errChild) {
-                                    return reject(errChild);
-                                }
-                                return resolve(
-                                    context.request.session.gsession,
-                                );
-                            });
+                            this.saveSession(context).then(
+                                () => resolve(context.request.session.gsession),
+                                reject,
+                            );
                             return;
                         }
                         return resolve((data as any).gsession);
@@ -300,6 +357,7 @@ export class GateSession implements IAuthController {
         idUser: string,
         nameProvider: string,
         data: IUserData,
+        login = data?.cv_login,
     ): Promise<void> {
         if (isEmpty(data.cv_timezone)) {
             data.cv_timezone = this.timezone;
@@ -334,6 +392,7 @@ export class GateSession implements IAuthController {
             .insert({
                 ck_d_provider: nameProvider,
                 ck_id: `${idUser}:${nameProvider}`,
+                cv_login: login,
                 data,
             })
             .then(() => {
@@ -366,7 +425,7 @@ export class GateSession implements IAuthController {
         return null;
     }
 
-    public getUserDb(): ILocalDB {
+    public getUserDb(): ILocalDB<IUserDbData> {
         return this.dbUsers;
     }
 
@@ -374,7 +433,7 @@ export class GateSession implements IAuthController {
         return this.store;
     }
 
-    public getCacheDb(): ILocalDB {
+    public getCacheDb(): ILocalDB<ICacheDb> {
         return this.dbCache;
     }
 
@@ -388,7 +447,7 @@ export class GateSession implements IAuthController {
             const userActions = [];
             const userDepartments = [];
             data.forEach((row) => {
-                const item = row.data || {};
+                const item: Partial<IUserData> = row.data || {};
                 if (!Array.isArray(item.ca_actions)) {
                     if (
                         typeof item.ca_actions === "string" &&
@@ -460,7 +519,7 @@ export class GateSession implements IAuthController {
      * Получение соли
      * @returns hash salt
      */
-    private getHashSalt(): string {
+    public getHashSalt(): string {
         let hashSalt = Constants.HASH_SALT;
         if (!hashSalt) {
             const hashLocalSalt = Constants.APP_START_TIME.toString(16);
@@ -492,69 +551,5 @@ export class GateSession implements IAuthController {
 
         valBuffer.write(val);
         return crypto.timingSafeEqual(macBuffer, valBuffer) ? str : false;
-    }
-
-    /**
-     * Рандомное значение
-     * @returns random
-     */
-    private generateRandom(): Promise<string> {
-        return new Promise((resolve, reject) => {
-            const buf = Buffer.alloc(10);
-            crypto.randomFill(buf, (err, newBuf) => {
-                if (err) {
-                    return reject(err);
-                }
-                return resolve(newBuf.toString("hex"));
-            });
-        });
-    }
-
-    /**
-     * Создание сессии
-     * @param id - ид сессии
-     * @returns сессия
-     */
-    private async generateIdSession(id: string | number): Promise<string> {
-        return new Promise((resolve, reject) => {
-            let buf = "";
-            this.generateRandom()
-                .then((rnd) => {
-                    buf += rnd;
-                    buf += this.getHashSalt();
-                    return this.sha256(buf);
-                })
-                .then((str) => {
-                    buf += str;
-                    return this.generateRandom();
-                })
-                .then((rnd) => {
-                    buf += rnd;
-                    buf += id;
-                    return this.generateRandom();
-                })
-                .then((rnd) => {
-                    buf += rnd;
-                    return this.generateRandom();
-                })
-                .then((rnd) => {
-                    buf += rnd;
-                    return this.generateRandom();
-                })
-                .then((rnd) => {
-                    buf += rnd;
-                    return this.sha256(buf);
-                })
-                .then((hash) => {
-                    buf = hash;
-                    const sessionId = buf.toUpperCase();
-                    this.logger.trace(`generated session id: ${sessionId}`);
-                    return resolve(sessionId);
-                })
-                .catch((err) => {
-                    this.logger.error(err);
-                    return reject(err);
-                });
-        });
     }
 }
