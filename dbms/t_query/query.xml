@@ -133,6 +133,9 @@
     <include file="MTViewOnlyConfig.sql" relativeToChangelogFile="true"/>
     <include file="MTPageAttr.sql" relativeToChangelogFile="true"/>
     <include file="MTDummy.sql" relativeToChangelogFile="true"/>
+    <include file="MTClassAllView.sql" relativeToChangelogFile="true"/>
+    <include file="MTAddPageObject.sql" relativeToChangelogFile="true"/>
+    <include file="GetMetamodelPage2.0.sql" relativeToChangelogFile="true"/>
     <include file="MTGetPageAction.sql" relativeToChangelogFile="true"/>
     <include file="MTQueryExtra.sql" relativeToChangelogFile="true"/>
     <include file="GTGetInitedProviders.sql" relativeToChangelogFile="true"/>
