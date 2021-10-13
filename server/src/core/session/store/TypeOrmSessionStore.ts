@@ -84,14 +84,7 @@ export class TypeOrmSessionStore extends Store implements ISessionStore {
             .save({
                 id,
                 data,
-                expire:
-                    data.cookie.expires ||
-                    new Date(
-                        Date.now() +
-                            (data.sessionDuration
-                                ? data.sessionDuration * 60000
-                                : this.ttl * 1000),
-                    ),
+                expire: data.expires,
             })
             .then(
                 () => cb(),
