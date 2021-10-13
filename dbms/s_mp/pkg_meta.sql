@@ -201,7 +201,7 @@ begin
               sys_guid() as ck_id_new,
               a.ck_class,
               pk_parent as ck_parent_new, -- при null parent, копируем в root
-              a.cv_name,
+              'COPY of ' || a.cv_name as cv_name,
               a.cn_order,
               a.ck_query,
               a.cv_description,
@@ -256,7 +256,7 @@ begin
         t.ck_id_new,
         t.ck_class,
         t.ck_parent,
-        'COPY of ' || t.cv_name,
+        t.cv_name,
         -- При копировании под текущей парент, добавляем к cn_order 100, если под новый парент, то оставляем cn_order как есть
         coalesce((select max(cn_order)+100 from s_mt.t_object where ck_parent = t.ck_parent), t.cn_order) as cn_order,
         t.ck_query,
