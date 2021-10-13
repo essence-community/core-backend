@@ -29,3 +29,13 @@ INSERT INTO s_mt.t_localization (ck_id,ck_d_lang,cr_namespace,cv_value,ck_user,c
 --changeset artemov_i:CORE-1035-auto-connect dbms:postgresql
 INSERT INTO s_mt.t_sys_setting (ck_id,cv_value,ck_user,ct_change,cv_description)
     VALUES ('auto_connect_guest','false','4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-03-04 20:58:14.658','По умолчанию авторизуемся как гость');
+
+--changeset artemov_i:delete-warn dbms:postgresql
+INSERT INTO s_mt.t_localization
+(ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change)
+VALUES('6fcb7feea53e4ca9b2b5634ac1832164', 'ru_RU', 'message', 'Учетная запись будет удалена безвозвратно', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2021-10-13 15:36:08.818') on conflict on constraint cin_u_localization_1 DO NOTHING;
+
+--changeset artemov_i:deleted_account dbms:postgresql
+INSERT INTO s_mt.t_localization
+(ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change)
+VALUES('b26c57fa632e4567895b9c31f6085ee8', 'ru_RU', 'message', 'Учетная запись удалена', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2021-10-13 15:54:34.405') on conflict on constraint cin_u_localization_1 DO NOTHING;

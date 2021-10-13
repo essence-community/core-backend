@@ -19,7 +19,7 @@ select
 from t_account ac
 join t_create_patch cp
   on cp.ck_id = (:json::json#>>''{master,ck_id}'')::uuid and cp.сj_param::jsonb#>>''{data,cct_account}'' is not null and ac.ck_id in (select value::uuid from jsonb_array_elements_text(cp.сj_param#>''{data,cct_account}''))
-where true
+where true and ac.cl_deleted = 0::smallint
 /*##filter.ck_id*/and ac.ck_id = (:json::json#>>''{filter,ck_id}'')::uuid/*filter.ck_id##*/
   ) t
  where &FILTER

@@ -14,6 +14,7 @@ select ac.ck_id,
        ac.cv_timezone,
        ac.cv_patronymic,
        ac.cv_email,
+       ac.cl_deleted,
        ac.ck_user,
        ac.ct_change at time zone :sess_cv_timezone as ct_change
   from t_account ac

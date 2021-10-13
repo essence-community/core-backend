@@ -189,7 +189,7 @@ begin
     *
     into vot_account
   from s_at.t_account
-    where (upper(cv_login) = upper(pv_login) and cv_hash_password = pkg_account.f_create_hash(cv_salt, pv_password)) or (vot_auth_token.ck_account is not null and ck_id = vot_auth_token.ck_account);
+    where (upper(cv_login) = upper(pv_login) and cl_deleted = 0::smallint and cv_hash_password = pkg_account.f_create_hash(cv_salt, pv_password)) or (vot_auth_token.ck_account is not null and cl_deleted = 0::smallint and ck_id = vot_auth_token.ck_account);
   -- логируем данные
   if pl_audit = 1 then
      perform pkg_log.p_save('-11', '', jsonb_build_object('cv_login', pv_login, 'cv_token', pv_token), 'Login', vot_account.ck_id::varchar, 'i');
@@ -216,14 +216,18 @@ AS $BODY$
 declare
   -- переменные пакета
   gv_error sessvarstr;
+  gl_warning sessvari;
 
   -- переменные функции
   vot_account s_at.t_account;
+  vl_deleted smallint;
   vct_account_info jsonb := '[]'::jsonb;
   vv_action  varchar(1);
 begin
   -- инициализация/получение переменных пакета
   gv_error = sessvarstr_declare('pkg', 'gv_error', '');
+  gl_warning = sessvari_declare('pkg', 'gl_warning', 0);
+
 
   -- код функции
   --обнулим глобальные переменные с перечнем ошибок/предупреждений/информационных сообщений, выставим пользователя
@@ -231,6 +235,9 @@ begin
   --JSON -> rowtype
 
   vot_account.ck_id = nullif(trim(pc_json#>>'{data,ck_id}'), '')::uuid;
+  select ac.cl_deleted
+   into vl_deleted
+   from s_at.t_account ac where vot_account.ck_id is not null and ac.ck_id = vot_account.ck_id;
   vot_account.cv_login = nullif(trim(pc_json#>>'{data,cv_login}'), '');
   vot_account.cv_name = nullif(trim(pc_json#>>'{data,cv_name}'), '');
   vot_account.cv_hash_password = nullif(trim(pc_json#>>'{data,cv_hash_password}'), '');
@@ -238,10 +245,11 @@ begin
   vot_account.cv_email = nullif(trim(pc_json#>>'{data,cv_email}'), '');
   vot_account.cv_patronymic = nullif(trim(pc_json#>>'{data,cv_patronymic}'), '');
   vot_account.cv_timezone = coalesce(nullif(trim(pc_json#>>'{data,cv_timezone}'), ''), '+03:00');
-  vot_account.cl_deleted = coalesce(nullif(trim(pc_json#>>'{data,cl_deleted}'), ''), '0')::smalint;
+  vot_account.cl_deleted = coalesce(nullif(trim(pc_json#>>'{data,cl_deleted}'), ''), vl_deleted::text, '0')::smallint;
   vot_account.ck_user = pv_user;
   vot_account.ct_change = CURRENT_TIMESTAMP;
   vv_action = trim(pc_json#>>'{service,cv_action}');
+  perform gl_warning == (pc_json#>>'{service,cl_warning}')::bigint;
   select
     jsonb_agg(jt.*)
   into

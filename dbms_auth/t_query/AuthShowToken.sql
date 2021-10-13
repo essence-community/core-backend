@@ -19,7 +19,7 @@ select /*Pagination*/
     from t_auth_token at
     join t_account a
      on at.ck_account = a.ck_id
-    where true
+    where true and a.cl_deleted = 0::smallint
         /*##filter.ck_id*/
     and at.ck_id = :json::json#>>''{filter,ck_id}''/*filter.ck_id##*/
   ) t

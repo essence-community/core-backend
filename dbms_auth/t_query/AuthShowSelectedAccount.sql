@@ -22,7 +22,7 @@ from t_account a
 left join t_account_role ra
  on a.ck_id = ra.ck_account and ra.ck_role =
        trim(:json::json#>>''{master,ck_id}'')::uuid
- where ra.ck_role is not null
+ where ra.ck_role is not null and a.cl_deleted = 0::smallint
  ) t
   where &FILTER
  order by &SORT

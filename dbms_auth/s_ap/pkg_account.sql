@@ -125,6 +125,8 @@ declare
   u sessvarstr;
   d sessvarstr;
   gv_error sessvarstr;
+  gl_warning sessvari;
+  gv_warning sessvarstr;
   -- переменные функции
   vcur_account record;
   vcur_d_info record;
@@ -134,18 +136,30 @@ begin
   u = sessvarstr_declare('pkg', 'u', 'U');
   d = sessvarstr_declare('pkg', 'd', 'D');
   gv_error = sessvarstr_declare('pkg', 'gv_error', '');
+  gl_warning = sessvari_declare('pkg', 'gl_warning', 0);
+  gv_warning = sessvarstr_declare('pkg', 'gv_warning', '');
 
   -- код функции
   if pv_action = d::varchar then
-  	-- delete from s_at.t_account_info where ck_account = pot_account.ck_id;
-    -- delete from s_at.t_account_role where ck_account = pot_account.ck_id;
-    -- delete from s_at.t_account where ck_id = pot_account.ck_id;
-    update s_at.t_account
-     set (cl_deleted,ck_user,ct_change) = 
-     (1::smalint,pot_account.ck_user,pot_account.ct_change)
-     where ck_id = pot_account.ck_id;
-    if not found then
-      perform pkg.p_set_error(504);
+    if pot_account.cl_deleted = 1::smallint and (gl_warning::bigint) = 0 then
+      perform pkg.p_set_warning(82, '6fcb7feea53e4ca9b2b5634ac1832164');
+    end if;
+  	
+    if nullif(gv_error::varchar, '') is not null or nullif(gv_warning::varchar, '') is not null then
+      return;
+    end if;
+    if pot_account.cl_deleted = 1::smallint then
+      delete from s_at.t_account_info where ck_account = pot_account.ck_id;
+      delete from s_at.t_account_role where ck_account = pot_account.ck_id;
+      delete from s_at.t_account where ck_id = pot_account.ck_id;
+    else
+      update s_at.t_account
+      set (cl_deleted,ck_user,ct_change) = 
+      (1::smallint,pot_account.ck_user,pot_account.ct_change)
+      where ck_id = pot_account.ck_id;
+      if not found then
+        perform pkg.p_set_error(504);
+      end if;
     end if;
     return;
   end if;
@@ -189,7 +203,7 @@ begin
     if pot_account.cv_hash_password is null then
     	perform pkg.p_set_error(200, 'meta:e59a81c8ac1846679714fad756f39649');
   	end if;
-    if nullif(gv_error::varchar, '') is not null then
+    if nullif(gv_error::varchar, '') is not null or nullif(gv_warning::varchar, '') is not null then
    	  return;
     end if;
   	pot_account.ck_id := public.uuid_generate_v4();
@@ -203,7 +217,7 @@ begin
     end if;
    return;
   end if;
-  if nullif(gv_error::varchar, '') is not null then
+  if nullif(gv_error::varchar, '') is not null or nullif(gv_warning::varchar, '') is not null then
    	  return;
   end if;
   if pot_account.cv_hash_password is null then
@@ -615,6 +629,7 @@ declare
   gv_error sessvarstr;
  
   vv_salt varchar;
+  vl_deleted smallint;
 begin
   -- инициализация/получение переменных пакета
   i = sessvarstr_declare('pkg', 'i', 'I');
@@ -628,6 +643,12 @@ begin
     return;
   end if;
   if pv_action = i::varchar then
+    select ac.cl_deleted
+      into vl_deleted
+    from s_at.t_account ac where vot_account.ck_id is not null and ac.ck_id = vot_account.ck_id;
+    if vl_deleted = 1::smallint then
+      perform pkg.p_set_error(51, 'b26c57fa632e4567895b9c31f6085ee8');
+    end if;
     if pot_auth_token.ck_account is null then
       perform pkg.p_set_error(200, 'meta:9cbe9222069f462795ce3fc6e6c32de5');
     end if;
