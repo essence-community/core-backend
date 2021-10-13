@@ -227,6 +227,7 @@ export class GateSession implements IAuthController {
         context.request.session.cookie.expires = new Date(
             Date.now() + sessionDuration * 6000,
         );
+        context.request.session.sessionDuration = sessionDuration; 
         return this.saveSession(context).then(() => ({
             ...userData,
             session: signed,

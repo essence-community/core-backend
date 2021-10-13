@@ -57,7 +57,13 @@ export class TypeOrmSessionStore extends Store implements ISessionStore {
                     },
                 ],
             })
-            .then((val) => cb(null, val ? val.data : undefined))
+            .then((val) => {
+                if (!val) {
+                    return cb(null, null);
+                }
+                val.data.expires = val.expire;
+                return cb(null, val.data);
+            })
             .catch((err) => cb(err));
     }
     set(
@@ -66,6 +72,13 @@ export class TypeOrmSessionStore extends Store implements ISessionStore {
         cb: any = (err) => (err ? this.logger.error(err) : null),
     ) {
         this.logger.trace("SET %s data %j", id, data);
+        data.expires = data.cookie.expires ||
+        new Date(
+            Date.now() +
+                (data.sessionDuration
+                    ? data.sessionDuration * 60000
+                    : this.ttl * 1000),
+        );
         this.connection
             .getRepository(SessionModel)
             .save({
@@ -108,7 +121,7 @@ export class TypeOrmSessionStore extends Store implements ISessionStore {
         if (!sess.gsession) {
             return cb();
         }
-        const oldDate = sess.cookie.expires;
+        const oldDate = sess.expires;
         if (
             oldDate &&
             oldDate.getTime() <
@@ -134,6 +147,7 @@ export class TypeOrmSessionStore extends Store implements ISessionStore {
                         ? sess.sessionDuration * 60000
                         : this.ttl * 1000),
             );
+            sess.expires = sess.cookie.expires;
         }
         this.connection
             .getRepository(SessionModel)
