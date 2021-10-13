@@ -322,9 +322,12 @@ export function sortFilesData(
     });
     const jlSort = json.filter.jl_sort as IRecordsOrder[];
     if (!isEmpty(jlSort)) {
-        const sortArr = [...jlSort].reverse();
+        const sortArr = [...jlSort];
         return (obj1: any, obj2: any): number =>
-            sortArr.reduce((val: number, item, index: number) => {
+            sortArr.reduce((val: number, item) => {
+                if (val !== 0) {
+                    return val;
+                }
                 if (isEmpty(item.property) || isEmpty(item.direction)) {
                     return val;
                 }
@@ -352,8 +355,7 @@ export function sortFilesData(
                     nmColumn.startsWith("ft_")
                 ) {
                     return (
-                        val +
-                        moment(
+                       moment(
                             direction === "ASC"
                                 ? (val1 as string)
                                 : (val2 as string),
@@ -364,48 +366,33 @@ export function sortFilesData(
                                     : (val1 as string),
                             ),
                             formatStr[format] as any,
-                        ) *
-                            (10 * index)
+                        )
                     );
                 }
                 if (typeof val1 === "number" && typeof val2 === "number") {
-                    return (
-                        val +
-                        (direction === "ASC" ? val1 - val2 : val2 - val1) *
-                            (10 * index)
+                    return ((direction === "ASC" ? val1 - val2 : val2 - val1)
                     );
                 }
                 if (datatype === "integer" || datatype === "numeric") {
-                    return (
-                        val +
-                        (direction === "ASC"
+                    return ((direction === "ASC"
                             ? new BigNumber(val1 as any)
                                   .minus(new BigNumber(val2 as any))
                                   .toNumber()
                             : new BigNumber(val2 as any)
                                   .minus(new BigNumber(val1 as any))
-                                  .toNumber()) *
-                            (10 * index)
+                                  .toNumber())
                     );
                 }
                 if (typeof val1 === "string" && typeof val2 === "string") {
                     return (
-                        val +
-                        (
                             (direction === "ASC" ? val1 : val2) || ""
                         ).localeCompare(
                             (direction === "ASC" ? val2 : val1) || "",
-                        ) *
-                            (10 * index)
-                    );
+                        );
                 }
                 // @ts-ignore
                 // tslint:disable-line no-unused-expression
-                return (
-                    val +
-                    +(direction === "ASC" ? val1 > val2 : val2 > val1) *
-                        (10 * index)
-                );
+                return +(direction === "ASC" ? val1 > val2 : val2 > val1);
             }, 0);
     }
 
