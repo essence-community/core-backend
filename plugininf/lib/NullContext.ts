@@ -14,6 +14,7 @@ import ResultStream from "./stream/ResultStream";
 import { initParams } from "./util/Util";
 
 const findRegEx = new RegExp("^/(?<reg>[\x5cs\x5cS]*)/(?<key>[gimy]*)$");
+const logger = Logger.getLogger("NullContext");
 
 export default abstract class NullContext implements IContextPlugin {
     public static getParamsInfo(): IParamsInfo {
@@ -99,6 +100,36 @@ export default abstract class NullContext implements IContextPlugin {
                 hiddenRules: "!g_context_cors",
                 name: "cors params",
                 type: "form_nested",
+            },
+            enableHelmet: {
+                defaultValue: true,
+                name: "Включаем защиту helmet",
+                description: "Helmet: https://www.npmjs.com/package/helmet",
+                setGlobal: [{ out: "g_context_helmet" }],
+                type: "boolean",
+            },
+            helmet: {
+                name: "Helmet config",
+                description: "Default: https://github.com/helmetjs/helmet",
+                type: "long_string",
+                hidden: true,
+                hiddenRules: "!g_context_helmet",
+                required: true,
+                defaultValue: "{}",
+                checkvalue: (value) => {
+                    if (typeof value === "string") {
+                        try{
+                            return JSON.parse(value);
+                        } catch(e) {
+                            logger.warn("Parse config helmet", e);
+                            return undefined;
+                        }
+                    }
+                    if (typeof value === "object") {
+                        return value;
+                    }
+                    return undefined;
+                },
             },
             paramSession: {
                 name: "session params",
@@ -386,7 +417,7 @@ export default abstract class NullContext implements IContextPlugin {
     ) {
         this.name = name;
         this.params = initParams(NullContext.getParamsInfo(), params);
-        this.logger = Logger.getLogger(`Context ${name}`);
+        this.logger = Logger.getLogger(`Context:${name}`);
         this.authController = authController;
         if (this.params.enableCors) {
             if (this.params.cors) {

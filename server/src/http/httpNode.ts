@@ -10,6 +10,7 @@ import {
 import * as compression from "compression";
 import * as cors from "cors";
 import * as http from "http";
+import * as helmet from "helmet";
 import { noop } from "lodash";
 import * as Router from "router";
 import * as expressSession from "express-session";
@@ -65,6 +66,9 @@ class HttpServer {
                 route.use(BodyParse(gateContext));
                 if (params.enableCors) {
                     route.use(cors(params.cors));
+                }
+                if (params.enableHelmet) {
+                    route.use(helmet(params.helmet));
                 }
                 route.all("/", (req, res) => {
                     MainController.execute(

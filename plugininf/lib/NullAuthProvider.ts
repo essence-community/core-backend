@@ -14,6 +14,7 @@ import { IParamsProvider } from "./NullProvider";
 import { isEmpty } from "./util/Util";
 import { IAuthController, ICreateSessionParam } from "./IAuthController";
 import { initParams } from "@ungate/plugininf/lib/util/Util";
+import Logger from './Logger';
 
 export interface IAuthResult {
     idUser: string;
@@ -71,6 +72,7 @@ export default abstract class NullAuthProvider extends NullProvider {
         authController: IAuthController,
     ) {
         super(name, params, authController);
+        this.log = Logger.getLogger(`AuthProvider:${name}`);
         this.params = initParams(NullAuthProvider.getParamsInfo(), this.params);
     }
     public async beforeSession(

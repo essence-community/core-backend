@@ -20,7 +20,7 @@ export default abstract class NullPlugin implements IPlugin {
     constructor(name: string, params: ICCTParams) {
         this.name = name;
         this.params = params;
-        this.logger = Logger.getLogger(`Plugin ${name}`);
+        this.logger = Logger.getLogger(`Plugin:${name}`);
         if (
             typeof this.params === "object" &&
             this.params.lvl_logger &&

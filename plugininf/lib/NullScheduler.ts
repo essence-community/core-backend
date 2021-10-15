@@ -23,7 +23,7 @@ export default abstract class NullScheduler implements IScheduler {
         cronStr: string,
         isEnable: boolean = false,
     ) {
-        this.log = Logger.getLogger(`${name}_scheduler`);
+        this.log = Logger.getLogger(`Scheduler:${name}`);
         this.name = name;
         this.params = params;
         this.cronStr = cronStr;
