@@ -1,60 +1,43 @@
 import NullProvider from "@ungate/plugininf/lib/NullProvider";
-import IContext from "@ungate/plugininf/lib/IContext";
+import IContext, { IFormData } from "@ungate/plugininf/lib/IContext";
 import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
 import { IResultProvider } from "@ungate/plugininf/lib/IResult";
 import IParamsInfo from "@ungate/plugininf/lib/ICCTParams";
 import { IParamsProvider } from "@ungate/plugininf/lib/NullProvider";
 import { ClientOpts, createClient } from "redis";
-import { initParams } from "@ungate/plugininf/lib/util/Util";
+import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
 import ICCTParams from "@ungate/plugininf/lib/ICCTParams";
 import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
+import { parse } from "@ungate/plugininf/lib/parser/parser";
+import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
+import { deepParam } from "@ungate/plugininf/lib/util/deepParam";
 
 interface IProviderParam extends ClientOpts, IParamsProvider {}
 
-function deepFind(obj, paths) {
-    let current = obj;
-
-    for (const val of paths) {
-        if (current[val] === undefined || current[val] === null) {
-            return current;
-        }
-        current = current[val];
+function prepareQuery(
+    query: IGateQuery,
+    param: Record<string, any>,
+): IQueryRedis {
+    if (isEmpty(query.queryStr) && isEmpty(query.modifyMethod)) {
+        throw new ErrorException(101, "Empty query string");
     }
-    return current;
-}
+    const parser = parse(query.queryStr || query.modifyMethod);
 
-function escapeValue(value: any): any {
-    return typeof value === "string"
-        ? value
-              .replace(/\n/g, "\\n")
-              .replace(/\'/g, "\\'")
-              .replace(/\"/g, '\\"')
-              .replace(/\&/g, "\\&")
-              .replace(/\r/g, "\\r")
-              .replace(/\t/g, "\\t")
-              .replace(/\f/g, "\\f")
-        : value;
-}
-
-function prepareQuery(query: IGateQuery): IQueryRedis {
-    const json = JSON.parse(query.inParams.json || "{}");
-    return JSON.parse(
-        query.queryStr.replace(/\{([\w\.]+?)\}/gi, (_, key) => {
-            if (key.indexOf(".") === -1) {
-                return escapeValue(query.inParams[key] || key);
-            }
-
-            return escapeValue(deepFind(json, key.split(".")));
-        }),
-    );
+    const config = parser.runer({
+        get: (key: string, isKeyEmpty: boolean) => {
+            return param[key] || (isKeyEmpty ? "" : key);
+        },
+    }) as any;
+    return config;
 }
 
 interface IQueryRedis {
     command: string;
-    args: string[];
-    path_res?: string;
-    result_eval?: string;
+    args: any[];
+    resultPath?: string;
+    resultParse?: string;
+    resultRowParse?: string;
 }
 
 export class RedisProvider extends NullProvider {
@@ -167,75 +150,86 @@ export class RedisProvider extends NullProvider {
         context: IContext,
         query: IGateQuery,
     ): Promise<IResultProvider> {
-        const redisQuery = prepareQuery(query);
-        const client = this.getClient();
-        if (!client[redisQuery.command.toUpperCase()]) {
-            throw new Error("Method not implemented.");
-        }
-        const res: IResultProvider = await new Promise((resolve, reject) => {
-            client[redisQuery.command.toUpperCase()](
-                redisQuery.args,
-                (err, val) => {
-                    if (err) {
-                        return reject(err);
-                    }
-                    if (redisQuery.result_eval) {
-                        const data = new Function(
-                            "result",
-                            redisQuery.result_eval,
-                        );
-                        return resolve({
-                            stream: ResultStream(data(val)),
-                        });
-                    }
-                    if (redisQuery.path_res) {
-                        const data = deepFind(
-                            val,
-                            redisQuery.path_res.split("."),
-                        );
-                        return resolve({
-                            stream: ResultStream(data),
-                        });
-                    }
-                    return resolve({
-                        stream: ResultStream(val),
-                    });
-                },
-            );
-        });
-        client.end();
-        return res;
+        return this.processDml(context, query);
     }
     public async processDml(
         context: IContext,
         query: IGateQuery,
     ): Promise<IResultProvider> {
-        const redisQuery = prepareQuery(query);
+        const param = {
+            jt_in_param:
+                typeof context.request.body === "object" &&
+                (context.request.body as IFormData).files
+                    ? {
+                          ...query.inParams,
+                          ...(context.request.body as IFormData).files,
+                      }
+                    : query.inParams,
+            jt_request_header: context.request.headers,
+            jt_request_method: context.request.method,
+            jt_provider_params: this.params,
+        };
+        const redisQuery = prepareQuery(query, param);
         const client = this.getClient();
-        if (!client[redisQuery.command.toUpperCase()]) {
+        const command =
+            isEmpty(redisQuery.command) || isEmpty(redisQuery.command.trim())
+                ? false
+                : redisQuery.command.trim().toUpperCase();
+        if (!command || !client[command]) {
             throw new Error("Method not implemented.");
         }
         const res: IResultProvider = await new Promise((resolve, reject) => {
-            client[redisQuery.command.toUpperCase()](
-                redisQuery.args,
-                (err, val) => {
-                    if (err) {
-                        return reject(err);
+            client[command](redisQuery.args, (err, val) => {
+                if (err) {
+                    return reject(err);
+                }
+                let result = Array.isArray(val) ? val : [val];
+                if (redisQuery.resultPath) {
+                    const data = deepParam(redisQuery.resultPath, val);
+                    result = Array.isArray(data) ? data : [data];
+                }
+                if (redisQuery.resultParse) {
+                    const responseParam = {
+                        ...param,
+                        jt_result: result,
+                    };
+                    const parserResult = parse(redisQuery.resultParse);
+
+                    result = parserResult.runer({
+                        get: (key: string, isKeyEmpty: boolean) => {
+                            return (
+                                responseParam[key] || (isKeyEmpty ? "" : key)
+                            );
+                        },
+                    }) as any;
+                    if (!Array.isArray(result)) {
+                        result = [result];
                     }
-                    if (redisQuery.path_res) {
-                        const data = deepFind(
-                            val,
-                            redisQuery.path_res.split("."),
-                        );
-                        return resolve({
-                            stream: ResultStream(data),
+                }
+                if (redisQuery.resultRowParse && Array.isArray(result)) {
+                    const parserRowResult = parse(redisQuery.resultRowParse);
+                    const responseParam = {
+                        ...param,
+                        jt_result: result,
+                    };
+                    result = result.map((item, index) => {
+                        const rowParam = {
+                            ...responseParam,
+                            jt_result_row: item,
+                            jt_result_row_index: index,
+                        };
+                        return parserRowResult.runer({
+                            get: (key: string, isKeyEmpty: boolean) => {
+                                return rowParam[key] || (isKeyEmpty ? "" : key);
+                            },
                         });
-                    }
-                    return resolve({
-                        stream: ResultStream(val),
                     });
-                },
-            );
+                }
+
+                return resolve({
+                    stream: ResultStream(result),
+                });
+            });
         });
         client.end();
         return res;

@@ -354,41 +354,35 @@ export function sortFilesData(
                     nmColumn.startsWith("fd_") ||
                     nmColumn.startsWith("ft_")
                 ) {
-                    return (
-                       moment(
+                    return moment(
+                        direction === "ASC"
+                            ? (val1 as string)
+                            : (val2 as string),
+                    ).diff(
+                        moment(
                             direction === "ASC"
-                                ? (val1 as string)
-                                : (val2 as string),
-                        ).diff(
-                            moment(
-                                direction === "ASC"
-                                    ? (val2 as string)
-                                    : (val1 as string),
-                            ),
-                            formatStr[format] as any,
-                        )
+                                ? (val2 as string)
+                                : (val1 as string),
+                        ),
+                        formatStr[format] as any,
                     );
                 }
                 if (typeof val1 === "number" && typeof val2 === "number") {
-                    return ((direction === "ASC" ? val1 - val2 : val2 - val1)
-                    );
+                    return direction === "ASC" ? val1 - val2 : val2 - val1;
                 }
                 if (datatype === "integer" || datatype === "numeric") {
-                    return ((direction === "ASC"
-                            ? new BigNumber(val1 as any)
-                                  .minus(new BigNumber(val2 as any))
-                                  .toNumber()
-                            : new BigNumber(val2 as any)
-                                  .minus(new BigNumber(val1 as any))
-                                  .toNumber())
-                    );
+                    return direction === "ASC"
+                        ? new BigNumber(val1 as any)
+                              .minus(new BigNumber(val2 as any))
+                              .toNumber()
+                        : new BigNumber(val2 as any)
+                              .minus(new BigNumber(val1 as any))
+                              .toNumber();
                 }
                 if (typeof val1 === "string" && typeof val2 === "string") {
                     return (
-                            (direction === "ASC" ? val1 : val2) || ""
-                        ).localeCompare(
-                            (direction === "ASC" ? val2 : val1) || "",
-                        );
+                        (direction === "ASC" ? val1 : val2) || ""
+                    ).localeCompare((direction === "ASC" ? val2 : val1) || "");
                 }
                 // @ts-ignore
                 // tslint:disable-line no-unused-expression

@@ -73,21 +73,21 @@ export class NeDbSessionStore extends Store implements ISessionStore {
         cb: any = (err) => (err ? this.logger.error(err) : null),
     ) {
         this.logger.trace("SET %s data %j", ck_id, data);
-        data.expires = data.cookie.expires ||
-        new Date(
-            Date.now() +
-                (data.sessionDuration
-                    ? data.sessionDuration * 60000
-                    : this.ttl * 1000),
-        );
+        data.expires =
+            data.cookie.expires ||
+            new Date(
+                Date.now() +
+                    (data.sessionDuration
+                        ? data.sessionDuration * 60000
+                        : this.ttl * 1000),
+            );
         this.db
             .update(
                 { ck_id },
                 {
                     ck_id,
                     data,
-                    expiredAt:
-                    data.expires,
+                    expiredAt: data.expires,
                 },
                 { multi: false, upsert: true },
             )

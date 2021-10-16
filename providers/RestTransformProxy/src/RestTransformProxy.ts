@@ -330,7 +330,9 @@ export default class RestTransformProxy extends NullProvider {
             };
             if (gateContext.isDebugEnabled()) {
                 gateContext.debug(
-                    "Response: Status: %s,  proxy headers:\n%j", response.status, response.headers
+                    "Response: Status: %s,  proxy headers:\n%j",
+                    response.status,
+                    response.headers,
                 );
             }
             if (validHeader.find((key) => ctHeader.startsWith(key))) {

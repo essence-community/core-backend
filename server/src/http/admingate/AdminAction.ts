@@ -42,13 +42,13 @@ export default class AdminAction {
     public dbPlugins: ILocalDB<IPluginConfig>;
     public dbQuerys: ILocalDB<IQueryConfig>;
     public dbServers: ILocalDB<IServerConfig>;
-    constructor (name: string, params: ICCTParams) {
+    constructor(name: string, params: ICCTParams) {
         this.name = name;
         this.params = params;
         this.riakAction = new RiakAction(params);
     }
 
-    public async init (): Promise<void> {
+    public async init(): Promise<void> {
         this.dbContexts = await Property.getContext();
         this.dbEvents = await Property.getEvents();
         this.dbProviders = await Property.getProviders();
@@ -58,7 +58,7 @@ export default class AdminAction {
         this.dbServers = await Property.getServers();
     }
     /* tslint:disable:object-literal-sort-keys */
-    public get handlers () {
+    public get handlers() {
         return {
             gtresetdefaultconfig: (gateContext: IContext) =>
                 gateContext.gateContextPlugin.init(true).then(() =>
@@ -428,7 +428,7 @@ export default class AdminAction {
         };
     }
 
-    public ParamsToString (method: any, ckDPlugin: string, cctParams = {}) {
+    public ParamsToString(method: any, ckDPlugin: string, cctParams = {}) {
         const PClass = method(ckDPlugin.toLowerCase());
         let params = {};
         if (PClass && PClass.getParamsInfo) {
@@ -450,7 +450,7 @@ export default class AdminAction {
      * @param db
      * @returns
      */
-    public async loadSetting (
+    public async loadSetting(
         gateContext: IContext,
         column: string,
         method,
@@ -523,7 +523,7 @@ export default class AdminAction {
         return Promise.resolve([]);
     }
 
-    private checkData (name: string, conf: IParamInfo, params = {}) {
+    private checkData(name: string, conf: IParamInfo, params = {}) {
         switch (conf.type) {
             case "string":
             case "long_string": {
@@ -602,7 +602,7 @@ export default class AdminAction {
      * @param [params]
      * @returns
      */
-    public createFields (
+    public createFields(
         gateContext: IContext,
         name: string,
         ckPage: number | string,

@@ -118,9 +118,9 @@ export default abstract class NullContext implements IContextPlugin {
                 defaultValue: "{}",
                 checkvalue: (value) => {
                     if (typeof value === "string") {
-                        try{
+                        try {
                             return JSON.parse(value);
-                        } catch(e) {
+                        } catch (e) {
                             logger.warn("Parse config helmet", e);
                             return undefined;
                         }

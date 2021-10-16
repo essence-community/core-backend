@@ -14,7 +14,7 @@ import { IParamsProvider } from "./NullProvider";
 import { isEmpty } from "./util/Util";
 import { IAuthController, ICreateSessionParam } from "./IAuthController";
 import { initParams } from "@ungate/plugininf/lib/util/Util";
-import Logger from './Logger';
+import Logger from "./Logger";
 
 export interface IAuthResult {
     idUser: string;

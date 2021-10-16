@@ -322,13 +322,13 @@ export default class RestEssenceProxy extends NullProvider {
             }
             if (gateContext.isDebugEnabled()) {
                 gateContext.debug(
-                    "Response: Status: %s,  proxy headers:\n%j", response.status, response.headers
+                    "Response: Status: %s,  proxy headers:\n%j",
+                    response.status,
+                    response.headers,
                 );
             }
             if (response?.status === 403) {
-                return reject(
-                    new ErrorException(ErrorGate.REQUIRED_AUTH),
-                );
+                return reject(new ErrorException(ErrorGate.REQUIRED_AUTH));
             }
             const ctHeader =
                 response.headers["content-type"] || "application/json";
