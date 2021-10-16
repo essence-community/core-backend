@@ -178,6 +178,7 @@ export class RedisProvider extends NullProvider {
         if (!command || !client[command]) {
             throw new Error("Method not implemented.");
         }
+        this.log.trace("Redis Param %j", redisQuery);
         const res: IResultProvider = await new Promise((resolve, reject) => {
             client[command](redisQuery.args, (err, val) => {
                 if (err) {
