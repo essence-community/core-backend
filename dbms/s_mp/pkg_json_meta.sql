@@ -280,7 +280,7 @@ begin
   vot_module.ct_change = CURRENT_TIMESTAMP;
   vot_module.cv_version = nullif(trim(pc_json#>>'{data,cv_version}'), '');
   vot_module.cv_version_api = nullif(trim(pc_json#>>'{data,cv_version_api}'), '');
-  vot_module.cl_available = (pc_json#>>'{data,cl_available}')::int2;
+  vot_module.cl_available = coalesce(nullif(trim(pc_json#>>'{data,cl_available}'), ''), '0')::int2;
   vot_module.cc_manifest = trim(pc_json#>>'{data,cc_manifest}')::json;
   vot_module.cc_config = trim(pc_json#>>'{data,cc_config}')::json;
   vv_action = (pc_json#>>'{service,cv_action}');
