@@ -7,7 +7,7 @@ import Logger from "@ungate/plugininf/lib/Logger";
 import { ISessionData } from "@ungate/plugininf/lib/ISession";
 import { IRufusLogger } from "rufus";
 import { ISessionStore } from "@ungate/plugininf/lib/IAuthController";
-import { getSessionMaxEgeMs } from '../../util/index';
+import { getSessionMaxAgeMs } from '../../util/index';
 
 export interface IDBSessionData {
     ck_id: string;
@@ -75,7 +75,7 @@ export class NeDbSessionStore extends Store implements ISessionStore {
     ) {
         this.logger.trace("SET %s data %j", ck_id, data);
         if (!data.cookie.maxAge) {
-            const maxAge = data.sessionDuration ? getSessionMaxEgeMs(data.sessionDuration) : this.ttl * 1000;
+            const maxAge = data.sessionDuration ? getSessionMaxAgeMs(data.sessionDuration) : this.ttl * 1000;
             data.cookie.originalMaxAge = maxAge;
             data.cookie.maxAge = maxAge;
         }

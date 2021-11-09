@@ -34,7 +34,7 @@ import { TypeOrmSessionStore } from "./store/TypeOrmSessionStore";
 import { TypeOrmLogger } from "@ungate/plugininf/lib/db/TypeOrmLogger";
 import { UserStore } from "./store/typeorm/UserStore";
 import { CacheStore } from "./store/typeorm/CacheStore";
-import { getSessionMaxEgeMs } from "../util";
+import { getSessionMaxAgeMs } from "../util";
 
 const REPLICA_TIMEOUT = parseInt(
     process.env.KUBERNETES_REPLICA_TIMEOUT || "0",
@@ -223,7 +223,7 @@ export class GateSession implements IAuthController {
             session: signed,
             sessionData,
         };
-        const maxAge = getSessionMaxEgeMs(sessionDuration);
+        const maxAge = getSessionMaxAgeMs(sessionDuration);
         context.request.session.cookie.originalMaxAge = maxAge;
         context.request.session.cookie.maxAge = maxAge;
         context.request.session.cookie.expires = new Date(

@@ -6,7 +6,7 @@ import { IRufusLogger } from "rufus";
 import { ISessionStore } from "@ungate/plugininf/lib/IAuthController";
 import { Connection, IsNull, LessThan, MoreThanOrEqual } from "typeorm";
 import { SessionModel } from "./typeorm/entries/SessionModel";
-import { getSessionMaxEgeMs } from '../../util/index';
+import { getSessionMaxAgeMs } from '../../util/index';
 
 export interface IPTypeOrmSessionStore {
     connection: Connection;
@@ -74,7 +74,7 @@ export class TypeOrmSessionStore extends Store implements ISessionStore {
     ) {
         this.logger.trace("SET %s data %j", id, data);
         if (!data.cookie.maxAge) {
-            const maxAge = data.sessionDuration ? getSessionMaxEgeMs(data.sessionDuration) : this.ttl * 1000;
+            const maxAge = data.sessionDuration ? getSessionMaxAgeMs(data.sessionDuration) : this.ttl * 1000;
             data.cookie.originalMaxAge = maxAge;
             data.cookie.maxAge = maxAge;
         }
