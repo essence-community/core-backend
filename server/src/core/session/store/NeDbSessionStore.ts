@@ -7,6 +7,7 @@ import Logger from "@ungate/plugininf/lib/Logger";
 import { ISessionData } from "@ungate/plugininf/lib/ISession";
 import { IRufusLogger } from "rufus";
 import { ISessionStore } from "@ungate/plugininf/lib/IAuthController";
+import { getSessionMaxEgeMs } from '../../util/index';
 
 export interface IDBSessionData {
     ck_id: string;
@@ -73,13 +74,15 @@ export class NeDbSessionStore extends Store implements ISessionStore {
         cb: any = (err) => (err ? this.logger.error(err) : null),
     ) {
         this.logger.trace("SET %s data %j", ck_id, data);
+        if (!data.cookie.maxAge) {
+            const maxAge = data.sessionDuration ? getSessionMaxEgeMs(data.sessionDuration) : this.ttl * 1000;
+            data.cookie.originalMaxAge = maxAge;
+            data.cookie.maxAge = maxAge;
+        }
         data.expires =
             data.cookie.expires ||
             new Date(
-                Date.now() +
-                    (data.sessionDuration
-                        ? data.sessionDuration * 60000
-                        : this.ttl * 1000),
+                Date.now() + data.cookie.maxAge,
             );
         this.db
             .update(
@@ -125,25 +128,13 @@ export class NeDbSessionStore extends Store implements ISessionStore {
             oldDate.getTime() <
                 new Date(
                     Date.now() -
-                        (sess.sessionDuration
-                            ? sess.sessionDuration * 60000
-                            : this.ttl * 1000) *
-                            0.1,
+                        sess.cookie.maxAge * 0.1,
                 ).getTime()
         ) {
             return cb();
         } else {
-            sess.cookie.maxAge = sess.sessionDuration
-                ? sess.sessionDuration * 60000
-                : this.ttl * 1000;
-            sess.cookie.originalMaxAge = sess.sessionDuration
-                ? sess.sessionDuration * 60000
-                : this.ttl * 1000;
             sess.cookie.expires = new Date(
-                Date.now() +
-                    (sess.sessionDuration
-                        ? sess.sessionDuration * 60000
-                        : this.ttl * 1000),
+                Date.now() + sess.cookie.maxAge,
             );
             sess.expires = sess.cookie.expires;
         }
@@ -163,9 +154,7 @@ export class NeDbSessionStore extends Store implements ISessionStore {
                             expiredAt: {
                                 $lt: new Date(
                                     Date.now() -
-                                        (sess.sessionDuration
-                                            ? sess.sessionDuration * 60000
-                                            : this.ttl * 1000) *
+                                        sess.cookie.maxAge *
                                             0.1,
                                 ),
                             },
@@ -177,10 +166,7 @@ export class NeDbSessionStore extends Store implements ISessionStore {
                     expiredAt:
                         sess.cookie.expires ||
                         new Date(
-                            Date.now() +
-                                (sess.sessionDuration
-                                    ? sess.sessionDuration * 60000
-                                    : this.ttl * 1000),
+                            Date.now() + sess.cookie.maxAge,
                         ),
                     data: sess,
                 },

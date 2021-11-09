@@ -6,6 +6,7 @@ import { IRufusLogger } from "rufus";
 import { ISessionStore } from "@ungate/plugininf/lib/IAuthController";
 import { Connection, IsNull, LessThan, MoreThanOrEqual } from "typeorm";
 import { SessionModel } from "./typeorm/entries/SessionModel";
+import { getSessionMaxEgeMs } from '../../util/index';
 
 export interface IPTypeOrmSessionStore {
     connection: Connection;
@@ -72,13 +73,15 @@ export class TypeOrmSessionStore extends Store implements ISessionStore {
         cb: any = (err) => (err ? this.logger.error(err) : null),
     ) {
         this.logger.trace("SET %s data %j", id, data);
+        if (!data.cookie.maxAge) {
+            const maxAge = data.sessionDuration ? getSessionMaxEgeMs(data.sessionDuration) : this.ttl * 1000;
+            data.cookie.originalMaxAge = maxAge;
+            data.cookie.maxAge = maxAge;
+        }
         data.expires =
             data.cookie.expires ||
             new Date(
-                Date.now() +
-                    (data.sessionDuration
-                        ? data.sessionDuration * 60000
-                        : this.ttl * 1000),
+                Date.now() + data.cookie.maxAge,
             );
         this.connection
             .getRepository(SessionModel)
@@ -121,25 +124,14 @@ export class TypeOrmSessionStore extends Store implements ISessionStore {
             oldDate.getTime() <
                 new Date(
                     Date.now() -
-                        (sess.sessionDuration
-                            ? sess.sessionDuration * 60000
-                            : this.ttl * 1000) *
+                        sess.cookie.maxAge *
                             0.1,
                 ).getTime()
         ) {
             return cb();
         } else {
-            sess.cookie.maxAge = sess.sessionDuration
-                ? sess.sessionDuration * 60000
-                : this.ttl * 1000;
-            sess.cookie.originalMaxAge = sess.sessionDuration
-                ? sess.sessionDuration * 60000
-                : this.ttl * 1000;
             sess.cookie.expires = new Date(
-                Date.now() +
-                    (sess.sessionDuration
-                        ? sess.sessionDuration * 60000
-                        : this.ttl * 1000),
+                Date.now() + sess.cookie.maxAge,
             );
             sess.expires = sess.cookie.expires;
         }
@@ -151,10 +143,7 @@ export class TypeOrmSessionStore extends Store implements ISessionStore {
                 expire:
                     sess.cookie.expires ||
                     new Date(
-                        Date.now() +
-                            (sess.sessionDuration
-                                ? sess.sessionDuration * 60000
-                                : this.ttl * 1000),
+                        Date.now() + sess.cookie.maxAge,
                     ),
                 data: sess,
             })
@@ -163,9 +152,7 @@ export class TypeOrmSessionStore extends Store implements ISessionStore {
                 expire: LessThan(
                     new Date(
                         Date.now() -
-                            (sess.sessionDuration
-                                ? sess.sessionDuration * 60000
-                                : this.ttl * 1000) *
+                            sess.cookie.maxAge *
                                 0.1,
                     ),
                 ),
