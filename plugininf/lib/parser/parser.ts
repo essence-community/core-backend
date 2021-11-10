@@ -17,6 +17,8 @@ import {
 import Logger from "../Logger";
 import { isEmpty } from "../util/Util";
 import * as util from "util";
+import * as QS from "querystring";
+import * as YAML from "js-yaml";
 
 interface IGetValue {
     get: (key: string) => any;
@@ -59,8 +61,18 @@ const operators: any = {
     ">": ({ left, right }: LogicalExpression, values: IValues) =>
         parseOperations(left, values) > parseOperations(right, values),
     in: ({ left, right }: LogicalExpression, values: IValues) => {
-        const value = parseOperations(right, values);
-
+        let value = parseOperations(right, values);
+        if (
+            typeof value === "string" &&
+            value.startsWith("[") &&
+            value.endsWith("]")
+        ) {
+            try {
+                value = JSON.parse(value);
+            } catch (err) {
+                logger.warn("Parsed error %s", value, err);
+            }
+        }
         return (
             (Array.isArray(value) ? value : [value]).indexOf(
                 parseOperations(left, values),
@@ -73,6 +85,8 @@ const operators: any = {
 
 const utils = {
     JSON,
+    QS,
+    YAML,
     isEmpty,
     lodash,
     util,

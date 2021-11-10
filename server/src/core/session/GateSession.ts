@@ -226,11 +226,10 @@ export class GateSession implements IAuthController {
         const maxAge = getSessionMaxAgeMs(sessionDuration);
         context.request.session.cookie.originalMaxAge = maxAge;
         context.request.session.cookie.maxAge = maxAge;
-        context.request.session.cookie.expires = new Date(
-            Date.now() + maxAge,
-        );
+        context.request.session.cookie.expires = new Date(Date.now() + maxAge);
         context.request.session.sessionDuration = sessionDuration;
-        context.request.session.expires = context.request.session.cookie.expires;
+        context.request.session.expires =
+            context.request.session.cookie.expires;
         context.request.session.create = new Date();
         return this.saveSession(context).then(() => ({
             ...userData,

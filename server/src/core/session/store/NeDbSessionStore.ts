@@ -7,7 +7,6 @@ import Logger from "@ungate/plugininf/lib/Logger";
 import { ISessionData } from "@ungate/plugininf/lib/ISession";
 import { IRufusLogger } from "rufus";
 import { ISessionStore } from "@ungate/plugininf/lib/IAuthController";
-import { getSessionMaxAgeMs } from '../../util/index';
 
 export interface IDBSessionData {
     ck_id: string;
@@ -74,16 +73,8 @@ export class NeDbSessionStore extends Store implements ISessionStore {
         cb: any = (err) => (err ? this.logger.error(err) : null),
     ) {
         this.logger.trace("SET %s data %j", ck_id, data);
-        if (!data.cookie.maxAge) {
-            const maxAge = data.sessionDuration ? getSessionMaxAgeMs(data.sessionDuration) : this.ttl * 1000;
-            data.cookie.originalMaxAge = maxAge;
-            data.cookie.maxAge = maxAge;
-        }
         data.expires =
-            data.cookie.expires ||
-            new Date(
-                Date.now() + data.cookie.maxAge,
-            );
+            data.cookie.expires || new Date(Date.now() + data.cookie.maxAge);
         this.db
             .update(
                 { ck_id },
@@ -119,25 +110,6 @@ export class NeDbSessionStore extends Store implements ISessionStore {
         cb: any = (err) => (err ? this.logger.error(err) : null),
     ) {
         this.logger.trace("TOUCH %s data %j", ck_id, sess);
-        if (!sess.gsession) {
-            return cb();
-        }
-        const oldDate = sess.expires;
-        if (
-            oldDate &&
-            oldDate.getTime() <
-                new Date(
-                    Date.now() -
-                        sess.cookie.maxAge * 0.1,
-                ).getTime()
-        ) {
-            return cb();
-        } else {
-            sess.cookie.expires = new Date(
-                Date.now() + sess.cookie.maxAge,
-            );
-            sess.expires = sess.cookie.expires;
-        }
         this.db
             .update(
                 {
@@ -150,24 +122,13 @@ export class NeDbSessionStore extends Store implements ISessionStore {
                                 $exists: false,
                             },
                         },
-                        {
-                            expiredAt: {
-                                $lt: new Date(
-                                    Date.now() -
-                                        sess.cookie.maxAge *
-                                            0.1,
-                                ),
-                            },
-                        },
                     ],
                 },
                 {
                     ck_id,
                     expiredAt:
                         sess.cookie.expires ||
-                        new Date(
-                            Date.now() + sess.cookie.maxAge,
-                        ),
+                        new Date(Date.now() + sess.cookie.maxAge),
                     data: sess,
                 },
                 { multi: false, upsert: false },

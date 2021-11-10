@@ -4,9 +4,13 @@ import Logger from "@ungate/plugininf/lib/Logger";
 import { ISessionData } from "@ungate/plugininf/lib/ISession";
 import { IRufusLogger } from "rufus";
 import { ISessionStore } from "@ungate/plugininf/lib/IAuthController";
-import { Connection, IsNull, LessThan, MoreThanOrEqual } from "typeorm";
+import {
+    Brackets,
+    Connection,
+    IsNull,
+    MoreThanOrEqual,
+} from "typeorm";
 import { SessionModel } from "./typeorm/entries/SessionModel";
-import { getSessionMaxAgeMs } from '../../util/index';
 
 export interface IPTypeOrmSessionStore {
     connection: Connection;
@@ -73,16 +77,8 @@ export class TypeOrmSessionStore extends Store implements ISessionStore {
         cb: any = (err) => (err ? this.logger.error(err) : null),
     ) {
         this.logger.trace("SET %s data %j", id, data);
-        if (!data.cookie.maxAge) {
-            const maxAge = data.sessionDuration ? getSessionMaxAgeMs(data.sessionDuration) : this.ttl * 1000;
-            data.cookie.originalMaxAge = maxAge;
-            data.cookie.maxAge = maxAge;
-        }
         data.expires =
-            data.cookie.expires ||
-            new Date(
-                Date.now() + data.cookie.maxAge,
-            );
+            data.cookie.expires || new Date(Date.now() + data.cookie.maxAge);
         this.connection
             .getRepository(SessionModel)
             .save({
@@ -115,26 +111,6 @@ export class TypeOrmSessionStore extends Store implements ISessionStore {
         cb: any = (err) => (err ? this.logger.error(err) : null),
     ) {
         this.logger.trace("TOUCH %s data %j", id, sess);
-        if (!sess.gsession) {
-            return cb();
-        }
-        const oldDate = sess.expires;
-        if (
-            oldDate &&
-            oldDate.getTime() <
-                new Date(
-                    Date.now() -
-                        sess.cookie.maxAge *
-                            0.1,
-                ).getTime()
-        ) {
-            return cb();
-        } else {
-            sess.cookie.expires = new Date(
-                Date.now() + sess.cookie.maxAge,
-            );
-            sess.expires = sess.cookie.expires;
-        }
         this.connection
             .getRepository(SessionModel)
             .createQueryBuilder("session")
@@ -142,24 +118,19 @@ export class TypeOrmSessionStore extends Store implements ISessionStore {
             .set({
                 expire:
                     sess.cookie.expires ||
-                    new Date(
-                        Date.now() + sess.cookie.maxAge,
-                    ),
+                    new Date(Date.now() + sess.cookie.maxAge),
                 data: sess,
             })
-            .where({
-                id,
-                expire: LessThan(
-                    new Date(
-                        Date.now() -
-                            sess.cookie.maxAge *
-                                0.1,
-                    ),
-                ),
-            })
-            .andWhere("(isDelete is null or isDelete = :isDelete)", {
-                isDelete: false,
-            })
+            .where([
+                {
+                    id,
+                    isDelete: IsNull(),
+                },
+                {
+                    id,
+                    isDelete: false,
+                },
+            ])
             .returning("*")
             .execute()
             .then(
@@ -203,10 +174,16 @@ export class TypeOrmSessionStore extends Store implements ISessionStore {
             .getRepository(SessionModel)
             .createQueryBuilder("session")
             .where(
-                "(session.isDelete is null or session.isDelete = :isDelete)",
-                {
-                    isDelete: false,
-                },
+                new Brackets((qb) =>
+                    qb.where([
+                        {
+                            isDelete: IsNull(),
+                        },
+                        {
+                            isDelete: false,
+                        },
+                    ]),
+                ),
             )
             .andWhere(
                 isExpired
@@ -260,9 +237,14 @@ export class TypeOrmSessionStore extends Store implements ISessionStore {
             .set({
                 isDelete: true,
             })
-            .where({
-                isDelete: IsNull(),
-            })
+            .where([
+                {
+                    isDelete: IsNull(),
+                },
+                {
+                    isDelete: false,
+                },
+            ])
             .returning("*")
             .execute()
             .then(
