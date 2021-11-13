@@ -378,3 +378,20 @@ DELETE FROM s_mt.t_icon
 	WHERE ck_id='DE90446566F2421890793C9649647585';
 DELETE FROM s_mt.t_icon
 	WHERE ck_id='6DB2A8599C8B4439B4F1D66149FD42C0';
+
+--changeset artemov_i:added-number-filter-grid dbms:postgresql
+INSERT INTO s_mt.t_localization
+(ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change)
+VALUES('2f2d76d4879841f2bfc4fa9722a77563', 'ru_RU', 'static', 'Больше', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2021-11-13 18:30:36.494') on conflict on constraint cin_u_localization_1 DO NOTHING;
+INSERT INTO s_mt.t_localization
+(ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change)
+VALUES('cba377a98c1b41cdab8d62bbed66df33', 'ru_RU', 'static', 'Больше или равно', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2021-11-13 18:31:15.370') on conflict on constraint cin_u_localization_1 DO NOTHING;
+INSERT INTO s_mt.t_localization
+(ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change)
+VALUES('2f9def1991e74c40903c47dc20e411d7', 'ru_RU', 'static', 'Меньше', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2021-11-13 18:31:45.607') on conflict on constraint cin_u_localization_1 DO NOTHING;
+INSERT INTO s_mt.t_localization
+(ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change)
+VALUES('5ca97aa339e64723b386c2bc845bbe60', 'ru_RU', 'static', 'Меньше или равно', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2021-11-13 18:32:15.270') on conflict on constraint cin_u_localization_1 DO NOTHING;
+INSERT INTO s_mt.t_localization
+(ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change)
+VALUES('8e4039d067b24d83af302fa59168e46f', 'ru_RU', 'static', 'Равно', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2021-11-13 18:43:38.130') on conflict on constraint cin_u_localization_1 DO NOTHING;

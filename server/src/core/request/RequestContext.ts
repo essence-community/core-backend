@@ -196,6 +196,9 @@ export default class RequestContext implements IContext {
         const buf = Buffer.alloc(6);
         crypto.randomFillSync(buf);
         this._hash = buf.toString("hex");
+        this._metaData = {
+            requestId: this._hash,
+        };
         this._gateContextPlugin = context;
         this._startTime = new Date().getTime();
         this._gateVersion = Constants.GATE_VERSION;
