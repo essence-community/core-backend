@@ -7,7 +7,7 @@ import * as websocket from "websocket";
 import Mask from "../Mask";
 import PluginManager from "../../core/pluginmanager/PluginManager";
 import IContextPlugin from "@ungate/plugininf/lib/IContextPlugin";
-import { ParsedUrlQuery } from "qs";
+import { ParsedQs } from "qs";
 import ISession from "@ungate/plugininf/lib/ISession";
 import { GateSession } from "../../core/session/GateSession";
 const logger = Logger.getLogger("NotificationController");
@@ -74,16 +74,16 @@ class NotificationController {
     public async onRequest(request: websocket.request) {
         if (
             !request.resourceURL.query ||
-            !(request.resourceURL.query as ParsedUrlQuery).session
+            !(request.resourceURL.query as ParsedQs).session
         ) {
             return;
         }
         const sessionId = decodeURIComponent(
             (Array.isArray(
-                (request.resourceURL.query as ParsedUrlQuery).session,
+                (request.resourceURL.query as ParsedQs).session,
             )
-                ? (request.resourceURL.query as ParsedUrlQuery).session[0]
-                : (request.resourceURL.query as ParsedUrlQuery)
+                ? (request.resourceURL.query as ParsedQs).session[0]
+                : (request.resourceURL.query as ParsedQs)
                       .session) as string,
         );
         const connection = request.accept(

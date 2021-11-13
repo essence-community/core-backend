@@ -1,9 +1,8 @@
 import * as JSONStream from "JSONStream";
-import { isBoolean } from "lodash";
+import { isBoolean, isObject, isString } from "lodash";
 import * as QueryString from "qs";
 import * as request from "request";
 import * as url from "url";
-import { isObject, isString } from "util";
 import ErrorException from "../errors/ErrorException";
 import ICCTParams, { IParamsInfo } from "../ICCTParams";
 import IContext from "../IContext";
@@ -86,14 +85,14 @@ export default class JsonGateCaller {
     private request(
         context: IContext,
         method: "GET" | "POST",
-        qs: QueryString.ParsedUrlQuery,
+        qs: QueryString.ParsedQs,
         headers: IObjectParam = {
             "content-type": "application/x-www-form-urlencoded",
         },
         body?: any,
     ): Promise<IResultProvider> {
         const urlGate = url.parse(this.jsonGateUrl, true) as url.Url;
-        urlGate.query = qs;
+        urlGate.query = qs as any;
         const params = {
             gzip: !!this.params.useGzip,
             headers,
