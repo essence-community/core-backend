@@ -12,7 +12,7 @@ import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
 import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
 import * as KeyCloak from "keycloak-connect";
 import { IKeyCloakAuthParams, IRequestExtra } from "./KeyCloakAuth.types";
-import * as QueryString from "query-string";
+import * as QueryString from "qs";
 import * as URL from "url";
 import { Admin, GrantAttacher, PostAuth } from "./Midleware";
 import BreakException from "@ungate/plugininf/lib/errors/BreakException";

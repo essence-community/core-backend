@@ -9,7 +9,7 @@ import { Pod, PodList } from "../types/kube/v1.21.0/core/v1";
 import { noop } from "lodash";
 import Logger from "@ungate/plugininf/lib/Logger";
 import { clearInterval } from "timers";
-import * as qs from "query-string";
+import * as qs from "qs";
 import adminEventController from "./AdminEventController";
 const logger = Logger.getLogger("KubeController");
 

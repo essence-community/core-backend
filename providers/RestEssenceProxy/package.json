@@ -8,8 +8,7 @@
         "@ungate/plugininf": "^1.0.0",
         "axios": "^0.21.2",
         "form-data": "^4.0.0",
-        "lodash": "^4.17.15",
-        "query-string": "^6.9.0"
+        "lodash": "^4.17.15"
     },
     "devDependencies": {
         "@types/lodash": "^4.14.120"

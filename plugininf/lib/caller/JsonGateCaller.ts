@@ -1,6 +1,6 @@
 import * as JSONStream from "JSONStream";
 import { isBoolean } from "lodash";
-import * as QueryString from "querystring";
+import * as QueryString from "qs";
 import * as request from "request";
 import * as url from "url";
 import { isObject, isString } from "util";

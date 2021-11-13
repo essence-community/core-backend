@@ -14,7 +14,7 @@ import { safeResponsePipe } from "@ungate/plugininf/lib/stream/Util";
 import * as axios from "axios";
 import * as url from "url";
 import { isEmpty } from "@ungate/plugininf/lib/util/Util";
-import * as QueryString from "query-string";
+import * as QueryString from "qs";
 import * as fs from "fs";
 import * as FormData from "form-data";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";

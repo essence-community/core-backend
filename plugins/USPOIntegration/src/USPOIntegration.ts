@@ -10,7 +10,7 @@ import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
 import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
 import { delay, forEach, isObject } from "lodash";
 import * as moment from "moment";
-import * as QueryString from "query-string";
+import * as QueryString from "qs";
 import * as request from "request";
 import * as url from "url";
 import * as util from "util";

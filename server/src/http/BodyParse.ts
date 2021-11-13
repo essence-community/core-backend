@@ -8,7 +8,7 @@ import {
     raw as Raw,
 } from "body-parser";
 import * as Multiparty from "multiparty";
-import * as QueryString from "query-string";
+import * as QueryString from "qs";
 import * as typeis from "type-is";
 import * as zlib from "zlib";
 import Constants from "../core/Constants";

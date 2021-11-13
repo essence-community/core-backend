@@ -21,7 +21,7 @@ import * as url from "url";
 import { isEmpty } from "@ungate/plugininf/lib/util/Util";
 import * as fs from "fs";
 import * as path from "path";
-import * as QueryString from "query-string";
+import * as QueryString from "qs";
 import * as FormData from "form-data";
 import { IFile } from "@ungate/plugininf/lib/IContext";
 

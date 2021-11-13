@@ -8,7 +8,7 @@ import IResult from "@ungate/plugininf/lib/IResult";
 import NullPlugin from "@ungate/plugininf/lib/NullPlugin";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
 import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
-import * as QueryString from "query-string";
+import * as QueryString from "qs";
 import * as URL from "url";
 import * as util from "util";
 import * as http from "http";

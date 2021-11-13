@@ -2,7 +2,7 @@ import * as http from "http";
 import * as URL from "url";
 import * as crypto from "crypto";
 import axios from "axios";
-import * as qs from "query-string";
+import * as qs from "qs";
 import Grant from "keycloak-connect/middleware/auth-utils/grant";
 import Token from "keycloak-connect/middleware/auth-utils/token";
 import { Rotation } from "./Rotation";

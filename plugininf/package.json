@@ -20,11 +20,11 @@
         "pg": "^8.6.0",
         "pg-cursor": "^2.6.0",
         "pg-query-stream": "^4.1.0",
+        "qs": "^6.10.1",
         "request": "^2.88.2",
         "rufus": "^0.5.7",
         "soap": "^0.30.0",
-        "uuid": "^8.3.2",
-        "yesql": "^3.2.2"
+        "uuid": "^8.3.2"
     },
     "devDependencies": {
         "@types/cron": "^1.6.0",
@@ -38,7 +38,6 @@
         "@types/promise": "^7.1.30",
         "@types/request": "^2.48.4",
         "@types/soap": "^0.21.0",
-        "@types/yesql": "^3.2.1",
         "prettier": "^1.16.4",
         "tslint": "^5.11.0",
         "typescript": "^3.2.1"

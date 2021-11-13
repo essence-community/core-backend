@@ -7,7 +7,7 @@ import * as websocket from "websocket";
 import Mask from "../Mask";
 import PluginManager from "../../core/pluginmanager/PluginManager";
 import IContextPlugin from "@ungate/plugininf/lib/IContextPlugin";
-import { ParsedUrlQuery } from "querystring";
+import { ParsedUrlQuery } from "qs";
 import ISession from "@ungate/plugininf/lib/ISession";
 import { GateSession } from "../../core/session/GateSession";
 const logger = Logger.getLogger("NotificationController");

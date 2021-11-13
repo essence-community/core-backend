@@ -17,7 +17,7 @@ import {
 import Logger from "../Logger";
 import { isEmpty } from "../util/Util";
 import * as util from "util";
-import * as QS from "querystring";
+import * as QS from "qs";
 import * as YAML from "js-yaml";
 
 interface IGetValue {
