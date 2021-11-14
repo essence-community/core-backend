@@ -161,7 +161,7 @@ export default class RestTransformProxy extends NullProvider {
         }
 
         if (config.json) {
-            params.data = JSON.stringify(config.json);
+            params.data = typeof config.json === "string" ? JSON.parse(config.json) : config.json;
             params.headers["content-type"] = "application/json";
         }
 
