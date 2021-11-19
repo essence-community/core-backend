@@ -2,7 +2,8 @@ import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import { IParamsInfo } from "@ungate/plugininf/lib/ICCTParams";
 import IContext, { IFormData } from "@ungate/plugininf/lib/IContext";
 import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
-import { parse } from "@ungate/plugininf/lib/parser/parser";
+import { parse as parseSync } from "@ungate/plugininf/lib/parser/parser";
+import { parse } from "@ungate/plugininf/lib/parser/parserAsync";
 import { IResultProvider } from "@ungate/plugininf/lib/IResult";
 import NullProvider, {
     IParamsProvider,
@@ -197,12 +198,12 @@ export default class GRpcTransformProxy extends NullProvider {
                 );
             }
             if (this.params.credentialsSsl.checkServerIdentity) {
-                const parser = parse(
+                const parser = parseSync(
                     this.params.credentialsSsl.checkServerIdentity,
                 );
                 opts = {
                     checkServerIdentity: (hostname, cert) => {
-                        const res = parser.runer({ hostname, cert });
+                        const res = parser.runer<string | boolean>({ hostname, cert });
                         if (typeof res === "string") {
                             return new Error(res);
                         }
@@ -273,11 +274,11 @@ export default class GRpcTransformProxy extends NullProvider {
             jt_provider_params: this.params,
         };
 
-        const config = (parser.runer({
+        const config = await parser.runer<IQueryConfig>({
             get: (key: string, isKeyEmpty: boolean) => {
                 return param[key] || (isKeyEmpty ? "" : key);
             },
-        }) as any) as IQueryConfig;
+        });
         if (gateContext.isDebugEnabled()) {
             gateContext.debug(
                 `Request proxy config: ${JSON.stringify(config)}`,

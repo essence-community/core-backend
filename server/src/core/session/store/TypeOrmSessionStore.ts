@@ -4,12 +4,7 @@ import Logger from "@ungate/plugininf/lib/Logger";
 import { ISessionData } from "@ungate/plugininf/lib/ISession";
 import { IRufusLogger } from "rufus";
 import { ISessionStore } from "@ungate/plugininf/lib/IAuthController";
-import {
-    Brackets,
-    Connection,
-    IsNull,
-    MoreThanOrEqual,
-} from "typeorm";
+import { Brackets, Connection, IsNull, MoreThanOrEqual } from "typeorm";
 import { SessionModel } from "./typeorm/entries/SessionModel";
 
 export interface IPTypeOrmSessionStore {

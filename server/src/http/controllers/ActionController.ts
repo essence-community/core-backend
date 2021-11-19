@@ -126,7 +126,10 @@ class ActionController {
                                   columnsBc: data.metaData,
                               };
                     }
-                    resolve({ type: "success", data: data.stream });
+                    resolve({
+                        type: data.type || "success",
+                        data: data.stream,
+                    });
                 })
                 .catch((err) => {
                     gateContext.error(
@@ -159,7 +162,10 @@ class ActionController {
                                   columnsBc: data.metaData,
                               };
                     }
-                    resolve({ type: "success", data: data.stream });
+                    resolve({
+                        type: data.type || "success",
+                        data: data.stream,
+                    });
                 })
                 .catch((err) => {
                     gateContext.error(
@@ -180,7 +186,10 @@ class ActionController {
             provider
                 .processDml(gateContext, query)
                 .then((data) => {
-                    resolve({ type: "attachment", data: data.stream });
+                    resolve({
+                        type: data.type || "attachment",
+                        data: data.stream,
+                    });
                 })
                 .catch((err) => {
                     gateContext.error(
@@ -264,7 +273,7 @@ class ActionController {
             provider
                 .processDml(gateContext, query)
                 .then((data) => {
-                    resolve({ type: "file", data: data.stream });
+                    resolve({ type: data.type || "file", data: data.stream });
                 })
                 .catch((err) => {
                     gateContext.error(

@@ -25,9 +25,16 @@ interface IGetValue {
 }
 
 export interface IParseReturnType {
-    runer<T>(
+    runer<
+        T =
+            | Record<string, undefined | string | boolean | number>
+            | undefined
+            | string
+            | boolean
+            | number
+    >(
         values?: Record<string, any> | IGetValue,
-    ): T;
+    ): Promise<T>;
     variables: string[];
     hasError: boolean;
 }
@@ -40,28 +47,36 @@ interface IValues {
 const logger = Logger.getLogger("parser");
 
 const operators: any = {
-    "!": ({ argument }: UnaryExpression, values: IValues) =>
-        !parseOperations(argument, values),
-    "!=": ({ left, right }: LogicalExpression, values: IValues) =>
+    "!": async ({ argument }: UnaryExpression, values: IValues) =>
+        !(await parseOperations(argument, values)),
+    "!=": async ({ left, right }: LogicalExpression, values: IValues) =>
         // eslint-disable-next-line eqeqeq
-        parseOperations(left, values) != parseOperations(right, values),
-    "!==": ({ left, right }: LogicalExpression, values: IValues) =>
-        parseOperations(left, values) !== parseOperations(right, values),
-    "&&": ({ left, right }: LogicalExpression, values: IValues) =>
-        parseOperations(left, values) && parseOperations(right, values),
-    "+": ({ left, right }: LogicalExpression, values: IValues) =>
-        parseOperations(left, values) + parseOperations(right, values),
-    "<": ({ left, right }: LogicalExpression, values: IValues) =>
-        parseOperations(left, values) < parseOperations(right, values),
-    "==": ({ left, right }: LogicalExpression, values: IValues) =>
+        (await parseOperations(left, values)) !=
+        (await parseOperations(right, values)),
+    "!==": async ({ left, right }: LogicalExpression, values: IValues) =>
+        (await parseOperations(left, values)) !==
+        (await parseOperations(right, values)),
+    "&&": async ({ left, right }: LogicalExpression, values: IValues) =>
+        (await parseOperations(left, values)) &&
+        (await parseOperations(right, values)),
+    "+": async ({ left, right }: LogicalExpression, values: IValues) =>
+        (await parseOperations(left, values)) +
+        (await parseOperations(right, values)),
+    "<": async ({ left, right }: LogicalExpression, values: IValues) =>
+        (await parseOperations(left, values)) <
+        (await parseOperations(right, values)),
+    "==": async ({ left, right }: LogicalExpression, values: IValues) =>
         // eslint-disable-next-line eqeqeq
-        parseOperations(left, values) == parseOperations(right, values),
-    "===": ({ left, right }: LogicalExpression, values: IValues) =>
-        parseOperations(left, values) === parseOperations(right, values),
-    ">": ({ left, right }: LogicalExpression, values: IValues) =>
-        parseOperations(left, values) > parseOperations(right, values),
-    in: ({ left, right }: LogicalExpression, values: IValues) => {
-        let value = parseOperations(right, values);
+        (await parseOperations(left, values)) ==
+        (await parseOperations(right, values)),
+    "===": async ({ left, right }: LogicalExpression, values: IValues) =>
+        (await parseOperations(left, values)) ===
+        (await parseOperations(right, values)),
+    ">": async ({ left, right }: LogicalExpression, values: IValues) =>
+        (await parseOperations(left, values)) >
+        (await parseOperations(right, values)),
+    in: async ({ left, right }: LogicalExpression, values: IValues) => {
+        let value = await parseOperations(right, values);
         if (
             typeof value === "string" &&
             value.startsWith("[") &&
@@ -75,12 +90,13 @@ const operators: any = {
         }
         return (
             (Array.isArray(value) ? value : [value]).indexOf(
-                parseOperations(left, values),
+                await parseOperations(left, values),
             ) !== -1
         );
     },
-    "||": ({ left, right }: LogicalExpression, values: IValues) =>
-        parseOperations(left, values) || parseOperations(right, values),
+    "||": async ({ left, right }: LogicalExpression, values: IValues) =>
+        (await parseOperations(left, values)) ||
+        (await parseOperations(right, values)),
 };
 
 const utils = {
@@ -96,10 +112,10 @@ const utils = {
     decodeURIComponent,
 };
 
-function parseOperations(
+async function parseOperations(
     expression: Expression | Pattern | Super | IFunction | Statement,
     values: IValues,
-): any {
+): Promise<any> {
     if (!expression) {
         return null;
     }
@@ -108,11 +124,13 @@ function parseOperations(
         case "BinaryExpression":
         case "LogicalExpression":
             return operators[expression.operator]
-                ? operators[expression.operator](expression, values)
+                ? await operators[expression.operator](expression, values)
                 : false;
         case "SequenceExpression":
-            return expression.expressions.map((exp: Expression) =>
-                parseOperations(exp, values),
+            return Promise.all(
+                expression.expressions.map((exp: Expression) =>
+                    parseOperations(exp, values),
+                ),
             );
         case "Literal":
             // @ts-ignore
@@ -135,36 +153,38 @@ function parseOperations(
                 (expression.isMember && expression.name)
             );
         case "AssignmentExpression":
-            return parseOperations(expression.right, values);
+            return await parseOperations(expression.right, values);
         case "ObjectExpression":
-            return expression.properties.reduce(
-                (acc: IValues, prop: Property) => {
-                    // @ts-ignore
-                    prop.key.isMember = true;
-                    acc[parseOperations(prop.key, values)] = parseOperations(
-                        prop.value,
-                        values,
-                    );
+            return await expression.properties.reduce(
+                (accProm: Promise<IValues>, prop: Property) =>
+                    accProm.then(async (acc: IValues) => {
+                        // @ts-ignore
+                        prop.key.isMember = true;
+                        acc[
+                            await parseOperations(prop.key, values)
+                        ] = await parseOperations(prop.value, values);
 
-                    return acc;
-                },
-                {},
+                        return acc;
+                    }),
+                Promise.resolve({}),
             );
         case "ArrayExpression":
-            return expression.elements.map((element: any) =>
-                parseOperations(element, values),
+            return await Promise.all(
+                expression.elements.map((element: any) =>
+                    parseOperations(element, values),
+                ),
             );
         case "ConditionalExpression":
-            return parseOperations(expression.test, values)
-                ? parseOperations(expression.consequent, values)
-                : parseOperations(expression.alternate, values);
+            return (await parseOperations(expression.test, values))
+                ? await parseOperations(expression.consequent, values)
+                : await parseOperations(expression.alternate, values);
         case "MemberExpression":
             if (expression.property.type === "Literal") {
                 // @ts-ignore
                 expression.property.isMember = true;
             }
 
-            let res = parseOperations(expression.object, values);
+            let res = await parseOperations(expression.object, values);
             if (
                 typeof res === "string" &&
                 (res.charAt(0) === "{" || res.charAt(0) === "[")
@@ -187,7 +207,7 @@ function parseOperations(
                         : values[expression.property.name]) ||
                     expression.property.name;
             }
-            const property = parseOperations(
+            const property = await parseOperations(
                 expression.property,
                 res
                     ? {
@@ -222,16 +242,16 @@ function parseOperations(
                 : property;
         case "TemplateLiteral":
             return expression.expressions
-                ? expression.expressions.reduce(
-                      (acc, expr, index) =>
-                          `${acc}${parseOperations(expr, values)}${
-                              expression.quasis[index + 1].value.raw
-                          }`,
-                      expression.quasis[0].value.raw,
+                ? await expression.expressions.reduce(
+                      (accProm, expr, index) => accProm.then(async(acc) => `${acc}${await parseOperations(expr, values)}${
+                        expression.quasis[index + 1].value.raw
+                    }`)
+                          ,
+                      Promise.resolve(expression.quasis[0].value.raw),
                   )
                 : "";
         case "CallExpression":
-            const fn = parseOperations(expression.callee, {
+            const fn = await parseOperations(expression.callee, {
                 get: (key) => {
                     return (
                         utils[key] ||
@@ -240,17 +260,19 @@ function parseOperations(
                 },
             });
             return typeof fn === "function"
-                ? fn.apply(
+                ? await fn.apply(
                       fn.parentFn || fn,
-                      expression.arguments.map((arg) =>
-                          // @ts-ignore
-                          parseOperations(arg, values),
+                      await Promise.all(
+                          expression.arguments.map((arg) =>
+                              // @ts-ignore
+                              parseOperations(arg, values),
+                          ),
                       ),
                   )
                 : "";
         case "ArrowFunctionExpression":
-            return (...ags) =>
-                parseOperations(expression.body, {
+            return async (...ags) =>
+                await parseOperations(expression.body, {
                     get: (key) => {
                         const resArrow = ags.reduce((resParam, val, ind) => {
                             // @ts-ignore
@@ -291,7 +313,7 @@ export const parse = (src: string, withTokens = false): IParseReturnType => {
 
     return {
         hasError: false,
-        runer: (values: IValues = {}) => {
+        runer: async (values: IValues = {}) => {
             const expression = parsedSrc
                 ? (parsedSrc.body[0] as any).expression
                 : undefined;

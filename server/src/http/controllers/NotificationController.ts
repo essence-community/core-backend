@@ -79,12 +79,9 @@ class NotificationController {
             return;
         }
         const sessionId = decodeURIComponent(
-            (Array.isArray(
-                (request.resourceURL.query as ParsedQs).session,
-            )
+            (Array.isArray((request.resourceURL.query as ParsedQs).session)
                 ? (request.resourceURL.query as ParsedQs).session[0]
-                : (request.resourceURL.query as ParsedQs)
-                      .session) as string,
+                : (request.resourceURL.query as ParsedQs).session) as string,
         );
         const connection = request.accept(
             "notification",

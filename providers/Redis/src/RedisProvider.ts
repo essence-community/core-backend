@@ -9,26 +9,26 @@ import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
 import ICCTParams from "@ungate/plugininf/lib/ICCTParams";
 import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
-import { parse } from "@ungate/plugininf/lib/parser/parser";
+import { parse } from "@ungate/plugininf/lib/parser/parserAsync";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import { deepParam } from "@ungate/plugininf/lib/util/deepParam";
 
 interface IProviderParam extends ClientOpts, IParamsProvider {}
 
-function prepareQuery(
+async function prepareQuery(
     query: IGateQuery,
     param: Record<string, any>,
-): IQueryRedis {
+): Promise<IQueryRedis> {
     if (isEmpty(query.queryStr) && isEmpty(query.modifyMethod)) {
         throw new ErrorException(101, "Empty query string");
     }
     const parser = parse(query.queryStr || query.modifyMethod);
 
-    const config = parser.runer({
+    const config = await parser.runer<IQueryRedis>({
         get: (key: string, isKeyEmpty: boolean) => {
             return param[key] || (isKeyEmpty ? "" : key);
         },
-    }) as any;
+    });
     return config;
 }
 
@@ -169,7 +169,7 @@ export class RedisProvider extends NullProvider {
             jt_request_method: context.request.method,
             jt_provider_params: this.params,
         };
-        const redisQuery = prepareQuery(query, param);
+        const redisQuery = await prepareQuery(query, param);
         const client = this.getClient();
         const command =
             isEmpty(redisQuery.command) || isEmpty(redisQuery.command.trim())

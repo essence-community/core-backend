@@ -67,6 +67,28 @@ streamRequest - признак что запрос stream, по умолчани
 
 channelOptions - дополнительные настройки канала, заполняем если надо
 
+### Доступные функции утилит
+
+JSON - parse и stringify разбор и преоброзование json
+
+QS - parse и stringify разбор и преоброзование query string
+
+YAML - dump, load, loadAll разбор и преоброзование yaml
+
+isEmpty - проверка на пустоту
+
+lodash - разнообразные функции из пакета lodash
+
+util - разнообразные функции из пакета lodash
+
+Object - работа с объектом
+
+Array - работа с массивом
+
+encodeURIComponent - url encode
+
+decodeURIComponent - uld decode
+
 ### Доступные переменные
 
 jt_in_param - входные переменные

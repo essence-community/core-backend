@@ -35,5 +35,6 @@ export type IResult = IResultWithData | IResultBase;
 export default IResult;
 export interface IResultProvider {
     stream: Readable;
+    type?: IResult["type"];
     metaData?: any;
 }
