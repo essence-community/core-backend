@@ -513,6 +513,18 @@ export default class RestTransformProxy extends NullProvider {
 
                 result = await parserResult.runer({
                     get: (key: string, isKeyEmpty: boolean) => {
+                        if (key === "callRequest") {
+                            return (
+                                configRest: IRestEssenceProxyConfig,
+                                name?: string,
+                            ) =>
+                                this.callRequest(
+                                    gateContext,
+                                    configRest,
+                                    param,
+                                    name,
+                                );
+                        }
                         return responseParam[key] || (isKeyEmpty ? "" : key);
                     },
                 });
@@ -538,6 +550,18 @@ export default class RestTransformProxy extends NullProvider {
                         };
                         return parserRowResult.runer({
                             get: (key: string, isKeyEmpty: boolean) => {
+                                if (key === "callRequest") {
+                                    return (
+                                        configRest: IRestEssenceProxyConfig,
+                                        name?: string,
+                                    ) =>
+                                        this.callRequest(
+                                            gateContext,
+                                            configRest,
+                                            param,
+                                            name,
+                                        );
+                                }
                                 return rowParam[key] || (isKeyEmpty ? "" : key);
                             },
                         });
