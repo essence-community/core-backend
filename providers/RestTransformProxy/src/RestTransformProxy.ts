@@ -153,6 +153,15 @@ export default class RestTransformProxy extends NullProvider {
                 return param[key] || (isKeyEmpty ? "" : key);
             },
         });
+        let result = await this.callRequest(gateContext, config, param);
+
+        if (!Array.isArray(result)) {
+            result = [result];
+        }
+
+        if (result.length && typeof result[0] !== "object") {
+            result = result.map((res) => ({raw: res}));
+        }
 
         return {
             stream: ResultStream(
@@ -167,6 +176,12 @@ export default class RestTransformProxy extends NullProvider {
         param: Record<string, any>,
         name?: string,
     ): Promise<any[]> {
+        if (name && Object.prototype.hasOwnProperty.call(
+            param,
+            name,
+        )) {
+            return param[name];
+        }
         const headers = {
             ...(config.header || {}),
         };
@@ -380,7 +395,7 @@ export default class RestTransformProxy extends NullProvider {
                     response.headers,
                 );
             }
-            let arr = [];
+            let arr: any = [];
             let jtBody;
             
             if (config.proxyResult) {
@@ -450,9 +465,6 @@ export default class RestTransformProxy extends NullProvider {
                                     : {
                                           response_data: json,
                                       };
-                                if (!Array.isArray(parseData)) {
-                                    parseData = [parseData];
-                                }
                                 resolveArr(parseData);
                             } catch (e) {
                                 this.log.error(
@@ -494,11 +506,9 @@ export default class RestTransformProxy extends NullProvider {
                         resolveChild(Buffer.concat(bufs));
                     });
                 });
-                arr = [
-                    {
-                        jt_body: jtBody,
-                    },
-                ];
+                arr = {
+                    jt_body: jtBody,
+                };
             } 
             let result = arr;
 
@@ -528,9 +538,6 @@ export default class RestTransformProxy extends NullProvider {
                         return responseParam[key] || (isKeyEmpty ? "" : key);
                     },
                 });
-                if (!Array.isArray(result)) {
-                    result = [result];
-                }
             }
             if (config.resultRowParse && Array.isArray(result)) {
                 const parserRowResult = parse(config.resultRowParse);
