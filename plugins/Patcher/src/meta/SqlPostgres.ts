@@ -181,6 +181,7 @@ export const sqlPage =
     "    ck_user,\n" +
     "    ct_change,\n" +
     "    cl_menu,\n" +
+    "    ck_view,\n" +
     "    1 as lvl\n" +
     "from\n" +
     "    s_mt.t_page\n" +
@@ -199,6 +200,7 @@ export const sqlPage =
     "    p.ck_user,\n" +
     "    p.ct_change,\n" +
     "    p.cl_menu,\n" +
+    "    p.ck_view,\n" +
     "    rp.lvl+1 as lvl\n" +
     "from\n" +
     "    s_mt.t_page p\n" +
@@ -217,6 +219,7 @@ export const sqlPage =
     "    ck_icon,\n" +
     "    ck_user,\n" +
     "    ct_change,\n" +
+    "    ck_view,\n" +
     "    cl_menu\n" +
     "from\n" +
     "    page\n" +
