@@ -3,3 +3,4 @@
 liquibase   text eol=lf
 update      text eol=lf
 patcher     text eol=lf
+gradlew     text eol=lf

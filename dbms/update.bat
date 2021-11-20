@@ -1,2 +1,2 @@
 cd %~dp0
-call liquibase\liquibase --defaultsFile=liquibase.properties --changeLogFile=db.changelog.xml update >> main.log
+call gradlew.bat update -PrunList=schema update >> main.log

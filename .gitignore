@@ -5,3 +5,4 @@ nohup.out
 bin
 *.log
 *.bak
+.gradle
