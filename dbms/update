@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-gradlew update -PrunList=schema 1>> main.log 2>&1
+./gradlew update -PrunList=schema 1>> main.log 2>&1
