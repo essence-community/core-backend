@@ -398,6 +398,7 @@ export default abstract class NullContext implements IContextPlugin {
     public params: IContextParams;
     public logger: IRufusLogger;
     public authController: IAuthController;
+    public isExcludeAccessLog: boolean = false;
     public get maxPostSize(): number {
         return this.params.maxPostSize || 10485760;
     }

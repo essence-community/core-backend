@@ -52,6 +52,7 @@ export default class KubeProbe extends NullContext {
             ...this.params,
             ...initParams(KubeProbe.getParamsInfo(), this.params),
         };
+        this.isExcludeAccessLog = true;
         if (!isEmpty(this.params.accessHeader)) {
             const accessHeader = this.params.accessHeader.map(
                 ({ name, value }) => ({

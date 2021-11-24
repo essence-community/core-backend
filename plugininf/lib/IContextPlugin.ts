@@ -79,6 +79,7 @@ export default interface IContextPlugin {
     maxLogParamLen: number;
     attachmentType: string;
     params: IContextParams;
+    isExcludeAccessLog: boolean;
     authController: IAuthController;
     init(reload?: boolean): Promise<void>;
     initContext(gateContext: IContext): Promise<IContextPluginResult>;

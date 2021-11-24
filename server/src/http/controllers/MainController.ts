@@ -260,6 +260,9 @@ class MainController {
      * @private
      */
     private async logParams(gateContext: IContext) {
+        if (gateContext.gateContextPlugin.isExcludeAccessLog) {
+            return;
+        }
         const param = Object.assign({}, gateContext.params);
         if (param[Constants.PASSWORD_PARAM_PREFIX]) {
             param[Constants.PASSWORD_PARAM_PREFIX] = "***";
