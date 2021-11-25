@@ -25,7 +25,7 @@ select o.ck_id,
   on o.ck_parent = op.ck_id
  where (o.ck_parent = :json::json#>>''{master,ck_object}'' /* Если передали ИД родительского объекта - выберем его дочек */
     or o.ck_parent is null /* Верхнеуровневые объекты показываем всегда */)
-    and cl.ck_view = :json::json#>>''{filter,gck_view}''
+    and (cl.ck_view = :json::json#>>''{filter,gck_view}'' or cl.ck_view = ''system'')
 ) as t
  where &FILTER
  order by &SORT

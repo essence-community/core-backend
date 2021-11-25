@@ -20,7 +20,7 @@ select ck_id,
            /* только те классы, которые могут быть дочерними от класса родительского объекта */
            /*##master.ck_id*/
            and o.ck_id = (cast(:json as jsonb)->''master''->>''ck_id'')::varchar/*master.ck_id##*/
-           and c.ck_view = :json::json#>>''{filter,ck_view}''
+           and (c.ck_view = :json::json#>>''{filter,ck_view}'' or c.ck_view = ''system'')
            /* если родительский объект не передан, то показываем только final-классы */
            and ((cast(:json as jsonb)->''master''->>''ck_id'')::varchar is not null or c.cl_final = 1)
   ) as q

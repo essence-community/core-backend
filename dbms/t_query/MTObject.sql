@@ -38,7 +38,7 @@ with recursive
                    on p.ck_id = po.ck_page
                 group by po.ck_object) p_out on p_out.ck_object = o.ck_id
                 where o.ck_parent is null
-                and c.ck_view = :json::json#>>''{filter,ck_view}''
+                and (c.ck_view = :json::json#>>''{filter,ck_view}'' or c.ck_view = ''system'')
     /* Поиск по наименованию работает только по объектам верхнего уровня */
     /*##filter.cv_name*/and lower(o.cv_name) like ''%'' || lower(:json::json#>>''{filter,cv_name}'') || ''%''/*filter.cv_name##*/
     /*##filter.ck_page*/and exists(select 1
