@@ -239,12 +239,7 @@ export default class CoreOracleIntegration extends NullContext {
                 ],
                 needSession: row.ck_d_interface !== "auth",
                 queryData: row,
-                queryStr:
-                    "select i.*\n" +
-                    "  from s_it.t_interface i\n" +
-                    " start with lower(i.ck_id) = lower(:ck_query)\n" +
-                    "connect by i.ck_id = prior i.ck_parent\n" +
-                    " order by level desc",
+                queryStr: row.cc_request,
             },
         };
         if (
