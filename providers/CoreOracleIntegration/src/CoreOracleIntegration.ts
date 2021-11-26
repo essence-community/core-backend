@@ -71,6 +71,59 @@ export default class CoreOracleIntegration extends NullProvider {
         const conn = await this.dataSource.getConnection();
         try {
             context.connection = conn;
+            if (query.queryStr) {
+                query.extraOutParams.push({
+                    cv_name: "result",
+                    outType: "DEFAULT",
+                });
+                query.extraOutParams.push({
+                    cv_name: "cur_result",
+                    outType: "CURSOR",
+                });
+                const inParam: any = {};
+                if (context.session) {
+                    inParam.sess_session = context.session.session;
+                    Object.keys(context.session.userData).forEach((key) => {
+                        inParam[`sess_${key}`] = context.session.userData[key];
+                    });
+                }
+                return conn
+                    .executeStmt(
+                        query.queryStr,
+                        {
+                            ck_query: context.queryName,
+                            ...context.params,
+                            ...inParam,
+                        },
+                        {
+                            cur_result: "",
+                            result: "",
+                        },
+                    )
+                    .then(
+                        (res) =>
+                            new Promise((resolve, reject) => {
+                                const data = [];
+                                res.stream.on("error", (err) => reject(err));
+                                res.stream.on("data", (chunk) =>
+                                    data.push(chunk),
+                                );
+                                res.stream.on("end", () => {
+                                    if (data.length) {
+                                        const doc = data[0];
+                                        query.queryData.querys = data;
+                                        query.queryStr = doc.cc_request;
+                                        return resolve(query);
+                                    }
+                                    return reject(
+                                        new ErrorException(
+                                            ErrorGate.NOTFOUND_QUERY,
+                                        ),
+                                    );
+                                });
+                            }),
+                    );
+            }
             query.extraOutParams.push({
                 cv_name: "result",
                 outType: "DEFAULT",
