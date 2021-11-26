@@ -240,7 +240,7 @@ export default class CoreOracleIntegration extends NullContext {
                 needSession: row.ck_d_interface !== "auth",
                 queryData: row,
                 queryStr:
-                row.ck_d_interfac === "auth" ? row.cc_request :
+                row.ck_d_interface === "auth" ? row.cc_request :
                     "select i.*\n" +
                     "  from s_it.t_interface i\n" +
                     " start with lower(i.ck_id) = lower(:ck_query)\n" +
