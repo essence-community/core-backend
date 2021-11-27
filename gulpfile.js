@@ -167,7 +167,7 @@ gulp.task("plugins", () => {
                                         )
                                     ) {
                                         cpy(
-                                            "**/*.*",
+                                            ["**/*.*","**/*"],
                                             path.join(
                                                 homeDir,
                                                 "bin",
@@ -273,7 +273,7 @@ gulp.task("contexts", () => {
                                         )
                                     ) {
                                         cpy(
-                                            "**/*.*",
+                                            ["**/*.*","**/*"],
                                             path.join(
                                                 homeDir,
                                                 "bin",
@@ -379,7 +379,7 @@ gulp.task("events", () => {
                                         )
                                     ) {
                                         cpy(
-                                            "**/*.*",
+                                            ["**/*.*","**/*"],
                                             path.join(
                                                 homeDir,
                                                 "bin",
@@ -485,7 +485,7 @@ gulp.task("schedulers", () => {
                                         )
                                     ) {
                                         cpy(
-                                            "**/*.*",
+                                            ["**/*.*","**/*"],
                                             path.join(
                                                 homeDir,
                                                 "bin",
@@ -591,7 +591,7 @@ gulp.task("providers", () => {
                                         )
                                     ) {
                                         cpy(
-                                            "**/*.*",
+                                            ["**/*.*","**/*"],
                                             path.join(
                                                 homeDir,
                                                 "bin",
@@ -647,7 +647,7 @@ gulp.task("server", () => {
                         .on("end", () => {
                             if (fs.existsSync(path.join(serverDir, "assets"))) {
                                 cpy(
-                                    "**/*.*",
+                                    ["**/*.*","**/*"],
                                     path.join(
                                         homeDir,
                                         "bin",
@@ -749,7 +749,7 @@ gulp.task("libs", () => {
                                 },
                             );
                         }
-                        cpy("**/*.*", path.join(homeDir, "bin", "libs", file), {
+                        cpy(["**/*.*","**/*"], path.join(homeDir, "bin", "libs", file), {
                             cwd: path.join(libsDir, file),
                             parents: true,
                             dot: true,
@@ -764,7 +764,7 @@ gulp.task("libs", () => {
 });
 
 gulp.task("winsvc", async () => {
-    return cpy("**/*.*", path.join(homeDir, "bin", "server"), {
+    return cpy(["**/*.*","**/*"], path.join(homeDir, "bin", "server"), {
         cwd: path.join(homeDir, "winsvc"),
         parents: true,
         dot: true,
@@ -772,7 +772,7 @@ gulp.task("winsvc", async () => {
 });
 
 gulp.task("cert", async () => {
-    return cpy("**/*.*", path.join(homeDir, "bin", "server", "cert"), {
+    return cpy(["**/*.*","**/*"], path.join(homeDir, "bin", "server", "cert"), {
         cwd: path.join(homeDir, "cert"),
         parents: true,
         dot: true,
