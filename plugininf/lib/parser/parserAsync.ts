@@ -145,6 +145,22 @@ async function parseOperations(
             }
             return expression.value;
         case "Identifier":
+            // @ts-ignore
+            if (!expression.isMember && expression.name === "undefined") {
+                return undefined;
+            }
+            // @ts-ignore
+            if (!expression.isMember && expression.name === "null") {
+                return null;
+            }
+            // @ts-ignore
+            if (!expression.isMember && expression.name === "true") {
+                return true;
+            }
+            // @ts-ignore
+            if (!expression.isMember && expression.name === "false") {
+                return false;
+            }
             return (
                 (values.get
                     ? values.get(expression.name, true)
@@ -243,10 +259,14 @@ async function parseOperations(
         case "TemplateLiteral":
             return expression.expressions
                 ? await expression.expressions.reduce(
-                      (accProm, expr, index) => accProm.then(async(acc) => `${acc}${await parseOperations(expr, values)}${
-                        expression.quasis[index + 1].value.raw
-                    }`)
-                          ,
+                      (accProm, expr, index) =>
+                          accProm.then(
+                              async (acc) =>
+                                  `${acc}${await parseOperations(
+                                      expr,
+                                      values,
+                                  )}${expression.quasis[index + 1].value.raw}`,
+                          ),
                       Promise.resolve(expression.quasis[0].value.raw),
                   )
                 : "";

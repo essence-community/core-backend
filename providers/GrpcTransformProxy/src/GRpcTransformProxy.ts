@@ -203,7 +203,10 @@ export default class GRpcTransformProxy extends NullProvider {
                 );
                 opts = {
                     checkServerIdentity: (hostname, cert) => {
-                        const res = parser.runer<string | boolean>({ hostname, cert });
+                        const res = parser.runer<string | boolean>({
+                            hostname,
+                            cert,
+                        });
                         if (typeof res === "string") {
                             return new Error(res);
                         }

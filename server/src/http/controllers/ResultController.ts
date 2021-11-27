@@ -103,7 +103,7 @@ class ResultController {
                             const val = self.xsiType(arr[1]);
                             if (val.type === "object") {
                                 obj.param.push({
-                                    ...val.value,
+                                    "#": val.value,
                                     "@": {
                                         key: arr[0],
                                         "xsi:type": val.type,

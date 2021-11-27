@@ -2,7 +2,6 @@ const gulp = require("gulp");
 const ts = require("gulp-typescript");
 const fs = require("fs");
 const path = require("path");
-const copyDir = require("copy-dir");
 const { exec } = require("child_process");
 const crypto = require("crypto");
 const glob = require("glob");
@@ -20,6 +19,7 @@ packageJson.scripts = {
     server: "nodemon",
     installSvc: "node server/installSvcWin.js",
 };
+const cpy = require("cpy");
 const shasum = crypto.createHash("sha1");
 const buf = Buffer.alloc(8);
 crypto.randomFillSync(buf).toString("hex");
@@ -41,6 +41,7 @@ packageJson.nodemonConfig = {
 function list(val) {
     return val.toUpperCase().split(",");
 }
+
 function cmdExec(
     command,
     options = {
@@ -57,19 +58,14 @@ function cmdExec(
 
                 return reject(error);
             }
-            resolve({ stdout, stderr });
+            resolve({
+                stdout,
+                stderr,
+            });
         });
     });
 }
-const copyDirAsync = (...args) =>
-    new Promise((resolve, reject) =>
-        copyDir(...args, (err) => {
-            if (err) {
-                return reject(err);
-            }
-            return resolve();
-        }),
-    );
+
 const filterJson = (packageSrc, packageDest) => {
     const packageJson = JSON.parse(fs.readFileSync(packageSrc));
     delete packageJson.devDependencies;
@@ -120,43 +116,20 @@ gulp.task("plugins", () => {
                     },
                 );
                 rows.push(
-                    new Promise((resolve, reject) => {
-                        gulp.src(
-                            path.join(pluginsDir, file, "src", "**", "*.ts"),
-                        )
-                            .pipe(tsProject())
-                            .pipe(
-                                gulp.dest(
-                                    path.join(
-                                        homeDir,
-                                        "bin",
-                                        "server",
-                                        "plugins",
-                                        "datas",
-                                        file,
-                                    ),
+                    () =>
+                        new Promise((resolve, reject) => {
+                            gulp.src(
+                                path.join(
+                                    pluginsDir,
+                                    file,
+                                    "src",
+                                    "**",
+                                    "*.ts",
                                 ),
                             )
-                            .on("end", () => {
-                                filterJson(
-                                    path.join(pluginsDir, file, "package.json"),
-                                    path.join(
-                                        homeDir,
-                                        "bin",
-                                        "server",
-                                        "plugins",
-                                        "datas",
-                                        file,
-                                        "package.json",
-                                    ),
-                                );
-                                if (
-                                    fs.existsSync(
-                                        path.join(pluginsDir, file, "assets"),
-                                    )
-                                ) {
-                                    copyDir(
-                                        path.join(pluginsDir, file, "assets"),
+                                .pipe(tsProject())
+                                .pipe(
+                                    gulp.dest(
                                         path.join(
                                             homeDir,
                                             "bin",
@@ -164,25 +137,68 @@ gulp.task("plugins", () => {
                                             "plugins",
                                             "datas",
                                             file,
-                                            "assets",
                                         ),
-                                        (err) => {
-                                            if (err) {
-                                                return reject(err);
-                                            }
-                                            resolve();
-                                        },
+                                    ),
+                                )
+                                .on("end", () => {
+                                    filterJson(
+                                        path.join(
+                                            pluginsDir,
+                                            file,
+                                            "package.json",
+                                        ),
+                                        path.join(
+                                            homeDir,
+                                            "bin",
+                                            "server",
+                                            "plugins",
+                                            "datas",
+                                            file,
+                                            "package.json",
+                                        ),
                                     );
-                                    return;
-                                }
-                                resolve();
-                            })
-                            .on("error", (err) => reject(err));
-                    }),
+                                    if (
+                                        fs.existsSync(
+                                            path.join(
+                                                pluginsDir,
+                                                file,
+                                                "assets",
+                                            ),
+                                        )
+                                    ) {
+                                        cpy(
+                                            "**/*.*",
+                                            path.join(
+                                                homeDir,
+                                                "bin",
+                                                "server",
+                                                "plugins",
+                                                "datas",
+                                                file,
+                                                "assets",
+                                            ),
+                                            {
+                                                cwd: path.join(
+                                                    pluginsDir,
+                                                    file,
+                                                    "assets",
+                                                ),
+                                                parents: true,
+                                                dot: true,
+                                            },
+                                        ).then(resolve, reject);
+                                        return;
+                                    }
+                                    resolve();
+                                })
+                                .on("error", (err) => reject(err));
+                        }),
                 );
             }
         });
-    return Promise.all(rows);
+    return rows.length
+        ? rows.splice(1).reduce((res, val) => res.then(() => val()), rows[0]())
+        : Promise.resolve();
 });
 gulp.task("contexts", () => {
     const rows = [];
@@ -206,43 +222,20 @@ gulp.task("contexts", () => {
                     },
                 );
                 rows.push(
-                    new Promise((resolve, reject) => {
-                        gulp.src(
-                            path.join(pluginsDir, file, "src", "**", "*.ts"),
-                        )
-                            .pipe(tsProject())
-                            .pipe(
-                                gulp.dest(
-                                    path.join(
-                                        homeDir,
-                                        "bin",
-                                        "server",
-                                        "plugins",
-                                        "contexts",
-                                        file,
-                                    ),
+                    () =>
+                        new Promise((resolve, reject) => {
+                            gulp.src(
+                                path.join(
+                                    pluginsDir,
+                                    file,
+                                    "src",
+                                    "**",
+                                    "*.ts",
                                 ),
                             )
-                            .on("end", () => {
-                                filterJson(
-                                    path.join(pluginsDir, file, "package.json"),
-                                    path.join(
-                                        homeDir,
-                                        "bin",
-                                        "server",
-                                        "plugins",
-                                        "contexts",
-                                        file,
-                                        "package.json",
-                                    ),
-                                );
-                                if (
-                                    fs.existsSync(
-                                        path.join(pluginsDir, file, "assets"),
-                                    )
-                                ) {
-                                    copyDir(
-                                        path.join(pluginsDir, file, "assets"),
+                                .pipe(tsProject())
+                                .pipe(
+                                    gulp.dest(
                                         path.join(
                                             homeDir,
                                             "bin",
@@ -250,25 +243,68 @@ gulp.task("contexts", () => {
                                             "plugins",
                                             "contexts",
                                             file,
-                                            "assets",
                                         ),
-                                        (err) => {
-                                            if (err) {
-                                                return reject(err);
-                                            }
-                                            resolve();
-                                        },
+                                    ),
+                                )
+                                .on("end", () => {
+                                    filterJson(
+                                        path.join(
+                                            pluginsDir,
+                                            file,
+                                            "package.json",
+                                        ),
+                                        path.join(
+                                            homeDir,
+                                            "bin",
+                                            "server",
+                                            "plugins",
+                                            "contexts",
+                                            file,
+                                            "package.json",
+                                        ),
                                     );
-                                    return;
-                                }
-                                resolve();
-                            })
-                            .on("error", (err) => reject(err));
-                    }),
+                                    if (
+                                        fs.existsSync(
+                                            path.join(
+                                                pluginsDir,
+                                                file,
+                                                "assets",
+                                            ),
+                                        )
+                                    ) {
+                                        cpy(
+                                            "**/*.*",
+                                            path.join(
+                                                homeDir,
+                                                "bin",
+                                                "server",
+                                                "plugins",
+                                                "contexts",
+                                                file,
+                                                "assets",
+                                            ),
+                                            {
+                                                cwd: path.join(
+                                                    pluginsDir,
+                                                    file,
+                                                    "assets",
+                                                ),
+                                                parents: true,
+                                                dot: true,
+                                            },
+                                        ).then(resolve, reject);
+                                        return;
+                                    }
+                                    resolve();
+                                })
+                                .on("error", (err) => reject(err));
+                        }),
                 );
             }
         });
-    return Promise.all(rows);
+    return rows.length
+        ? rows.splice(1).reduce((res, val) => res.then(() => val()), rows[0]())
+        : Promise.resolve();
 });
 gulp.task("events", () => {
     const rows = [];
@@ -292,43 +328,20 @@ gulp.task("events", () => {
                     },
                 );
                 rows.push(
-                    new Promise((resolve, reject) => {
-                        gulp.src(
-                            path.join(pluginsDir, file, "src", "**", "*.ts"),
-                        )
-                            .pipe(tsProject())
-                            .pipe(
-                                gulp.dest(
-                                    path.join(
-                                        homeDir,
-                                        "bin",
-                                        "server",
-                                        "plugins",
-                                        "events",
-                                        file,
-                                    ),
+                    () =>
+                        new Promise((resolve, reject) => {
+                            gulp.src(
+                                path.join(
+                                    pluginsDir,
+                                    file,
+                                    "src",
+                                    "**",
+                                    "*.ts",
                                 ),
                             )
-                            .on("end", () => {
-                                filterJson(
-                                    path.join(pluginsDir, file, "package.json"),
-                                    path.join(
-                                        homeDir,
-                                        "bin",
-                                        "server",
-                                        "plugins",
-                                        "events",
-                                        file,
-                                        "package.json",
-                                    ),
-                                );
-                                if (
-                                    fs.existsSync(
-                                        path.join(pluginsDir, file, "assets"),
-                                    )
-                                ) {
-                                    copyDir(
-                                        path.join(pluginsDir, file, "assets"),
+                                .pipe(tsProject())
+                                .pipe(
+                                    gulp.dest(
                                         path.join(
                                             homeDir,
                                             "bin",
@@ -336,25 +349,68 @@ gulp.task("events", () => {
                                             "plugins",
                                             "events",
                                             file,
-                                            "assets",
                                         ),
-                                        (err) => {
-                                            if (err) {
-                                                return reject(err);
-                                            }
-                                            resolve();
-                                        },
+                                    ),
+                                )
+                                .on("end", () => {
+                                    filterJson(
+                                        path.join(
+                                            pluginsDir,
+                                            file,
+                                            "package.json",
+                                        ),
+                                        path.join(
+                                            homeDir,
+                                            "bin",
+                                            "server",
+                                            "plugins",
+                                            "events",
+                                            file,
+                                            "package.json",
+                                        ),
                                     );
-                                    return;
-                                }
-                                resolve();
-                            })
-                            .on("error", (err) => reject(err));
-                    }),
+                                    if (
+                                        fs.existsSync(
+                                            path.join(
+                                                pluginsDir,
+                                                file,
+                                                "assets",
+                                            ),
+                                        )
+                                    ) {
+                                        cpy(
+                                            "**/*.*",
+                                            path.join(
+                                                homeDir,
+                                                "bin",
+                                                "server",
+                                                "plugins",
+                                                "events",
+                                                file,
+                                                "assets",
+                                            ),
+                                            {
+                                                cwd: path.join(
+                                                    pluginsDir,
+                                                    file,
+                                                    "assets",
+                                                ),
+                                                parents: true,
+                                                dot: true,
+                                            },
+                                        ).then(resolve, reject);
+                                        return;
+                                    }
+                                    resolve();
+                                })
+                                .on("error", (err) => reject(err));
+                        }),
                 );
             }
         });
-    return Promise.all(rows);
+    return rows.length
+        ? rows.splice(1).reduce((res, val) => res.then(() => val()), rows[0]())
+        : Promise.resolve();
 });
 gulp.task("schedulers", () => {
     const rows = [];
@@ -378,43 +434,20 @@ gulp.task("schedulers", () => {
                     },
                 );
                 rows.push(
-                    new Promise((resolve, reject) => {
-                        gulp.src(
-                            path.join(pluginsDir, file, "src", "**", "*.ts"),
-                        )
-                            .pipe(tsProject())
-                            .pipe(
-                                gulp.dest(
-                                    path.join(
-                                        homeDir,
-                                        "bin",
-                                        "server",
-                                        "plugins",
-                                        "schedulers",
-                                        file,
-                                    ),
+                    () =>
+                        new Promise((resolve, reject) => {
+                            gulp.src(
+                                path.join(
+                                    pluginsDir,
+                                    file,
+                                    "src",
+                                    "**",
+                                    "*.ts",
                                 ),
                             )
-                            .on("end", () => {
-                                filterJson(
-                                    path.join(pluginsDir, file, "package.json"),
-                                    path.join(
-                                        homeDir,
-                                        "bin",
-                                        "server",
-                                        "plugins",
-                                        "schedulers",
-                                        file,
-                                        "package.json",
-                                    ),
-                                );
-                                if (
-                                    fs.existsSync(
-                                        path.join(pluginsDir, file, "assets"),
-                                    )
-                                ) {
-                                    copyDir(
-                                        path.join(pluginsDir, file, "assets"),
+                                .pipe(tsProject())
+                                .pipe(
+                                    gulp.dest(
                                         path.join(
                                             homeDir,
                                             "bin",
@@ -422,25 +455,68 @@ gulp.task("schedulers", () => {
                                             "plugins",
                                             "schedulers",
                                             file,
-                                            "assets",
                                         ),
-                                        (err) => {
-                                            if (err) {
-                                                return reject(err);
-                                            }
-                                            resolve();
-                                        },
+                                    ),
+                                )
+                                .on("end", () => {
+                                    filterJson(
+                                        path.join(
+                                            pluginsDir,
+                                            file,
+                                            "package.json",
+                                        ),
+                                        path.join(
+                                            homeDir,
+                                            "bin",
+                                            "server",
+                                            "plugins",
+                                            "schedulers",
+                                            file,
+                                            "package.json",
+                                        ),
                                     );
-                                    return;
-                                }
-                                resolve();
-                            })
-                            .on("error", (err) => reject(err));
-                    }),
+                                    if (
+                                        fs.existsSync(
+                                            path.join(
+                                                pluginsDir,
+                                                file,
+                                                "assets",
+                                            ),
+                                        )
+                                    ) {
+                                        cpy(
+                                            "**/*.*",
+                                            path.join(
+                                                homeDir,
+                                                "bin",
+                                                "server",
+                                                "plugins",
+                                                "schedulers",
+                                                file,
+                                                "assets",
+                                            ),
+                                            {
+                                                cwd: path.join(
+                                                    pluginsDir,
+                                                    file,
+                                                    "assets",
+                                                ),
+                                                parents: true,
+                                                dot: true,
+                                            },
+                                        ).then(resolve, reject);
+                                        return;
+                                    }
+                                    resolve();
+                                })
+                                .on("error", (err) => reject(err));
+                        }),
                 );
             }
         });
-    return Promise.all(rows);
+    return rows.length
+        ? rows.splice(1).reduce((res, val) => res.then(() => val()), rows[0]())
+        : Promise.resolve();
 });
 gulp.task("providers", () => {
     const rows = [];
@@ -464,43 +540,20 @@ gulp.task("providers", () => {
                     },
                 );
                 rows.push(
-                    new Promise((resolve, reject) => {
-                        gulp.src(
-                            path.join(pluginsDir, file, "src", "**", "*.ts"),
-                        )
-                            .pipe(tsProject())
-                            .pipe(
-                                gulp.dest(
-                                    path.join(
-                                        homeDir,
-                                        "bin",
-                                        "server",
-                                        "plugins",
-                                        "providers",
-                                        file,
-                                    ),
+                    () =>
+                        new Promise((resolve, reject) => {
+                            gulp.src(
+                                path.join(
+                                    pluginsDir,
+                                    file,
+                                    "src",
+                                    "**",
+                                    "*.ts",
                                 ),
                             )
-                            .on("end", () => {
-                                filterJson(
-                                    path.join(pluginsDir, file, "package.json"),
-                                    path.join(
-                                        homeDir,
-                                        "bin",
-                                        "server",
-                                        "plugins",
-                                        "providers",
-                                        file,
-                                        "package.json",
-                                    ),
-                                );
-                                if (
-                                    fs.existsSync(
-                                        path.join(pluginsDir, file, "assets"),
-                                    )
-                                ) {
-                                    copyDir(
-                                        path.join(pluginsDir, file, "assets"),
+                                .pipe(tsProject())
+                                .pipe(
+                                    gulp.dest(
                                         path.join(
                                             homeDir,
                                             "bin",
@@ -508,25 +561,68 @@ gulp.task("providers", () => {
                                             "plugins",
                                             "providers",
                                             file,
-                                            "assets",
                                         ),
-                                        (err) => {
-                                            if (err) {
-                                                return reject(err);
-                                            }
-                                            resolve();
-                                        },
+                                    ),
+                                )
+                                .on("end", () => {
+                                    filterJson(
+                                        path.join(
+                                            pluginsDir,
+                                            file,
+                                            "package.json",
+                                        ),
+                                        path.join(
+                                            homeDir,
+                                            "bin",
+                                            "server",
+                                            "plugins",
+                                            "providers",
+                                            file,
+                                            "package.json",
+                                        ),
                                     );
-                                    return;
-                                }
-                                resolve();
-                            })
-                            .on("error", (err) => reject(err));
-                    }),
+                                    if (
+                                        fs.existsSync(
+                                            path.join(
+                                                pluginsDir,
+                                                file,
+                                                "assets",
+                                            ),
+                                        )
+                                    ) {
+                                        cpy(
+                                            "**/*.*",
+                                            path.join(
+                                                homeDir,
+                                                "bin",
+                                                "server",
+                                                "plugins",
+                                                "providers",
+                                                file,
+                                                "assets",
+                                            ),
+                                            {
+                                                cwd: path.join(
+                                                    pluginsDir,
+                                                    file,
+                                                    "assets",
+                                                ),
+                                                parents: true,
+                                                dot: true,
+                                            },
+                                        ).then(resolve, reject);
+                                        return;
+                                    }
+                                    resolve();
+                                })
+                                .on("error", (err) => reject(err));
+                        }),
                 );
             }
         });
-    return Promise.all(rows);
+    return rows.length
+        ? rows.splice(1).reduce((res, val) => res.then(() => val()), rows[0]())
+        : Promise.resolve();
 });
 gulp.task("server", () => {
     const rows = [];
@@ -543,31 +639,38 @@ gulp.task("server", () => {
             },
         );
         rows.push(
-            new Promise((resolve, reject) => {
-                gulp.src(path.join(serverDir, "src", "**", "*.ts"))
-                    .pipe(tsProject())
-                    .pipe(gulp.dest(path.join(homeDir, "bin", "server")))
-                    .on("end", () => {
-                        if (fs.existsSync(path.join(serverDir, "assets"))) {
-                            copyDir(
-                                path.join(serverDir, "assets"),
-                                path.join(homeDir, "bin", "server", "assets"),
-                                (err) => {
-                                    if (err) {
-                                        return reject(err);
-                                    }
-                                    resolve();
-                                },
-                            );
-                            return;
-                        }
-                        resolve();
-                    })
-                    .on("error", (err) => reject(err));
-            }),
+            () =>
+                new Promise((resolve, reject) => {
+                    gulp.src(path.join(serverDir, "src", "**", "*.ts"))
+                        .pipe(tsProject())
+                        .pipe(gulp.dest(path.join(homeDir, "bin", "server")))
+                        .on("end", () => {
+                            if (fs.existsSync(path.join(serverDir, "assets"))) {
+                                cpy(
+                                    "**/*.*",
+                                    path.join(
+                                        homeDir,
+                                        "bin",
+                                        "server",
+                                        "assets",
+                                    ),
+                                    {
+                                        cwd: path.join(serverDir, "assets"),
+                                        parents: true,
+                                        dot: true,
+                                    },
+                                ).then(resolve, reject);
+                                return;
+                            }
+                            resolve();
+                        })
+                        .on("error", (err) => reject(err));
+                }),
         );
     }
-    return Promise.all(rows);
+    return rows.length
+        ? rows.splice(1).reduce((res, val) => res.then(() => val()), rows[0]())
+        : Promise.resolve();
 });
 gulp.task("plugininf", () => {
     const rows = [];
@@ -584,44 +687,47 @@ gulp.task("plugininf", () => {
             },
         );
         rows.push(
-            new Promise((resolve, reject) => {
-                gulp.src(path.join(plugininfDir, "lib", "**", "*.ts"))
-                    .pipe(tsProject())
-                    .pipe(
-                        gulp.dest(
-                            path.join(
-                                homeDir,
-                                "bin",
-                                "libs",
-                                "plugininf",
-                                "lib",
+            () =>
+                new Promise((resolve, reject) => {
+                    gulp.src(path.join(plugininfDir, "lib", "**", "*.ts"))
+                        .pipe(tsProject())
+                        .pipe(
+                            gulp.dest(
+                                path.join(
+                                    homeDir,
+                                    "bin",
+                                    "libs",
+                                    "plugininf",
+                                    "lib",
+                                ),
                             ),
-                        ),
-                    )
-                    .on("end", () => {
-                        const pluginInfJson = JSON.parse(
-                            fs.readFileSync(
-                                path.join(plugininfDir, "package.json"),
-                            ),
-                        );
-                        delete pluginInfJson.devDependencies;
-                        fs.writeFileSync(
-                            path.join(
-                                homeDir,
-                                "bin",
-                                "libs",
-                                "plugininf",
-                                "package.json",
-                            ),
-                            JSON.stringify(pluginInfJson, null, 4),
-                        );
-                        resolve();
-                    })
-                    .on("error", (err) => reject(err));
-            }),
+                        )
+                        .on("end", () => {
+                            const pluginInfJson = JSON.parse(
+                                fs.readFileSync(
+                                    path.join(plugininfDir, "package.json"),
+                                ),
+                            );
+                            delete pluginInfJson.devDependencies;
+                            fs.writeFileSync(
+                                path.join(
+                                    homeDir,
+                                    "bin",
+                                    "libs",
+                                    "plugininf",
+                                    "package.json",
+                                ),
+                                JSON.stringify(pluginInfJson, null, 4),
+                            );
+                            resolve();
+                        })
+                        .on("error", (err) => reject(err));
+                }),
         );
     }
-    return Promise.all(rows);
+    return rows.length
+        ? rows.splice(1).reduce((res, val) => res.then(() => val()), rows[0]())
+        : Promise.resolve();
 });
 gulp.task("libs", () => {
     const rows = [];
@@ -629,52 +735,47 @@ gulp.task("libs", () => {
     fs.readdirSync(libsDir).forEach((file) => {
         if (fs.existsSync(path.join(libsDir, file, "package.json"))) {
             rows.push(
-                new Promise((resolve, reject) => {
-                    if (
-                        !fs.existsSync(path.join(homeDir, "bin", "libs", file))
-                    ) {
-                        fs.mkdirSync(path.join(homeDir, "bin", "libs", file), {
-                            recursive: true,
-                        });
-                    }
-                    copyDir(
-                        path.join(libsDir, file),
-                        path.join(homeDir, "bin", "libs", file),
-                        (err) => {
-                            if (err) reject(err);
-                            resolve();
-                        },
-                    );
-                }),
+                () =>
+                    new Promise((resolve, reject) => {
+                        if (
+                            !fs.existsSync(
+                                path.join(homeDir, "bin", "libs", file),
+                            )
+                        ) {
+                            fs.mkdirSync(
+                                path.join(homeDir, "bin", "libs", file),
+                                {
+                                    recursive: true,
+                                },
+                            );
+                        }
+                        cpy("**/*.*", path.join(homeDir, "bin", "libs", file), {
+                            cwd: path.join(libsDir, file),
+                            parents: true,
+                            dot: true,
+                        }).then(resolve, reject);
+                    }),
             );
         }
     });
-    return Promise.all(rows);
+    return rows.length
+        ? rows.splice(1).reduce((res, val) => res.then(() => val()), rows[0]())
+        : Promise.resolve();
 });
 
-gulp.task("winsvc", () => {
-    return new Promise((resolve, reject) => {
-        copyDir(
-            path.join(homeDir, "winsvc"),
-            path.join(homeDir, "bin", "server"),
-            (err) => {
-                if (err) reject(err);
-                resolve();
-            },
-        );
+gulp.task("winsvc", async () => {
+    return cpy("**/*.*", path.join(homeDir, "bin", "server"), {
+        cwd: path.join(homeDir, "winsvc"),
+        parents: true,
+        dot: true,
     });
 });
 
-gulp.task("cert", () => {
-    return new Promise((resolve, reject) => {
-        copyDir(
-            path.join(homeDir, "cert"),
-            path.join(homeDir, "bin", "server", "cert"),
-            (err) => {
-                if (err) reject(err);
-                resolve();
-            },
-        );
+gulp.task("cert", async () => {
+    return cpy("**/*.*", path.join(homeDir, "bin", "server", "cert"), {
+        cwd: path.join(homeDir, "cert"),
+        parents: true,
+        dot: true,
     });
 });
 

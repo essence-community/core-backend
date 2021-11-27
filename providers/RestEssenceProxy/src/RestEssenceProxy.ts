@@ -286,133 +286,144 @@ export default class RestEssenceProxy extends NullProvider {
         }
 
         return new Promise(async (resolve, reject) => {
-            let response: axios.AxiosResponse<any> = null;
             try {
-                response = await axios.default.request(params);
-            } catch (err) {
-                if (err && err.isAxiosError) {
-                    gateContext.error(
-                        `Error query ${gateContext.queryName}`,
-                        err,
-                    );
-                    if (err.response?.status === 403) {
-                        return reject(
-                            new ErrorException(ErrorGate.REQUIRED_AUTH),
+                let response: axios.AxiosResponse<any> = null;
+                try {
+                    response = await axios.default.request(params);
+                } catch (err) {
+                    if (err && err.isAxiosError) {
+                        gateContext.error(
+                            `Error query ${gateContext.queryName}`,
+                            err,
                         );
-                    } else {
+                        if (err.response?.status === 403) {
+                            return reject(
+                                new ErrorException(ErrorGate.REQUIRED_AUTH),
+                            );
+                        } else {
+                            return reject(
+                                new ErrorException(
+                                    -1,
+                                    JSON.stringify(err.toJSON()),
+                                ),
+                            );
+                        }
+                    } else if (err) {
+                        gateContext.error(
+                            `Error query ${gateContext.queryName}`,
+                            err,
+                        );
                         return reject(
                             new ErrorException(
                                 -1,
-                                JSON.stringify(err.toJSON()),
+                                "Ошибка вызова внешнего сервиса",
                             ),
                         );
                     }
-                } else if (err) {
-                    gateContext.error(
-                        `Error query ${gateContext.queryName}`,
-                        err,
-                    );
-                    return reject(
-                        new ErrorException(
-                            -1,
-                            "Ошибка вызова внешнего сервиса",
-                        ),
+                }
+                if (gateContext.isDebugEnabled()) {
+                    gateContext.debug(
+                        "Response: Status: %s,  proxy headers:\n%j",
+                        response.status,
+                        response.headers,
                     );
                 }
-            }
-            if (gateContext.isDebugEnabled()) {
-                gateContext.debug(
-                    "Response: Status: %s,  proxy headers:\n%j",
-                    response.status,
-                    response.headers,
-                );
-            }
-            if (response?.status === 403) {
-                return reject(new ErrorException(ErrorGate.REQUIRED_AUTH));
-            }
-            const ctHeader =
-                response.headers["content-type"] || "application/json";
-            const rheaders = {
-                ...response.headers,
-            };
+                if (response?.status === 403) {
+                    return reject(new ErrorException(ErrorGate.REQUIRED_AUTH));
+                }
+                const ctHeader =
+                    response.headers["content-type"] || "application/json";
+                const rheaders = {
+                    ...response.headers,
+                };
 
-            response.data.on("error", (err) => {
-                if (err) {
-                    gateContext.error(
-                        `Error query ${gateContext.queryName}`,
-                        err,
-                    );
-                    reject(
-                        new ErrorException(
-                            -1,
-                            "Ошибка вызова внешнего сервиса",
-                        ),
-                    );
-                }
-                return undefined;
-            });
-            if (validHeader.find((key) => ctHeader.startsWith(key))) {
-                let arr = [];
-                arr = await new Promise<any[]>((resolveArr) => {
-                    let json = "";
-                    response.data.on("data", (data) => {
-                        json += data;
-                    });
-                    response.data.on("end", () => {
-                        try {
-                            let parseData = ctHeader.startsWith(
-                                "application/json",
-                            )
-                                ? isEmpty(json)
-                                    ? []
-                                    : JSON.parse(json)
-                                : {
-                                      response_data: json,
-                                  };
-                            if (!Array.isArray(parseData)) {
-                                parseData = [parseData];
+                response.data.on("error", (err) => {
+                    if (err) {
+                        gateContext.error(
+                            `Error query ${gateContext.queryName}`,
+                            err,
+                        );
+                        reject(
+                            new ErrorException(
+                                -1,
+                                "Ошибка вызова внешнего сервиса",
+                            ),
+                        );
+                    }
+                    return undefined;
+                });
+                if (validHeader.find((key) => ctHeader.startsWith(key))) {
+                    let arr = [];
+                    arr = await new Promise<any[]>((resolveArr) => {
+                        let json = "";
+                        response.data.on("data", (data) => {
+                            json += data;
+                        });
+                        response.data.on("end", () => {
+                            try {
+                                let parseData = ctHeader.startsWith(
+                                    "application/json",
+                                )
+                                    ? isEmpty(json)
+                                        ? []
+                                        : JSON.parse(json)
+                                    : {
+                                          response_data: json,
+                                      };
+                                if (!Array.isArray(parseData)) {
+                                    parseData = [parseData];
+                                }
+                                resolveArr(parseData);
+                            } catch (e) {
+                                this.log.error(
+                                    `Parse json error: \n ${json}`,
+                                    e,
+                                );
+                                reject(e);
                             }
-                            resolveArr(parseData);
-                        } catch (e) {
-                            this.log.error(`Parse json error: \n ${json}`, e);
-                            reject(e);
-                        }
+                        });
                     });
-                });
 
-                if (arr.length === 1 && arr[0].statusCode && arr[0].error) {
-                    return reject(
-                        new ErrorException(
-                            -1,
-                            `StatusCode: ${arr[0].statusCode}\nError:\n${arr[0].message}`,
-                        ),
-                    );
-                }
+                    if (arr.length === 1 && arr[0].statusCode && arr[0].error) {
+                        return reject(
+                            new ErrorException(
+                                -1,
+                                `StatusCode: ${arr[0].statusCode}\nError:\n${arr[0].message}`,
+                            ),
+                        );
+                    }
 
-                if (this.params.includeHeaderOut) {
-                    this.params.includeHeaderOut.split(",").forEach((item) => {
-                        if (rheaders[item]) {
-                            gateContext.extraHeaders[item] = rheaders[
-                                item
-                            ] as any;
-                        }
+                    if (this.params.includeHeaderOut) {
+                        this.params.includeHeaderOut
+                            .split(",")
+                            .forEach((item) => {
+                                if (rheaders[item]) {
+                                    gateContext.extraHeaders[item] = rheaders[
+                                        item
+                                    ] as any;
+                                }
+                            });
+                    }
+                    return resolve({
+                        stream: ResultStream(arr),
                     });
                 }
-                return resolve({
-                    stream: ResultStream(arr),
-                });
+                delete rheaders.date;
+                delete rheaders.host;
+                if (this.params.excludeHeaderOut) {
+                    this.params.excludeHeaderOut.split(",").forEach((item) => {
+                        delete rheaders[item];
+                    });
+                }
+                gateContext.response.writeHead(response.status, rheaders);
+                response.data.on("end", () =>
+                    reject(new BreakException("break")),
+                );
+                safeResponsePipe(response.data as any, gateContext.response);
+                return undefined;
+            } catch (err) {
+                reject(err);
             }
-            delete rheaders.date;
-            delete rheaders.host;
-            if (this.params.excludeHeaderOut) {
-                this.params.excludeHeaderOut.split(",").forEach((item) => {
-                    delete rheaders[item];
-                });
-            }
-            gateContext.response.writeHead(response.status, rheaders);
-            response.data.on("end", () => reject(new BreakException("break")));
-            safeResponsePipe(response.data as any, gateContext.response);
-            return undefined;
         });
     }
 }

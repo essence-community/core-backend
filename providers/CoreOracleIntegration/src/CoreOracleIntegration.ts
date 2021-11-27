@@ -69,24 +69,24 @@ export default class CoreOracleIntegration extends NullProvider {
     ): Promise<IQuery> {
         const query = await super.initContext(context, preQuery);
         const conn = await this.dataSource.getConnection();
+        query.extraOutParams.push({
+            cv_name: "result",
+            outType: "DEFAULT",
+        });
+        query.extraOutParams.push({
+            cv_name: "cur_result",
+            outType: "CURSOR",
+        });
+        const inParam: any = {};
+        if (context.session) {
+            inParam.sess_session = context.session.session;
+            Object.keys(context.session.userData).forEach((key) => {
+                inParam[`sess_${key}`] = context.session.userData[key];
+            });
+        }
         try {
             context.connection = conn;
             if (query.queryStr) {
-                query.extraOutParams.push({
-                    cv_name: "result",
-                    outType: "DEFAULT",
-                });
-                query.extraOutParams.push({
-                    cv_name: "cur_result",
-                    outType: "CURSOR",
-                });
-                const inParam: any = {};
-                if (context.session) {
-                    inParam.sess_session = context.session.session;
-                    Object.keys(context.session.userData).forEach((key) => {
-                        inParam[`sess_${key}`] = context.session.userData[key];
-                    });
-                }
                 return conn
                     .executeStmt(
                         query.queryStr,
@@ -123,21 +123,6 @@ export default class CoreOracleIntegration extends NullProvider {
                                 });
                             }),
                     );
-            }
-            query.extraOutParams.push({
-                cv_name: "result",
-                outType: "DEFAULT",
-            });
-            query.extraOutParams.push({
-                cv_name: "cur_result",
-                outType: "CURSOR",
-            });
-            const inParam: any = {};
-            if (context.session) {
-                inParam.sess_session = context.session.session;
-                Object.keys(context.session.userData).forEach((key) => {
-                    inParam[`sess_${key}`] = context.session.userData[key];
-                });
             }
             return conn
                 .executeStmt(

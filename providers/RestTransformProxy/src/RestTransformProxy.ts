@@ -18,12 +18,15 @@ import { Agent as HttpAgent } from "http";
 import * as JSONStream from "JSONStream";
 import * as axios from "axios";
 import * as url from "url";
-import { isEmpty } from "@ungate/plugininf/lib/util/Util";
+import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
 import * as fs from "fs";
 import * as path from "path";
 import * as QueryString from "qs";
 import * as FormData from "form-data";
 import { IFile } from "@ungate/plugininf/lib/IContext";
+import { BreakResult } from "./BreakResult";
+import ICCTParams from "@ungate/plugininf/lib/ICCTParams";
+import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
 
 const optionsRequest = [
     "url",
@@ -48,7 +51,8 @@ const optionsRequest = [
 
 const validHeader = ["application/json", "application/xml", "text/"];
 
-export interface IRestEssenceProxyConfig extends Partial<axios.AxiosRequestConfig> {
+export interface IRestEssenceProxyConfig
+    extends Partial<axios.AxiosRequestConfig> {
     header?: Record<string, string | string[]>;
     includeHeader?: string[];
     url?: string;
@@ -58,10 +62,17 @@ export interface IRestEssenceProxyConfig extends Partial<axios.AxiosRequestConfi
     resultPath?: string;
     resultParse?: string;
     resultRowParse?: string;
+    breakResult?: string;
+    breakTypeResult?: IResult["type"];
     includeHeaderOut?: string[];
     excludeHeaderOut?: string[];
     typeResult?: IResult["type"];
     proxyResult?: boolean;
+}
+
+interface IPairValue {
+    key: string;
+    value: string;
 }
 
 export interface IRestEssenceProxyParams extends IParamsProvider {
@@ -70,6 +81,8 @@ export interface IRestEssenceProxyParams extends IParamsProvider {
     timeout: string;
     useGzip: boolean;
     httpsAgent?: string;
+    extraParam?: IPairValue[];
+    extraParamEncrypt?: IPairValue[];
 }
 export default class RestTransformProxy extends NullProvider {
     public static getParamsInfo(): IParamsInfo {
@@ -96,7 +109,60 @@ export default class RestTransformProxy extends NullProvider {
                 name: "Настройки https agent",
                 type: "long_string",
             },
+            extraParam: {
+                type: "form_repeater",
+                name: "Дополнительные настройки",
+                childs: {
+                    key: {
+                        type: "string",
+                        name: "Ключ",
+                        required: true,
+                    },
+                    value: {
+                        type: "string",
+                        name: "Значание",
+                        required: true,
+                    },
+                },
+            },
+            extraParamEncrypt: {
+                type: "form_repeater",
+                name: "Дополнительные настройки шифрованые",
+                childs: {
+                    key: {
+                        type: "string",
+                        name: "Ключ",
+                        required: true,
+                    },
+                    value: {
+                        type: "password",
+                        name: "Значание",
+                        required: true,
+                    },
+                },
+            },
         };
+    }
+    private extraParam: Record<string, string> = {};
+    public params: IRestEssenceProxyParams;
+
+    constructor(
+        name: string,
+        params: ICCTParams,
+        authController: IAuthController,
+    ) {
+        super(name, params, authController);
+        this.params = initParams(RestTransformProxy.getParamsInfo(), params);
+        if (this.params.extraParam) {
+            this.params.extraParam.forEach(({ key, value }) => {
+                this.extraParam[key] = value;
+            });
+        }
+        if (this.params.extraParamEncrypt) {
+            this.params.extraParamEncrypt.forEach(({ key, value }) => {
+                this.extraParam[key] = value;
+            });
+        }
     }
 
     public processSql(
@@ -134,40 +200,51 @@ export default class RestTransformProxy extends NullProvider {
             jt_request_header: gateContext.request.headers,
             jt_request_method: gateContext.request.method,
             jt_provider_params: this.params,
+            jt_extra_params: this.extraParam,
         };
+        let result = [];
+        let type;
+        try {
+            const config = await parser.runer<IRestEssenceProxyConfig>({
+                get: (key: string, isKeyEmpty: boolean) => {
+                    if (key === "callRequest") {
+                        return (
+                            configRest: IRestEssenceProxyConfig,
+                            name?: string,
+                        ) =>
+                            this.callRequest(
+                                gateContext,
+                                configRest,
+                                param,
+                                name,
+                            );
+                    }
+                    return param[key] || (isKeyEmpty ? "" : key);
+                },
+            });
 
-        const config = await parser.runer<IRestEssenceProxyConfig>({
-            get: (key: string, isKeyEmpty: boolean) => {
-                if (key === "callRequest") {
-                    return (
-                        configRest: IRestEssenceProxyConfig,
-                        name?: string,
-                    ) =>
-                        this.callRequest(
-                            gateContext,
-                            configRest,
-                            param,
-                            name,
-                        );
-                }
-                return param[key] || (isKeyEmpty ? "" : key);
-            },
-        });
-        let result = await this.callRequest(gateContext, config, param);
+            type = config.typeResult;
+            result = await this.callRequest(gateContext, config, param);
+        } catch (err) {
+            if (err instanceof BreakResult) {
+                result = err.result;
+                type = err.type;
+            } else {
+                throw err;
+            }
+        }
 
         if (!Array.isArray(result)) {
             result = [result];
         }
 
         if (result.length && typeof result[0] !== "object") {
-            result = result.map((res) => ({raw: res}));
+            result = result.map((res) => ({ raw: res }));
         }
 
         return {
-            stream: ResultStream(
-                await this.callRequest(gateContext, config, param),
-            ),
-            type: config.typeResult,
+            stream: ResultStream(result),
+            type,
         };
     }
     public async callRequest(
@@ -176,10 +253,7 @@ export default class RestTransformProxy extends NullProvider {
         param: Record<string, any>,
         name?: string,
     ): Promise<any[]> {
-        if (name && Object.prototype.hasOwnProperty.call(
-            param,
-            name,
-        )) {
+        if (name && Object.prototype.hasOwnProperty.call(param, name)) {
             return param[name];
         }
         const headers = {
@@ -382,116 +456,42 @@ export default class RestTransformProxy extends NullProvider {
             );
         }
         return new Promise(async (resolve, reject) => {
-            const response = await axios.default.request(params);
-            const ctHeader =
-                response.headers["content-type"] || "application/json";
-            const rheaders = {
-                ...response.headers,
-            };
-            if (gateContext.isDebugEnabled()) {
-                gateContext.debug(
-                    "Response: Status: %s,  proxy headers:\n%j",
-                    response.status,
-                    response.headers,
-                );
-            }
-            let arr: any = [];
-            let jtBody;
-            
-            if (config.proxyResult) {
-                delete rheaders.date;
-                delete rheaders.host;
-                if (config.excludeHeaderOut) {
-                    config.excludeHeaderOut.forEach((item) => {
-                        delete rheaders[item];
-                    });
+            try {
+                const response = await axios.default.request(params);
+                const ctHeader =
+                    response.headers["content-type"] || "application/json";
+                const rheaders = {
+                    ...response.headers,
+                };
+                if (gateContext.isDebugEnabled()) {
+                    gateContext.debug(
+                        "Response: Status: %s,  proxy headers:\n%j",
+                        response.status,
+                        response.headers,
+                    );
                 }
-                gateContext.response.writeHead(response.status, rheaders);
-                response.data.on("end", () =>
-                    reject(new BreakException("break")),
-                );
-                response.data.on("error", (err) => {
-                    if (err) {
-                        gateContext.error(
-                            `Error query ${gateContext.queryName}`,
-                            err,
-                        );
-                        return reject(
-                            new ErrorException(
-                                -1,
-                                "Ошибка вызова внешнего сервиса",
-                            ),
-                        );
-                    }
-                });
-                return safeResponsePipe(
-                    response.data as any,
-                    gateContext.response,
-                );
-            } else if (validHeader.find((key) => ctHeader.startsWith(key))) {
-                response.data.on("error", (err) => {
-                    if (err) {
-                        gateContext.error(
-                            `Error query ${gateContext.queryName}`,
-                            err,
-                        );
-                        reject(
-                            new ErrorException(
-                                -1,
-                                "Ошибка вызова внешнего сервиса",
-                            ),
-                        );
-                    }
-                    return undefined;
-                });
-                if (
-                    isEmpty(config.resultPath) ||
-                    config.resultPath === "" ||
-                    !ctHeader.startsWith("application/json")
-                ) {
-                    arr = await new Promise<any[]>((resolveArr) => {
-                        let json = "";
-                        response.data.on("data", (data) => {
-                            json += data;
-                        });
-                        response.data.on("end", () => {
-                            try {
-                                let parseData = ctHeader.startsWith(
-                                    "application/json",
-                                )
-                                    ? isEmpty(json)
-                                        ? []
-                                        : JSON.parse(json)
-                                    : {
-                                          response_data: json,
-                                      };
-                                resolveArr(parseData);
-                            } catch (e) {
-                                this.log.error(
-                                    `Parse json error: \n ${json}`,
-                                    e,
-                                );
-                                reject(e);
-                            }
-                        });
-                    });
-                } else if (ctHeader.startsWith("application/json")) {
-                    const stream = JSONStream.parse(config.resultPath || "*");
+                let arr: any = [];
+                let jtBody;
 
-                    response.data.pipe(stream);
-
-                    arr = await ReadStreamToArray(stream as any);
-                }
-            } else {
-                jtBody = await new Promise((resolveChild, rejectChild) => {
-                    const bufs = [];
+                if (config.proxyResult) {
+                    delete rheaders.date;
+                    delete rheaders.host;
+                    if (config.excludeHeaderOut) {
+                        config.excludeHeaderOut.forEach((item) => {
+                            delete rheaders[item];
+                        });
+                    }
+                    gateContext.response.writeHead(response.status, rheaders);
+                    response.data.on("end", () =>
+                        reject(new BreakException("break")),
+                    );
                     response.data.on("error", (err) => {
                         if (err) {
                             gateContext.error(
                                 `Error query ${gateContext.queryName}`,
                                 err,
                             );
-                            return rejectChild(
+                            return reject(
                                 new ErrorException(
                                     -1,
                                     "Ошибка вызова внешнего сервиса",
@@ -499,91 +499,209 @@ export default class RestTransformProxy extends NullProvider {
                             );
                         }
                     });
-                    response.data.on("data", (d) => {
-                        bufs.push(d);
-                    });
-                    response.data.on("end", () => {
-                        resolveChild(Buffer.concat(bufs));
-                    });
-                });
-                arr = {
-                    jt_body: jtBody,
-                };
-            } 
-            let result = arr;
-
-            if (config.resultParse) {
-                const responseParam = {
-                    ...param,
-                    jt_response_header: response.headers,
-                    jt_result: result,
-                    jt_body: jtBody,
-                };
-                const parserResult = parse(config.resultParse);
-
-                result = await parserResult.runer({
-                    get: (key: string, isKeyEmpty: boolean) => {
-                        if (key === "callRequest") {
-                            return (
-                                configRest: IRestEssenceProxyConfig,
-                                name?: string,
-                            ) =>
-                                this.callRequest(
-                                    gateContext,
-                                    configRest,
-                                    param,
-                                    name,
-                                );
+                    return safeResponsePipe(
+                        response.data as any,
+                        gateContext.response,
+                    );
+                } else if (
+                    validHeader.find((key) => ctHeader.startsWith(key))
+                ) {
+                    response.data.on("error", (err) => {
+                        if (err) {
+                            gateContext.error(
+                                `Error query ${gateContext.queryName}`,
+                                err,
+                            );
+                            reject(
+                                new ErrorException(
+                                    -1,
+                                    "Ошибка вызова внешнего сервиса",
+                                ),
+                            );
                         }
-                        return responseParam[key] || (isKeyEmpty ? "" : key);
-                    },
-                });
-            }
-            if (config.resultRowParse && Array.isArray(result)) {
-                const parserRowResult = parse(config.resultRowParse);
-                const responseParam = {
-                    ...param,
-                    jt_response_header: response.headers,
-                    jt_result: result,
-                    jt_body: jtBody,
-                };
-                result = await Promise.all(
-                    result.map((item, index) => {
-                        const rowParam = {
-                            ...responseParam,
-                            jt_result_row: item,
-                            jt_result_row_index: index,
-                            jt_body: jtBody,
-                        };
-                        return parserRowResult.runer({
-                            get: (key: string, isKeyEmpty: boolean) => {
-                                if (key === "callRequest") {
-                                    return (
-                                        configRest: IRestEssenceProxyConfig,
-                                        name?: string,
-                                    ) =>
-                                        this.callRequest(
-                                            gateContext,
-                                            configRest,
-                                            param,
-                                            name,
-                                        );
+                        return undefined;
+                    });
+                    if (
+                        isEmpty(config.resultPath) ||
+                        config.resultPath === "" ||
+                        !ctHeader.startsWith("application/json")
+                    ) {
+                        arr = await new Promise<any[]>((resolveArr) => {
+                            let json = "";
+                            response.data.on("data", (data) => {
+                                json += data;
+                            });
+                            response.data.on("end", () => {
+                                try {
+                                    const parseData = ctHeader.startsWith(
+                                        "application/json",
+                                    )
+                                        ? isEmpty(json)
+                                            ? []
+                                            : JSON.parse(json)
+                                        : {
+                                              response_data: json,
+                                          };
+                                    resolveArr(parseData);
+                                } catch (e) {
+                                    this.log.error(
+                                        `Parse json error: \n ${json}`,
+                                        e,
+                                    );
+                                    reject(e);
                                 }
-                                return rowParam[key] || (isKeyEmpty ? "" : key);
-                            },
+                            });
                         });
-                    }),
-                );
+                    } else if (ctHeader.startsWith("application/json")) {
+                        const stream = JSONStream.parse(
+                            config.resultPath || "*",
+                        );
+
+                        response.data.pipe(stream);
+
+                        arr = await ReadStreamToArray(stream as any);
+                    }
+                } else {
+                    jtBody = await new Promise((resolveChild, rejectChild) => {
+                        const bufs = [];
+                        response.data.on("error", (err) => {
+                            if (err) {
+                                gateContext.error(
+                                    `Error query ${gateContext.queryName}`,
+                                    err,
+                                );
+                                return rejectChild(
+                                    new ErrorException(
+                                        -1,
+                                        "Ошибка вызова внешнего сервиса",
+                                    ),
+                                );
+                            }
+                        });
+                        response.data.on("data", (d) => {
+                            bufs.push(d);
+                        });
+                        response.data.on("end", () => {
+                            resolveChild(Buffer.concat(bufs));
+                        });
+                    });
+                    arr = {
+                        jt_body: jtBody,
+                    };
+                }
+                let result = arr;
+
+                if (config.breakResult) {
+                    const responseParam = {
+                        ...param,
+                        jt_response_header: response.headers,
+                        jt_result: result,
+                        jt_body: jtBody,
+                    };
+                    const parserResult = parse(config.breakResult);
+
+                    const res = await parserResult.runer({
+                        get: (key: string, isKeyEmpty: boolean) => {
+                            if (key === "callRequest") {
+                                return (
+                                    configRestChild: IRestEssenceProxyConfig,
+                                    nameChild?: string,
+                                ) =>
+                                    this.callRequest(
+                                        gateContext,
+                                        configRestChild,
+                                        param,
+                                        nameChild,
+                                    );
+                            }
+                            return (
+                                responseParam[key] || (isKeyEmpty ? "" : key)
+                            );
+                        },
+                    });
+                    if (res) {
+                        throw new BreakResult(res, config.breakTypeResult);
+                    }
+                }
+                if (config.resultParse) {
+                    const responseParam = {
+                        ...param,
+                        jt_response_header: response.headers,
+                        jt_result: result,
+                        jt_body: jtBody,
+                    };
+                    const parserResult = parse(config.resultParse);
+
+                    result = await parserResult.runer({
+                        get: (key: string, isKeyEmpty: boolean) => {
+                            if (key === "callRequest") {
+                                return (
+                                    configRestChild: IRestEssenceProxyConfig,
+                                    nameChild?: string,
+                                ) =>
+                                    this.callRequest(
+                                        gateContext,
+                                        configRestChild,
+                                        param,
+                                        nameChild,
+                                    );
+                            }
+                            return (
+                                responseParam[key] || (isKeyEmpty ? "" : key)
+                            );
+                        },
+                    });
+                }
+                if (config.resultRowParse && Array.isArray(result)) {
+                    const parserRowResult = parse(config.resultRowParse);
+                    const responseParam = {
+                        ...param,
+                        jt_response_header: response.headers,
+                        jt_result: result,
+                        jt_body: jtBody,
+                    };
+                    result = await Promise.all(
+                        result.map((item, index) => {
+                            const rowParam = {
+                                ...responseParam,
+                                jt_result_row: item,
+                                jt_result_row_index: index,
+                                jt_body: jtBody,
+                            };
+                            return parserRowResult.runer({
+                                get: (key: string, isKeyEmpty: boolean) => {
+                                    if (key === "callRequest") {
+                                        return (
+                                            configRestChild: IRestEssenceProxyConfig,
+                                            nameChild?: string,
+                                        ) =>
+                                            this.callRequest(
+                                                gateContext,
+                                                configRestChild,
+                                                param,
+                                                nameChild,
+                                            );
+                                    }
+                                    return (
+                                        rowParam[key] || (isKeyEmpty ? "" : key)
+                                    );
+                                },
+                            });
+                        }),
+                    );
+                }
+                if (config.includeHeaderOut) {
+                    config.includeHeaderOut.forEach((item) => {
+                        gateContext.extraHeaders[item] = rheaders[item] as any;
+                    });
+                }
+                if (name) {
+                    param[name] = result;
+                }
+                return resolve(result);
+            } catch (err) {
+                reject(err);
             }
-            if (config.includeHeaderOut) {
-                config.includeHeaderOut.forEach((item) => {
-                    gateContext.extraHeaders[item] = rheaders[item] as any;
-                });
-            }
-            if (name) {
-                param[name] = result;
-            }
-            return resolve(result);
         });
     }
 }

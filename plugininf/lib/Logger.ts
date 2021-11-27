@@ -45,10 +45,12 @@ class Logger {
                     // tslint:disable-next-line:no-console
                     console.log("Load config logger", strConf);
                     const json = JSON.parse(strConf);
+                    rufus._handlers.length = 0;
                     rufus.config(json);
                 },
             );
         } else {
+            rufus._handlers.length = 0;
             rufus.config({
                 handlers: {
                     console: {

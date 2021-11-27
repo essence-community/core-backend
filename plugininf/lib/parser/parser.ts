@@ -25,9 +25,7 @@ interface IGetValue {
 }
 
 export interface IParseReturnType {
-    runer<T>(
-        values?: Record<string, any> | IGetValue,
-    ): T;
+    runer<T>(values?: Record<string, any> | IGetValue): T;
     variables: string[];
     hasError: boolean;
 }
@@ -127,6 +125,22 @@ function parseOperations(
             }
             return expression.value;
         case "Identifier":
+            // @ts-ignore
+            if (!expression.isMember && expression.name === "undefined") {
+                return undefined;
+            }
+            // @ts-ignore
+            if (!expression.isMember && expression.name === "null") {
+                return null;
+            }
+            // @ts-ignore
+            if (!expression.isMember && expression.name === "true") {
+                return true;
+            }
+            // @ts-ignore
+            if (!expression.isMember && expression.name === "false") {
+                return false;
+            }
             return (
                 (values.get
                     ? values.get(expression.name, true)
