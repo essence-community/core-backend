@@ -303,7 +303,7 @@ export default class CoreNotification extends NullEvent {
                         target: "cluster",
                     });
                 }
-                if (!isEmpty(msg.cv_error)) {
+                if (!isEmpty(msg.cv_error) || !isEmpty(msg.jt_message) || !isEmpty(msg.jt_form_message)) {
                     sendProcess({
                         command: "sendNotification",
                         data: {

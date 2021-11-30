@@ -260,6 +260,17 @@ export default class CoreNotification extends NullEvent {
                         target: "cluster",
                     });
                 }
+                if (!isEmpty(msg.cv_error) || !isEmpty(msg.jt_message) || !isEmpty(msg.jt_form_message)) {
+                    sendProcess({
+                        command: "sendNotification",
+                        data: {
+                            ckUser: user,
+                            nameProvider: this.params.authProvider,
+                            text,
+                        },
+                        target: "cluster",
+                    });
+                }
                 resolve({
                     json: JSON.stringify({
                         data: {
