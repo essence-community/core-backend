@@ -13,7 +13,7 @@
         "jsreport-xlsx": "^2.5.0"
     },
     "devDependencies": {
-        "@types/jsreport-core": "^1.5.3",
+        "@types/jsreport-core": "^2.0.2",
         "@types/jsreport-handlebars": "^2.1.0",
         "@types/jsreport-xlsx": "^1.4.1"
     }

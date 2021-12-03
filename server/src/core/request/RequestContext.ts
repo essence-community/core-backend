@@ -208,8 +208,8 @@ export default class RequestContext implements IContext {
         let isWriteHead = false;
         response.writeHead = (...args) => {
             if (!isWriteHead) {
-                writeHead.apply(response, args);
                 isWriteHead = true;
+                return writeHead.apply(response, args);
             }
         };
         response.once("finish", () => {

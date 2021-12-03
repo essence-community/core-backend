@@ -3,7 +3,6 @@ import * as lodash from "lodash";
 /* tslint:disable triple-equals */
 /* eslint-disable @typescript-eslint/no-use-before-define, no-use-before-define */
 import * as esprima from "esprima";
-// eslint-disable-next-line import/no-extraneous-dependencies, import/extensions, import/no-unresolved
 import {
     Expression,
     Property,
@@ -13,6 +12,8 @@ import {
     UnaryExpression,
     Statement,
     Function as IFunction,
+// eslint-disable-next-line import/no-extraneous-dependencies, import/extensions, import/no-unresolved
+// @ts-ignore
 } from "estree";
 import Logger from "../Logger";
 import { isEmpty } from "../util/Util";
@@ -95,7 +96,7 @@ const utils = {
 };
 
 function parseOperations(
-    expression: Expression | Pattern | Super | IFunction | Statement,
+    expression: Expression | Pattern | Super | IFunction | Statement | any,
     values: IValues,
 ): any {
     if (!expression) {

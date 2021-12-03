@@ -1,9 +1,10 @@
 import Logger from "@ungate/plugininf/lib/Logger";
 import { ISenderOptions } from "@ungate/plugininf/lib/util/ProcessSender";
-import * as cluster from "cluster";
+import * as cl from "cluster";
 import Constants from "../core/Constants";
 const logger = Logger.getLogger("Http");
 const workers = {};
+const cluster: cl.Cluster = cl as any;
 function initNodeHttp(id: string) {
     const node = cluster.fork({
         ...process.env,
@@ -28,7 +29,7 @@ if (cluster.isMaster) {
         if ((message as ISenderOptions).target === "cluster") {
             Object.values(cluster.workers).forEach((node) => {
                 if (node) {
-                    node.send(message);
+                    node.send(message as any);
                 }
             });
         }

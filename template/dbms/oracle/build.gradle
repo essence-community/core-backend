@@ -39,11 +39,11 @@ liquibase {
       defaultsFile 'liquibase.meta.properties'
     }
     schema {
-      changeLogFile 'db.changelog.auth.xml'
-      defaultsFile 'liquibase.auth.properties'
+      changeLogFile 'db.changelog.schema.xml'
+      defaultsFile 'liquibase.schema.properties'
     }
   }
-  runList = 'meta,schema'
+  runList = 'schema,meta'
 }
 
 project.ext.getProperties().each { key, value -> 

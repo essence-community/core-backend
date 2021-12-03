@@ -6,7 +6,7 @@
     "license": "MIT",
     "dependencies": {
         "@ungate/plugininf": "^1.0.0",
-        "adm-zip": "^0.4.13",
+        "adm-zip": "^0.5.9",
         "aws-sdk": "^2.665.0"
     },
     "devDependencies": {

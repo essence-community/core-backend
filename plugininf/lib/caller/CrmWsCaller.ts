@@ -51,7 +51,7 @@ export default class CrmWsCaller {
                     xmlKey: "$xml",
                 }).then((conn) => {
                     this.conn = conn;
-                    conn.wsdl.services.CrmWsService.ports.CrmWs.binding.methods.getDataEx.style =
+                    (conn.wsdl as any).services.CrmWsService.ports.CrmWs.binding.methods.getDataEx.style =
                         "document";
                     resolve();
                 }, reject);

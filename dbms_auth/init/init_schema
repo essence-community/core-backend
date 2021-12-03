@@ -12,8 +12,8 @@ function right_index {
 }
 
 if [ -f $DIR/liquibase.init.properties ]; then
-    cd $DIR
-    $DIR/../gradlew update -PrunList=init
+    cd $DIR/..
+    ./gradlew update -PrunList=init
     if [ $? != 0 ]; then
         echo "Error init errorcode $?"
         exit 1
@@ -88,8 +88,8 @@ function replaceFn {
 replaceFn "$DIR/db.sql"
 replaceFn "$DIR/db.changelog.init.xml"
 
-commadLiquibase="$DIR/../gradlew update -PrunList=init -Pliquibase.username=$sPw -Pliquibase.password=$sUser -Pliquibase.url=$connectionPreBd -Pliquibase.driver=org.postgresql.Driver"
-cd $DIR
+commadLiquibase="./gradlew update -PrunList=init -Pliquibase.username=$sPw -Pliquibase.password=$sUser -Pliquibase.url=$connectionPreBd -Pliquibase.driver=org.postgresql.Driver"
+cd $DIR/..
 $commadLiquibase
 if [ $? != 0 ]; then
     echo "Error init $newDataBase errorcode $?"

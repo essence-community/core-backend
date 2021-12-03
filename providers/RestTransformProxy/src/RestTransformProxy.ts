@@ -348,7 +348,7 @@ export default class RestTransformProxy extends NullProvider {
         }
 
         if (Object.keys(headers).length) {
-            params.headers = headers;
+            params.headers = headers as any;
         }
 
         if (this.params.proxy) {

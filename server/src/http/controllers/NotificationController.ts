@@ -143,7 +143,6 @@ class NotificationController {
         connection.sendCloseFrame(
             4001,
             "Session not found, specified query requires authentication",
-            true,
         );
     }
 
@@ -312,7 +311,6 @@ class NotificationController {
                                         conn.sendCloseFrame(
                                             4001,
                                             "Session not found, specified query requires authentication",
-                                            true,
                                         );
                                         const obj = this.notificationClient[
                                             `${conn.session.idUser}:${conn.session.nameProvider}`

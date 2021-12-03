@@ -38,9 +38,9 @@ function sendAllDate(
 }
 
 class AdminEventController {
-    private key: string;
-    private cert: string;
-    private ca: string;
+    private key: string | Buffer;
+    private cert: string | Buffer;
+    private ca: string | Buffer;
     private wsServer: websocket.server;
     protected server: https.Server;
 
@@ -59,15 +59,12 @@ class AdminEventController {
             );
         }
         this.key = fs.readFileSync(Constants.GATE_ADMIN_CLUSTER_KEY, {
-            encoding: "UTF-8",
             flag: "r",
         });
         this.cert = fs.readFileSync(Constants.GATE_ADMIN_CLUSTER_CERT, {
-            encoding: "UTF-8",
             flag: "r",
         });
         this.ca = fs.readFileSync(Constants.GATE_ADMIN_CLUSTER_CA, {
-            encoding: "UTF-8",
             flag: "r",
         });
         await new Promise<void>((resolve, reject) => {
@@ -95,10 +92,7 @@ class AdminEventController {
             this.wsServer = new websocket.server({
                 httpServer: server,
             });
-            server.listen(Constants.GATE_ADMIN_CLUSTER_PORT, (err) => {
-                if (err) {
-                    return reject(err);
-                }
+            server.listen(Constants.GATE_ADMIN_CLUSTER_PORT, () => {
                 return resolve();
             });
             this.server = server;
@@ -288,7 +282,7 @@ class AdminEventController {
                     await this.command[command.event](connection, command.data);
                 } catch (err) {
                     logger.warn(
-                        `Cluster message: ${message.utf8Data}\nError: ${err.message}`,
+                        `Cluster message: ${message.binaryData}\nError: ${err.message}`,
                         err,
                     );
                 }

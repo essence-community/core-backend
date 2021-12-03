@@ -131,14 +131,14 @@ export default class RestEssenceProxy extends NullProvider {
 
         defaultHeader.forEach((item) => {
             if (headers[item]) {
-                params.headers[item] = headers[item];
+                params.headers[item] = headers[item] as any;
             }
         });
 
         if (this.params.includeHeaderIn) {
             this.params.includeHeaderIn.split(",").forEach((item) => {
                 if (headers[item]) {
-                    params.headers[item] = headers[item];
+                    params.headers[item] = headers[item] as any;
                 }
             });
         }

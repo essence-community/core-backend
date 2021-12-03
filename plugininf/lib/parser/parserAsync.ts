@@ -13,6 +13,7 @@ import {
     UnaryExpression,
     Statement,
     Function as IFunction,
+// @ts-ignore
 } from "estree";
 import Logger from "../Logger";
 import { isEmpty } from "../util/Util";
@@ -113,7 +114,7 @@ const utils = {
 };
 
 async function parseOperations(
-    expression: Expression | Pattern | Super | IFunction | Statement,
+    expression: Expression | Pattern | Super | IFunction | Statement | any,
     values: IValues,
 ): Promise<any> {
     if (!expression) {

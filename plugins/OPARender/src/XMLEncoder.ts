@@ -8,7 +8,7 @@ import { IOPARenderParams } from "./OPARender.types";
 const Parser = parser.j2xParser;
 
 export class XMLEncoder implements IEncoder {
-    x2joptions: parser.X2jOptions;
+    x2joptions: Partial<parser.X2jOptions>;
     j2xoptions: parser.J2xOptions;
     jsonToXmlParser: parser.j2xParser;
     params: IOPARenderParams;
