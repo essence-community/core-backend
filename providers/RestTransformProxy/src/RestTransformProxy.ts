@@ -595,6 +595,7 @@ export default class RestTransformProxy extends NullProvider {
                     const responseParam = {
                         ...param,
                         jt_response_header: response.headers,
+                        jt_response_status: response.status,
                         jt_result: result,
                         jt_body: jtBody,
                     };
@@ -627,6 +628,7 @@ export default class RestTransformProxy extends NullProvider {
                     const responseParam = {
                         ...param,
                         jt_response_header: response.headers,
+                        jt_response_status: response.status,
                         jt_result: result,
                         jt_body: jtBody,
                     };
@@ -657,6 +659,7 @@ export default class RestTransformProxy extends NullProvider {
                     const responseParam = {
                         ...param,
                         jt_response_header: response.headers,
+                        jt_response_status: response.status,
                         jt_result: result,
                         jt_body: jtBody,
                     };
