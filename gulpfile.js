@@ -2,9 +2,21 @@ const gulp = require("gulp");
 const ts = require("gulp-typescript");
 const fs = require("fs");
 const path = require("path");
-const { exec } = require("child_process");
+const {
+    spawn,
+    exec
+} = require("child_process");
 const crypto = require("crypto");
 const glob = require("glob");
+const {
+    Command
+} = require('commander');
+const program = new Command();
+program.version('0.0.1');
+program.option('--to <path>', 'to')
+program.option('--srcname <name>', 'srcname')
+program.option('--from <path>', 'from')
+program.parse(process.argv);
 const homeDir = __dirname;
 const packageJson = JSON.parse(fs.readFileSync("./package.json"));
 const serverJson = JSON.parse(fs.readFileSync("./server/package.json"));
@@ -44,24 +56,21 @@ function list(val) {
 
 function cmdExec(
     command,
+    args = [],
     options = {
         env: process.env,
         cwd: __dirname,
     },
 ) {
     return new Promise((resolve, reject) => {
-        exec(command, options, (error, stdout, stderr) => {
-            if (error) {
-                error.message += `\n${stdout ? stdout : ""}\n${
-                    stderr ? stderr : ""
-                }`;
-
-                return reject(error);
+        const cwd = spawn(command, args, options);
+        cwd.stdout.on('data', (data) => console.log(data.toString()));
+        cwd.stderr.on('data', (data) => console.error(data.toString()));
+        cwd.on('close', (code) => {
+            if (code !== 0) {
+                reject();
             }
-            resolve({
-                stdout,
-                stderr,
-            });
+            resolve()
         });
     });
 }
@@ -72,21 +81,21 @@ const filterJson = (packageSrc, packageDest) => {
     delete packageJson.workspaces;
     fs.writeFileSync(packageDest, JSON.stringify(packageJson, null, 4));
 };
-const contextPlugins = process.env.CONTEXT_PLUGINS
-    ? list(process.env.CONTEXT_PLUGINS)
-    : null;
-const providerPlugins = process.env.PROVIDER_PLUGINS
-    ? list(process.env.PROVIDER_PLUGINS)
-    : null;
-const dataPlugins = process.env.DATA_PLUGINS
-    ? list(process.env.DATA_PLUGINS)
-    : null;
-const eventPlugins = process.env.EVENT_PLUGINS
-    ? list(process.env.EVENT_PLUGINS)
-    : null;
-const schedulerPlugins = process.env.SCHEDULERS_PLUGINS
-    ? list(process.env.SCHEDULERS_PLUGINS)
-    : null;
+const contextPlugins = process.env.CONTEXT_PLUGINS ?
+    list(process.env.CONTEXT_PLUGINS) :
+    null;
+const providerPlugins = process.env.PROVIDER_PLUGINS ?
+    list(process.env.PROVIDER_PLUGINS) :
+    null;
+const dataPlugins = process.env.DATA_PLUGINS ?
+    list(process.env.DATA_PLUGINS) :
+    null;
+const eventPlugins = process.env.EVENT_PLUGINS ?
+    list(process.env.EVENT_PLUGINS) :
+    null;
+const schedulerPlugins = process.env.SCHEDULERS_PLUGINS ?
+    list(process.env.SCHEDULERS_PLUGINS) :
+    null;
 
 exec('git log -n 1 --pretty="format:%h от %ai"', (err, stdout) => {
     packageJson.nodemonConfig.env.GATE_VERSION = `${versionApp.trim()} (${stdout.trim()})`;
@@ -94,535 +103,419 @@ exec('git log -n 1 --pretty="format:%h от %ai"', (err, stdout) => {
 
 const isDev = process.env.NODE_ENV === "development";
 
+gulp.task("build_path", () => {
+    const opt = program.opts();
+    const tsProject = ts.createProject(
+        path.join(opt.to, "tsconfig.json"), {
+            removeComments: !isDev,
+            sourceMap: !isDev,
+        },
+    );
+    return gulp.src(
+            path.join(
+                opt.to,
+                opt.srcname || "src",
+                "**",
+                "*.ts",
+            ),
+        )
+        .pipe(tsProject())
+        .pipe(
+            gulp.dest(
+                opt.from,
+            ),
+        )
+
+});
 gulp.task("plugins", () => {
     const rows = [];
     const pluginsDir = path.join(homeDir, "plugins");
     fs.readdirSync(pluginsDir)
         .filter((file) =>
-            dataPlugins && dataPlugins.length
-                ? dataPlugins.includes(file.toUpperCase())
-                : true,
+            dataPlugins && dataPlugins.length ?
+            dataPlugins.includes(file.toUpperCase()) :
+            true,
         )
         .forEach((file) => {
             if (
                 fs.existsSync(path.join(pluginsDir, file, "tsconfig.json")) &&
                 fs.existsSync(path.join(pluginsDir, file, "package.json"))
             ) {
-                const tsProject = ts.createProject(
-                    path.join(pluginsDir, file, "tsconfig.json"),
-                    {
-                        removeComments: !isDev,
-                        sourceMap: !isDev,
-                    },
-                );
                 rows.push(
-                    () =>
-                        new Promise((resolve, reject) => {
-                            gulp.src(
+                    async () => {
+                        await cmdExec('yarn', ['gulp', 'build_path', '--to', path.join(pluginsDir, file), '--from', path.join(
+                            homeDir,
+                            "bin",
+                            "server",
+                            "plugins",
+                            "datas",
+                            file,
+                        )]);
+                        filterJson(
+                            path.join(
+                                pluginsDir,
+                                file,
+                                "package.json",
+                            ),
+                            path.join(
+                                homeDir,
+                                "bin",
+                                "server",
+                                "plugins",
+                                "datas",
+                                file,
+                                "package.json",
+                            ),
+                        );
+                        if (
+                            fs.existsSync(
                                 path.join(
                                     pluginsDir,
                                     file,
-                                    "src",
-                                    "**",
-                                    "*.ts",
+                                    "assets",
                                 ),
                             )
-                                .pipe(tsProject())
-                                .pipe(
-                                    gulp.dest(
-                                        path.join(
-                                            homeDir,
-                                            "bin",
-                                            "server",
-                                            "plugins",
-                                            "datas",
-                                            file,
-                                        ),
+                        ) {
+                            await cpy(
+                                ["**/*.*", "**/*"],
+                                path.join(
+                                    homeDir,
+                                    "bin",
+                                    "server",
+                                    "plugins",
+                                    "datas",
+                                    file,
+                                    "assets",
+                                ), {
+                                    cwd: path.join(
+                                        pluginsDir,
+                                        file,
+                                        "assets",
                                     ),
-                                )
-                                .on("end", () => {
-                                    filterJson(
-                                        path.join(
-                                            pluginsDir,
-                                            file,
-                                            "package.json",
-                                        ),
-                                        path.join(
-                                            homeDir,
-                                            "bin",
-                                            "server",
-                                            "plugins",
-                                            "datas",
-                                            file,
-                                            "package.json",
-                                        ),
-                                    );
-                                    if (
-                                        fs.existsSync(
-                                            path.join(
-                                                pluginsDir,
-                                                file,
-                                                "assets",
-                                            ),
-                                        )
-                                    ) {
-                                        cpy(
-                                            ["**/*.*","**/*"],
-                                            path.join(
-                                                homeDir,
-                                                "bin",
-                                                "server",
-                                                "plugins",
-                                                "datas",
-                                                file,
-                                                "assets",
-                                            ),
-                                            {
-                                                cwd: path.join(
-                                                    pluginsDir,
-                                                    file,
-                                                    "assets",
-                                                ),
-                                                parents: true,
-                                                dot: true,
-                                            },
-                                        ).then(resolve, reject);
-                                        return;
-                                    }
-                                    resolve();
-                                })
-                                .on("error", (err) => reject(err));
-                        }),
+                                    parents: true,
+                                    dot: true,
+                                },
+                            )
+                        }
+                    },
                 );
             }
         });
-    return rows.length
-        ? rows.splice(1).reduce((res, val) => res.then(() => val()), rows[0]())
-        : Promise.resolve();
+    return rows.length ?
+        rows.splice(1).reduce((res, val) => res.then(() => val()), rows[0]()) :
+        Promise.resolve();
 });
 gulp.task("contexts", () => {
     const rows = [];
     const pluginsDir = path.join(homeDir, "contexts");
     fs.readdirSync(pluginsDir)
         .filter((file) =>
-            contextPlugins && contextPlugins.length
-                ? contextPlugins.includes(file.toUpperCase())
-                : true,
+            contextPlugins && contextPlugins.length ?
+            contextPlugins.includes(file.toUpperCase()) :
+            true,
         )
         .forEach((file) => {
             if (
                 fs.existsSync(path.join(pluginsDir, file, "tsconfig.json")) &&
                 fs.existsSync(path.join(pluginsDir, file, "package.json"))
             ) {
-                const tsProject = ts.createProject(
-                    path.join(pluginsDir, file, "tsconfig.json"),
-                    {
-                        removeComments: !isDev,
-                        sourceMap: !isDev,
-                    },
-                );
                 rows.push(
-                    () =>
-                        new Promise((resolve, reject) => {
-                            gulp.src(
+                    async () => {
+                        await cmdExec('yarn', ['gulp', 'build_path', '--to', path.join(pluginsDir, file), '--from', path.join(
+                            homeDir,
+                            "bin",
+                            "server",
+                            "plugins",
+                            "contexts",
+                            file,
+                        )]);
+                        filterJson(
+                            path.join(
+                                pluginsDir,
+                                file,
+                                "package.json",
+                            ),
+                            path.join(
+                                homeDir,
+                                "bin",
+                                "server",
+                                "plugins",
+                                "contexts",
+                                file,
+                                "package.json",
+                            ),
+                        );
+                        if (
+                            fs.existsSync(
                                 path.join(
                                     pluginsDir,
                                     file,
-                                    "src",
-                                    "**",
-                                    "*.ts",
+                                    "assets",
                                 ),
                             )
-                                .pipe(tsProject())
-                                .pipe(
-                                    gulp.dest(
-                                        path.join(
-                                            homeDir,
-                                            "bin",
-                                            "server",
-                                            "plugins",
-                                            "contexts",
-                                            file,
-                                        ),
+                        ) {
+                            await cpy(
+                                ["**/*.*", "**/*"],
+                                path.join(
+                                    homeDir,
+                                    "bin",
+                                    "server",
+                                    "plugins",
+                                    "contexts",
+                                    file,
+                                    "assets",
+                                ), {
+                                    cwd: path.join(
+                                        pluginsDir,
+                                        file,
+                                        "assets",
                                     ),
-                                )
-                                .on("end", () => {
-                                    filterJson(
-                                        path.join(
-                                            pluginsDir,
-                                            file,
-                                            "package.json",
-                                        ),
-                                        path.join(
-                                            homeDir,
-                                            "bin",
-                                            "server",
-                                            "plugins",
-                                            "contexts",
-                                            file,
-                                            "package.json",
-                                        ),
-                                    );
-                                    if (
-                                        fs.existsSync(
-                                            path.join(
-                                                pluginsDir,
-                                                file,
-                                                "assets",
-                                            ),
-                                        )
-                                    ) {
-                                        cpy(
-                                            ["**/*.*","**/*"],
-                                            path.join(
-                                                homeDir,
-                                                "bin",
-                                                "server",
-                                                "plugins",
-                                                "contexts",
-                                                file,
-                                                "assets",
-                                            ),
-                                            {
-                                                cwd: path.join(
-                                                    pluginsDir,
-                                                    file,
-                                                    "assets",
-                                                ),
-                                                parents: true,
-                                                dot: true,
-                                            },
-                                        ).then(resolve, reject);
-                                        return;
-                                    }
-                                    resolve();
-                                })
-                                .on("error", (err) => reject(err));
-                        }),
+                                    parents: true,
+                                    dot: true,
+                                },
+                            )
+                        }
+                    },
                 );
             }
         });
-    return rows.length
-        ? rows.splice(1).reduce((res, val) => res.then(() => val()), rows[0]())
-        : Promise.resolve();
+    return rows.length ?
+        rows.splice(1).reduce((res, val) => res.then(() => val()), rows[0]()) :
+        Promise.resolve();
 });
 gulp.task("events", () => {
     const rows = [];
     const pluginsDir = path.join(homeDir, "events");
     fs.readdirSync(pluginsDir)
         .filter((file) =>
-            eventPlugins && eventPlugins.length
-                ? eventPlugins.includes(file.toUpperCase())
-                : true,
+            eventPlugins && eventPlugins.length ?
+            eventPlugins.includes(file.toUpperCase()) :
+            true,
         )
         .forEach((file) => {
             if (
                 fs.existsSync(path.join(pluginsDir, file, "tsconfig.json")) &&
                 fs.existsSync(path.join(pluginsDir, file, "package.json"))
             ) {
-                const tsProject = ts.createProject(
-                    path.join(pluginsDir, file, "tsconfig.json"),
-                    {
-                        removeComments: !isDev,
-                        sourceMap: !isDev,
-                    },
-                );
                 rows.push(
-                    () =>
-                        new Promise((resolve, reject) => {
-                            gulp.src(
+                    async () => {
+                        await cmdExec('yarn', ['gulp', 'build_path', '--to', path.join(pluginsDir, file), '--from', path.join(
+                            homeDir,
+                            "bin",
+                            "server",
+                            "plugins",
+                            "events",
+                            file,
+                        )]);
+                        filterJson(
+                            path.join(
+                                pluginsDir,
+                                file,
+                                "package.json",
+                            ),
+                            path.join(
+                                homeDir,
+                                "bin",
+                                "server",
+                                "plugins",
+                                "events",
+                                file,
+                                "package.json",
+                            ),
+                        );
+                        if (
+                            fs.existsSync(
                                 path.join(
                                     pluginsDir,
                                     file,
-                                    "src",
-                                    "**",
-                                    "*.ts",
+                                    "assets",
                                 ),
                             )
-                                .pipe(tsProject())
-                                .pipe(
-                                    gulp.dest(
-                                        path.join(
-                                            homeDir,
-                                            "bin",
-                                            "server",
-                                            "plugins",
-                                            "events",
-                                            file,
-                                        ),
+                        ) {
+                            await cpy(
+                                ["**/*.*", "**/*"],
+                                path.join(
+                                    homeDir,
+                                    "bin",
+                                    "server",
+                                    "plugins",
+                                    "events",
+                                    file,
+                                    "assets",
+                                ), {
+                                    cwd: path.join(
+                                        pluginsDir,
+                                        file,
+                                        "assets",
                                     ),
-                                )
-                                .on("end", () => {
-                                    filterJson(
-                                        path.join(
-                                            pluginsDir,
-                                            file,
-                                            "package.json",
-                                        ),
-                                        path.join(
-                                            homeDir,
-                                            "bin",
-                                            "server",
-                                            "plugins",
-                                            "events",
-                                            file,
-                                            "package.json",
-                                        ),
-                                    );
-                                    if (
-                                        fs.existsSync(
-                                            path.join(
-                                                pluginsDir,
-                                                file,
-                                                "assets",
-                                            ),
-                                        )
-                                    ) {
-                                        cpy(
-                                            ["**/*.*","**/*"],
-                                            path.join(
-                                                homeDir,
-                                                "bin",
-                                                "server",
-                                                "plugins",
-                                                "events",
-                                                file,
-                                                "assets",
-                                            ),
-                                            {
-                                                cwd: path.join(
-                                                    pluginsDir,
-                                                    file,
-                                                    "assets",
-                                                ),
-                                                parents: true,
-                                                dot: true,
-                                            },
-                                        ).then(resolve, reject);
-                                        return;
-                                    }
-                                    resolve();
-                                })
-                                .on("error", (err) => reject(err));
-                        }),
+                                    parents: true,
+                                    dot: true,
+                                },
+                            );
+                        }
+                    },
                 );
             }
         });
-    return rows.length
-        ? rows.splice(1).reduce((res, val) => res.then(() => val()), rows[0]())
-        : Promise.resolve();
+    return rows.length ?
+        rows.splice(1).reduce((res, val) => res.then(() => val()), rows[0]()) :
+        Promise.resolve();
 });
 gulp.task("schedulers", () => {
     const rows = [];
     const pluginsDir = path.join(homeDir, "schedulers");
     fs.readdirSync(pluginsDir)
         .filter((file) =>
-            schedulerPlugins && schedulerPlugins.length
-                ? schedulerPlugins.includes(file.toUpperCase())
-                : true,
+            schedulerPlugins && schedulerPlugins.length ?
+            schedulerPlugins.includes(file.toUpperCase()) :
+            true,
         )
         .forEach((file) => {
             if (
                 fs.existsSync(path.join(pluginsDir, file, "tsconfig.json")) &&
                 fs.existsSync(path.join(pluginsDir, file, "package.json"))
             ) {
-                const tsProject = ts.createProject(
-                    path.join(pluginsDir, file, "tsconfig.json"),
-                    {
-                        removeComments: !isDev,
-                        sourceMap: !isDev,
-                    },
-                );
                 rows.push(
-                    () =>
-                        new Promise((resolve, reject) => {
-                            gulp.src(
+                    async () => {
+                        await cmdExec('yarn', ['gulp', 'build_path', '--to', path.join(pluginsDir, file), '--from', path.join(
+                            homeDir,
+                            "bin",
+                            "server",
+                            "plugins",
+                            "schedulers",
+                            file,
+                        )]);
+                        filterJson(
+                            path.join(
+                                pluginsDir,
+                                file,
+                                "package.json",
+                            ),
+                            path.join(
+                                homeDir,
+                                "bin",
+                                "server",
+                                "plugins",
+                                "schedulers",
+                                file,
+                                "package.json",
+                            ),
+                        );
+                        if (
+                            fs.existsSync(
                                 path.join(
                                     pluginsDir,
                                     file,
-                                    "src",
-                                    "**",
-                                    "*.ts",
+                                    "assets",
                                 ),
                             )
-                                .pipe(tsProject())
-                                .pipe(
-                                    gulp.dest(
-                                        path.join(
-                                            homeDir,
-                                            "bin",
-                                            "server",
-                                            "plugins",
-                                            "schedulers",
-                                            file,
-                                        ),
+                        ) {
+                            await cpy(
+                                ["**/*.*", "**/*"],
+                                path.join(
+                                    homeDir,
+                                    "bin",
+                                    "server",
+                                    "plugins",
+                                    "schedulers",
+                                    file,
+                                    "assets",
+                                ), {
+                                    cwd: path.join(
+                                        pluginsDir,
+                                        file,
+                                        "assets",
                                     ),
-                                )
-                                .on("end", () => {
-                                    filterJson(
-                                        path.join(
-                                            pluginsDir,
-                                            file,
-                                            "package.json",
-                                        ),
-                                        path.join(
-                                            homeDir,
-                                            "bin",
-                                            "server",
-                                            "plugins",
-                                            "schedulers",
-                                            file,
-                                            "package.json",
-                                        ),
-                                    );
-                                    if (
-                                        fs.existsSync(
-                                            path.join(
-                                                pluginsDir,
-                                                file,
-                                                "assets",
-                                            ),
-                                        )
-                                    ) {
-                                        cpy(
-                                            ["**/*.*","**/*"],
-                                            path.join(
-                                                homeDir,
-                                                "bin",
-                                                "server",
-                                                "plugins",
-                                                "schedulers",
-                                                file,
-                                                "assets",
-                                            ),
-                                            {
-                                                cwd: path.join(
-                                                    pluginsDir,
-                                                    file,
-                                                    "assets",
-                                                ),
-                                                parents: true,
-                                                dot: true,
-                                            },
-                                        ).then(resolve, reject);
-                                        return;
-                                    }
-                                    resolve();
-                                })
-                                .on("error", (err) => reject(err));
-                        }),
+                                    parents: true,
+                                    dot: true,
+                                },
+                            );
+                        }
+                    },
                 );
             }
         });
-    return rows.length
-        ? rows.splice(1).reduce((res, val) => res.then(() => val()), rows[0]())
-        : Promise.resolve();
+    return rows.length ?
+        rows.splice(1).reduce((res, val) => res.then(() => val()), rows[0]()) :
+        Promise.resolve();
 });
 gulp.task("providers", () => {
     const rows = [];
     const pluginsDir = path.join(homeDir, "providers");
     fs.readdirSync(pluginsDir)
         .filter((file) =>
-            providerPlugins && providerPlugins.length
-                ? providerPlugins.includes(file.toUpperCase())
-                : true,
+            providerPlugins && providerPlugins.length ?
+            providerPlugins.includes(file.toUpperCase()) :
+            true,
         )
         .forEach((file) => {
             if (
                 fs.existsSync(path.join(pluginsDir, file, "tsconfig.json")) &&
                 fs.existsSync(path.join(pluginsDir, file, "package.json"))
             ) {
-                const tsProject = ts.createProject(
-                    path.join(pluginsDir, file, "tsconfig.json"),
-                    {
-                        removeComments: !isDev,
-                        sourceMap: !isDev,
-                    },
-                );
                 rows.push(
-                    () =>
-                        new Promise((resolve, reject) => {
-                            gulp.src(
+                    async () => {
+                        await cmdExec('yarn', ['gulp', 'build_path', '--to', path.join(pluginsDir, file), '--from', path.join(
+                            homeDir,
+                            "bin",
+                            "server",
+                            "plugins",
+                            "providers",
+                            file,
+                        )]);
+                        filterJson(
+                            path.join(
+                                pluginsDir,
+                                file,
+                                "package.json",
+                            ),
+                            path.join(
+                                homeDir,
+                                "bin",
+                                "server",
+                                "plugins",
+                                "providers",
+                                file,
+                                "package.json",
+                            ),
+                        );
+                        if (
+                            fs.existsSync(
                                 path.join(
                                     pluginsDir,
                                     file,
-                                    "src",
-                                    "**",
-                                    "*.ts",
+                                    "assets",
                                 ),
                             )
-                                .pipe(tsProject())
-                                .pipe(
-                                    gulp.dest(
-                                        path.join(
-                                            homeDir,
-                                            "bin",
-                                            "server",
-                                            "plugins",
-                                            "providers",
-                                            file,
-                                        ),
+                        ) {
+                            await cpy(
+                                ["**/*.*", "**/*"],
+                                path.join(
+                                    homeDir,
+                                    "bin",
+                                    "server",
+                                    "plugins",
+                                    "providers",
+                                    file,
+                                    "assets",
+                                ), {
+                                    cwd: path.join(
+                                        pluginsDir,
+                                        file,
+                                        "assets",
                                     ),
-                                )
-                                .on("end", () => {
-                                    filterJson(
-                                        path.join(
-                                            pluginsDir,
-                                            file,
-                                            "package.json",
-                                        ),
-                                        path.join(
-                                            homeDir,
-                                            "bin",
-                                            "server",
-                                            "plugins",
-                                            "providers",
-                                            file,
-                                            "package.json",
-                                        ),
-                                    );
-                                    if (
-                                        fs.existsSync(
-                                            path.join(
-                                                pluginsDir,
-                                                file,
-                                                "assets",
-                                            ),
-                                        )
-                                    ) {
-                                        cpy(
-                                            ["**/*.*","**/*"],
-                                            path.join(
-                                                homeDir,
-                                                "bin",
-                                                "server",
-                                                "plugins",
-                                                "providers",
-                                                file,
-                                                "assets",
-                                            ),
-                                            {
-                                                cwd: path.join(
-                                                    pluginsDir,
-                                                    file,
-                                                    "assets",
-                                                ),
-                                                parents: true,
-                                                dot: true,
-                                            },
-                                        ).then(resolve, reject);
-                                        return;
-                                    }
-                                    resolve();
-                                })
-                                .on("error", (err) => reject(err));
-                        }),
+                                    parents: true,
+                                    dot: true,
+                                },
+                            );
+                        }
+                    },
                 );
             }
         });
-    return rows.length
-        ? rows.splice(1).reduce((res, val) => res.then(() => val()), rows[0]())
-        : Promise.resolve();
+    return rows.length ?
+        rows.splice(1).reduce((res, val) => res.then(() => val()), rows[0]()) :
+        Promise.resolve();
 });
 gulp.task("server", () => {
     const rows = [];
@@ -631,46 +524,34 @@ gulp.task("server", () => {
         fs.existsSync(path.join(serverDir, "tsconfig.json")) &&
         fs.existsSync(path.join(serverDir, "package.json"))
     ) {
-        const tsProject = ts.createProject(
-            path.join(serverDir, "tsconfig.json"),
-            {
-                removeComments: !isDev,
-                sourceMap: !isDev,
+        rows.push(
+            async () => {
+                await cmdExec('yarn', ['gulp', 'build_path', '--to', serverDir, '--from', path.join(
+                    homeDir,
+                    "bin",
+                    "server",
+                )]);
+                if (fs.existsSync(path.join(serverDir, "assets"))) {
+                    await cpy(
+                        ["**/*.*", "**/*"],
+                        path.join(
+                            homeDir,
+                            "bin",
+                            "server",
+                            "assets",
+                        ), {
+                            cwd: path.join(serverDir, "assets"),
+                            parents: true,
+                            dot: true,
+                        },
+                    );
+                }
             },
         );
-        rows.push(
-            () =>
-                new Promise((resolve, reject) => {
-                    gulp.src(path.join(serverDir, "src", "**", "*.ts"))
-                        .pipe(tsProject())
-                        .pipe(gulp.dest(path.join(homeDir, "bin", "server")))
-                        .on("end", () => {
-                            if (fs.existsSync(path.join(serverDir, "assets"))) {
-                                cpy(
-                                    ["**/*.*","**/*"],
-                                    path.join(
-                                        homeDir,
-                                        "bin",
-                                        "server",
-                                        "assets",
-                                    ),
-                                    {
-                                        cwd: path.join(serverDir, "assets"),
-                                        parents: true,
-                                        dot: true,
-                                    },
-                                ).then(resolve, reject);
-                                return;
-                            }
-                            resolve();
-                        })
-                        .on("error", (err) => reject(err));
-                }),
-        );
     }
-    return rows.length
-        ? rows.splice(1).reduce((res, val) => res.then(() => val()), rows[0]())
-        : Promise.resolve();
+    return rows.length ?
+        rows.splice(1).reduce((res, val) => res.then(() => val()), rows[0]()) :
+        Promise.resolve();
 });
 gulp.task("plugininf", () => {
     const rows = [];
@@ -680,54 +561,42 @@ gulp.task("plugininf", () => {
         fs.existsSync(path.join(plugininfDir, "package.json"))
     ) {
         const tsProject = ts.createProject(
-            path.join(plugininfDir, "tsconfig.json"),
-            {
+            path.join(plugininfDir, "tsconfig.json"), {
                 removeComments: !isDev,
                 sourceMap: !isDev,
             },
         );
         rows.push(
-            () =>
-                new Promise((resolve, reject) => {
-                    gulp.src(path.join(plugininfDir, "lib", "**", "*.ts"))
-                        .pipe(tsProject())
-                        .pipe(
-                            gulp.dest(
-                                path.join(
-                                    homeDir,
-                                    "bin",
-                                    "libs",
-                                    "plugininf",
-                                    "lib",
-                                ),
-                            ),
-                        )
-                        .on("end", () => {
-                            const pluginInfJson = JSON.parse(
-                                fs.readFileSync(
-                                    path.join(plugininfDir, "package.json"),
-                                ),
-                            );
-                            delete pluginInfJson.devDependencies;
-                            fs.writeFileSync(
-                                path.join(
-                                    homeDir,
-                                    "bin",
-                                    "libs",
-                                    "plugininf",
-                                    "package.json",
-                                ),
-                                JSON.stringify(pluginInfJson, null, 4),
-                            );
-                            resolve();
-                        })
-                        .on("error", (err) => reject(err));
-                }),
+            async () => {
+                await cmdExec('yarn', ['gulp', 'build_path', '--srcname', 'lib', '--to', plugininfDir, '--from', path.join(
+                    homeDir,
+                    "bin",
+                    "libs",
+                    "plugininf",
+                    "lib",
+                )]);
+                const pluginInfJson = JSON.parse(
+                    fs.readFileSync(
+                        path.join(plugininfDir, "package.json"),
+                    ),
+                );
+                delete pluginInfJson.devDependencies;
+                fs.writeFileSync(
+                    path.join(
+                        homeDir,
+                        "bin",
+                        "libs",
+                        "plugininf",
+                        "package.json",
+                    ),
+                    JSON.stringify(pluginInfJson, null, 4),
+                );
+            },
         );
     }
-    return rows.length
-        ? rows.splice(1).reduce((res, val) => res.then(() => val()), rows[0]())
-        : Promise.resolve();
+    return rows.length ?
+        rows.splice(1).reduce((res, val) => res.then(() => val()), rows[0]()) :
+        Promise.resolve();
 });
 gulp.task("libs", () => {
     const rows = [];
@@ -736,35 +605,34 @@ gulp.task("libs", () => {
         if (fs.existsSync(path.join(libsDir, file, "package.json"))) {
             rows.push(
                 () =>
-                    new Promise((resolve, reject) => {
-                        if (
-                            !fs.existsSync(
-                                path.join(homeDir, "bin", "libs", file),
-                            )
-                        ) {
-                            fs.mkdirSync(
-                                path.join(homeDir, "bin", "libs", file),
-                                {
-                                    recursive: true,
-                                },
-                            );
-                        }
-                        cpy(["**/*.*","**/*"], path.join(homeDir, "bin", "libs", file), {
-                            cwd: path.join(libsDir, file),
-                            parents: true,
-                            dot: true,
-                        }).then(resolve, reject);
-                    }),
+                new Promise((resolve, reject) => {
+                    if (
+                        !fs.existsSync(
+                            path.join(homeDir, "bin", "libs", file),
+                        )
+                    ) {
+                        fs.mkdirSync(
+                            path.join(homeDir, "bin", "libs", file), {
+                                recursive: true,
+                            },
+                        );
+                    }
+                    cpy(["**/*.*", "**/*"], path.join(homeDir, "bin", "libs", file), {
+                        cwd: path.join(libsDir, file),
+                        parents: true,
+                        dot: true,
+                    }).then(resolve, reject);
+                }),
             );
         }
     });
-    return rows.length
-        ? rows.splice(1).reduce((res, val) => res.then(() => val()), rows[0]())
-        : Promise.resolve();
+    return rows.length ?
+        rows.splice(1).reduce((res, val) => res.then(() => val()), rows[0]()) :
+        Promise.resolve();
 });
 
 gulp.task("winsvc", async () => {
-    return cpy(["**/*.*","**/*"], path.join(homeDir, "bin", "server"), {
+    return cpy(["**/*.*", "**/*"], path.join(homeDir, "bin", "server"), {
         cwd: path.join(homeDir, "winsvc"),
         parents: true,
         dot: true,
@@ -772,7 +640,7 @@ gulp.task("winsvc", async () => {
 });
 
 gulp.task("cert", async () => {
-    return cpy(["**/*.*","**/*"], path.join(homeDir, "bin", "server", "cert"), {
+    return cpy(["**/*.*", "**/*"], path.join(homeDir, "bin", "server", "cert"), {
         cwd: path.join(homeDir, "cert"),
         parents: true,
         dot: true,
@@ -806,31 +674,15 @@ gulp.task("tslint:fix:all", async () => {
         })
     ).filter(
         (file) =>
-            file.indexOf("bin") === -1 && file.indexOf("node_modules") === -1,
+        file.indexOf("bin") === -1 && file.indexOf("node_modules") === -1,
     );
     return files.slice(1).reduce(
         (promise, file) => {
             return promise.then(() =>
-                cmdExec(`yarn tslint --project "${file}" --fix`).then(
-                    ({ stdout, stderr }) => {
-                        console.log(stdout);
-                        if (stderr) {
-                            console.error(stderr);
-                        }
-                        return;
-                    },
-                ),
+                cmdExec('yarn', ['tslint', '--project', file, '--fix']),
             );
         },
-        cmdExec(`yarn tslint --project "${files[0]}" --fix`).then(
-            ({ stdout, stderr }) => {
-                console.log(stdout);
-                if (stderr) {
-                    console.error(stderr);
-                }
-                return;
-            },
-        ),
+        cmdExec('yarn', ['tslint', '--project', files[0], '--fix']),
     );
 });
 
