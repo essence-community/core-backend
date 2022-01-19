@@ -3,7 +3,8 @@ import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import { IParamsInfo } from "@ungate/plugininf/lib/ICCTParams";
 import IContext, { IFormData } from "@ungate/plugininf/lib/IContext";
 import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
-import { parse } from "@ungate/plugininf/lib/parser/parserAsync";
+import { parse as parseAsync } from "@ungate/plugininf/lib/parser/parserAsync";
+import { parse as parseSync } from "@ungate/plugininf/lib/parser/parser";
 import IResult, { IResultProvider } from "@ungate/plugininf/lib/IResult";
 import NullProvider, {
     IParamsProvider,
@@ -61,8 +62,15 @@ export interface IRestEssenceProxyConfig
     formData?: Record<string, any>;
     resultPath?: string;
     resultParse?: string;
+    resultParseAsync?: string;
     resultRowParse?: string;
+    resultRowParseAsync?: string;
+    appendParams?: string;
+    appendParamsAsync?: string;
+    breakResultAsync?: string;
     breakResult?: string;
+    breakExecuteAsync?: string;
+    breakExecute?: string;
     breakTypeResult?: IResult["type"];
     includeHeaderOut?: string[];
     excludeHeaderOut?: string[];
@@ -187,7 +195,7 @@ export default class RestTransformProxy extends NullProvider {
         if (isEmpty(query.queryStr) && isEmpty(query.modifyMethod)) {
             throw new ErrorException(101, "Empty query string");
         }
-        const parser = parse(query.queryStr || query.modifyMethod);
+        const parser = parseAsync(query.queryStr || query.modifyMethod);
         const param = {
             jt_in_param:
                 typeof gateContext.request.body === "object" &&
@@ -250,11 +258,58 @@ export default class RestTransformProxy extends NullProvider {
     public async callRequest(
         gateContext: IContext,
         config: IRestEssenceProxyConfig,
-        param: Record<string, any>,
+        preParam: Record<string, any>,
         name?: string,
     ): Promise<any[]> {
+        let param = preParam;
         if (name && Object.prototype.hasOwnProperty.call(param, name)) {
             return param[name];
+        }
+        if (config.breakExecute) {
+            const parser = parseSync(config.appendParams);
+            const res = parser.runer<IRestEssenceProxyConfig>({
+                get: (key: string, isKeyEmpty: boolean) => {
+                    if (key === "callRequest") {
+                        return (
+                            configRest: IRestEssenceProxyConfig,
+                            name?: string,
+                        ) =>
+                            this.callRequest(
+                                gateContext,
+                                configRest,
+                                param,
+                                name,
+                            );
+                    }
+                    return param[key] || (isKeyEmpty ? "" : key);
+                },
+            });
+            if (res) {
+                throw new BreakResult(res, config.breakTypeResult);
+            }
+        }
+        if (config.breakExecuteAsync) {
+            const parser = parseAsync(config.appendParamsAsync);
+            const res = await parser.runer<IRestEssenceProxyConfig>({
+                get: (key: string, isKeyEmpty: boolean) => {
+                    if (key === "callRequest") {
+                        return (
+                            configRest: IRestEssenceProxyConfig,
+                            name?: string,
+                        ) =>
+                            this.callRequest(
+                                gateContext,
+                                configRest,
+                                param,
+                                name,
+                            );
+                    }
+                    return param[key] || (isKeyEmpty ? "" : key);
+                },
+            });
+            if (res) {
+                throw new BreakResult(res, config.breakTypeResult);
+            }
         }
         const headers = {
             ...(config.header || {}),
@@ -590,8 +645,7 @@ export default class RestTransformProxy extends NullProvider {
                     };
                 }
                 let result = arr;
-
-                if (config.breakResult) {
+                if (config.breakResultAsync) {
                     const responseParam = {
                         ...param,
                         jt_response_header: response.headers,
@@ -599,7 +653,7 @@ export default class RestTransformProxy extends NullProvider {
                         jt_result: result,
                         jt_body: jtBody,
                     };
-                    const parserResult = parse(config.breakResult);
+                    const parserResult = parseAsync(config.breakResultAsync);
 
                     const res = await parserResult.runer({
                         get: (key: string, isKeyEmpty: boolean) => {
@@ -624,7 +678,7 @@ export default class RestTransformProxy extends NullProvider {
                         throw new BreakResult(res, config.breakTypeResult);
                     }
                 }
-                if (config.resultParse) {
+                if (config.breakResult) {
                     const responseParam = {
                         ...param,
                         jt_response_header: response.headers,
@@ -632,7 +686,40 @@ export default class RestTransformProxy extends NullProvider {
                         jt_result: result,
                         jt_body: jtBody,
                     };
-                    const parserResult = parse(config.resultParse);
+                    const parserResult = parseSync(config.breakResult);
+
+                    const res = parserResult.runer({
+                        get: (key: string, isKeyEmpty: boolean) => {
+                            if (key === "callRequest") {
+                                return (
+                                    configRestChild: IRestEssenceProxyConfig,
+                                    nameChild?: string,
+                                ) =>
+                                    this.callRequest(
+                                        gateContext,
+                                        configRestChild,
+                                        param,
+                                        nameChild,
+                                    );
+                            }
+                            return (
+                                responseParam[key] || (isKeyEmpty ? "" : key)
+                            );
+                        },
+                    });
+                    if (res) {
+                        throw new BreakResult(res, config.breakTypeResult);
+                    }
+                }
+                if (config.resultParseAsync) {
+                    const responseParam = {
+                        ...param,
+                        jt_response_header: response.headers,
+                        jt_response_status: response.status,
+                        jt_result: result,
+                        jt_body: jtBody,
+                    };
+                    const parserResult = parseSync(config.resultParseAsync);
 
                     result = await parserResult.runer({
                         get: (key: string, isKeyEmpty: boolean) => {
@@ -654,8 +741,38 @@ export default class RestTransformProxy extends NullProvider {
                         },
                     });
                 }
-                if (config.resultRowParse && Array.isArray(result)) {
-                    const parserRowResult = parse(config.resultRowParse);
+                if (config.resultParse) {
+                    const responseParam = {
+                        ...param,
+                        jt_response_header: response.headers,
+                        jt_response_status: response.status,
+                        jt_result: result,
+                        jt_body: jtBody,
+                    };
+                    const parserResult = parseSync(config.resultParse);
+
+                    result = parserResult.runer({
+                        get: (key: string, isKeyEmpty: boolean) => {
+                            if (key === "callRequest") {
+                                return (
+                                    configRestChild: IRestEssenceProxyConfig,
+                                    nameChild?: string,
+                                ) =>
+                                    this.callRequest(
+                                        gateContext,
+                                        configRestChild,
+                                        param,
+                                        nameChild,
+                                    );
+                            }
+                            return (
+                                responseParam[key] || (isKeyEmpty ? "" : key)
+                            );
+                        },
+                    });
+                }
+                if (config.resultRowParseAsync && Array.isArray(result)) {
+                    const parserRowResult = parseAsync(config.resultRowParseAsync);
                     const responseParam = {
                         ...param,
                         jt_response_header: response.headers,
@@ -692,6 +809,43 @@ export default class RestTransformProxy extends NullProvider {
                             });
                         }),
                     );
+                }
+                if (config.resultRowParse && Array.isArray(result)) {
+                    const parserRowResult = parseSync(config.resultRowParse);
+                    const responseParam = {
+                        ...param,
+                        jt_response_header: response.headers,
+                        jt_response_status: response.status,
+                        jt_result: result,
+                        jt_body: jtBody,
+                    };
+                    result = result.map((item, index) => {
+                        const rowParam = {
+                            ...responseParam,
+                            jt_result_row: item,
+                            jt_result_row_index: index,
+                            jt_body: jtBody,
+                        };
+                        return parserRowResult.runer({
+                            get: (key: string, isKeyEmpty: boolean) => {
+                                if (key === "callRequest") {
+                                    return (
+                                        configRestChild: IRestEssenceProxyConfig,
+                                        nameChild?: string,
+                                    ) =>
+                                        this.callRequest(
+                                            gateContext,
+                                            configRestChild,
+                                            param,
+                                            nameChild,
+                                        );
+                                }
+                                return (
+                                    rowParam[key] || (isKeyEmpty ? "" : key)
+                                );
+                            },
+                        });
+                    });
                 }
                 if (config.includeHeaderOut) {
                     config.includeHeaderOut.forEach((item) => {
