@@ -58,7 +58,7 @@ export function encryptAes(
 ): string {
     if (!Constant.PW_KEY_SECRET) {
         throw new Error(
-            "Not found key, need init environment ESSSENCE_PW_KEY_SECRET",
+            "Not found key, need init environment ESSENCE_PW_KEY_SECRET",
         );
     }
     const key = cu.getKeyFromPassword(
@@ -73,7 +73,7 @@ export function encryptAes(
 export function encryptUseKey(data: string): string {
     if (!Constant.PW_RSA_SECRET) {
         throw new Error(
-            "Not found private key, need init environment ESSSENCE_PW_RSA",
+            "Not found private key, need init environment ESSENCE_PW_RSA",
         );
     }
     return crypto

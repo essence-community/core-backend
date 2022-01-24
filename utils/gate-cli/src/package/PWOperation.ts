@@ -8,7 +8,7 @@ export class Constants {
     public PW_KEY_SECRET: string;
     /** SALT для шифрования пароля */
     public PW_SALT_SECRET: string =
-        process.env.ESSSENCE_PW_SALT ||
+        process.env.ESSENCE_PW_SALT ||
         "bf359e3e7beb05473be3b0acb8e36adb597b9e34";
 
     public DEFAULT_ALG = process.env.ESSENCE_PW_DEFAULT_ALG || "aes-256-cbc";
@@ -21,41 +21,41 @@ export class Constants {
 
     constructor() {
         let isUseEncrypt = false;
-        if (process.env.ESSSENCE_PW_KEY_SECRET) {
-            if (fs.existsSync(process.env.ESSSENCE_PW_KEY_SECRET)) {
+        if (process.env.ESSENCE_PW_KEY_SECRET) {
+            if (fs.existsSync(process.env.ESSENCE_PW_KEY_SECRET)) {
                 this.PW_KEY_SECRET = fs
-                    .readFileSync(process.env.ESSSENCE_PW_KEY_SECRET)
+                    .readFileSync(process.env.ESSENCE_PW_KEY_SECRET)
                     .toString();
             } else {
-                this.PW_KEY_SECRET = process.env.ESSSENCE_PW_KEY_SECRET;
+                this.PW_KEY_SECRET = process.env.ESSENCE_PW_KEY_SECRET;
             }
-            if (process.env.ESSSENCE_PW_SALT) {
-                if (fs.existsSync(process.env.ESSSENCE_PW_SALT)) {
+            if (process.env.ESSENCE_PW_SALT) {
+                if (fs.existsSync(process.env.ESSENCE_PW_SALT)) {
                     this.PW_SALT_SECRET = fs
-                        .readFileSync(process.env.ESSSENCE_PW_SALT)
+                        .readFileSync(process.env.ESSENCE_PW_SALT)
                         .toString();
                 } else {
-                    this.PW_SALT_SECRET = process.env.ESSSENCE_PW_SALT;
+                    this.PW_SALT_SECRET = process.env.ESSENCE_PW_SALT;
                 }
             }
             isUseEncrypt = true;
         }
-        if (process.env.ESSSENCE_PW_RSA) {
-            if (fs.existsSync(process.env.ESSSENCE_PW_RSA)) {
+        if (process.env.ESSENCE_PW_RSA) {
+            if (fs.existsSync(process.env.ESSENCE_PW_RSA)) {
                 this.PW_RSA_SECRET = fs
-                    .readFileSync(process.env.ESSSENCE_PW_RSA)
+                    .readFileSync(process.env.ESSENCE_PW_RSA)
                     .toString();
             } else {
-                this.PW_RSA_SECRET = process.env.ESSSENCE_PW_RSA;
+                this.PW_RSA_SECRET = process.env.ESSENCE_PW_RSA;
             }
-            if (process.env.ESSSENCE_PW_RSA_PASSPHRASE) {
-                if (fs.existsSync(process.env.ESSSENCE_PW_RSA_PASSPHRASE)) {
+            if (process.env.ESSENCE_PW_RSA_PASSPHRASE) {
+                if (fs.existsSync(process.env.ESSENCE_PW_RSA_PASSPHRASE)) {
                     this.PW_RSA_SECRET_PASSPHRASE = fs
-                        .readFileSync(process.env.ESSSENCE_PW_RSA_PASSPHRASE)
+                        .readFileSync(process.env.ESSENCE_PW_RSA_PASSPHRASE)
                         .toString();
                 } else {
                     this.PW_RSA_SECRET_PASSPHRASE =
-                        process.env.ESSSENCE_PW_RSA_PASSPHRASE;
+                        process.env.ESSENCE_PW_RSA_PASSPHRASE;
                 }
             }
             isUseEncrypt = true;
@@ -101,7 +101,7 @@ export function encryptAes(
 ): string {
     if (!Constant.PW_KEY_SECRET) {
         throw new Error(
-            "Not found key, need init environment ESSSENCE_PW_KEY_SECRET",
+            "Not found key, need init environment ESSENCE_PW_KEY_SECRET",
         );
     }
     const key = cu.getKeyFromPassword(
@@ -116,7 +116,7 @@ export function encryptAes(
 export function encryptUseKey(data: string): string {
     if (!Constant.PW_RSA_SECRET) {
         throw new Error(
-            "Not found private key, need init environment ESSSENCE_PW_RSA",
+            "Not found private key, need init environment ESSENCE_PW_RSA",
         );
     }
     return crypto

@@ -8,14 +8,14 @@ yarn create @essence-community/gate-cli
 
 # Environment
 
-ESSSENCE_PW_KEY_SECRET - key used aes encrypt(string or file)
+ESSENCE_PW_KEY_SECRET - key used aes encrypt(string or file)
 
-ESSSENCE_PW_SALT - salt used aes encrypt(string or file)
+ESSENCE_PW_SALT - salt used aes encrypt(string or file)
 
-ESSSENCE_PW_IV - initialization vector (IV) hex(string or file)
+ESSENCE_PW_IV - initialization vector (IV) hex(string or file)
 
 ESSENCE_PW_DEFAULT_ALG - default alg
 
-ESSSENCE_PW_RSA - private key(string or file)
+ESSENCE_PW_RSA - private key(string or file)
 
-ESSSENCE_PW_RSA_PASSPHRASE - passphrase private key(string or file)
+ESSENCE_PW_RSA_PASSPHRASE - passphrase private key(string or file)

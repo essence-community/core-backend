@@ -60,17 +60,17 @@ GATE_ADMIN_CLUSTER_PORT - порт межсетевого взаимодейст
 
 GATE_NODE_NAME - наименование сервера. По умолчанию: имя машины
 
-ESSSENCE_PW_KEY_SECRET - key used aes encrypt(string or file)
+ESSENCE_PW_KEY_SECRET - key used aes encrypt(string or file)
 
-ESSSENCE_PW_SALT - salt used aes encrypt(string or file)
+ESSENCE_PW_SALT - salt used aes encrypt(string or file)
 
-ESSSENCE_PW_IV - initialization vector (IV) hex(string or file)
+ESSENCE_PW_IV - initialization vector (IV) hex(string or file)
 
 ESSENCE_PW_DEFAULT_ALG - default alg
 
-ESSSENCE_PW_RSA - private key(string or file)
+ESSENCE_PW_RSA - private key(string or file)
 
-ESSSENCE_PW_RSA_PASSPHRASE - passphrase private key(string or file)
+ESSENCE_PW_RSA_PASSPHRASE - passphrase private key(string or file)
 
 # Документация
 [Описание доступных плагинов](docs/README.md)
