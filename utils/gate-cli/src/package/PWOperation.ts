@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as crypto from "crypto";
 import { isEmpty, questionReadline } from "../util";
+import * as cu from "./cryptoUtil";
 
 export class Constants {
     /** PW для шифрования пароля */
@@ -9,12 +10,6 @@ export class Constants {
     public PW_SALT_SECRET: string =
         process.env.ESSSENCE_PW_SALT ||
         "bf359e3e7beb05473be3b0acb8e36adb597b9e34";
-    /** PW для шифрования пароля */
-    public PW_IV_SECRET = Buffer.from(
-        process.env.ESSSENCE_PW_IV ||
-            "a290e34766b2afdca71948366cf73154eaaf880f141393c1d38542cb36a0370b",
-        "hex",
-    );
 
     public DEFAULT_ALG = process.env.ESSENCE_PW_DEFAULT_ALG || "aes-256-cbc";
 
@@ -43,15 +38,6 @@ export class Constants {
                     this.PW_SALT_SECRET = process.env.ESSSENCE_PW_SALT;
                 }
             }
-            if (this.PW_IV_SECRET.length > 16) {
-                this.PW_IV_SECRET = this.PW_IV_SECRET.slice(0, 16);
-            } else if (this.PW_IV_SECRET.length < 16) {
-                this.PW_IV_SECRET = crypto.scryptSync(
-                    this.PW_IV_SECRET,
-                    this.PW_SALT_SECRET,
-                    16,
-                );
-            }
             isUseEncrypt = true;
         }
         if (process.env.ESSSENCE_PW_RSA) {
@@ -78,7 +64,7 @@ export class Constants {
             if (this.PW_RSA_SECRET) {
                 this.DEFAULT_ALG = "privatekey";
             } else {
-                this.DEFAULT_ALG = "aes-256-cbc";
+                this.DEFAULT_ALG = "aes-256-gcm";
             }
         }
         this.isUseEncrypt = isUseEncrypt;
@@ -89,17 +75,12 @@ function decryptAes(
     type: crypto.CipherCCMTypes | crypto.CipherGCMTypes,
     data: string,
 ): string {
-    const key = crypto.scryptSync(
+    const key = cu.getKeyFromPassword(
+        type,
         Constant.PW_KEY_SECRET,
         Constant.PW_SALT_SECRET,
-        32,
     );
-    const iv = Constant.PW_IV_SECRET;
-
-    const cipher = crypto.createDecipheriv(type, key, iv);
-
-    cipher.update(Buffer.from(data, "hex"));
-    return cipher.final().toString();
+    return cu.decrypt(type, data, key);
 }
 
 function decryptUseKey(data: string): string {
@@ -123,17 +104,13 @@ export function encryptAes(
             "Not found key, need init environment ESSSENCE_PW_KEY_SECRET",
         );
     }
-    const key = crypto.scryptSync(
+    const key = cu.getKeyFromPassword(
+        type,
         Constant.PW_KEY_SECRET,
         Constant.PW_SALT_SECRET,
-        32,
     );
-    const iv = Constant.PW_IV_SECRET;
 
-    const cipher = crypto.createCipheriv(type, key, iv);
-
-    cipher.update(Buffer.from(data));
-    return cipher.final().toString("hex");
+    return cu.encrypt(type, data, key);
 }
 
 export function encryptUseKey(data: string): string {
@@ -169,9 +146,6 @@ export function encryptPassword(
         case "aes-128-ccm":
         case "aes-192-ccm":
         case "aes-256-ccm":
-        case "aes-128-cbc":
-        case "aes-192-cbc":
-        case "aes-256-cbc":
             return `{${type}}${encryptAes(type as any, data)}`;
         default:
             throw new Error(`Not found type ${type}`);
@@ -199,9 +173,6 @@ export function decryptPassword(value: string) {
         case "aes-128-ccm":
         case "aes-192-ccm":
         case "aes-256-ccm":
-        case "aes-128-cbc":
-        case "aes-192-cbc":
-        case "aes-256-cbc":
             return decryptAes(type as any, hash);
         case "privatekey":
             return decryptUseKey(hash);
@@ -228,9 +199,6 @@ export async function encryptPWCli() {
             "- aes-128-ccm\n" +
             "- aes-192-ccm\n" +
             "- aes-256-ccm\n" +
-            "- aes-128-cbc\n" +
-            "- aes-192-cbc\n" +
-            "- aes-256-cbc\n" +
             `Type encrypt(${Constant.DEFAULT_ALG}): `,
         Constant.DEFAULT_ALG,
     );

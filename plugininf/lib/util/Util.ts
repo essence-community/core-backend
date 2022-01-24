@@ -14,6 +14,7 @@ import { IParamInfo, IParamsInfo } from "../ICCTParams";
 import ICCTParams from "../ICCTParams";
 import IContext from "../IContext";
 import Constant from "../Constants";
+import * as cu from "./cryptoUtil";
 
 export function isEmpty(value: any, allowEmptyString: boolean = false) {
     return (
@@ -31,17 +32,12 @@ function decryptAes(
     type: crypto.CipherCCMTypes | crypto.CipherGCMTypes,
     data: string,
 ): string {
-    const key = crypto.scryptSync(
+    const key = cu.getKeyFromPassword(
+        type,
         Constant.PW_KEY_SECRET,
         Constant.PW_SALT_SECRET,
-        32,
     );
-    const iv = Constant.PW_IV_SECRET;
-
-    const cipher = crypto.createDecipheriv(type, key, iv);
-
-    cipher.update(Buffer.from(data, "hex"));
-    return cipher.final().toString();
+    return cu.decrypt(type, data, key);
 }
 
 function decryptUseKey(data: string): string {
@@ -65,17 +61,13 @@ export function encryptAes(
             "Not found key, need init environment ESSSENCE_PW_KEY_SECRET",
         );
     }
-    const key = crypto.scryptSync(
+    const key = cu.getKeyFromPassword(
+        type,
         Constant.PW_KEY_SECRET,
         Constant.PW_SALT_SECRET,
-        32,
     );
-    const iv = Constant.PW_IV_SECRET;
 
-    const cipher = crypto.createCipheriv(type, key, iv);
-
-    cipher.update(Buffer.from(data));
-    return cipher.final().toString("hex");
+    return cu.encrypt(type, data, key);
 }
 
 export function encryptUseKey(data: string): string {
@@ -119,10 +111,7 @@ export function encryptPassword(
         case "aes-256-gcm":
         case "aes-128-ccm":
         case "aes-192-ccm":
-        case "aes-256-ccm":
-        case "aes-128-cbc":
-        case "aes-192-cbc":
-        case "aes-256-cbc": {
+        case "aes-256-ccm": {
             if (!Constant.PW_KEY_SECRET) {
                 return data;
             }
@@ -152,9 +141,6 @@ export function decryptPassword(value: string) {
         case "aes-128-ccm":
         case "aes-192-ccm":
         case "aes-256-ccm":
-        case "aes-128-cbc":
-        case "aes-192-cbc":
-        case "aes-256-cbc":
             return decryptAes(type as any, hash);
         case "privatekey":
             return decryptUseKey(hash);

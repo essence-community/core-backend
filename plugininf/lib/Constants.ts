@@ -102,14 +102,8 @@ export class Constants {
     public PW_SALT_SECRET: string =
         process.env.ESSSENCE_PW_SALT ||
         "bf359e3e7beb05473be3b0acb8e36adb597b9e34";
-    /** PW для шифрования пароля */
-    public PW_IV_SECRET = Buffer.from(
-        process.env.ESSSENCE_PW_IV ||
-            "a290e34766b2afdca71948366cf73154eaaf880f141393c1d38542cb36a0370b",
-        "hex",
-    );
 
-    public DEFAULT_ALG = process.env.ESSENCE_PW_DEFAULT_ALG || "aes-256-cbc";
+    public DEFAULT_ALG = process.env.ESSENCE_PW_DEFAULT_ALG || "aes-256-gcm";
 
     /** PW Key RSA для шифрования пароля */
     public PW_RSA_SECRET: string;
@@ -135,15 +129,6 @@ export class Constants {
                 } else {
                     this.PW_SALT_SECRET = process.env.ESSSENCE_PW_SALT;
                 }
-            }
-            if (this.PW_IV_SECRET.length > 16) {
-                this.PW_IV_SECRET = this.PW_IV_SECRET.slice(0, 16);
-            } else if (this.PW_IV_SECRET.length < 16) {
-                this.PW_IV_SECRET = scryptSync(
-                    this.PW_IV_SECRET,
-                    this.PW_SALT_SECRET,
-                    16,
-                );
             }
             isUseEncrypt = true;
         }
