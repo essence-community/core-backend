@@ -267,11 +267,14 @@ export default class PostgresDB {
         delete connectionString.auth;
         /* tslint:disable:object-literal-sort-keys */
         const pool = new pg.Pool({
+            ...connectionString.query,
             ...this.extraPoolPgConfig,
             application_name: this.name,
-            connectionString: URL.format(connectionString),
+            host: connectionString.hostname,
+            port: parseInt(connectionString.port || "5432", 10),
             user: this.connectionConfig.user || user,
             password: this.connectionConfig.password || pass,
+            database: connectionString.path.substr(1),
             connectionTimeoutMillis:
                 this.connectionConfig.connectionTimeoutMillis ||
                 (PostgresDB.getParamsInfo().connectionTimeoutMillis
