@@ -21,8 +21,7 @@ type Optional<T extends Record<string, any>, OptionalKeys extends string> =
 type Optional<T extends Record<string, any>, OptionalK extends string> = Omit<
     T,
     OptionalK
-> &
-    { [K in OptionalK]?: T[K] };
+> & { [K in OptionalK]?: T[K] };
 
 export type UpdateDoc<Doc> = Partial<Omit<Doc, "_id">>;
 export type InsertDoc<Doc> = Optional<Doc, "_id" | "createdAt" | "updatedAt">;
@@ -57,9 +56,9 @@ export type LogicalOperators<T> = {
 
 export type FilterQuery<Doc> = Partial<LogicalOperators<Doc>> &
     Partial<{ [K in keyof Doc]: Doc[K] | QueryOperators<Doc[K]> }> &
-    Partial<
-        { [K in keyof Deep<Doc>]: Deep<Doc>[K] | QueryOperators<Deep<Doc>[K]> }
-    >;
+    Partial<{
+        [K in keyof Deep<Doc>]: Deep<Doc>[K] | QueryOperators<Deep<Doc>[K]>;
+    }>;
 
 export type SortQuery<Doc> = Partial<Record<keyof Doc, -1 | 1>> &
     Partial<Record<DeepKey<Doc>, 1 | -1>>;
@@ -69,8 +68,10 @@ export type Projection<Doc> =
     | ({ _id?: 1 | 0 } & Record<keyof Doc, 1> & Record<DeepKey<Doc>, 1>);
 
 export type UpdateOperators<Doc> = {
-    $set: { [K in keyof Omit<Doc, "_id">]?: Doc[K] } &
-        Record<DeepKey<Doc>, any>;
+    $set: { [K in keyof Omit<Doc, "_id">]?: Doc[K] } & Record<
+        DeepKey<Doc>,
+        any
+    >;
 
     $unset: Record<Exclude<keyof Doc, "_id">, boolean> &
         Record<DeepKey<Doc>, boolean>;
@@ -84,8 +85,7 @@ export type UpdateOperators<Doc> = {
                         $slice?: number;
                     }
             : never;
-    } &
-        Record<DeepKey<Doc>, any>;
+    } & Record<DeepKey<Doc>, any>;
 
     $addToSet: {
         [K in keyof Doc]: Doc[K] extends any[]
@@ -96,8 +96,7 @@ export type UpdateOperators<Doc> = {
                         $slice?: number;
                     }
             : never;
-    } &
-        Record<DeepKey<Doc>, { $each: any; $slice?: number } | any>;
+    } & Record<DeepKey<Doc>, { $each: any; $slice?: number } | any>;
 
     $pull: {
         [K in keyof Doc]: Doc[K] extends any[]
@@ -109,34 +108,40 @@ export type UpdateOperators<Doc> = {
                         $slice?: number;
                     }
             : never;
-    } &
-        Record<
-            DeepKey<Doc>,
-            | FilterQuery<any>
-            | {
-                  $each: any | FilterQuery<any>;
-                  $slice?: number;
-              }
-            | any
-        >;
+    } & Record<
+        DeepKey<Doc>,
+        | FilterQuery<any>
+        | {
+              $each: any | FilterQuery<any>;
+              $slice?: number;
+          }
+        | any
+    >;
 
-    $slice: { [K in keyof Doc]: Doc[K] extends any[] ? number : never } &
-        Record<DeepKey<Doc>, number>;
+    $slice: {
+        [K in keyof Doc]: Doc[K] extends any[] ? number : never;
+    } & Record<DeepKey<Doc>, number>;
 
-    $pop: { [K in keyof Doc]: Doc[K] extends any[] ? number : never } &
-        Record<DeepKey<Doc>, number>;
+    $pop: { [K in keyof Doc]: Doc[K] extends any[] ? number : never } & Record<
+        DeepKey<Doc>,
+        number
+    >;
 
-    $inc: { [K in keyof Doc]?: Doc[K] extends number ? number : never } &
-        Record<DeepKey<Doc>, number>;
+    $inc: {
+        [K in keyof Doc]?: Doc[K] extends number ? number : never;
+    } & Record<DeepKey<Doc>, number>;
 
-    $dec: { [K in keyof Doc]?: Doc[K] extends number ? number : never } &
-        Record<DeepKey<Doc>, number>;
+    $dec: {
+        [K in keyof Doc]?: Doc[K] extends number ? number : never;
+    } & Record<DeepKey<Doc>, number>;
 
-    $min: { [K in keyof Doc]?: Doc[K] extends number ? number : never } &
-        Record<DeepKey<Doc>, number>;
+    $min: {
+        [K in keyof Doc]?: Doc[K] extends number ? number : never;
+    } & Record<DeepKey<Doc>, number>;
 
-    $max: { [K in keyof Doc]?: Doc[K] extends number ? number : never } &
-        Record<DeepKey<Doc>, number>;
+    $max: {
+        [K in keyof Doc]?: Doc[K] extends number ? number : never;
+    } & Record<DeepKey<Doc>, number>;
 };
 
 export type UpdateQuery<Doc> = UpdateDoc<Doc> | Partial<UpdateOperators<Doc>>;

@@ -66,8 +66,7 @@ export default class TokenAuth extends NullAuthProvider {
                     },
                     publicKey: {
                         name: "Realm public key",
-                        type: "boolean",
-                        defaultValue: true,
+                        type: "long_string",
                     },
                     public: {
                         name: "Public client",
@@ -81,6 +80,11 @@ export default class TokenAuth extends NullAuthProvider {
                     },
                     verifyTokenAudience: {
                         name: "Verify Token Audience",
+                        type: "boolean",
+                        defaultValue: true,
+                    },
+                    isIgnoreCheckSignature: {
+                        name: "Ignore check sig",
                         type: "boolean",
                         defaultValue: true,
                     },
@@ -178,18 +182,22 @@ export default class TokenAuth extends NullAuthProvider {
         super(name, params, authController);
         this.params = initParams(TokenAuth.getParamsInfo(), this.params);
         if (
-            this.params.grantManagerConfig.publicKey &&
+            !isEmpty(this.params.grantManagerConfig.publicKey) &&
             fs.existsSync(this.params.grantManagerConfig.publicKey)
         ) {
             this.params.grantManagerConfig.publicKey = fs
                 .readFileSync(this.params.grantManagerConfig.publicKey)
                 .toString();
         }
-        if (this.params.grantManagerConfig.publicKey) {
-            this.params.grantManagerConfig.publicKey = this.params.grantManagerConfig.publicKey
-                .replace("-----BEGIN PUBLIC KEY-----\n", "")
-                .replace("-----END PUBLIC KEY-----", "")
-                .trim();
+        if (
+            !isEmpty(this.params.grantManagerConfig.publicKey) &&
+            !isEmpty(this.params.grantManagerConfig.publicKey.trim())
+        ) {
+            this.params.grantManagerConfig.publicKey =
+                this.params.grantManagerConfig.publicKey
+                    .replace("-----BEGIN PUBLIC KEY-----\n", "")
+                    .replace("-----END PUBLIC KEY-----", "")
+                    .trim();
         }
         Object.entries(this.params.grantManagerConfig).forEach(
             ([key, value]) => {
@@ -198,7 +206,10 @@ export default class TokenAuth extends NullAuthProvider {
                 }
             },
         );
-        this.grantManager = new GrantManager(this.params.grantManagerConfig);
+        this.grantManager = new GrantManager(
+            this.params.grantManagerConfig,
+            this.log,
+        );
     }
     /**
      * Проверка на случай если авторизация вынесена на внешний прокси nginx
@@ -212,10 +223,28 @@ export default class TokenAuth extends NullAuthProvider {
         sessionId: string,
         session: ISession,
     ): Promise<ISession> {
+        const header = gateContext.request.headers.authorization;
+        if (
+            (session && session.nameProvider !== this.name) ||
+            (header &&
+                header.substr(0, 7).toLowerCase().indexOf("bearer ") === -1) ||
+            (!header &&
+                !gateContext.request.session[`token_bearer_${this.name}`])
+        ) {
+            return session;
+        }
+        this.log.debug("Grant check");
         return GrantAttacher(this.name, gateContext, this.grantManager)
             .then(async (grant) => {
                 if (!grant) {
                     throw new Error("Not Auth");
+                }
+                if (
+                    session &&
+                    session.sessionData.access_token ===
+                        (grant.access_token as any).token
+                ) {
+                    return session;
                 }
                 const dataUser = await this.generateUserData(
                     gateContext,
@@ -234,8 +263,7 @@ export default class TokenAuth extends NullAuthProvider {
                         userData: dataUser.userData,
                         isAccessErrorNotFound: false,
                         sessionData: {
-                            [`access_token`]: (grant.access_token as any)
-                                ?.token,
+                            access_token: (grant.access_token as any)?.token,
                         },
                     });
 
@@ -252,6 +280,11 @@ export default class TokenAuth extends NullAuthProvider {
                     ...session.userData,
                     ...dataUser.userData,
                 };
+                session.sessionData.access_token = (
+                    grant.access_token as any
+                )?.token;
+                gateContext.request.session.gsession.sessionData.access_token =
+                    (grant.access_token as any)?.token;
                 await this.authController.addUser(
                     dataUser.idUser,
                     this.name,
@@ -259,8 +292,13 @@ export default class TokenAuth extends NullAuthProvider {
                 );
                 return session;
             })
-            .catch(async () => {
-                await this.authController.logoutSession(gateContext);
+            .catch(async (err) => {
+                gateContext.debug("Token Auth Error", err);
+                if (session && session.nameProvider === this.name) {
+                    await this.authController.logoutSession(gateContext);
+                } else if (session && session.nameProvider !== this.name) {
+                    return session;
+                }
                 if (
                     !this.params.disableRecursiveAuth &&
                     gateContext.queryName === Constant.QUERY_GETSESSIONDATA
@@ -292,11 +330,8 @@ export default class TokenAuth extends NullAuthProvider {
             if (!isEmpty(userInfo[obj.in])) {
                 dataUser[obj.out] = userInfo[obj.in];
             }
-            if (
-                (grant.access_token as any).content &&
-                !isEmpty((grant.access_token as any).content[obj.in])
-            ) {
-                dataUser[obj.out] = (grant.access_token as any).content[obj.in];
+            if (token.content && !isEmpty(token.content[obj.in])) {
+                dataUser[obj.out] = token.content[obj.in];
             }
         });
         if (typeof dataUser.ca_actions === "string") {
@@ -310,7 +345,7 @@ export default class TokenAuth extends NullAuthProvider {
             dataUser.ca_actions = [];
         }
         this.params.mapKeyCloakGrant.forEach((obj) => {
-            if (grant.access_token.hasRole(obj.grant)) {
+            if (token.hasRole(obj.grant)) {
                 dataUser.ca_actions.push(
                     typeof obj.action === "string"
                         ? parseInt(obj.action.replace("new#", "") as any, 10)

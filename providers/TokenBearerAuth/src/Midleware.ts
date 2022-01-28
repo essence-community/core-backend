@@ -16,12 +16,20 @@ export async function GrantAttacher(
     } else if (gateContext.request.session[`token_bearer_${name}`]) {
         accessToken = gateContext.request.session[`token_bearer_${name}`];
     }
+    if (gateContext.isDebugEnabled()) {
+        gateContext.debug("Access Token Found %s", accessToken);
+    }
     return accessToken
         ? grantManager.createGrant(accessToken).then((grant) => {
-              (gateContext.request as any).kauth.grant = grant;
-              gateContext.request.session[
-                  `token_bearer_${name}`
-              ] = (grant as any).__raw;
+              // tslint:disable:triple-equals
+              if (
+                  gateContext.request.session[`token_bearer_${name}`] !=
+                  (grant as any).__raw
+              ) {
+                  gateContext.request.session[`token_bearer_${name}`] = (
+                      grant as any
+                  ).__raw;
+              }
               return grant as Grant;
           })
         : null;

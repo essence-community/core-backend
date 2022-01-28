@@ -75,8 +75,7 @@ export default abstract class NullContext implements IContextPlugin {
                         type: "integer",
                     },
                     preflightContinue: {
-                        name:
-                            "Pass the CORS preflight response to the next handler",
+                        name: "Pass the CORS preflight response to the next handler",
                         description:
                             "Pass the CORS preflight response to the next handler.",
                         type: "boolean",
@@ -438,8 +437,9 @@ export default abstract class NullContext implements IContextPlugin {
                         this.params.cors.origin = JSON.parse(
                             this.params.cors.origin as string,
                         );
-                        this.params.cors.origin = (this.params.cors
-                            .origin as string[]).map((val) => {
+                        this.params.cors.origin = (
+                            this.params.cors.origin as string[]
+                        ).map((val) => {
                             const matcher2 = findRegEx.exec(val);
                             if (matcher2) {
                                 const groups = matcher2.groups;

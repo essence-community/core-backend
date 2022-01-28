@@ -199,11 +199,12 @@ class MainController {
                     wsQuery,
                 );
                 // 12: Вызов плагинов перед получение результата
-                let result = await PluginController.applyPluginQueryExecuteBefore(
-                    requestContext,
-                    plugins,
-                    wsQuery,
-                );
+                let result =
+                    await PluginController.applyPluginQueryExecuteBefore(
+                        requestContext,
+                        plugins,
+                        wsQuery,
+                    );
                 if (!result) {
                     // 13: Обработка по экшенам
                     result = await ActionController.execute({
@@ -215,11 +216,12 @@ class MainController {
                 }
                 if (!requestContext.isResponded) {
                     // 15: Вызов плагины постобработки
-                    result = await PluginController.applyPluginAfterQueryExecute(
-                        requestContext,
-                        plugins,
-                        result,
-                    );
+                    result =
+                        await PluginController.applyPluginAfterQueryExecute(
+                            requestContext,
+                            plugins,
+                            result,
+                        );
                     await ResultController.responseCheck(
                         requestContext,
                         result,

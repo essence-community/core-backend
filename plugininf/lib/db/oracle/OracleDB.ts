@@ -664,20 +664,26 @@ export default class OracleDB {
                             isNotCursor = false;
                             result = {
                                 metaData: this.extractMetaData(
-                                    (value as oracledb.ResultSet<
-                                        Record<string, any>
-                                    >).metaData,
+                                    (
+                                        value as oracledb.ResultSet<
+                                            Record<string, any>
+                                        >
+                                    ).metaData,
                                 ),
-                                stream: (value as oracledb.ResultSet<
-                                    Record<string, any>
-                                >).toQueryStream(),
+                                stream: (
+                                    value as oracledb.ResultSet<
+                                        Record<string, any>
+                                    >
+                                ).toQueryStream(),
                             };
                             result.stream = safePipe(
                                 result.stream,
                                 this.DatasetSerializer(
-                                    (value as oracledb.ResultSet<
-                                        Record<string, any>
-                                    >).metaData,
+                                    (
+                                        value as oracledb.ResultSet<
+                                            Record<string, any>
+                                        >
+                                    ).metaData,
                                 ),
                             );
                         }

@@ -13,8 +13,7 @@ export default class JsonRowColumnExtractor extends NullPlugin {
     public static getParamsInfo(): IParamsInfo {
         return {
             columns: {
-                name:
-                    "Наименоване колонок которые надо распаковать через запятую",
+                name: "Наименоване колонок которые надо распаковать через запятую",
                 type: "string",
             },
             extractSingleColumn: {
@@ -52,36 +51,33 @@ export default class JsonRowColumnExtractor extends NullPlugin {
         const self = this;
         const columns = (this.params.columns || "").split(",");
         let columnExtract;
-        const columnObjExtract = (name: string) => (
-            stream: any,
-            chunk: any,
-            done: any,
-        ) => {
-            try {
-                const obj = isString(chunk[name])
-                    ? JSON.parse(chunk[name])
-                    : chunk[name];
-                delete chunk[name];
-                if (isArray(obj)) {
-                    obj.forEach((val) =>
-                        stream.push({
-                            ...chunk,
-                            ...val,
-                        }),
-                    );
-                    done();
-                    return;
-                }
+        const columnObjExtract =
+            (name: string) => (stream: any, chunk: any, done: any) => {
+                try {
+                    const obj = isString(chunk[name])
+                        ? JSON.parse(chunk[name])
+                        : chunk[name];
+                    delete chunk[name];
+                    if (isArray(obj)) {
+                        obj.forEach((val) =>
+                            stream.push({
+                                ...chunk,
+                                ...val,
+                            }),
+                        );
+                        done();
+                        return;
+                    }
 
-                done(null, {
-                    ...chunk,
-                    ...obj,
-                });
-            } catch (e) {
-                gateContext.error(e.message, e);
-                done(null, chunk);
-            }
-        };
+                    done(null, {
+                        ...chunk,
+                        ...obj,
+                    });
+                } catch (e) {
+                    gateContext.error(e.message, e);
+                    done(null, chunk);
+                }
+            };
         const columnExist = (stream: any, chunk: any, done: any) => {
             done(null, chunk);
         };

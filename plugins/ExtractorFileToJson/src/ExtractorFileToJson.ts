@@ -53,8 +53,7 @@ export default class ExtractorFileToJson extends NullPlugin {
             },
             clS3ReadPublic: {
                 defaultValue: false,
-                name:
-                    "Устанавливать права доступа public, добавляемым файлам в riak/aws",
+                name: "Устанавливать права доступа public, добавляемым файлам в riak/aws",
                 type: "boolean",
             },
             cvCsvDelimiter: {

@@ -1,5 +1,6 @@
 import { forEach, isObject, noop } from "lodash";
 import * as pg from "pg";
+import * as fs from "fs";
 // @ts-ignore
 import * as QueryStream from "pg-query-stream";
 import { IRufusLogger } from "rufus";
@@ -147,6 +148,7 @@ export default class PostgresDB {
 
     private log: IRufusLogger;
     private setAppData: string[] = [];
+    private extraPoolPgConfig: Record<string, any> = {};
     constructor(name: string, params: IPostgresDBConfig) {
         this.name = name;
         let setConnectionParam = {};
@@ -162,9 +164,33 @@ export default class PostgresDB {
             this.connectionConfig.poolPg.startsWith("{") &&
             this.connectionConfig.poolPg.endsWith("}")
         ) {
-            this.connectionConfig.poolPg = JSON.parse(
-                this.connectionConfig.poolPg,
-            );
+            this.extraPoolPgConfig = JSON.parse(this.connectionConfig.poolPg);
+        }
+        if (this.extraPoolPgConfig.ssl) {
+            if (
+                this.extraPoolPgConfig.ssl.ca &&
+                fs.existsSync(this.extraPoolPgConfig.ssl.ca)
+            ) {
+                this.extraPoolPgConfig.ssl.ca = fs
+                    .readFileSync(this.extraPoolPgConfig.ssl.ca)
+                    .toString();
+            }
+            if (
+                this.extraPoolPgConfig.ssl.key &&
+                fs.existsSync(this.extraPoolPgConfig.ssl.key)
+            ) {
+                this.extraPoolPgConfig.ssl.key = fs
+                    .readFileSync(this.extraPoolPgConfig.ssl.key)
+                    .toString();
+            }
+            if (
+                this.extraPoolPgConfig.ssl.cert &&
+                fs.existsSync(this.extraPoolPgConfig.ssl.cert)
+            ) {
+                this.extraPoolPgConfig.ssl.cert = fs
+                    .readFileSync(this.extraPoolPgConfig.ssl.cert)
+                    .toString();
+            }
         }
         if (
             typeof this.connectionConfig.setConnectionParam === "string" &&
@@ -175,9 +201,7 @@ export default class PostgresDB {
                 this.connectionConfig.setConnectionParam,
             );
         }
-        if (
-            typeof this.connectionConfig.setConnectionParam === "object"
-        ) {
+        if (typeof this.connectionConfig.setConnectionParam === "object") {
             setConnectionParam = this.connectionConfig.setConnectionParam;
         }
         this.log = Logger.getLogger(`PostgresDB ${name}`);
@@ -235,19 +259,19 @@ export default class PostgresDB {
      * @returns {Promise}
      */
     public createPool(): Promise<pg.Pool> {
-        const connectionString = URL.parse(this.connectionConfig.connectString);
+        const connectionString = URL.parse(
+            this.connectionConfig.connectString,
+            true,
+        );
         const [user, pass] = (connectionString.auth || "").split(":");
+        delete connectionString.auth;
         /* tslint:disable:object-literal-sort-keys */
         const pool = new pg.Pool({
-            ...(typeof this.connectionConfig.poolPg === "object"
-                ? this.connectionConfig.poolPg
-                : {}),
+            ...this.extraPoolPgConfig,
             application_name: this.name,
-            host: connectionString.hostname,
-            port: parseInt(connectionString.port || "5432", 10),
+            connectionString: URL.format(connectionString),
             user: this.connectionConfig.user || user,
             password: this.connectionConfig.password || pass,
-            database: connectionString.path.substr(1),
             connectionTimeoutMillis:
                 this.connectionConfig.connectionTimeoutMillis ||
                 (PostgresDB.getParamsInfo().connectionTimeoutMillis
@@ -258,6 +282,7 @@ export default class PostgresDB {
                     .defaultValue as number),
             max: this.connectionConfig.poolMax || 4,
             min: this.connectionConfig.poolMin || 0,
+            log: (...msg) => this.log.trace(...msg),
         });
         /* tslint:enable:object-literal-sort-keys */
         this.pool = pool;
@@ -280,10 +305,12 @@ export default class PostgresDB {
             .then((pool) => pool.connect())
             .then(async (pgconn) => {
                 if (this.setAppData.length) {
-                    await Promise.all(this.setAppData.map((sql) => pgconn.query(sql)));
+                    await Promise.all(
+                        this.setAppData.map((sql) => pgconn.query(sql)),
+                    );
                 }
-                
-                return new Connection(this, "postgresql", pgconn)
+
+                return new Connection(this, "postgresql", pgconn);
             });
     }
 
@@ -294,15 +321,15 @@ export default class PostgresDB {
      */
     public getConnectionNew(params: IPostgresDBConfig): Promise<Connection> {
         const client = new pg.Client(params as pg.ClientConfig);
-        return client
-            .connect()
-            .then(async () => {
-                if (this.setAppData.length) {
-                    await Promise.all(this.setAppData.map((sql) => client.query(sql)));
-                }
-                
-                return new Connection(this, "postgresql", client)
-            });
+        return client.connect().then(async () => {
+            if (this.setAppData.length) {
+                await Promise.all(
+                    this.setAppData.map((sql) => client.query(sql)),
+                );
+            }
+
+            return new Connection(this, "postgresql", client);
+        });
     }
 
     /**

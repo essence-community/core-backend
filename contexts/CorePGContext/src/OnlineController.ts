@@ -623,19 +623,23 @@ export default class OnlineController implements ICoreController {
                                     );
                                 }
                                 if (doc.cr_access === "po_session") {
-                                    const access = await this.tempTable.dbQueryAction.findOne(
-                                        {
-                                            $and: [
-                                                { ck_page_object: pageObject },
-                                                {
-                                                    cn_action: {
-                                                        $in: caActions,
+                                    const access =
+                                        await this.tempTable.dbQueryAction.findOne(
+                                            {
+                                                $and: [
+                                                    {
+                                                        ck_page_object:
+                                                            pageObject,
                                                     },
-                                                },
-                                            ],
-                                        },
-                                        true,
-                                    );
+                                                    {
+                                                        cn_action: {
+                                                            $in: caActions,
+                                                        },
+                                                    },
+                                                ],
+                                            },
+                                            true,
+                                        );
                                     if (
                                         isEmpty(access) &&
                                         !this.params.disableCheckAccess
@@ -652,9 +656,8 @@ export default class OnlineController implements ICoreController {
                                     return reject(CoreContext.accessDenied());
                                 }
                                 return resolve({
-                                    defaultActionName: CoreContext.decodeType(
-                                        doc,
-                                    ),
+                                    defaultActionName:
+                                        CoreContext.decodeType(doc),
                                     providerName: doc.ck_provider,
                                     query: {
                                         extraOutParams: [

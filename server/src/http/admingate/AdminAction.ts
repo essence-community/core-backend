@@ -114,9 +114,7 @@ export default class AdminAction {
                                 .filter(filterFilesData(gateContext)),
                         ),
                     ),
-            gtgetsessions: (
-                gateContext: IContext,
-            ) => /*.find().then((docs) =>
+            gtgetsessions: (gateContext: IContext) => /*.find().then((docs) =>
                     Promise.resolve(
                         docs
                             .map((val) => ({
@@ -155,16 +153,18 @@ export default class AdminAction {
                     },
                 );
                 return this.dbProviders.find().then((docs) =>
-                    ([
-                        ...(json?.filter?.g_providers_add_all === "all"
-                            ? [
-                                  {
-                                      ck_id: "all",
-                                  },
-                              ]
-                            : []),
-                        ...docs,
-                    ] as any)
+                    (
+                        [
+                            ...(json?.filter?.g_providers_add_all === "all"
+                                ? [
+                                      {
+                                          ck_id: "all",
+                                      },
+                                  ]
+                                : []),
+                            ...docs,
+                        ] as any
+                    )
                         .map((val) =>
                             json?.filter?.g_providers_add_all === "all"
                                 ? { ck_id: val.ck_id }
@@ -176,7 +176,8 @@ export default class AdminAction {
                                           val.cct_params,
                                       ),
                                       cct_params: undefined,
-                                      ck_d_plugin: val.ck_d_plugin.toLowerCase(),
+                                      ck_d_plugin:
+                                          val.ck_d_plugin.toLowerCase(),
                                   },
                         )
                         .sort(sortFilesData(gateContext))

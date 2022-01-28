@@ -8,8 +8,8 @@ export default class BreakException extends Error {
     public resultData: IResult;
     constructor(type: string | IResult, data: Readable = ResultStream([])) {
         super();
-        this.resultData = (isObject(type)
-            ? type
-            : { type: type as string, data }) as IResult;
+        this.resultData = (
+            isObject(type) ? type : { type: type as string, data }
+        ) as IResult;
     }
 }

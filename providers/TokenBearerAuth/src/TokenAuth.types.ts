@@ -53,6 +53,7 @@ export interface IGrantManagerConfig extends IRotationConfig {
     public: string;
     bearerOnly: string;
     verifyTokenAudience: boolean;
+    isIgnoreCheckSignature?: boolean;
 }
 
 export interface IRotationConfig {

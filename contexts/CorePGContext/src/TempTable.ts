@@ -16,7 +16,7 @@ import {
     ISysSettingData,
     IObjectData,
 } from "./CoreContext.types";
-const createTempTable = ((global as any) as IGlobalObject).createTempTable;
+const createTempTable = (global as any as IGlobalObject).createTempTable;
 
 export class TempTable {
     private sysSettings =

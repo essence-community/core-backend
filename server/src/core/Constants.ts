@@ -6,7 +6,7 @@ import * as path from "path";
 
 const HOME_DIR: string =
     process.env.GATE_HOME_DIR || path.join(__dirname, "..");
-((global as any) as IGlobalObject).homedir = HOME_DIR;
+(global as any as IGlobalObject).homedir = HOME_DIR;
 class Constants extends Constant {
     /**
      * Число нод в кластере

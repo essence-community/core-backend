@@ -203,12 +203,11 @@ export default class KeyCloakAuth extends NullAuthProvider {
                 .toString();
         }
         if (this.params.keyCloakConfig["realm-public-key"]) {
-            this.params.keyCloakConfig[
-                "realm-public-key"
-            ] = this.params.keyCloakConfig["realm-public-key"]
-                .replace("-----BEGIN PUBLIC KEY-----\n", "")
-                .replace("-----END PUBLIC KEY-----", "")
-                .trim();
+            this.params.keyCloakConfig["realm-public-key"] =
+                this.params.keyCloakConfig["realm-public-key"]
+                    .replace("-----BEGIN PUBLIC KEY-----\n", "")
+                    .replace("-----END PUBLIC KEY-----", "")
+                    .trim();
         }
         Object.entries(this.params.keyCloakConfig).forEach(([key, value]) => {
             if (isEmpty(value)) {
@@ -268,9 +267,8 @@ export default class KeyCloakAuth extends NullAuthProvider {
             (gateContext.request as IRequestExtra).kauth = {};
             const redirectUrl = URL.parse(this.params.redirectUrl, true);
             redirectUrl.query[this.params.flagRedirect] = "1";
-            gateContext.request.session.auth_redirect_uri = URL.format(
-                redirectUrl,
-            );
+            gateContext.request.session.auth_redirect_uri =
+                URL.format(redirectUrl);
             const grant = await PostAuth(gateContext, this.keyCloak, data);
             delete gateContext.request.session.auth_redirect_uri;
             if (!grant) {

@@ -66,7 +66,8 @@ export default class USPOIntegration extends NullPlugin {
         super(name, params);
         this.name = name;
         this.params = initParams(USPOIntegration.getParamsInfo(), this.params);
-        this.params.queryNotification = this.params.queryNotification.toLowerCase();
+        this.params.queryNotification =
+            this.params.queryNotification.toLowerCase();
         this.runReport = `${this.params.urlReceiver}/accept`;
         this.reportDelete = `${this.params.urlReceiver}/queue-delete`;
         this.runDelayedPrint = `${this.params.urlReceiver}/delayedPrint`;

@@ -11,7 +11,7 @@ const re = /"level":\s*"([^"]+)"/gi;
 const pathConf =
     process.env.LOGGER_CONF ||
     path.join(
-        ((global as any) as IGlobalObject).homedir || __dirname,
+        (global as any as IGlobalObject).homedir || __dirname,
         "resources",
         "config",
         "logger.json",

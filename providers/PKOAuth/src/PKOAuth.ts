@@ -384,17 +384,20 @@ export default class PKOAuth extends NullAuthProvider {
             }
             if (
                 x509.getSerialNumberHex().toLocaleUpperCase() !==
-                (gateContext.request.headers[
-                    "forwarded-ssl-client-m-serial"
-                ] as string).toLocaleUpperCase()
+                (
+                    gateContext.request.headers[
+                        "forwarded-ssl-client-m-serial"
+                    ] as string
+                ).toLocaleUpperCase()
             ) {
                 this.log.error(
                     `Not valid certificate Serial-In-AD: ${x509
                         .getSerialNumberHex()
-                        .toLocaleUpperCase()}, Serial-Forwarded: ${(gateContext
-                        .request.headers[
-                        "forwarded-ssl-client-m-serial"
-                    ] as string).toLocaleUpperCase()}`,
+                        .toLocaleUpperCase()}, Serial-Forwarded: ${(
+                        gateContext.request.headers[
+                            "forwarded-ssl-client-m-serial"
+                        ] as string
+                    ).toLocaleUpperCase()}`,
                 );
                 reject(new ErrorException(ErrorGate.AUTH_DENIED));
                 return;

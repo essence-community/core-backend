@@ -13,7 +13,7 @@ import {
     UnaryExpression,
     Statement,
     Function as IFunction,
-// @ts-ignore
+    // @ts-ignore
 } from "estree";
 import Logger from "../Logger";
 import { isEmpty } from "../util/Util";
@@ -32,7 +32,7 @@ export interface IParseReturnType {
             | undefined
             | string
             | boolean
-            | number
+            | number,
     >(
         values?: Record<string, any> | IGetValue,
     ): Promise<T>;
@@ -177,9 +177,8 @@ async function parseOperations(
                     accProm.then(async (acc: IValues) => {
                         // @ts-ignore
                         prop.key.isMember = true;
-                        acc[
-                            await parseOperations(prop.key, values)
-                        ] = await parseOperations(prop.value, values);
+                        acc[await parseOperations(prop.key, values)] =
+                            await parseOperations(prop.value, values);
 
                         return acc;
                     }),

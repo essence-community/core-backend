@@ -117,9 +117,10 @@ class NotificationController {
             crypto.randomFillSync(buf);
             connection.uniqhash = buf.toString("hex");
             connection.on("close", () => {
-                const obj = this.notificationClient[
-                    `${session.idUser}:${session.nameProvider}`
-                ];
+                const obj =
+                    this.notificationClient[
+                        `${session.idUser}:${session.nameProvider}`
+                    ];
                 delete obj[connection.uniqhash];
             });
             if (
@@ -312,9 +313,10 @@ class NotificationController {
                                             4001,
                                             "Session not found, specified query requires authentication",
                                         );
-                                        const obj = this.notificationClient[
-                                            `${conn.session.idUser}:${conn.session.nameProvider}`
-                                        ];
+                                        const obj =
+                                            this.notificationClient[
+                                                `${conn.session.idUser}:${conn.session.nameProvider}`
+                                            ];
                                         delete obj[conn.uniqhash];
                                     }
                                 });

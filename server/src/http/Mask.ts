@@ -147,6 +147,6 @@ class BMask implements IMask {
 }
 
 const Mask = new BMask();
-((global as any) as IGlobalObject).maskgate = Mask;
+(global as any as IGlobalObject).maskgate = Mask;
 
 export default Mask;

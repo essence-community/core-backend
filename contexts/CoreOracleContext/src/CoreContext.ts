@@ -21,7 +21,7 @@ import OnlineController from "./OnlineController";
 import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
 import { IUserDbData } from "@ungate/plugininf/lib/ISession";
 const logger = Logger.getLogger("CoreContext");
-const Mask = ((global as any) as IGlobalObject).maskgate;
+const Mask = (global as any as IGlobalObject).maskgate;
 
 export interface ICoreParams extends IContextParams {
     debug: boolean;
@@ -75,8 +75,7 @@ export default class CoreContext extends NullContext {
             },
             pageMetaQueryName: {
                 defaultValue: "GetMetamodelPage",
-                name:
-                    "Наименование запроса на возращение сформированой страницы",
+                name: "Наименование запроса на возращение сформированой страницы",
                 type: "string",
             },
             pageObjectsQueryName: {
@@ -147,10 +146,13 @@ export default class CoreContext extends NullContext {
             user: this.params.user,
         });
         this.params.modifyQueryName = this.params.modifyQueryName.toLowerCase();
-        this.params.pageMetaQueryName = this.params.pageMetaQueryName.toLowerCase();
-        this.params.defaultDepartmentQueryName = this.params.defaultDepartmentQueryName.toLowerCase();
+        this.params.pageMetaQueryName =
+            this.params.pageMetaQueryName.toLowerCase();
+        this.params.defaultDepartmentQueryName =
+            this.params.defaultDepartmentQueryName.toLowerCase();
         this.params.metaResetQuery = this.params.metaResetQuery.toLowerCase();
-        this.params.pageObjectsQueryName = this.params.pageObjectsQueryName.toLowerCase();
+        this.params.pageObjectsQueryName =
+            this.params.pageObjectsQueryName.toLowerCase();
         this.params.getSysSettings = this.params.getSysSettings.toLowerCase();
         if (this.params.disableCache) {
             this.controller = new OnlineController(

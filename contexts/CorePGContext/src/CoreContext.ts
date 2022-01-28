@@ -24,7 +24,7 @@ import { TempTable } from "./TempTable";
 import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
 import { IUserDbData } from "@ungate/plugininf/lib/ISession";
 const logger = Logger.getLogger("CoreContext");
-const Mask = ((global as any) as IGlobalObject).maskgate;
+const Mask = (global as any as IGlobalObject).maskgate;
 export interface ICoreParams extends IContextParams {
     debug: boolean;
     anonymousAction: number;
@@ -82,8 +82,7 @@ export default class CoreContext extends NullContext {
             },
             pageMetaQueryName: {
                 defaultValue: "GetMetamodelPage",
-                name:
-                    "Наименование запроса на возращение сформированой страницы",
+                name: "Наименование запроса на возращение сформированой страницы",
                 type: "string",
             },
             pageObjectQueryName: {
@@ -93,8 +92,7 @@ export default class CoreContext extends NullContext {
             },
             pageMetaQueryNameNew: {
                 defaultValue: "GetMetamodelPage2.0",
-                name:
-                    "Наименование запроса на возращение сформированой страницы 2.0",
+                name: "Наименование запроса на возращение сформированой страницы 2.0",
                 type: "string",
             },
             pageObjectsQueryName: {
@@ -171,13 +169,18 @@ export default class CoreContext extends NullContext {
             queryTimeout: this.params.queryTimeout,
         });
         this.params.modifyQueryName = this.params.modifyQueryName.toLowerCase();
-        this.params.pageMetaQueryName = this.params.pageMetaQueryName.toLowerCase();
-        this.params.pageMetaQueryNameNew = this.params.pageMetaQueryNameNew.toLowerCase();
-        this.params.defaultDepartmentQueryName = this.params.defaultDepartmentQueryName.toLowerCase();
+        this.params.pageMetaQueryName =
+            this.params.pageMetaQueryName.toLowerCase();
+        this.params.pageMetaQueryNameNew =
+            this.params.pageMetaQueryNameNew.toLowerCase();
+        this.params.defaultDepartmentQueryName =
+            this.params.defaultDepartmentQueryName.toLowerCase();
         this.params.metaResetQuery = this.params.metaResetQuery.toLowerCase();
-        this.params.pageObjectsQueryName = this.params.pageObjectsQueryName.toLowerCase();
+        this.params.pageObjectsQueryName =
+            this.params.pageObjectsQueryName.toLowerCase();
         this.params.getSysSettings = this.params.getSysSettings.toLowerCase();
-        this.params.pageObjectQueryName = this.params.pageObjectQueryName.toLowerCase();
+        this.params.pageObjectQueryName =
+            this.params.pageObjectQueryName.toLowerCase();
         this.params.versionApi = {
             [this.params.pageMetaQueryName]: "1",
             [this.params.pageObjectsQueryName]: "2",

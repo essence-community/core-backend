@@ -241,15 +241,16 @@ export default class OfflineController implements ICoreController {
                         throw new ErrorException(ErrorGate.REQUIRED_AUTH);
                     }
                     if (doc.cr_access === "po_session") {
-                        const access = await this.tempTable.dbQueryAction.findOne(
-                            {
-                                $and: [
-                                    { ck_page_object: pageObject },
-                                    { cn_action: { $in: caActions } },
-                                ],
-                            },
-                            true,
-                        );
+                        const access =
+                            await this.tempTable.dbQueryAction.findOne(
+                                {
+                                    $and: [
+                                        { ck_page_object: pageObject },
+                                        { cn_action: { $in: caActions } },
+                                    ],
+                                },
+                                true,
+                            );
                         if (
                             isEmpty(access) &&
                             !this.params.disableCheckAccess

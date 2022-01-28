@@ -2,20 +2,20 @@ import * as URL from "url";
 import * as jwkToPem from "jwk-to-pem";
 import axios from "axios";
 import { IRotationConfig } from "./TokenAuth.types";
-import Logger from "@ungate/plugininf/lib/Logger";
-const logger = Logger.getLogger("Rotation");
 export class Rotation {
     public realmUrl: string;
     public certsUrl: string;
     public minTimeBetweenJwksRequests: number;
     public jwks: jwkToPem.JWK[];
     public lastTimeRequesTime: number;
-    constructor(config: IRotationConfig) {
+    public logger: any;
+    constructor(config: IRotationConfig, logger: any) {
         this.realmUrl = config.realmUrl;
         this.minTimeBetweenJwksRequests = config.minTimeBetweenJwksRequests;
         this.certsUrl = config.certsUrl;
         this.jwks = [];
         this.lastTimeRequesTime = 0;
+        this.logger = logger;
     }
 
     retrieveJWKs(callback?: (err?: Error) => void) {
@@ -70,7 +70,7 @@ export class Rotation {
                 return convertedKey;
             });
         } else {
-            logger.error(
+            this.logger.error(
                 "Not enough time elapsed since the last request, blocking the request",
             );
         }

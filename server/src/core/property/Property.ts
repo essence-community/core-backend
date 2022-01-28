@@ -135,9 +135,9 @@ class BuildProperty {
         return loadProperty<IDBSessionData>(`tt_sessions_${name}`, true);
     }
 }
-((global as any) as IGlobalObject).createTempTable = (name) => {
+(global as any as IGlobalObject).createTempTable = (name) => {
     return loadProperty(name, true);
 };
 const Property = new BuildProperty();
-((global as any) as IGlobalObject).property = Property;
+(global as any as IGlobalObject).property = Property;
 export default Property;

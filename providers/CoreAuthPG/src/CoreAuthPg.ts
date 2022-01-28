@@ -76,13 +76,12 @@ export default class CoreAuthPg extends NullAuthProvider {
                     return session;
                 }
                 if (context.params.connect_guest === "true") {
-                    const {
-                        session: sessGuest,
-                    }: any = await this.createSession({
-                        context,
-                        idUser: this.params.guestAccount,
-                        userData: {} as any,
-                    });
+                    const { session: sessGuest }: any =
+                        await this.createSession({
+                            context,
+                            idUser: this.params.guestAccount,
+                            userData: {} as any,
+                        });
                     return this.authController.loadSession(sessGuest);
                 }
                 return session;

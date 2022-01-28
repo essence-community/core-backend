@@ -3,11 +3,12 @@ import * as URL from "url";
 import * as crypto from "crypto";
 import axios from "axios";
 import * as qs from "qs";
-import Grant from "keycloak-connect/middleware/auth-utils/grant";
-import Token from "keycloak-connect/middleware/auth-utils/token";
+import * as Grant from "keycloak-connect/middleware/auth-utils/grant";
+import * as Token from "keycloak-connect/middleware/auth-utils/token";
 import { Rotation } from "./Rotation";
 import { IGrantManagerConfig, IToken } from "./TokenAuth.types";
 import Logger from "@ungate/plugininf/lib/Logger";
+import { isEmpty } from "@ungate/plugininf/lib/util/Util";
 const logger = Logger.getLogger("GrantManager");
 
 export class GrantManager {
@@ -23,19 +24,23 @@ export class GrantManager {
     public public: string;
     public bearerOnly: string;
     public verifyTokenAudience: boolean;
-    constructor(config: IGrantManagerConfig) {
+    public isIgnoreCheckSignature: boolean;
+    public logger: any;
+    constructor(config: IGrantManagerConfig, log: any) {
         this.realmUrl = config.realmUrl;
         this.userInfoUrl = config.userInfoUrl;
         this.tokenVerifyUrl = config.tokenVerifyUrl;
         this.tokenUrl = config.tokenUrl;
         this.clientId = config.clientId;
         this.secret = config.secret;
-        this.publicKey = config.publicKey;
+        this.publicKey = config.publicKey || "";
         this.public = config.public;
         this.bearerOnly = config.bearerOnly;
+        this.isIgnoreCheckSignature = config.isIgnoreCheckSignature;
         this.notBefore = 0;
-        this.rotation = new Rotation(config);
+        this.rotation = new Rotation(config, log);
         this.verifyTokenAudience = config.verifyTokenAudience;
+        this.logger = log;
     }
     obtainDirectly(username, password, callback, scopeParam) {
         const params = {
@@ -276,7 +281,7 @@ export class GrantManager {
             })
             .catch((err) => {
                 if (err.response) {
-                    logger.error(err.response.data);
+                    this.logger.error(err.response.data);
                     throw new Error("Error fetching account");
                 }
                 throw err;
@@ -285,7 +290,7 @@ export class GrantManager {
         return nodeify(promise, callback);
     }
     getAccount() {
-        logger.error(
+        this.logger.error(
             "GrantManager#getAccount is deprecated. See GrantManager#userInfo",
         );
         return this.userInfo.apply(this, arguments);
@@ -331,11 +336,11 @@ export class GrantManager {
                 reject(new Error("invalid token (expired)"));
             } else if (!token.signed) {
                 reject(new Error("invalid token (not signed)"));
-            } else if (token.content.typ !== expectedType) {
+            } else if (expectedType && token.content.typ !== expectedType) {
                 reject(new Error("invalid token (wrong type)"));
             } else if (token.content.iat < this.notBefore) {
                 reject(new Error("invalid token (stale token)"));
-            } else if (token.content.iss !== this.realmUrl) {
+            } else if (this.realmUrl && token.content.iss !== this.realmUrl) {
                 reject(new Error("invalid token (wrong ISS)"));
             } else {
                 const audienceData = Array.isArray(token.content.aud)
@@ -360,9 +365,12 @@ export class GrantManager {
                         reject(new Error("invalid token (wrong audience)"));
                     }
                 }
+                if (this.isIgnoreCheckSignature) {
+                    return resolve(token);
+                }
                 const verify = crypto.createVerify("RSA-SHA256");
                 // if public key has been supplied use it to validate token
-                if (this.publicKey) {
+                if (!isEmpty(this.publicKey)) {
                     try {
                         verify.update(token.signed);
                         if (
@@ -377,6 +385,7 @@ export class GrantManager {
                             resolve(token);
                         }
                     } catch (err) {
+                        this.logger.error(err);
                         reject(
                             new Error(
                                 "Misconfigured parameters while validating token. Check your keycloak.json file!",
@@ -400,6 +409,7 @@ export class GrantManager {
                             }
                         })
                         .catch((err) => {
+                            this.logger.error(err);
                             reject(
                                 new Error(
                                     "failed to load public key to verify token. Reason: " +
@@ -422,6 +432,7 @@ export class GrantManager {
                         resolve();
                     })
                     .catch((err) => {
+                        this.logger.error(err);
                         reject(
                             new Error(
                                 "Grant validation failed. Reason: " +
@@ -444,6 +455,7 @@ export class GrantManager {
                     resolve(grant);
                 })
                 .catch((err) => {
+                    this.logger.error(err);
                     reject(new Error(err.message));
                 });
         });
@@ -470,15 +482,12 @@ const refreshHandler = (manager: GrantManager) => (resolve, reject, json) => {
         .catch((err) => reject(err));
 };
 
-const validationHandler = (manager: GrantManager, token) => (
-    resolve,
-    reject,
-    json,
-) => {
-    const data = JSON.parse(json);
-    if (!data.active) resolve(false);
-    else resolve(token);
-};
+const validationHandler =
+    (manager: GrantManager, token) => (resolve, reject, json) => {
+        const data = JSON.parse(json);
+        if (!data.active) resolve(false);
+        else resolve(token);
+    };
 
 const postOptions = (manager: GrantManager, path?: string) => {
     const realPath =

@@ -261,7 +261,7 @@ export default class RestTransformProxy extends NullProvider {
         preParam: Record<string, any>,
         name?: string,
     ): Promise<any[]> {
-        let param = preParam;
+        const param = preParam;
         if (name && Object.prototype.hasOwnProperty.call(param, name)) {
             return param[name];
         }
@@ -272,13 +272,13 @@ export default class RestTransformProxy extends NullProvider {
                     if (key === "callRequest") {
                         return (
                             configRest: IRestEssenceProxyConfig,
-                            name?: string,
+                            nameChild?: string,
                         ) =>
                             this.callRequest(
                                 gateContext,
                                 configRest,
                                 param,
-                                name,
+                                nameChild,
                             );
                     }
                     return param[key] || (isKeyEmpty ? "" : key);
@@ -295,13 +295,13 @@ export default class RestTransformProxy extends NullProvider {
                     if (key === "callRequest") {
                         return (
                             configRest: IRestEssenceProxyConfig,
-                            name?: string,
+                            nameChild?: string,
                         ) =>
                             this.callRequest(
                                 gateContext,
                                 configRest,
                                 param,
-                                name,
+                                nameChild,
                             );
                     }
                     return param[key] || (isKeyEmpty ? "" : key);
@@ -443,9 +443,9 @@ export default class RestTransformProxy extends NullProvider {
             params.httpsAgent = JSON.parse(this.params.httpsAgent);
         }
         if (params.httpsAgent) {
-            const httpsAgent: AgentOptions = (params.httpsAgent as string).startsWith(
-                "{",
-            )
+            const httpsAgent: AgentOptions = (
+                params.httpsAgent as string
+            ).startsWith("{")
                 ? JSON.parse(params.httpsAgent as string)
                 : params.httpsAgent;
             if (
@@ -772,7 +772,9 @@ export default class RestTransformProxy extends NullProvider {
                     });
                 }
                 if (config.resultRowParseAsync && Array.isArray(result)) {
-                    const parserRowResult = parseAsync(config.resultRowParseAsync);
+                    const parserRowResult = parseAsync(
+                        config.resultRowParseAsync,
+                    );
                     const responseParam = {
                         ...param,
                         jt_response_header: response.headers,
@@ -840,9 +842,7 @@ export default class RestTransformProxy extends NullProvider {
                                             nameChild,
                                         );
                                 }
-                                return (
-                                    rowParam[key] || (isKeyEmpty ? "" : key)
-                                );
+                                return rowParam[key] || (isKeyEmpty ? "" : key);
                             },
                         });
                     });

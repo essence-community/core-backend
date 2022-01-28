@@ -28,7 +28,7 @@ import {
 } from "./CoreContext.types";
 import ICoreController from "./ICoreController";
 const logger = Logger.getLogger("OfflineController");
-const createTempTable = ((global as any) as IGlobalObject).createTempTable;
+const createTempTable = (global as any as IGlobalObject).createTempTable;
 
 export interface ITempTable {
     dbPage: ILocalDB<IPageData>;
@@ -368,15 +368,16 @@ export default class OfflineController implements ICoreController {
             .then(async (doc) => {
                 if (doc) {
                     if (doc.cr_access === "po_session") {
-                        const access = await this.tempTable.dbQueryAction.findOne(
-                            {
-                                $and: [
-                                    { ck_page_object: pageObject },
-                                    { cn_action: { $in: caActions } },
-                                ],
-                            },
-                            true,
-                        );
+                        const access =
+                            await this.tempTable.dbQueryAction.findOne(
+                                {
+                                    $and: [
+                                        { ck_page_object: pageObject },
+                                        { cn_action: { $in: caActions } },
+                                    ],
+                                },
+                                true,
+                            );
                         if (
                             isEmpty(access) &&
                             !this.params.disableCheckAccess
@@ -543,19 +544,23 @@ export default class OfflineController implements ICoreController {
                                 }
                                 const [doc] = data;
                                 if (doc.cr_access === "po_session") {
-                                    const access = await this.tempTable.dbQueryAction.findOne(
-                                        {
-                                            $and: [
-                                                { ck_page_object: pageObject },
-                                                {
-                                                    cn_action: {
-                                                        $in: caActions,
+                                    const access =
+                                        await this.tempTable.dbQueryAction.findOne(
+                                            {
+                                                $and: [
+                                                    {
+                                                        ck_page_object:
+                                                            pageObject,
                                                     },
-                                                },
-                                            ],
-                                        },
-                                        true,
-                                    );
+                                                    {
+                                                        cn_action: {
+                                                            $in: caActions,
+                                                        },
+                                                    },
+                                                ],
+                                            },
+                                            true,
+                                        );
                                     if (
                                         isEmpty(access) &&
                                         !this.params.disableCheckAccess
@@ -572,9 +577,8 @@ export default class OfflineController implements ICoreController {
                                     return reject(CoreContext.accessDenied());
                                 }
                                 return resolve({
-                                    defaultActionName: CoreContext.decodeType(
-                                        doc,
-                                    ),
+                                    defaultActionName:
+                                        CoreContext.decodeType(doc),
                                     providerName: doc.ck_provider,
                                     query: {
                                         extraOutParams: [

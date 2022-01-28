@@ -12,8 +12,8 @@ import {
     UnaryExpression,
     Statement,
     Function as IFunction,
-// eslint-disable-next-line import/no-extraneous-dependencies, import/extensions, import/no-unresolved
-// @ts-ignore
+    // eslint-disable-next-line import/no-extraneous-dependencies, import/extensions, import/no-unresolved
+    // @ts-ignore
 } from "estree";
 import Logger from "../Logger";
 import { isEmpty } from "../util/Util";

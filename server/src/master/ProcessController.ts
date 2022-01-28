@@ -7,59 +7,58 @@ import * as fs from "fs";
 import { deleteFolderRecursive } from "@ungate/plugininf/lib/util/Util";
 const logger = Logger.getLogger("master");
 
-const checkMessage = (nodes: INode, name: string, id) => (
-    message: ISenderOptions,
-) => {
-    if (
-        logger.isTraceEnabled() &&
-        message.target &&
-        message.command !== "sendAllServerCallDb"
-    ) {
-        logger.trace(
-            `Process receive nameNode: ${name} pid: ${id} message ${JSON.stringify(
-                message,
-            )}`,
-        );
-    }
-    switch ((message as ISenderOptions).target) {
-        case "cluster":
-            if (nodes.http && id !== nodes.http.pid) {
-                nodes.http.send(message);
-            }
-            break;
-        case "clusterAdmin":
-            if (nodes.admin && id !== nodes.admin.pid) {
-                nodes.admin.send(message);
-            }
-            break;
-        case "eventNode":
-            if (nodes.events && id !== nodes.events.pid) {
-                nodes.events.send(message);
-            }
-            break;
-        case "localDbNode":
-            if (nodes.localDbNode && id !== nodes.localDbNode.pid) {
-                nodes.localDbNode.send(message);
-            }
-            break;
-        case "schedulerNode":
-            if (nodes.schedulers && id !== nodes.schedulers.pid) {
-                nodes.schedulers.send(message);
-            }
-            break;
-        case "master": {
-            if (ProcessController[(message as ISenderOptions).command]) {
-                ProcessController[(message as ISenderOptions).command].call(
-                    ProcessController,
-                    (message as ISenderOptions).data,
-                );
-            }
-            break;
+const checkMessage =
+    (nodes: INode, name: string, id) => (message: ISenderOptions) => {
+        if (
+            logger.isTraceEnabled() &&
+            message.target &&
+            message.command !== "sendAllServerCallDb"
+        ) {
+            logger.trace(
+                `Process receive nameNode: ${name} pid: ${id} message ${JSON.stringify(
+                    message,
+                )}`,
+            );
         }
-        default:
-            break;
-    }
-};
+        switch ((message as ISenderOptions).target) {
+            case "cluster":
+                if (nodes.http && id !== nodes.http.pid) {
+                    nodes.http.send(message);
+                }
+                break;
+            case "clusterAdmin":
+                if (nodes.admin && id !== nodes.admin.pid) {
+                    nodes.admin.send(message);
+                }
+                break;
+            case "eventNode":
+                if (nodes.events && id !== nodes.events.pid) {
+                    nodes.events.send(message);
+                }
+                break;
+            case "localDbNode":
+                if (nodes.localDbNode && id !== nodes.localDbNode.pid) {
+                    nodes.localDbNode.send(message);
+                }
+                break;
+            case "schedulerNode":
+                if (nodes.schedulers && id !== nodes.schedulers.pid) {
+                    nodes.schedulers.send(message);
+                }
+                break;
+            case "master": {
+                if (ProcessController[(message as ISenderOptions).command]) {
+                    ProcessController[(message as ISenderOptions).command].call(
+                        ProcessController,
+                        (message as ISenderOptions).data,
+                    );
+                }
+                break;
+            }
+            default:
+                break;
+        }
+    };
 
 function killNode(nodes: INode, name: string): Promise<void> {
     const node = nodes[name];

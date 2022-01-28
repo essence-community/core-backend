@@ -288,10 +288,9 @@ export default class GRpcTransformProxy extends NullProvider {
             );
         }
         if (config.args) {
-            (Array.isArray(config.args)
-                ? config.args
-                : [config.args]
-            ).forEach((val) => this.extractFile(val));
+            (Array.isArray(config.args) ? config.args : [config.args]).forEach(
+                (val) => this.extractFile(val),
+            );
         }
         const service = `${config.package}.${config.service}`;
         let client = this.clients[service];

@@ -54,14 +54,15 @@ class ActionController {
             plugins,
         );
         if (resPlugin) {
-            session = await gateContext.gateContextPlugin.authController.createSession(
-                {
-                    context: gateContext,
-                    idUser: resPlugin.idUser,
-                    nameProvider: `plugin_${resPlugin.namePlugin}`,
-                    userData: resPlugin.dataUser,
-                },
-            );
+            session =
+                await gateContext.gateContextPlugin.authController.createSession(
+                    {
+                        context: gateContext,
+                        idUser: resPlugin.idUser,
+                        nameProvider: `plugin_${resPlugin.namePlugin}`,
+                        userData: resPlugin.dataUser,
+                    },
+                );
         }
         if (!session) {
             const data = await (provider as NullAuthProvider).processAuth(

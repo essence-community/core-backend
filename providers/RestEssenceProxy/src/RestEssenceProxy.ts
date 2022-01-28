@@ -218,9 +218,9 @@ export default class RestEssenceProxy extends NullProvider {
             params.httpsAgent = JSON.parse(this.params.httpsAgent);
         }
         if (params.httpsAgent) {
-            const httpsAgent: AgentOptions = (params.httpsAgent as string).startsWith(
-                "{",
-            )
+            const httpsAgent: AgentOptions = (
+                params.httpsAgent as string
+            ).startsWith("{")
                 ? JSON.parse(params.httpsAgent as string)
                 : params.httpsAgent;
             if (
