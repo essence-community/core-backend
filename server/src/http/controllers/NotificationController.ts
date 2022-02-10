@@ -169,8 +169,8 @@ class NotificationController {
 
     /**
      * Отправка сообщения пользователю
-     * @param idUser индификатор пользователя
-     * @param nameProviderAuth наименование провайдера
+     * @param ckUser индификатор пользователя
+     * @param nameProvider наименование провайдера
      * @param text текст сообщения
      */
     public sendNotification(
