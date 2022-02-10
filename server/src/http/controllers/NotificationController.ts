@@ -189,6 +189,8 @@ class NotificationController {
                 conn.session.nameProvider === nameProvider;
         } else if (nameProvider) {
             filter = (conn) => conn.session.nameProvider === nameProvider;
+        } else if (ckUser) {
+            filter = (conn) => conn.session.idUser === ckUser;
         }
         allConn.filter(filter).forEach((conn) => conn.sendUTF(text));
     }
@@ -218,6 +220,8 @@ class NotificationController {
                 conn.session.nameProvider === nameProvider;
         } else if (nameProvider) {
             filter = (conn) => conn.session.nameProvider === nameProvider;
+        }  else if (ckUser) {
+            filter = (conn) => conn.session.idUser === ckUser;
         }
 
         const confSessions = allConn.filter(filter).reduce((res, conn) => {
