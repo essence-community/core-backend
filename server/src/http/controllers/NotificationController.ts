@@ -174,14 +174,23 @@ class NotificationController {
      * @param text текст сообщения
      */
     public sendNotification(
-        idUser: string,
-        nameProviderAuth: string,
+        ckUser: string,
+        nameProvider: string,
         text: string,
     ) {
-        forEach(
-            this.notificationClient[`${idUser}:${nameProviderAuth}`] || {},
-            (conn) => conn.sendUTF(text),
-        );
+        const allConn = Object.values(this.notificationClient || {}).reduce(
+            (arr, value) => [...arr, ...Object.values(value)],
+            [],
+        ) as IWSConnect[];
+        let filter: (IWSConnect) => boolean = () => true;
+        if (ckUser && nameProvider) {
+            filter = (conn) =>
+                conn.session.idUser === ckUser &&
+                conn.session.nameProvider === nameProvider;
+        } else if (nameProvider) {
+            filter = (conn) => conn.session.nameProvider === nameProvider;
+        }
+        allConn.filter(filter).forEach((conn) => conn.sendUTF(text));
     }
 
     /**
