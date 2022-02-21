@@ -136,13 +136,12 @@ async function parseOperations(
         case "Literal":
             // @ts-ignore
             if (expression.isMember) {
-                return (
-                    (values.get
-                        ? // @ts-ignore
-                          values.get(expression.value, true)
-                        : // @ts-ignore
-                          values[expression.value]) || expression.value
-                );
+                const value = values.get ? values.get(expression.value as any, true) : values[expression.value as any];
+
+                return typeof value === "undefined"
+                    ? // @ts-ignore
+                      expression.value || value
+                    : value;
             }
             return expression.value;
         case "Identifier":
@@ -162,13 +161,12 @@ async function parseOperations(
             if (!expression.isMember && expression.name === "false") {
                 return false;
             }
-            return (
-                (values.get
-                    ? values.get(expression.name, true)
-                    : values[expression.name]) ||
-                // @ts-ignore
-                (expression.isMember && expression.name)
-            );
+            const value = values.get ? values.get(expression.value as any, true) : values[expression.value as any];
+
+            return typeof value === "undefined"
+                ? // @ts-ignore
+                  expression.value || value
+                : value;
         case "AssignmentExpression":
             return await parseOperations(expression.right, values);
         case "ObjectExpression":
