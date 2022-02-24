@@ -116,12 +116,15 @@ function parseOperations(
         case "Literal":
             // @ts-ignore
             if (expression.isMember) {
-                const value = values.get ? values.get(expression.value as any, true) : values[expression.value as any];
-
-                return typeof value === "undefined" || value === ""
+                const value = values.get
                     ? // @ts-ignore
-                      expression.value || value
-                    : value;
+                      values.get(expression.value, true)
+                    : // @ts-ignore
+                      values[expression.value];
+
+                return (
+                    value === 0 ? value : value || expression.value
+                );
             }
             return expression.value;
         case "Identifier":
@@ -141,12 +144,15 @@ function parseOperations(
             if (!expression.isMember && expression.name === "false") {
                 return false;
             }
-            const value = values.get ? values.get(expression.value as any, true) : values[expression.value as any];
-
-            return typeof value === "undefined" || value === ""
+            const value = values.get
                 ? // @ts-ignore
-                (expression.isMember && expression.name) || value
-                : value;
+                  values.get(expression.name, true)
+                : // @ts-ignore
+                  values[expression.name];
+            
+            return (
+                value === 0 ? value : value || (expression.isMember && expression.name)
+            );
         case "AssignmentExpression":
             return parseOperations(expression.right, values);
         case "ObjectExpression":
