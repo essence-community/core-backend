@@ -138,7 +138,7 @@ async function parseOperations(
             if (expression.isMember) {
                 const value = values.get ? values.get(expression.value as any, true) : values[expression.value as any];
 
-                return typeof value === "undefined"
+                return typeof value === "undefined" || value === ""
                     ? // @ts-ignore
                       expression.value || value
                     : value;
@@ -163,9 +163,9 @@ async function parseOperations(
             }
             const value = values.get ? values.get(expression.value as any, true) : values[expression.value as any];
 
-            return typeof value === "undefined"
+            return typeof value === "undefined" || value === ""
                 ? // @ts-ignore
-                  expression.value || value
+                (expression.isMember && expression.name) || value
                 : value;
         case "AssignmentExpression":
             return await parseOperations(expression.right, values);
