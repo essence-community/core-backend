@@ -136,7 +136,7 @@ async function parseOperations(
         case "Literal":
             // @ts-ignore
             if (expression.isMember) {
-                const value = values.get ? values.get(expression.value as any, true) : values[expression.value as any];
+                const value = await (values.get ? values.get(expression.value as any, true) : values[expression.value as any]);
 
                 return typeof value === "undefined" || value === ""
                     ? // @ts-ignore
@@ -161,7 +161,7 @@ async function parseOperations(
             if (!expression.isMember && expression.name === "false") {
                 return false;
             }
-            const value = values.get ? values.get(expression.value as any, true) : values[expression.value as any];
+            const value = await (values.get ? values.get(expression.value as any, true) : values[expression.value as any]);
 
             return typeof value === "undefined" || value === ""
                 ? // @ts-ignore
