@@ -130,14 +130,14 @@ export default class RestEssenceProxy extends NullProvider {
         };
 
         defaultHeader.forEach((item) => {
-            if (headers[item]) {
+            if (!isEmpty(headers[item])) {
                 params.headers[item] = headers[item] as any;
             }
         });
 
         if (this.params.includeHeaderIn) {
             this.params.includeHeaderIn.split(",").forEach((item) => {
-                if (headers[item]) {
+                if (!isEmpty(headers[item])) {
                     params.headers[item] = headers[item] as any;
                 }
             });
@@ -276,6 +276,11 @@ export default class RestEssenceProxy extends NullProvider {
 
             params.httpAgent = new HttpAgent(httpAgent);
         }
+        
+        if (params.method === "GET") {
+            delete params.data;
+        }
+        
         if (this.log.isDebugEnabled()) {
             this.log.debug(
                 `Request: proxy params: ${JSON.stringify(params).substr(

@@ -91,6 +91,9 @@ export interface IRestEssenceProxyParams extends IParamsProvider {
     httpsAgent?: string;
     extraParam?: IPairValue[];
     extraParamEncrypt?: IPairValue[];
+    defaultIncludeHeader?: {
+        key: string;
+    }[];
 }
 export default class RestTransformProxy extends NullProvider {
     public static getParamsInfo(): IParamsInfo {
@@ -149,6 +152,17 @@ export default class RestTransformProxy extends NullProvider {
                     },
                 },
             },
+            defaultIncludeHeader: {
+                type: "form_repeater",
+                name: "Пробрасываемые Headers по умолчанию",
+                childs: {
+                    key: {
+                        type: "string",
+                        name: "Header по умолчанию пробрасываемый",
+                        required: true,
+                    },
+                },
+            }
         };
     }
     private extraParam: Record<string, string> = {};
@@ -311,12 +325,25 @@ export default class RestTransformProxy extends NullProvider {
                 throw new BreakResult(res, config.breakTypeResult);
             }
         }
-        const headers = {
-            ...(config.header || {}),
-        };
+        let headers: any = {};
+        if (this.params.defaultIncludeHeader) {
+            this.params.defaultIncludeHeader.forEach(({key}) => {
+                if (!isEmpty(headers[key])){
+                    headers[key] = gateContext.request.headers[key];
+                }
+            });
+        }
+        if (config.header) {
+            headers = {
+                ...headers,
+                ...config.header,
+            };
+        }
         if (config.includeHeader) {
             config.includeHeader.forEach((item: string) => {
-                headers[item] = gateContext.request.headers[item];
+                if (!isEmpty(headers[item])){
+                    headers[item] = gateContext.request.headers[item];
+                }
             });
         }
         if (isEmpty(config.url || this.params.defaultGateUrl)) {
@@ -403,7 +430,7 @@ export default class RestTransformProxy extends NullProvider {
         }
 
         if (Object.keys(headers).length) {
-            params.headers = headers as any;
+            params.headers = {...headers, ...params.headers} as any;
         }
 
         if (this.params.proxy) {
@@ -500,6 +527,10 @@ export default class RestTransformProxy extends NullProvider {
                 : params.httpAgent;
 
             params.httpAgent = new HttpAgent(httpAgent);
+        }
+
+        if (params.method === "GET") {
+            delete params.data;
         }
 
         if (this.log.isDebugEnabled()) {
