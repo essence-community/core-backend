@@ -6,7 +6,7 @@ import { IStoreTypes, IGateSession } from "./Store.types";
 import Logger from "@ungate/plugininf/lib/Logger";
 import { ISessionData } from "@ungate/plugininf/lib/ISession";
 import { IRufusLogger } from "rufus";
-import { ISessionStore } from "@ungate/plugininf/lib/IAuthController";
+import { ISessionStore } from "@ungate/plugininf/lib/ISessCtrl";
 
 export interface IDBSessionData {
     ck_id: string;

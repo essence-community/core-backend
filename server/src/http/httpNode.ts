@@ -28,6 +28,7 @@ import { initParams } from "@ungate/plugininf/lib/util/Util";
 import NullContext from "@ungate/plugininf/lib/NullContext";
 import { IContextParams } from "@ungate/plugininf/lib/IContextPlugin";
 import { GateSession } from "../core/session/GateSession";
+import { CreateJsonStream } from "@ungate/plugininf/lib/stream/ResultStream";
 const log = Logger.getLogger("HttpServer");
 
 class HttpServer {
@@ -56,7 +57,7 @@ class HttpServer {
                 const sessionConf = {
                     name: "essence.sid",
                     ...(params.paramSession || {}),
-                    store: gateContext.authController.getSessionStore(),
+                    store: gateContext.sessCtrl.getSessionStore(),
                     secret: GateSession.sha1(
                         `${gateContext.name}_cookie_${Constants.SESSION_SECRET}`,
                     ),
@@ -106,17 +107,16 @@ class HttpServer {
                     );
                     return;
                 }
-                const error = JSON.stringify({
+                const stream = CreateJsonStream({
                     err_code: 404,
-                    err_text: `\`${req.url}\` is not an implemented route`,
+                    err_text: "is not an implemented route",
                     metaData: { responseTime: 0.0 },
                     success: false,
                 });
                 res.writeHead(404, {
-                    "Content-Length": Buffer.byteLength(error),
                     "Content-Type": Constants.JSON_CONTENT_TYPE,
                 });
-                res.end(error);
+                stream.pipe(res);
             });
         });
         HttpServer.timeout = 86400000;

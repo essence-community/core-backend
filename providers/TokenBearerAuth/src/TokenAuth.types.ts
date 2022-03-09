@@ -1,6 +1,6 @@
 import { IRequest } from "@ungate/plugininf/lib/IContext";
 import * as KeyCloak from "keycloak-connect";
-import { IAuthProviderParam } from "@ungate/plugininf/lib/NullAuthProvider";
+import { ISessProviderParam } from "@ungate/plugininf/lib/NullSessProvider";
 
 export interface IGrantMap {
     grant: string;
@@ -12,7 +12,7 @@ export interface IUserInfoMap {
     out: string;
 }
 
-export interface ITokenAuthParams extends IAuthProviderParam {
+export interface ITokenAuthParams extends ISessProviderParam {
     grantManagerConfig: IGrantManagerConfig;
     redirectUrl: string;
     mapKeyCloakGrant: IGrantMap[];

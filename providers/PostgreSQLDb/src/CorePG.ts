@@ -3,7 +3,7 @@ import ILocalDB from "@ungate/plugininf/lib/db/local/ILocalDB";
 import BreakException from "@ungate/plugininf/lib/errors/BreakException";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
-import { ICacheDb } from "@ungate/plugininf/lib/IAuthController";
+import { ICacheDb } from "@ungate/plugininf/lib/ISessCtrl";
 import IContext from "@ungate/plugininf/lib/IContext";
 import IQuery from "@ungate/plugininf/lib/IQuery";
 import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
@@ -20,10 +20,10 @@ export default class CorePG extends IPostgreSQLController {
     private dbCache: ILocalDB<ICacheDb>;
     public async init(): Promise<void> {
         if (!this.dbUsers) {
-            this.dbUsers = this.authController.getUserDb();
+            this.dbUsers = this.sessCtrl.getUserDb();
         }
         if (!this.dbCache) {
-            this.dbCache = this.authController.getCacheDb();
+            this.dbCache = this.sessCtrl.getCacheDb();
         }
     }
     public async getConnection(context: IContext): Promise<Connection> {

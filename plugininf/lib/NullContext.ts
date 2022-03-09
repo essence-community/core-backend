@@ -2,7 +2,7 @@
 import { isString } from "lodash";
 import { IRufusLogger } from "rufus";
 import ErrorGate from "./errors/ErrorGate";
-import { IAuthController } from "./IAuthController";
+import { ISessCtrl } from "./ISessCtrl";
 import ICCTParams, { IParamsInfo } from "./ICCTParams";
 import IContext from "./IContext";
 import IContextPlugin, { IContextPluginResult } from "./IContextPlugin";
@@ -396,7 +396,7 @@ export default abstract class NullContext implements IContextPlugin {
     public name: string;
     public params: IContextParams;
     public logger: IRufusLogger;
-    public authController: IAuthController;
+    public sessCtrl: ISessCtrl;
     public isExcludeAccessLog: boolean = false;
     public get maxPostSize(): number {
         return this.params.maxPostSize || 10485760;
@@ -413,12 +413,12 @@ export default abstract class NullContext implements IContextPlugin {
     constructor(
         name: string,
         params: ICCTParams,
-        authController: IAuthController,
+        sessCtrl: ISessCtrl,
     ) {
         this.name = name;
         this.params = initParams(NullContext.getParamsInfo(), params);
         this.logger = Logger.getLogger(`Context:${name}`);
-        this.authController = authController;
+        this.sessCtrl = sessCtrl;
         if (this.params.enableCors) {
             if (this.params.cors) {
                 if (isString(this.params.cors.origin)) {

@@ -7,7 +7,7 @@ import IContext from "./IContext";
 import IObjectParam from "./IObjectParam";
 import IQuery, { IGateQuery } from "./IQuery";
 import IResult from "./IResult";
-import { IAuthResult } from "./NullAuthProvider";
+import { IAuthResult } from "./NullSessProvider";
 export interface IPluginRequestContext {
     [key: string]: any;
 }

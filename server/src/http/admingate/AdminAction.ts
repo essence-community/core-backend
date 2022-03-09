@@ -22,7 +22,7 @@ import NullContext from "@ungate/plugininf/lib/NullContext";
 import NullPlugin from "@ungate/plugininf/lib/NullPlugin";
 import NullScheduler from "@ungate/plugininf/lib/NullScheduler";
 import NullEvent from "@ungate/plugininf/lib/NullEvent";
-import NullAuthProvider from "@ungate/plugininf/lib/NullAuthProvider";
+import NullSessProvider from "@ungate/plugininf/lib/NullSessProvider";
 import IContextConfig from "../../core/property/IContextConfig";
 import IProviderConfig from "../../core/property/IProviderConfig";
 import IPluginConfig from "../../core/property/IPluginConfig";
@@ -86,7 +86,7 @@ export default class AdminAction {
                     "ck_id",
                 ),
             gtgetusers: (gateContext: IContext) =>
-                gateContext.gateContextPlugin.authController
+                gateContext.gateContextPlugin.sessCtrl
                     .getUserDb()
                     .find()
                     .then((docs) =>
@@ -382,7 +382,7 @@ export default class AdminAction {
                     this.dbProviders,
                     (pkClass) =>
                         pkClass.isAuth
-                            ? NullAuthProvider.getParamsInfo
+                            ? NullSessProvider.getParamsInfo
                             : NullProvider.getParamsInfo,
                 ),
             gtgetcontextsetting: (gateContext: IContext) =>

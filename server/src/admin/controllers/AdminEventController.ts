@@ -9,6 +9,7 @@ import Constants from "../../core/Constants";
 import Property, { getLocalDb } from "../../core/property/Property";
 import IServerConfig from "../../core/property/IServerConfig";
 import { noop } from "lodash";
+import { CreateJsonStream } from "@ungate/plugininf/lib/stream/ResultStream";
 const logger = Logger.getLogger("AdminEventController");
 const TIMEOUT_CONNECT = 15000;
 
@@ -76,17 +77,16 @@ class AdminEventController {
                     requestCert: true,
                 },
                 (req, res) => {
-                    const error = JSON.stringify({
+                    const stream = CreateJsonStream({
                         err_code: 404,
-                        err_text: `\`${req.url}\` is not an implemented route`,
+                        err_text: "is not an implemented route",
                         metaData: { responseTime: 0.0 },
                         success: false,
                     });
                     res.writeHead(404, {
-                        "Content-Length": Buffer.byteLength(error),
                         "Content-Type": Constants.JSON_CONTENT_TYPE,
                     });
-                    res.end(error);
+                    stream.pipe(res);
                 },
             );
             this.wsServer = new websocket.server({

@@ -11,7 +11,7 @@ import { isEmpty } from "@ungate/plugininf/lib/util/Util";
 import { initParams } from "@ungate/plugininf/lib/util/Util";
 import AdminAction from "./AdminAction";
 import AdminModify from "./AdminModify";
-import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
+import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
 
 export = class AdminGate extends NullProvider {
     public static getParamsInfo(): IParamsInfo {
@@ -31,9 +31,9 @@ export = class AdminGate extends NullProvider {
     constructor(
         name: string,
         params: ICCTParams,
-        authController: IAuthController,
+        sessCtrl: ISessCtrl,
     ) {
-        super(name, params, authController);
+        super(name, params, sessCtrl);
         this.params = initParams(AdminGate.getParamsInfo(), this.params);
         this.adminAction = new AdminAction(name, this.params);
         this.adminModify = new AdminModify(name, this.params);

@@ -8,7 +8,7 @@ import IPlugin, { IPluginRequestContext } from "./IPlugin";
 import IQuery, { IGateQuery } from "./IQuery";
 import IResult from "./IResult";
 import Logger from "./Logger";
-import { IAuthResult } from "./NullAuthProvider";
+import { IAuthResult } from "./NullSessProvider";
 
 export default abstract class NullPlugin implements IPlugin {
     public name: string;

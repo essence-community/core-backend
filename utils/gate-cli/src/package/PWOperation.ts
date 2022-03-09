@@ -182,7 +182,7 @@ export function decryptPassword(value: string) {
 }
 
 export async function decryptPWCli() {
-    const encPw = await questionReadline("Encrypt password: ", null, true);
+    const encPw = (await questionReadline("Encrypt password: ", null, true)).trim();
     if (!isEmpty(encPw)) {
         const descPW = decryptPassword(encPw);
         /* tslint:disable:no-console */
@@ -202,7 +202,7 @@ export async function encryptPWCli() {
             `Type encrypt(${Constant.DEFAULT_ALG}): `,
         Constant.DEFAULT_ALG,
     );
-    const pw = await questionReadline("Password: ", null, true);
+    const pw = (await questionReadline("Password: ", null, true)).trim();
     if (!isEmpty(pw)) {
         const descPW = encryptPassword(pw, type || undefined);
         /* tslint:disable:no-console */

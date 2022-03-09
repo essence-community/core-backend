@@ -4,7 +4,7 @@ import IContext, { IFormData } from "@ungate/plugininf/lib/IContext";
 import IProvider from "@ungate/plugininf/lib/IProvider";
 import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
 import IResult from "@ungate/plugininf/lib/IResult";
-import NullAuthProvider from "@ungate/plugininf/lib/NullAuthProvider";
+import NullSessProvider from "@ungate/plugininf/lib/NullSessProvider";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
 import { ReadStreamToArray } from "@ungate/plugininf/lib/stream/Util";
 import { isEmpty } from "@ungate/plugininf/lib/util/Util";
@@ -55,7 +55,7 @@ class ActionController {
         );
         if (resPlugin) {
             session =
-                await gateContext.gateContextPlugin.authController.createSession(
+                await gateContext.gateContextPlugin.sessCtrl.createSession(
                     {
                         context: gateContext,
                         idUser: resPlugin.idUser,
@@ -65,7 +65,7 @@ class ActionController {
                 );
         }
         if (!session) {
-            const data = await (provider as NullAuthProvider).processAuth(
+            const data = await (provider as NullSessProvider).processAuth(
                 gateContext,
                 query,
             );
@@ -89,7 +89,7 @@ class ActionController {
                     data,
                 )
             ) {
-                session = await (provider as NullAuthProvider).createSession({
+                session = await (provider as NullSessProvider).createSession({
                     context: gateContext,
                     idUser: data.idUser,
                     userData: data.dataUser as any,

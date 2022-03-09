@@ -26,9 +26,9 @@ import {
     sqlRoleAction,
 } from "./SqlPostgres";
 
-export async function patchAuth(dir: string, json: IJson, conn: Connection) {
+export async function patchUser(dir: string, json: IJson, conn: Connection) {
     const include: string[] = [];
-    const meta = path.join(dir, "auth");
+    const meta = path.join(dir, "user");
     if (!fs.existsSync(meta)) {
         fs.mkdirSync(meta);
     }
@@ -399,7 +399,7 @@ export async function patchAuth(dir: string, json: IJson, conn: Connection) {
         await closeFsWriteStream(account);
     }
     return createChangeXml(
-        path.join(meta, "auth.xml"),
+        path.join(meta, "user.xml"),
         include.map(
             (str) =>
                 `        <include file="${str}.sql" relativeToChangelogFile="true" />\n`,

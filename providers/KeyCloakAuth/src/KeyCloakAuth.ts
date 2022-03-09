@@ -5,11 +5,11 @@ import IContext from "@ungate/plugininf/lib/IContext";
 import IQuery from "@ungate/plugininf/lib/IQuery";
 import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
 import ISession, { IUserData } from "@ungate/plugininf/lib/ISession";
-import NullAuthProvider, {
+import NullSessProvider, {
     IAuthResult,
-} from "@ungate/plugininf/lib/NullAuthProvider";
+} from "@ungate/plugininf/lib/NullSessProvider";
 import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
-import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
+import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
 import * as KeyCloak from "keycloak-connect";
 import { IKeyCloakAuthParams, IRequestExtra } from "./KeyCloakAuth.types";
 import * as QueryString from "qs";
@@ -27,7 +27,7 @@ const USE_REDIRECT = "jl_keycloak_use_redirect";
 const PATH_CALLBACK = "jv_keycloak_path_callback";
 const TOKEN_KEY = "keycloak-token";
 
-export default class KeyCloakAuth extends NullAuthProvider {
+export default class KeyCloakAuth extends NullSessProvider {
     public async init(reload?: boolean): Promise<void> {
         return;
     }
@@ -45,58 +45,9 @@ export default class KeyCloakAuth extends NullAuthProvider {
                 defaultValue: "jt_keycloak",
             },
             keyCloakConfig: {
-                name: "KeyCloakConfig",
-                type: "form_nested",
-                childs: {
-                    "auth-server-url": {
-                        name: "URL Keyckock Server",
-                        type: "string",
-                        required: true,
-                    },
-                    realm: {
-                        name: "Realm",
-                        type: "string",
-                        required: true,
-                    },
-                    resource: {
-                        name: "Client ID | Resource",
-                        type: "string",
-                        required: true,
-                    },
-                    "ssl-required": {
-                        name: "SSL Require",
-                        type: "string",
-                        defaultValue: "external",
-                    },
-                    secret: {
-                        name: "Secret",
-                        type: "string",
-                    },
-                    "public-client": {
-                        name: "Public client",
-                        type: "boolean",
-                        defaultValue: true,
-                    },
-                    "bearer-only": {
-                        name: "Bearer only",
-                        type: "boolean",
-                        defaultValue: false,
-                    },
-                    "confidential-port": {
-                        name: "Confidential port",
-                        type: "string",
-                        defaultValue: "0",
-                    },
-                    "min-time-between-jwks-requests": {
-                        name: "Min time between jwks requests",
-                        type: "integer",
-                        defaultValue: 10,
-                    },
-                    "realm-public-key": {
-                        name: "Realm public key",
-                        type: "string",
-                    },
-                },
+                name: "KeyCloakConfig json",
+                type: "long_string",
+                defaultValue: "{}",
             },
             mapKeyCloakGrant: {
                 type: "form_repeater",
@@ -190,10 +141,18 @@ export default class KeyCloakAuth extends NullAuthProvider {
     constructor(
         name: string,
         params: ICCTParams,
-        authController: IAuthController,
+        sessCtrl: ISessCtrl,
     ) {
-        super(name, params, authController);
+        super(name, params, sessCtrl);
         this.params = initParams(KeyCloakAuth.getParamsInfo(), this.params);
+        if (typeof this.params.keyCloakConfig === "string") {
+            if ((this.params.keyCloakConfig as string).charAt(0) === "{") {
+                this.params.keyCloakConfig = JSON.parse(this.params.keyCloakConfig);
+            }
+        }
+        if (typeof this.params.keyCloakConfig !== "object") {
+            this.params.keyCloakConfig = {} as any;
+        }
         if (
             this.params.keyCloakConfig["realm-public-key"] &&
             fs.existsSync(this.params.keyCloakConfig["realm-public-key"])
@@ -216,7 +175,7 @@ export default class KeyCloakAuth extends NullAuthProvider {
         });
         this.keyCloak = new KeyCloak(
             {
-                store: this.authController.getSessionStore(),
+                store: this.sessCtrl.getSessionStore(),
             },
             this.params.keyCloakConfig,
         );
@@ -276,12 +235,12 @@ export default class KeyCloakAuth extends NullAuthProvider {
             }
             const dataUser = await this.generateUserData(grant);
 
-            await this.authController.addUser(
+            await this.sessCtrl.addUser(
                 dataUser.idUser,
                 this.name,
                 dataUser.userData,
             );
-            await this.authController.updateHashAuth();
+            await this.sessCtrl.updateHashAuth();
             const sess = await this.createSession({
                 context: gateContext,
                 idUser: dataUser.idUser,
@@ -325,12 +284,12 @@ export default class KeyCloakAuth extends NullAuthProvider {
                     }
                     const dataUser = await this.generateUserData(grant);
                     if (!session) {
-                        await this.authController.addUser(
+                        await this.sessCtrl.addUser(
                             dataUser.idUser,
                             this.name,
                             dataUser.userData,
                         );
-                        await this.authController.updateHashAuth();
+                        await this.sessCtrl.updateHashAuth();
                         const sess = await this.createSession({
                             context: gateContext,
                             idUser: dataUser.idUser,
@@ -342,7 +301,7 @@ export default class KeyCloakAuth extends NullAuthProvider {
                             },
                         });
 
-                        return this.authController.loadSession(
+                        return this.sessCtrl.loadSession(
                             gateContext,
                             sess.session,
                         );
@@ -355,7 +314,7 @@ export default class KeyCloakAuth extends NullAuthProvider {
                         ...session.userData,
                         ...dataUser.userData,
                     };
-                    await this.authController.addUser(
+                    await this.sessCtrl.addUser(
                         dataUser.idUser,
                         this.name,
                         dataUser.userData,
@@ -363,7 +322,11 @@ export default class KeyCloakAuth extends NullAuthProvider {
                     return session;
                 })
                 .catch(async () => {
-                    await this.authController.logoutSession(gateContext);
+                    if (session && session.nameProvider === this.name) {
+                        await this.sessCtrl.logoutSession(gateContext);
+                    } else if (session && session.nameProvider !== this.name) {
+                        return session;
+                    }
                     if (
                         !this.params.disableRecursiveAuth &&
                         gateContext.queryName === Constant.QUERY_GETSESSIONDATA
@@ -436,14 +399,7 @@ export default class KeyCloakAuth extends NullAuthProvider {
             context.request.session.id,
             URL.format(redirectUrl),
         );
-        if (context.params[USE_REDIRECT] === "1") {
-            context.response.writeHead(302, {
-                Location: loginUrl,
-            });
-            context.response.end();
-            throw new BreakException("break");
-        }
-        throw new ErrorException(ErrorGate.REDIRECT_MESSAGE(loginUrl));
+        throw new ErrorException(ErrorGate.REDIRECT_MESSAGE(encodeURI(loginUrl)));
     }
     public async checkQuery(
         context: IContext,

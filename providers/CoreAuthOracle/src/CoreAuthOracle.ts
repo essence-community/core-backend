@@ -6,15 +6,15 @@ import ICCTParams, { IParamsInfo } from "@ungate/plugininf/lib/ICCTParams";
 import IContext from "@ungate/plugininf/lib/IContext";
 import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
 import IQuery from "@ungate/plugininf/lib/IQuery";
-import NullAuthProvider, {
+import NullSessProvider, {
     IAuthResult,
-} from "@ungate/plugininf/lib/NullAuthProvider";
+} from "@ungate/plugininf/lib/NullSessProvider";
 import { ReadStreamToArray } from "@ungate/plugininf/lib/stream/Util";
 import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
 import * as moment from "moment";
-import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
+import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
 
-export default class CoreAuthOracle extends NullAuthProvider {
+export default class CoreAuthOracle extends NullSessProvider {
     public static getParamsInfo(): IParamsInfo {
         return {
             ...OracleDB.getParamsInfo(),
@@ -26,9 +26,9 @@ export default class CoreAuthOracle extends NullAuthProvider {
     constructor(
         name: string,
         params: ICCTParams,
-        authController: IAuthController,
+        sessCtrl: ISessCtrl,
     ) {
-        super(name, params, authController);
+        super(name, params, sessCtrl);
         this.params = initParams(CoreAuthOracle.getParamsInfo(), this.params);
         this.dataSource = new OracleDB(`${this.name}_provider`, {
             connectString: this.params.connectString,
@@ -203,7 +203,7 @@ export default class CoreAuthOracle extends NullAuthProvider {
             .then(() =>
                 Promise.all(
                     Object.values(users).map((user) =>
-                        this.authController.addUser(
+                        this.sessCtrl.addUser(
                             (user as any).ck_id,
                             this.name,
                             user as any,
@@ -211,9 +211,9 @@ export default class CoreAuthOracle extends NullAuthProvider {
                     ),
                 ),
             )
-            .then(() => this.authController.updateHashAuth())
+            .then(() => this.sessCtrl.updateHashAuth())
             .then(async () => {
-                await this.authController.updateUserInfo(this.name);
+                await this.sessCtrl.updateUserInfo(this.name);
             });
     }
     public async initContext(

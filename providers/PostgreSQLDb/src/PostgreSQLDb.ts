@@ -12,7 +12,7 @@ import IPostgreSQLController from "./IPostgreSQLController";
 import OldPG from "./OldPG";
 import { IParamPg } from "./PostgreSQLDb.types";
 import SimplePG from "./SimplePG";
-import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
+import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
 
 export default class PostgreSQLDb extends NullProvider {
     /* tslint:disable:object-literal-sort-keys */
@@ -46,9 +46,9 @@ export default class PostgreSQLDb extends NullProvider {
     constructor(
         name: string,
         params: ICCTParams,
-        authController: IAuthController,
+        sessCtrl: ISessCtrl,
     ) {
-        super(name, params, authController);
+        super(name, params, sessCtrl);
         this.params = initParams(PostgreSQLDb.getParamsInfo(), this.params);
         this.dataSource = new PostgresDB(`${this.name}_provider`, {
             connectString: this.params.connectString,
@@ -66,21 +66,21 @@ export default class PostgreSQLDb extends NullProvider {
                 this.name,
                 this.params,
                 this.dataSource,
-                this.authController,
+                this.sessCtrl,
             );
         } else if (params.old) {
             this.controller = new OldPG(
                 this.name,
                 this.params,
                 this.dataSource,
-                this.authController,
+                this.sessCtrl,
             );
         } else {
             this.controller = new SimplePG(
                 this.name,
                 this.params,
                 this.dataSource,
-                this.authController,
+                this.sessCtrl,
             );
         }
         if (!isEmpty(this.params.preExecuteSql)) {

@@ -1,5 +1,5 @@
 import ILocalDB from "./db/local/ILocalDB";
-import { ICacheDb } from "./IAuthController";
+import { ICacheDb } from "./ISessCtrl";
 import { IUserDbData } from "./ISession";
 
 export interface IPropertyGlobal {

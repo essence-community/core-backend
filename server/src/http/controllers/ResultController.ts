@@ -305,8 +305,18 @@ class ResultController {
         result.data.on("end", () => {
             const [error] = rows;
             error.err_id += ` ${moment(endTime).format("DD.MM.YYYY HH:mm:ss")}`;
-            error.metaData.responseTime =
-                (new Date().getTime() - gateContext.startTime) / 1000;
+            const metaData = {
+                ...result.metaData,
+                ...gateContext.metaData,
+                total: 1,
+            };
+            error.metaData = {
+                ...error.metaData,
+                ...metaData,
+                responseTime:
+                    (new Date().getTime() - gateContext.startTime) / 1000,
+            };
+
             const json = JSON.stringify(error);
             const headers = {
                 "Content-Length": Buffer.byteLength(json),
@@ -330,8 +340,17 @@ class ResultController {
         result.data.on("end", () => {
             const [error] = rows;
             error.err_id += ` ${moment(endTime).format("DD.MM.YYYY HH:mm:ss")}`;
-            error.metaData.responseTime =
-                (new Date().getTime() - gateContext.startTime) / 1000;
+            const metaData = {
+                ...result.metaData,
+                ...gateContext.metaData,
+                total: 1,
+            };
+            error.metaData = {
+                ...error.metaData,
+                ...metaData,
+                responseTime:
+                    (new Date().getTime() - gateContext.startTime) / 1000,
+            };
             const xml = js2xmlparser.parse(
                 "response",
                 {

@@ -8,7 +8,7 @@ import { ClientOpts, createClient } from "redis";
 import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
 import ICCTParams from "@ungate/plugininf/lib/ICCTParams";
-import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
+import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
 import { parse } from "@ungate/plugininf/lib/parser/parserAsync";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import { deepParam } from "@ungate/plugininf/lib/util/deepParam";
@@ -117,9 +117,9 @@ export class RedisProvider extends NullProvider {
     constructor(
         name: string,
         params: ICCTParams,
-        authController: IAuthController,
+        sessCtrl: ISessCtrl,
     ) {
-        super(name, params, authController);
+        super(name, params, sessCtrl);
         this.params = initParams(RedisProvider.getParamsInfo(), this.params);
     }
     private getClient() {

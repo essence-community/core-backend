@@ -12,7 +12,7 @@ import ISession from "./ISession";
 import NullProvider from "./NullProvider";
 import { IParamsProvider } from "./NullProvider";
 import { isEmpty } from "./util/Util";
-import { IAuthController, ICreateSessionParam } from "./IAuthController";
+import { ISessCtrl, ICreateSessionParam } from "./ISessCtrl";
 import { initParams } from "@ungate/plugininf/lib/util/Util";
 import Logger from "./Logger";
 
@@ -20,7 +20,7 @@ export interface IAuthResult {
     idUser: string;
     dataUser?: IObjectParam;
 }
-export interface IAuthProviderParam extends IParamsProvider {
+export interface ISessProviderParam extends IParamsProvider {
     onlySession: boolean;
     sessionDuration: number;
     idKey: string;
@@ -30,7 +30,7 @@ export interface IAuthProviderParam extends IParamsProvider {
         | "cookieandsession"
         | "cookieorsession";
 }
-export default abstract class NullAuthProvider extends NullProvider {
+export default abstract class NullSessProvider extends NullProvider {
     public static getParamsInfo(): IParamsInfo {
         return {
             onlySession: {
@@ -63,17 +63,17 @@ export default abstract class NullAuthProvider extends NullProvider {
             },
         };
     }
-    public params: IAuthProviderParam;
+    public params: ISessProviderParam;
     public static isAuth: boolean = true;
     public isAuth: boolean = true;
     constructor(
         name: string,
         params: ICCTParams,
-        authController: IAuthController,
+        sessCtrl: ISessCtrl,
     ) {
-        super(name, params, authController);
-        this.log = Logger.getLogger(`AuthProvider:${name}`);
-        this.params = initParams(NullAuthProvider.getParamsInfo(), this.params);
+        super(name, params, sessCtrl);
+        this.log = Logger.getLogger(`SessProvider:${name}`);
+        this.params = initParams(NullSessProvider.getParamsInfo(), this.params);
     }
     public async beforeSession(
         context: IContext,
@@ -144,12 +144,12 @@ export default abstract class NullAuthProvider extends NullProvider {
                 : userData.ca_actions;
         }
         const dataUser =
-            (await this.authController.getDataUser(
+            (await this.sessCtrl.getDataUser(
                 idUser,
                 this.name,
                 isAccessErrorNotFound,
             )) || {};
-        const session = await this.authController.createSession({
+        const session = await this.sessCtrl.createSession({
             context,
             idUser,
             nameProvider: this.name,

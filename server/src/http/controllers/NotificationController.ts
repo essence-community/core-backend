@@ -92,13 +92,13 @@ class NotificationController {
                 if (res) {
                     return res;
                 }
-                return (context.authController as GateSession)
+                return (context.sessCtrl as GateSession)
                     .loadSession(null, sessionId, true)
                     .then((session) =>
                         session ? { session, context } : session,
                     );
             },
-            (this.contexts[0].authController as GateSession)
+            (this.contexts[0].sessCtrl as GateSession)
                 .loadSession(null, sessionId, true)
                 .then((session) =>
                     session ? { session, context: this.contexts[0] } : session,
@@ -239,7 +239,7 @@ class NotificationController {
         }, {}) as IConfigSession;
         if (confSessions) {
             Object.values(confSessions).forEach(({ context, sessions }) => {
-                (context.authController as GateSession)
+                (context.sessCtrl as GateSession)
                     .findSessions(sessions, false)
                     .then((docs) => {
                         const ckUsers = Object.values(docs).map(
@@ -252,7 +252,7 @@ class NotificationController {
                             ] = doc.gsession.userData;
                             return res;
                         }, {});
-                        return (context.authController as GateSession)
+                        return (context.sessCtrl as GateSession)
                             .getUserDb()
                             .find({ ck_id: { $in: ckUsers } })
                             .then((users) => {
@@ -305,7 +305,7 @@ class NotificationController {
         if (allConn.length) {
             Object.values(confSessions).forEach(
                 ({ context, sessions, conns }) => {
-                    (context.authController as GateSession)
+                    (context.sessCtrl as GateSession)
                         .findSessions(sessions, false)
                         .then((docs) => {
                             const getSession = Object.values(docs).map(

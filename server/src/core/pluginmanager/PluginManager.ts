@@ -6,7 +6,7 @@ import IPlugin from "@ungate/plugininf/lib/IPlugin";
 import IProvider from "@ungate/plugininf/lib/IProvider";
 import IScheduler from "@ungate/plugininf/lib/IScheduler";
 import Logger from "@ungate/plugininf/lib/Logger";
-import NullAuthProvider from "@ungate/plugininf/lib/NullAuthProvider";
+import NullSessProvider from "@ungate/plugininf/lib/NullSessProvider";
 import NullContext from "@ungate/plugininf/lib/NullContext";
 import { initParams } from "@ungate/plugininf/lib/util/Util";
 import * as fs from "fs";
@@ -238,12 +238,12 @@ class PluginManager {
                                 ? new PluginClass.default(
                                       doc.ck_id,
                                       doc.cct_params,
-                                      value.authController,
+                                      value.sessCtrl,
                                   )
                                 : new PluginClass(
                                       doc.ck_id,
                                       doc.cct_params,
-                                      value.authController,
+                                      value.sessCtrl,
                                   );
                             rowsInit.push(
                                 GateProvider[name][doc.ck_id].init().then(
@@ -310,9 +310,9 @@ class PluginManager {
         return [];
     }
 
-    public getGateAuthProviders(context: string) {
+    public getGateSessProviders(context: string) {
         return Object.values(GateProvider[context]).filter(
-            (provider: NullAuthProvider) => provider.isAuth,
+            (provider: NullSessProvider) => provider.isAuth,
         );
     }
     public getGateProviders(context: string) {
@@ -484,7 +484,7 @@ class PluginManager {
                         NullContext.getParamsInfo(),
                         doc.cct_params,
                     );
-                    const authController = new GateSession(
+                    const sessCtrl = new GateSession(
                         doc.ck_id,
                         params,
                         GateSession.sha1(
@@ -495,15 +495,15 @@ class PluginManager {
                         ? new PluginClass.default(
                               doc.ck_id,
                               doc.cct_params,
-                              authController,
+                              sessCtrl,
                           )
                         : new PluginClass(
                               doc.ck_id,
                               doc.cct_params,
-                              authController,
+                              sessCtrl,
                           );
                     rowContext.push(
-                        (GateContext[doc.ck_id].authController as GateSession)
+                        (GateContext[doc.ck_id].sessCtrl as GateSession)
                             .init()
                             .then(() => GateContext[doc.ck_id].init())
                             .then(
