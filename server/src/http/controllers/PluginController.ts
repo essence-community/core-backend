@@ -6,9 +6,9 @@ import IPlugin, { IPluginRequestContext } from "@ungate/plugininf/lib/IPlugin";
 import IQuery, { IGateQuery } from "@ungate/plugininf/lib/IQuery";
 import IResult from "@ungate/plugininf/lib/IResult";
 import ISession from "@ungate/plugininf/lib/ISession";
-import NullAuthProvider, {
+import NullSessProvider, {
     IAuthResult,
-} from "@ungate/plugininf/lib/NullAuthProvider";
+} from "@ungate/plugininf/lib/NullSessProvider";
 import { isEmpty } from "@ungate/plugininf/lib/util/Util";
 
 export interface IPlugins {
@@ -306,7 +306,7 @@ class PluginController {
 
     public applyBeforeSession(
         gateContext: IContext,
-        providers: NullAuthProvider[] = [],
+        providers: NullSessProvider[] = [],
     ): Promise<ISession | void> {
         if (providers.length) {
             return providers.slice(1).reduce(
@@ -332,7 +332,7 @@ class PluginController {
     public applyAfterSession(
         gateContext: IContext,
         session?: ISession,
-        providers: NullAuthProvider[] = [],
+        providers: NullSessProvider[] = [],
     ): Promise<ISession> {
         if (providers.length) {
             return providers.slice(1).reduce(
@@ -360,7 +360,7 @@ class PluginController {
     public applyCheckQuery(
         gateContext: IContext,
         query: IGateQuery,
-        providers: NullAuthProvider[] = [],
+        providers: NullSessProvider[] = [],
     ): Promise<void> {
         if (providers.length) {
             return providers.slice(1).reduce(

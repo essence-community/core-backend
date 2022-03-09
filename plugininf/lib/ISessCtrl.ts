@@ -27,7 +27,7 @@ export interface ICacheDb {
     [key: string]: any;
 }
 
-export interface IAuthController {
+export interface ISessCtrl {
     /**
      * Обновляем кеш о юзерах
      */

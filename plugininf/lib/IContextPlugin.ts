@@ -2,7 +2,7 @@
  * Created by artemov_i on 04.12.2018.
  */
 import Connection from "./db/Connection";
-import { IAuthController } from "./IAuthController";
+import { ISessCtrl } from "./ISessCtrl";
 import ICCTParams from "./ICCTParams";
 import IContext, { TAction } from "./IContext";
 import IQuery, { IGateQuery } from "./IQuery";
@@ -80,7 +80,7 @@ export default interface IContextPlugin {
     attachmentType: string;
     params: IContextParams;
     isExcludeAccessLog: boolean;
-    authController: IAuthController;
+    sessCtrl: ISessCtrl;
     init(reload?: boolean): Promise<void>;
     initContext(gateContext: IContext): Promise<IContextPluginResult>;
     checkQueryAccess(

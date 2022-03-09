@@ -5,11 +5,11 @@ import IContext from "@ungate/plugininf/lib/IContext";
 import IQuery from "@ungate/plugininf/lib/IQuery";
 import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
 import ISession, { IUserData } from "@ungate/plugininf/lib/ISession";
-import NullAuthProvider, {
+import NullSessProvider, {
     IAuthResult,
-} from "@ungate/plugininf/lib/NullAuthProvider";
+} from "@ungate/plugininf/lib/NullSessProvider";
 import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
-import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
+import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
 import * as KeyCloak from "keycloak-connect";
 import { ITokenAuthParams } from "./TokenAuth.types";
 import { GrantAttacher } from "./Midleware";
@@ -24,7 +24,7 @@ import { GrantManager } from "./GrantManager";
 const FLAG_REDIRECT = "jl_keycloak_auth_callback";
 const USE_REDIRECT = "jl_keycloak_use_redirect";
 
-export default class TokenAuth extends NullAuthProvider {
+export default class TokenAuth extends NullSessProvider {
     public async init(reload?: boolean): Promise<void> {
         return;
     }
@@ -177,9 +177,9 @@ export default class TokenAuth extends NullAuthProvider {
     constructor(
         name: string,
         params: ICCTParams,
-        authController: IAuthController,
+        sessCtrl: ISessCtrl,
     ) {
-        super(name, params, authController);
+        super(name, params, sessCtrl);
         this.params = initParams(TokenAuth.getParamsInfo(), this.params);
         if (
             !isEmpty(this.params.grantManagerConfig.publicKey) &&
@@ -206,10 +206,12 @@ export default class TokenAuth extends NullAuthProvider {
                 }
             },
         );
+
         this.grantManager = new GrantManager(
             this.params.grantManagerConfig,
             this.log,
         );
+
     }
     /**
      * Проверка на случай если авторизация вынесена на внешний прокси nginx
@@ -251,12 +253,12 @@ export default class TokenAuth extends NullAuthProvider {
                     grant,
                 );
                 if (!session) {
-                    await this.authController.addUser(
+                    await this.sessCtrl.addUser(
                         dataUser.idUser,
                         this.name,
                         dataUser.userData,
                     );
-                    await this.authController.updateHashAuth();
+                    await this.sessCtrl.updateHashAuth();
                     const sess = await this.createSession({
                         context: gateContext,
                         idUser: dataUser.idUser,
@@ -267,7 +269,7 @@ export default class TokenAuth extends NullAuthProvider {
                         },
                     });
 
-                    return this.authController.loadSession(
+                    return this.sessCtrl.loadSession(
                         gateContext,
                         sess.session,
                     );
@@ -280,12 +282,13 @@ export default class TokenAuth extends NullAuthProvider {
                     ...session.userData,
                     ...dataUser.userData,
                 };
+
                 session.sessionData.access_token = (
                     grant.access_token as any
                 )?.token;
                 gateContext.request.session.gsession.sessionData.access_token =
                     (grant.access_token as any)?.token;
-                await this.authController.addUser(
+                await this.sessCtrl.addUser(
                     dataUser.idUser,
                     this.name,
                     dataUser.userData,
@@ -295,7 +298,7 @@ export default class TokenAuth extends NullAuthProvider {
             .catch(async (err) => {
                 gateContext.debug("Token Auth Error", err);
                 if (session && session.nameProvider === this.name) {
-                    await this.authController.logoutSession(gateContext);
+                    await this.sessCtrl.logoutSession(gateContext);
                 } else if (session && session.nameProvider !== this.name) {
                     return session;
                 }
@@ -330,7 +333,10 @@ export default class TokenAuth extends NullAuthProvider {
             if (!isEmpty(userInfo[obj.in])) {
                 dataUser[obj.out] = userInfo[obj.in];
             }
-            if (token.content && !isEmpty(token.content[obj.in])) {
+            if (
+                token.content &&
+                !isEmpty(token.content[obj.in])
+            ) {
                 dataUser[obj.out] = token.content[obj.in];
             }
         });

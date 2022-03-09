@@ -18,8 +18,8 @@ async function CreatePackage(dir: string) {
         user = await questionReadline("Author:");
     }
     let template = {
-        json: "",
-        modify: "",
+        pin: "",
+        pmod: "",
     };
 
     if (
@@ -38,7 +38,7 @@ CREATE SCHEMA pkg_json_${pSuffix}
     AUTHORIZATION \${user.update};
     
 ALTER SCHEMA pkg_json_${pSuffix} OWNER TO \${user.update};
-${template.json}
+${template.pin}
     `,
     );
 
@@ -52,7 +52,7 @@ CREATE SCHEMA pkg_${pSuffix}
     AUTHORIZATION \${user.update};
     
 ALTER SCHEMA pkg_${pSuffix} OWNER TO \${user.update};
-${template.modify}
+${template.pmod}
     `,
     );
 }
@@ -60,8 +60,8 @@ ${template.modify}
 async function CreateTemplateFn(dir: string, packageSuffix?: string) {
     let pSuffix = packageSuffix;
     const res = {
-        json: "",
-        modify: "",
+        pin: "",
+        pmod: "",
     };
 
     while (isEmpty(pSuffix)) {
@@ -91,10 +91,10 @@ async function CreateTemplateFn(dir: string, packageSuffix?: string) {
     }
 
     // eslint-disable-next-line max-len
-    res.json = `
+    res.pin = `
 CREATE FUNCTION pkg_json_${pSuffix}.f_modify_${fSuffix}(pv_user varchar, pk_session varchar, pc_json jsonb) RETURNS character varying
     LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO '\${user.table}', 'pkg_json_${pSuffix}', 'pkg_${pSuffix}', 'public'
+    SET search_path TO 'pkg_public', '\${user.table}', 'pkg_json_${pSuffix}', 'pkg_${pSuffix}', 'public'
     AS $$
 declare
   -- var package
@@ -142,10 +142,10 @@ ALTER FUNCTION pkg_json_${pSuffix}.f_modify_${fSuffix}(varchar, varchar, jsonb) 
 
     `;
 
-    res.modify = `
+    res.pmod = `
 CREATE FUNCTION pkg_${pSuffix}.p_modify_${fSuffix}(pv_action varchar, INOUT po${nameTable} \${user.table}.${nameTable}) RETURNS \${user.table}.${nameTable}
     LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'pkg_${pSuffix}', '\${user.table}', 'public'
+    SET search_path TO 'pkg_public', 'pkg_${pSuffix}', '\${user.table}', 'public'
     AS $$
 declare
   -- var package
@@ -186,7 +186,7 @@ ALTER FUNCTION pkg_${pSuffix}.p_modify_${fSuffix}(pv_action character varying, I
 
 CREATE FUNCTION pkg_${pSuffix}.p_lock_${fSuffix}(pk_id varchar) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO '\${user.table}', 'pkg_${pSuffix}', 'public'
+    SET search_path TO 'pkg_public', '\${user.table}', 'pkg_${pSuffix}', 'public'
     AS $$
 declare
   vn_lock bigint;
@@ -208,14 +208,14 @@ ALTER FUNCTION pkg_${pSuffix}.p_lock_${fSuffix}(pk_id varchar) OWNER TO \${user.
         fs.writeFileSync(
             jsonFile,
             `${json}
-            ${res.json}
+            ${res.pin}
             `,
         );
 
         fs.writeFileSync(
             modifyFile,
             `${modify}
-            ${res.modify}
+            ${res.pmod}
             `,
         );
     }

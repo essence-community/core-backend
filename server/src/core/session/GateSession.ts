@@ -16,11 +16,11 @@ import IContext from "@ungate/plugininf/lib/IContext";
 import { IRufusLogger } from "rufus";
 import NotificationController from "../../http/controllers/NotificationController";
 import {
-    IAuthController,
+    ISessCtrl,
     ICacheDb,
     ICreateSessionParam,
-} from "@ungate/plugininf/lib/IAuthController";
-import { ISessionStore } from "@ungate/plugininf/lib/IAuthController";
+} from "@ungate/plugininf/lib/ISessCtrl";
+import { ISessionStore } from "@ungate/plugininf/lib/ISessCtrl";
 import { ISessionData } from "@ungate/plugininf/lib/ISession";
 import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
 import NullContext from "@ungate/plugininf/lib/NullContext";
@@ -41,7 +41,7 @@ const REPLICA_TIMEOUT = parseInt(
     10,
 );
 
-export class GateSession implements IAuthController {
+export class GateSession implements ISessCtrl {
     private dbUsers: ILocalDB<IUserDbData>;
     private store: ISessionStore;
     private dbCache: ILocalDB<ICacheDb>;
@@ -67,7 +67,7 @@ export class GateSession implements IAuthController {
 
     public async init() {
         this.logger.debug(
-            "Start Init AuthController %s params %j",
+            "Start Init SessCtrl %s params %j",
             this.name,
             this.params,
         );
@@ -127,7 +127,7 @@ export class GateSession implements IAuthController {
         }
         await this.store.init();
 
-        this.logger.info("Inited AuthController %s", this.name);
+        this.logger.info("Inited SessCtrl %s", this.name);
     }
 
     public saveSession(context: IContext): Promise<void> {

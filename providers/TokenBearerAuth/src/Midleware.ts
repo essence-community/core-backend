@@ -20,17 +20,20 @@ export async function GrantAttacher(
         gateContext.debug("Access Token Found %s", accessToken);
     }
     return accessToken
-        ? grantManager.createGrant(accessToken).then((grant) => {
-              // tslint:disable:triple-equals
-              if (
-                  gateContext.request.session[`token_bearer_${name}`] !=
-                  (grant as any).__raw
-              ) {
-                  gateContext.request.session[`token_bearer_${name}`] = (
-                      grant as any
-                  ).__raw;
-              }
-              return grant as Grant;
-          })
+        ? grantManager.createGrant(accessToken).then(async (grant: Grant) => {
+            // tslint:disable:triple-equals
+            if (
+                gateContext.request.session[`token_bearer_${name}`] !=
+                (grant as any).__raw
+            ) {
+                if (grantManager.tokenVerifyUrl) {
+                    await grantManager.validateAccessToken(grant.access_token);
+                }
+                gateContext.request.session[`token_bearer_${name}`] = (
+                    grant as any
+                ).__raw;
+            }
+            return grant as Grant;
+        })
         : null;
 }

@@ -13,9 +13,9 @@ import { isObject } from "lodash";
 import IOracleController from "./IOracleController";
 import { IParamOracle } from "./OracleDb.types";
 import {
-    IAuthController,
+    ISessCtrl,
     ICacheDb,
-} from "@ungate/plugininf/lib/IAuthController";
+} from "@ungate/plugininf/lib/ISessCtrl";
 import { IUserDbData } from "@ungate/plugininf/lib/ISession";
 const wsQuerySQL =
     "select cc_query from t_query where upper(ck_id) = upper(:query)";
@@ -30,7 +30,7 @@ export default class CoreOracle implements IOracleController {
         name: string,
         params: IParamOracle,
         dataSource: OracleDB,
-        private authController: IAuthController,
+        private sessCtrl: ISessCtrl,
     ) {
         this.name = name;
         this.params = params;
@@ -38,10 +38,10 @@ export default class CoreOracle implements IOracleController {
     }
     public async init(): Promise<void> {
         if (!this.dbUsers) {
-            this.dbUsers = this.authController.getUserDb();
+            this.dbUsers = this.sessCtrl.getUserDb();
         }
         if (!this.dbCache) {
-            this.dbCache = this.authController.getCacheDb();
+            this.dbCache = this.sessCtrl.getCacheDb();
         }
     }
     public async getConnection(context: IContext): Promise<Connection> {

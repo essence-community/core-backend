@@ -1,6 +1,6 @@
 import * as nedb from "@ungate/nedb-multi";
 import ILocalDB from "@ungate/plugininf/lib/db/local/ILocalDB";
-import { ICacheDb } from "@ungate/plugininf/lib/IAuthController";
+import { ICacheDb } from "@ungate/plugininf/lib/ISessCtrl";
 import IGlobalObject from "@ungate/plugininf/lib/IGlobalObject";
 import { IUserDbData } from "@ungate/plugininf/lib/ISession";
 import * as path from "path";

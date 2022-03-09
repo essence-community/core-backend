@@ -20,7 +20,7 @@ import * as moment from "moment";
 import * as path from "path";
 import { Readable } from "stream";
 import { v4 as uuid } from "uuid";
-import { patchAuth } from "./auth/AuthPatch";
+import { patchUser } from "./user/UserPatch";
 import { DirStorage } from "./DirStorage";
 import { patchIntegr } from "./integr/IntegrPatch";
 import { patchMeta } from "./meta/MetaPatch";
@@ -146,11 +146,11 @@ export class Patcher extends NullPlugin implements IStorage {
                 this.calcMd5(path.join(temp, "integr"));
                 zip.addLocalFolder(path.join(temp, "integr"), "integr");
             } else if (json.service.cv_action === "auth") {
-                await patchAuth(temp, json, gateContext.connection);
-                include.push("auth/auth.xml");
+                await patchUser(temp, json, gateContext.connection);
+                include.push("user/user.xml");
                 nameBd = "core_auth";
-                this.calcMd5(path.join(temp, "auth"));
-                zip.addLocalFolder(path.join(temp, "auth"), "auth");
+                this.calcMd5(path.join(temp, "user"));
+                zip.addLocalFolder(path.join(temp, "user"), "user");
             } else {
                 await patchMeta(temp, json, gateContext.connection);
                 include.push("meta/meta.xml");

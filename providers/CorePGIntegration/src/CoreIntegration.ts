@@ -18,7 +18,7 @@ import { isEmpty } from "@ungate/plugininf/lib/util/Util";
 import { isObject, noop } from "lodash";
 import * as request from "request";
 import * as URL from "url";
-import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
+import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
 
 interface IResultSequence {
     res?: IResultProvider;
@@ -50,9 +50,9 @@ export default class CoreIntegration extends NullProvider {
     constructor(
         name: string,
         params: ICCTParams,
-        authController: IAuthController,
+        sessCtrl: ISessCtrl,
     ) {
-        super(name, params, authController);
+        super(name, params, sessCtrl);
         this.params = initParams(CoreIntegration.getParamsInfo(), this.params);
         this.dataSource = new PostgresDB(`${this.name}_provider`, {
             connectString: this.params.connectString,

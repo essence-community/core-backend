@@ -7,22 +7,22 @@ import IContext from "@ungate/plugininf/lib/IContext";
 import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
 import IQuery from "@ungate/plugininf/lib/IQuery";
 import { IResultProvider } from "@ungate/plugininf/lib/IResult";
-import NullAuthProvider, {
+import NullSessProvider, {
     IAuthResult,
-    IAuthProviderParam,
-} from "@ungate/plugininf/lib/NullAuthProvider";
+    ISessProviderParam,
+} from "@ungate/plugininf/lib/NullSessProvider";
 import { ReadStreamToArray } from "@ungate/plugininf/lib/stream/Util";
 import { initParams, isEmpty, debounce } from "@ungate/plugininf/lib/util/Util";
 import { noop, isObject } from "lodash";
 import ISession from "@ungate/plugininf/lib/ISession";
-import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
+import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
 
 const MAX_WAIT_RELOAD = 5000;
 
-export interface IParamsProvider extends IAuthProviderParam {
+export interface IParamsProvider extends ISessProviderParam {
     guestAccount?: string;
 }
-export default class CoreAuthPg extends NullAuthProvider {
+export default class CoreAuthPg extends NullSessProvider {
     public static getParamsInfo(): IParamsInfo {
         /* tslint:disable:object-literal-sort-keys */
         return {
@@ -51,9 +51,9 @@ export default class CoreAuthPg extends NullAuthProvider {
     constructor(
         name: string,
         params: ICCTParams,
-        authController: IAuthController,
+        sessCtrl: ISessCtrl,
     ) {
-        super(name, params, authController);
+        super(name, params, sessCtrl);
         this.params = initParams(CoreAuthPg.getParamsInfo(), this.params);
         this.dataSource = new PostgresDB(`${this.name}_provider`, {
             connectString: this.params.connectString,
@@ -82,7 +82,7 @@ export default class CoreAuthPg extends NullAuthProvider {
                             idUser: this.params.guestAccount,
                             userData: {} as any,
                         });
-                    return this.authController.loadSession(sessGuest);
+                    return this.sessCtrl.loadSession(sessGuest);
                 }
                 return session;
             };
@@ -329,7 +329,7 @@ export default class CoreAuthPg extends NullAuthProvider {
             .then(() =>
                 Promise.all(
                     Object.values(users).map((user) =>
-                        this.authController.addUser(
+                        this.sessCtrl.addUser(
                             (user as any).ck_id,
                             this.name,
                             user as any,
@@ -337,7 +337,7 @@ export default class CoreAuthPg extends NullAuthProvider {
                     ),
                 ),
             )
-            .then(() => this.authController.updateHashAuth())
-            .then(() => this.authController.updateUserInfo(this.name));
+            .then(() => this.sessCtrl.updateHashAuth())
+            .then(() => this.sessCtrl.updateUserInfo(this.name));
     }
 }

@@ -27,7 +27,7 @@ import * as FormData from "form-data";
 import { IFile } from "@ungate/plugininf/lib/IContext";
 import { BreakResult } from "./BreakResult";
 import ICCTParams from "@ungate/plugininf/lib/ICCTParams";
-import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
+import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
 
 const optionsRequest = [
     "url",
@@ -171,9 +171,9 @@ export default class RestTransformProxy extends NullProvider {
     constructor(
         name: string,
         params: ICCTParams,
-        authController: IAuthController,
+        sessCtrl: ISessCtrl,
     ) {
-        super(name, params, authController);
+        super(name, params, sessCtrl);
         this.params = initParams(RestTransformProxy.getParamsInfo(), params);
         if (this.params.extraParam) {
             this.params.extraParam.forEach(({ key, value }) => {

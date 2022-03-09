@@ -75,7 +75,7 @@ async function adminLogout(context: IContext, keycloak: KeyCloak.Keycloak) {
                     if (sessionIDs && sessionIDs.length > 0) {
                         let seen = 0;
                         sessionIDs.forEach((id) => {
-                            context.gateContextPlugin.authController
+                            context.gateContextPlugin.sessCtrl
                                 .getSessionStore()
                                 .destroy(id);
                             ++seen;

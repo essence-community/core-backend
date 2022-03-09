@@ -7,7 +7,7 @@ import IQuery, { IGateQuery } from "@ungate/plugininf/lib/IQuery";
 import { IResultProvider } from "@ungate/plugininf/lib/IResult";
 import IOracleController from "./IOracleController";
 import { IParamOracle } from "./OracleDb.types";
-import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
+import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
 
 export default class Oracle implements IOracleController {
     public dataSource: OracleDB;
@@ -17,7 +17,7 @@ export default class Oracle implements IOracleController {
         name: string,
         params: IParamOracle,
         dataSource: OracleDB,
-        protected authController: IAuthController,
+        protected sessCtrl: ISessCtrl,
     ) {
         this.name = name;
         this.params = params;

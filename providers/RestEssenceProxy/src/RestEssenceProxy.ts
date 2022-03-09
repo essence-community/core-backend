@@ -13,11 +13,13 @@ import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
 import { safeResponsePipe } from "@ungate/plugininf/lib/stream/Util";
 import * as axios from "axios";
 import * as url from "url";
-import { isEmpty } from "@ungate/plugininf/lib/util/Util";
+import { isEmpty, initParams } from "@ungate/plugininf/lib/util/Util";
 import * as QueryString from "qs";
 import * as fs from "fs";
 import * as FormData from "form-data";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
+import ICCTParams from "@ungate/plugininf/lib/ICCTParams";
+import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
 
 const validHeader = ["application/json", "application/xml", "text/"];
 const defaultHeader = ["content-type", "cookie"];
@@ -74,6 +76,15 @@ export default class RestEssenceProxy extends NullProvider {
     }
 
     public params: IRestEssenceProxyParams;
+
+    constructor(
+        name: string,
+        params: ICCTParams,
+        sessCtrl: ISessCtrl,
+    ) {
+        super(name, params, sessCtrl);
+        this.params = initParams(RestEssenceProxy.getParamsInfo(), this.params);
+    }
 
     public processSql(
         context: IContext,

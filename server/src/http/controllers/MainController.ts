@@ -4,7 +4,7 @@ import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
 import IContext from "@ungate/plugininf/lib/IContext";
 import IQuery from "@ungate/plugininf/lib/IQuery";
 import ISession from "@ungate/plugininf/lib/ISession";
-import NullAuthProvider from "@ungate/plugininf/lib/NullAuthProvider";
+import NullSessProvider from "@ungate/plugininf/lib/NullSessProvider";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
 import { isEmpty } from "@ungate/plugininf/lib/util/Util";
 import { noop } from "lodash";
@@ -45,20 +45,20 @@ class MainController {
                     await requestContext.gateContextPlugin.maskResult(),
                 );
             }
-            const authProviders = PluginManager.getGateAuthProviders(
+            const sessProviders = PluginManager.getGateSessProviders(
                 requestContext.gateContextPlugin.name,
-            ) as NullAuthProvider[];
+            ) as NullSessProvider[];
 
             let session = await PluginController.applyBeforeSession(
                 requestContext,
-                authProviders,
+                sessProviders,
             );
 
-            const authController =
-                requestContext.gateContextPlugin.authController;
+            const sessCtrl =
+                requestContext.gateContextPlugin.sessCtrl;
             // 2: Если передана сессия то инициализируем сессию
             if (isEmpty(session) && requestContext.sessionId) {
-                session = await authController.loadSession(
+                session = await sessCtrl.loadSession(
                     requestContext,
                     requestContext.sessionId,
                 );
@@ -66,14 +66,14 @@ class MainController {
             session = await PluginController.applyAfterSession(
                 requestContext,
                 session as ISession,
-                authProviders,
+                sessProviders,
             );
             if (session) {
                 requestContext.setSession(session);
             }
             if (requestContext.queryName === Constants.QUERY_LOGOUT) {
                 if (session) {
-                    await authController.logoutSession(requestContext);
+                    await sessCtrl.logoutSession(requestContext);
                 }
                 return ResultController.responseCheck(requestContext, {
                     data: ResultStream([]),
@@ -180,7 +180,7 @@ class MainController {
                 await PluginController.applyCheckQuery(
                     requestContext,
                     wsQuery,
-                    authProviders,
+                    sessProviders,
                 );
 
                 // 10.1: Проверка доступа
@@ -340,12 +340,12 @@ class MainController {
             ? new pluginClass.default(
                   config.ck_id,
                   config.cct_params,
-                  gateContext.gateContextPlugin.authController,
+                  gateContext.gateContextPlugin.sessCtrl,
               )
             : new pluginClass(
                   config.ck_id,
                   config.cct_params,
-                  gateContext.gateContextPlugin.authController,
+                  gateContext.gateContextPlugin.sessCtrl,
               );
         await provider.init();
         PluginManager.setGateProvider(

@@ -38,19 +38,26 @@ liquibase {
       changeLogFile 'db.changelog.xml'
       defaultsFile 'liquibase.properties'
     }
+    schema_min {
+      changeLogFile 'db.changelog.nocore.xml'
+      defaultsFile 'liquibase.properties'
+    }
   }
   runList = 'schema'
 }
 
-project.ext.getProperties().each {
-    if (it.key.startsWith('liquibase')) {
-        var key = it.key.replace('liquibase.','')
-        var value = it.value
-        liquibase.activities.each {
-            it.arguments.put(key, value)
-        }
+project.ext.getProperties().each { key, value ->
+    if (key.startsWith('liquibase.')) {
+      liquibase.activities.each {
+        it.arguments.put(key.replace('liquibase.', ''), value)
+      }
     }
-    if (it.key == 'runList') {
-        liquibase.runList = it.value
+    if (key.startsWith('liquibaseP.')) {
+      liquibase.activities.each {
+        it.parameters.put(key.replace('liquibaseP.', ''), value)
+      }
+    }
+    if (key == 'runList') {
+      liquibase.runList = value
     }
 }

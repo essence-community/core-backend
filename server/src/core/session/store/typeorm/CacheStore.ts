@@ -5,7 +5,7 @@ import ILocalDB, {
     RemoveOptions,
     UpdateQuery,
 } from "@ungate/plugininf/lib/db/local/ILocalDB";
-import { ICacheDb } from "@ungate/plugininf/lib/IAuthController";
+import { ICacheDb } from "@ungate/plugininf/lib/ISessCtrl";
 import { Connection } from "typeorm";
 import { CacheModel } from "./entries/CacheModel";
 import { addFilter } from "./Utils";

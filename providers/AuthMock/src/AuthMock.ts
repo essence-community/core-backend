@@ -3,11 +3,11 @@ import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
 import IParamsInfo from "@ungate/plugininf/lib/ICCTParams";
 import IContext from "@ungate/plugininf/lib/IContext";
 import IQuery, { IGateQuery } from "@ungate/plugininf/lib/IQuery";
-import NullAuthProvider, {
+import NullSessProvider, {
     IAuthResult,
-} from "@ungate/plugininf/lib/NullAuthProvider";
+} from "@ungate/plugininf/lib/NullSessProvider";
 
-export default class AuthMock extends NullAuthProvider {
+export default class AuthMock extends NullSessProvider {
     public static getParamsInfo(): IParamsInfo {
         return {
             adminPassword: {
@@ -71,17 +71,17 @@ export default class AuthMock extends NullAuthProvider {
             cv_patronymic: "",
             cv_surname: "",
         };
-        await this.authController.addUser(
+        await this.sessCtrl.addUser(
             "" + adminUser.ck_id,
             this.name,
             adminUser,
         );
-        await this.authController.addUser(
+        await this.sessCtrl.addUser(
             "" + viewUser.ck_id,
             this.name,
             viewUser,
         );
-        await this.authController.updateHashAuth();
+        await this.sessCtrl.updateHashAuth();
         return;
     }
     public async initContext(

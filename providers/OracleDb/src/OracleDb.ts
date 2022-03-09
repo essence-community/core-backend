@@ -13,7 +13,7 @@ import IOracleController from "./IOracleController";
 import OldOracle from "./OldOracle";
 import Oracle from "./Oracle";
 import { IParamOracle } from "./OracleDb.types";
-import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
+import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
 
 export default class OracleDBPlugin extends NullProvider {
     /* tslint:disable:object-literal-sort-keys */
@@ -52,9 +52,9 @@ export default class OracleDBPlugin extends NullProvider {
     constructor(
         name: string,
         params: ICCTParams,
-        authController: IAuthController,
+        sessCtrl: ISessCtrl,
     ) {
-        super(name, params, authController);
+        super(name, params, sessCtrl);
         this.params = initParams(OracleDBPlugin.getParamsInfo(), this.params);
         this.dataSource = new OracleDB(`${this.name}_provider`, {
             connectString: this.params.connectString,
@@ -73,21 +73,21 @@ export default class OracleDBPlugin extends NullProvider {
                 this.name,
                 this.params,
                 this.dataSource,
-                this.authController,
+                this.sessCtrl,
             );
         } else if (params.old) {
             this.controller = new OldOracle(
                 this.name,
                 this.params,
                 this.dataSource,
-                this.authController,
+                this.sessCtrl,
             );
         } else {
             this.controller = new Oracle(
                 this.name,
                 this.params,
                 this.dataSource,
-                this.authController,
+                this.sessCtrl,
             );
         }
         if (!isEmpty(this.params.preExecuteSql)) {

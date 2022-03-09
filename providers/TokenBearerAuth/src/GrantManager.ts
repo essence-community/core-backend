@@ -228,7 +228,7 @@ export class GrantManager {
 
         return nodeify(fetch(this, handler, options, params), callback);
     }
-    validateAccessToken(token, callback) {
+    validateAccessToken(token, callback?) {
         let t = token;
         if (typeof token === "object") {
             t = token.token;
@@ -329,7 +329,7 @@ export class GrantManager {
         }
     }
     validateToken(token, expectedType) {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             if (!token) {
                 reject(new Error("invalid token (missing)"));
             } else if (token.isExpired()) {
