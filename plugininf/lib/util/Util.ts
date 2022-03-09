@@ -178,21 +178,29 @@ function parseParam(conf: IParamInfo, value: any) {
                 ? conf.checkvalue(moment(value).toDate())
                 : moment(value).toDate();
         case "form_nested":
+            let objValue = value;
+            if (value && typeof value === "string" && value.charAt(0) === "{") {
+                objValue = JSON.parse(value);
+            }
             return Object.entries(conf.childs).reduce((res, [key, obj]) => {
-                if (!isEmpty((value || {})[key])) {
-                    res[key] = parseParam(obj, value[key]);
+                if (!isEmpty((objValue || {})[key])) {
+                    res[key] = parseParam(obj, objValue[key]);
                 } else if (
-                    isEmpty((value || {})[key]) &&
+                    isEmpty((objValue || {})[key]) &&
                     !isEmpty(
-                        (isEmpty(value) ? conf.defaultValue || {} : value)[key],
+                        (isEmpty(objValue)
+                            ? conf.defaultValue || {}
+                            : objValue)[key],
                     )
                 ) {
                     res[key] = parseParam(
                         obj,
-                        (isEmpty(value) ? conf.defaultValue || {} : value)[key],
+                        (isEmpty(objValue)
+                            ? conf.defaultValue || {}
+                            : objValue)[key],
                     );
                 } else if (
-                    isEmpty((value || {})[key]) &&
+                    isEmpty((objValue || {})[key]) &&
                     !isEmpty(obj.defaultValue)
                 ) {
                     res[key] = obj.defaultValue;
@@ -200,7 +208,11 @@ function parseParam(conf: IParamInfo, value: any) {
                 return res;
             }, {});
         case "form_repeater":
-            return (value || conf.defaultValue || []).map((val) =>
+            let arr = value;
+            if (value && typeof value === "string" && value.charAt(0) === "[") {
+                arr = JSON.parse(value);
+            }
+            return (arr || conf.defaultValue || []).map((val) =>
                 Object.entries(conf.childs).reduce((res, [key, obj]) => {
                     if (!isEmpty(val[key])) {
                         res[key] = parseParam(obj, val[key]);
