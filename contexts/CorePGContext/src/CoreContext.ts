@@ -21,7 +21,7 @@ import ICoreController from "./ICoreController";
 import OfflineController from "./OfflineController";
 import OnlineController from "./OnlineController";
 import { TempTable } from "./TempTable";
-import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
+import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
 import { IUserDbData } from "@ungate/plugininf/lib/ISession";
 const logger = Logger.getLogger("CoreContext");
 const Mask = (global as any as IGlobalObject).maskgate;
@@ -149,9 +149,9 @@ export default class CoreContext extends NullContext {
     constructor(
         name: string,
         params: ICCTParams,
-        authController: IAuthController,
+        sessCtrl: ISessCtrl,
     ) {
-        super(name, params, authController);
+        super(name, params, sessCtrl);
         this.params = {
             ...this.params,
             ...initParams(CoreContext.getParamsInfo(), this.params),
@@ -213,7 +213,7 @@ export default class CoreContext extends NullContext {
     }
 
     public async init(reload?: boolean): Promise<void> {
-        this.dbUsers = this.authController.getUserDb();
+        this.dbUsers = this.sessCtrl.getUserDb();
         return this.controller.init(reload);
     }
     public initContext(gateContext: IContext): Promise<IContextPluginResult> {

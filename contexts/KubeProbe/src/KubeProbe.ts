@@ -5,7 +5,7 @@ import BreakException from "@ungate/plugininf/lib/errors/BreakException";
 import IResult from "@ungate/plugininf/lib/IResult";
 import { IParamsInfo } from "@ungate/plugininf/lib/ICCTParams";
 import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
-import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
+import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
 import ICCTParams from "@ungate/plugininf/lib/ICCTParams";
 import { IContextParams } from "@ungate/plugininf/lib/IContextPlugin";
 const Mask = global.maskgate;
@@ -45,9 +45,9 @@ export default class KubeProbe extends NullContext {
     constructor(
         namePlugin: string,
         params: ICCTParams,
-        authController: IAuthController,
+        sessCtrl: ISessCtrl,
     ) {
-        super(namePlugin, params, authController);
+        super(namePlugin, params, sessCtrl);
         this.params = {
             ...this.params,
             ...initParams(KubeProbe.getParamsInfo(), this.params),

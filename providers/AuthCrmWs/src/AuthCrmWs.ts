@@ -6,15 +6,15 @@ import ICCTParams, { IParamsInfo } from "@ungate/plugininf/lib/ICCTParams";
 import IContext from "@ungate/plugininf/lib/IContext";
 import IQuery, { IGateQuery } from "@ungate/plugininf/lib/IQuery";
 import { IResultProvider } from "@ungate/plugininf/lib/IResult";
-import NullAuthProvider, {
+import NullSessProvider, {
     IAuthResult,
-} from "@ungate/plugininf/lib/NullAuthProvider";
+} from "@ungate/plugininf/lib/NullSessProvider";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
 import { ReadStreamToArray } from "@ungate/plugininf/lib/stream/Util";
 import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
-import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
+import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
 
-export default class AuthCrmWs extends NullAuthProvider {
+export default class AuthCrmWs extends NullSessProvider {
     public static getParamsInfo(): IParamsInfo {
         return {
             ...CrmWsCaller.getParamsInfo(),
@@ -78,9 +78,9 @@ export default class AuthCrmWs extends NullAuthProvider {
     constructor(
         name: string,
         params: ICCTParams,
-        authController: IAuthController,
+        sessCtrl: ISessCtrl,
     ) {
-        super(name, params, authController);
+        super(name, params, sessCtrl);
         this.params = initParams(AuthCrmWs.getParamsInfo(), this.params);
         this.crmWSCaller = new CrmWsCaller(this.params);
         this.nsiJsonGateCaller = new JsonGateCaller({
@@ -385,7 +385,7 @@ export default class AuthCrmWs extends NullAuthProvider {
             .then(() =>
                 Promise.all(
                     Object.values(users).map((user) =>
-                        this.authController.addUser(
+                        this.sessCtrl.addUser(
                             (user as any).ck_id,
                             this.name,
                             user as any,
@@ -393,9 +393,9 @@ export default class AuthCrmWs extends NullAuthProvider {
                     ),
                 ),
             )
-            .then(() => this.authController.updateHashAuth())
+            .then(() => this.sessCtrl.updateHashAuth())
             .then(() => {
-                this.authController.updateUserInfo(this.name);
+                this.sessCtrl.updateUserInfo(this.name);
                 return Promise.resolve();
             });
     }

@@ -6,19 +6,19 @@ import IObjectParam from "@ungate/plugininf/lib/IObjectParam";
 import IQuery from "@ungate/plugininf/lib/IQuery";
 import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
 import ISession from "@ungate/plugininf/lib/ISession";
-import NullAuthProvider, {
+import NullSessProvider, {
     IAuthResult,
-} from "@ungate/plugininf/lib/NullAuthProvider";
+} from "@ungate/plugininf/lib/NullSessProvider";
 import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
 import * as ActiveDirectory from "activedirectory";
 import { uniq } from "lodash";
-import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
-import { IAuthProviderParam } from "@ungate/plugininf/lib/NullAuthProvider";
+import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
+import { ISessProviderParam } from "@ungate/plugininf/lib/NullSessProvider";
 
 const BASIC_PATTERN = "Basic";
 const PASSWORD_PATTERN_NGINX_GSS = "bogus_auth_gss_passwd";
 
-interface IAdAuthParam extends IAuthProviderParam {
+interface IAdAuthParam extends ISessProviderParam {
     adBaseDN?: string;
     adLogin: string;
     adPassword: string;
@@ -33,7 +33,7 @@ interface IAdAuthParam extends IAuthProviderParam {
     }[];
 }
 
-export default class AdAuth extends NullAuthProvider {
+export default class AdAuth extends NullSessProvider {
     public static getParamsInfo(): IParamsInfo {
         return {
             adBaseDN: {
@@ -126,9 +126,9 @@ export default class AdAuth extends NullAuthProvider {
     constructor(
         name: string,
         params: ICCTParams,
-        authController: IAuthController,
+        sessCtrl: ISessCtrl,
     ) {
-        super(name, params, authController);
+        super(name, params, sessCtrl);
         this.params = initParams(AdAuth.getParamsInfo(), this.params);
         const userAttr = [
             "dn",
@@ -279,7 +279,7 @@ export default class AdAuth extends NullAuthProvider {
                                 },
                             );
                             addUsers.push(
-                                this.authController.addUser(
+                                this.sessCtrl.addUser(
                                     data.ck_id,
                                     this.name,
                                     data as any,
@@ -296,9 +296,9 @@ export default class AdAuth extends NullAuthProvider {
             );
         });
         return Promise.all(rows)
-            .then(() => this.authController.updateHashAuth())
+            .then(() => this.sessCtrl.updateHashAuth())
             .then(async () => {
-                await this.authController.updateUserInfo(this.name);
+                await this.sessCtrl.updateUserInfo(this.name);
             });
     }
     /**
@@ -336,7 +336,7 @@ export default class AdAuth extends NullAuthProvider {
                 reject(new ErrorException(ErrorGate.AUTH_DENIED));
                 return;
             }
-            this.authController
+            this.sessCtrl
                 .getUserDb()
                 .findOne(
                     {
@@ -367,7 +367,7 @@ export default class AdAuth extends NullAuthProvider {
                         },
                     );
                     if (!(userData.data || {}).ck_id) {
-                        await this.authController.addUser(
+                        await this.sessCtrl.addUser(
                             data.ck_id,
                             this.name,
                             data,
@@ -383,7 +383,7 @@ export default class AdAuth extends NullAuthProvider {
                         userData: data,
                     })
                         .then((res) =>
-                            this.authController.loadSession(res.session),
+                            this.sessCtrl.loadSession(res.session),
                         )
                         .then((sess) => resolve(sess));
                 })

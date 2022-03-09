@@ -9,7 +9,7 @@ import IGlobalObject from "@ungate/plugininf/lib/IGlobalObject";
 import NullContext from "@ungate/plugininf/lib/NullContext";
 import { initParams } from "@ungate/plugininf/lib/util/Util";
 import { noop } from "lodash";
-import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
+import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
 const createTempTable = (global as any as IGlobalObject).createTempTable;
 
 const querySql = "select q.* from t_interface q";
@@ -33,9 +33,9 @@ export default class CoreIntegration extends NullContext {
     constructor(
         name: string,
         params: ICCTParams,
-        authController: IAuthController,
+        sessCtrl: ISessCtrl,
     ) {
-        super(name, params, authController);
+        super(name, params, sessCtrl);
         this.params = initParams(CoreIntegration.getParamsInfo(), this.params);
         if (this.params.disableCache) {
             this.caller = this.onlineInitContext;

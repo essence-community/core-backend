@@ -8,20 +8,20 @@ import IObjectParam from "@ungate/plugininf/lib/IObjectParam";
 import IQuery from "@ungate/plugininf/lib/IQuery";
 import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
 import ISession from "@ungate/plugininf/lib/ISession";
-import NullAuthProvider, {
+import NullSessProvider, {
     IAuthResult,
-} from "@ungate/plugininf/lib/NullAuthProvider";
+} from "@ungate/plugininf/lib/NullSessProvider";
 import { ReadStreamToArray } from "@ungate/plugininf/lib/stream/Util";
 import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
 import * as ActiveDirectory from "activedirectory";
 import { X509 } from "jsrsasign";
 import { isObject, uniq } from "lodash";
-import { IAuthController } from "@ungate/plugininf/lib/IAuthController";
+import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
 
 const BASIC_PATTERN = "Basic";
 const PASSWORD_PATTERN_NGINX_GSS = "bogus_auth_gss_passwd";
 
-export default class PKOAuth extends NullAuthProvider {
+export default class PKOAuth extends NullSessProvider {
     public static getParamsInfo(): IParamsInfo {
         return {
             ...PostgresDB.getParamsInfo(),
@@ -74,9 +74,9 @@ export default class PKOAuth extends NullAuthProvider {
     constructor(
         name: string,
         params: ICCTParams,
-        authController: IAuthController,
+        sessCtrl: ISessCtrl,
     ) {
-        super(name, params, authController);
+        super(name, params, sessCtrl);
         this.params = initParams(PKOAuth.getParamsInfo(), this.params);
         this.dataSource = new PostgresDB(`${this.name}_provider`, {
             connectString: this.params.connectString,
@@ -323,7 +323,7 @@ export default class PKOAuth extends NullAuthProvider {
             .then(() =>
                 Promise.all(
                     Object.values(users).map((user) =>
-                        this.authController.addUser(
+                        this.sessCtrl.addUser(
                             (user as any).ck_id,
                             this.name,
                             user as any,
@@ -331,9 +331,9 @@ export default class PKOAuth extends NullAuthProvider {
                     ),
                 ),
             )
-            .then(() => this.authController.updateHashAuth())
+            .then(() => this.sessCtrl.updateHashAuth())
             .then(async () => {
-                await this.authController.updateUserInfo(this.name);
+                await this.sessCtrl.updateUserInfo(this.name);
             });
     }
     public async initContext(
@@ -402,7 +402,7 @@ export default class PKOAuth extends NullAuthProvider {
                 reject(new ErrorException(ErrorGate.AUTH_DENIED));
                 return;
             }
-            this.authController
+            this.sessCtrl
                 .getUserDb()
                 .findOne(
                     {
@@ -434,7 +434,7 @@ export default class PKOAuth extends NullAuthProvider {
                         },
                     );
                     if (!(userData.data || {}).ck_id) {
-                        await this.authController.addUser(
+                        await this.sessCtrl.addUser(
                             data.ck_id,
                             this.name,
                             data,
@@ -444,7 +444,7 @@ export default class PKOAuth extends NullAuthProvider {
                     if (isUserData) {
                         return resolve(data);
                     }
-                    const session = await this.authController.loadSession(
+                    const session = await this.sessCtrl.loadSession(
                         gateContext,
                         userData.ck_id || user.objectSID,
                     );
@@ -457,7 +457,7 @@ export default class PKOAuth extends NullAuthProvider {
                         userData: data,
                     })
                         .then((res) =>
-                            this.authController.loadSession(res.session),
+                            this.sessCtrl.loadSession(res.session),
                         )
                         .then((sess) => resolve(sess));
                 })
