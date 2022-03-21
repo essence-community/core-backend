@@ -328,7 +328,7 @@ export default class RestTransformProxy extends NullProvider {
         let headers: any = {};
         if (this.params.defaultIncludeHeader) {
             this.params.defaultIncludeHeader.forEach(({key}) => {
-                if (!isEmpty(headers[key])){
+                if (!isEmpty(gateContext.request.headers[key])){
                     headers[key] = gateContext.request.headers[key];
                 }
             });
@@ -341,7 +341,7 @@ export default class RestTransformProxy extends NullProvider {
         }
         if (config.includeHeader) {
             config.includeHeader.forEach((item: string) => {
-                if (!isEmpty(headers[item])){
+                if (!isEmpty(gateContext.request.headers[item])){
                     headers[item] = gateContext.request.headers[item];
                 }
             });
