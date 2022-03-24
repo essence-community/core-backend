@@ -24,8 +24,8 @@ export function isEmpty(value: any, allowEmptyString: boolean = false) {
     );
 }
 
-export function dateBetween(date: Date, fromDate: Date, toDate: Date) {
-    return date >= fromDate && date <= toDate;
+export function dateBetween(date: moment.Moment, startDate: moment.Moment, endDate: moment.Moment) {
+    return date.isBetween(startDate, endDate, undefined, '[]');
 }
 
 function decryptAes(

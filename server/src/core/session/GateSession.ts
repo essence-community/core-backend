@@ -35,6 +35,7 @@ import { TypeOrmLogger } from "@ungate/plugininf/lib/db/TypeOrmLogger";
 import { UserStore } from "./store/typeorm/UserStore";
 import { CacheStore } from "./store/typeorm/CacheStore";
 import { getSessionMaxAgeMs } from "../util";
+import { dateBetween } from '../../../../plugininf/lib/util/Util';
 
 const REPLICA_TIMEOUT = parseInt(
     process.env.KUBERNETES_REPLICA_TIMEOUT || "0",
@@ -249,6 +250,7 @@ export class GateSession implements ISessCtrl {
             context.request.session.gsession &&
             context.request.session.gsession.session === sessionId
         ) {
+            await this.prolongationSession(context);
             return context.request.session.gsession;
         }
 
@@ -261,6 +263,7 @@ export class GateSession implements ISessCtrl {
                 context.request.session.gsession.sessionData.typeCheckAuth ===
                     "cookieorsession")
         ) {
+            await this.prolongationSession(context);
             return context.request.session.gsession;
         }
 
@@ -269,7 +272,7 @@ export class GateSession implements ISessCtrl {
 
             if (val) {
                 return new Promise((resolve, reject) => {
-                    this.store.get(val, (err, data: ISessionData) => {
+                    this.store.get(val, async (err, data: ISessionData) => {
                         if (err) {
                             return reject(err);
                         }
@@ -288,12 +291,14 @@ export class GateSession implements ISessCtrl {
                                 .forEach(([key, value]) => {
                                     context.request.session[key] = value;
                                 });
+                            await this.prolongationSession(context, false);
                             this.saveSession(context).then(
                                 () => resolve(context.request.session.gsession),
                                 reject,
                             );
                             return;
                         }
+                        await this.prolongationSession(context);
                         return resolve((data as any).gsession);
                     });
                 });
@@ -301,6 +306,15 @@ export class GateSession implements ISessCtrl {
         }
 
         return null;
+    }
+
+    private async prolongationSession(context: IContext, isSave = true) {
+        if (dateBetween(moment(), moment(context.request.session.expires).clone().subtract(5, 'minute'), moment(context.request.session.expires).clone())) {
+            context.request.session.cookie.expires = new Date(Date.now() + context.request.session.cookie.maxAge);
+            context.request.session.expires =
+                context.request.session.cookie.expires;
+            return isSave ? this.saveSession(context) : undefined;
+        }
     }
 
     /**
