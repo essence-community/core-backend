@@ -135,6 +135,8 @@ export function decryptPassword(value: string) {
     const type = value.substring(1, endIndex);
     const hash = value.substring(endIndex + 1);
     switch (type) {
+        case "env":
+            return process.env[hash];
         case "aes-128-gcm":
         case "aes-192-gcm":
         case "aes-256-gcm":
