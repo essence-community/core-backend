@@ -111,6 +111,7 @@ const utils = {
     Array,
     encodeURIComponent,
     decodeURIComponent,
+    Promise,
 };
 
 async function parseOperations(
