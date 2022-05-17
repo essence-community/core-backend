@@ -92,6 +92,6 @@ DELETE FROM ${user.table}.t_account_role tar WHERE tar.ck_account = '4fd05ca9-3a
 ALTER TABLE ${user.table}.t_account ADD cl_deleted smallint NOT NULL DEFAULT 0::smallint;
 COMMENT ON COLUMN ${user.table}.t_account.cl_deleted IS 'Признак удаления';
 
---changeset artemov_i:add_logical_delete dbms:postgresql
+--changeset artemov_i:add_type_json_info dbms:postgresql
 ALTER TABLE ${user.table}.t_d_info DROP CONSTRAINT cin_c_d_info_1;
 ALTER TABLE ${user.table}.t_d_info ADD CONSTRAINT cin_c_d_info_1 CHECK (cr_type in ('json', 'array', 'object', 'text', 'date', 'integer', 'numeric', 'boolean', 'textarea', 'custom'));
