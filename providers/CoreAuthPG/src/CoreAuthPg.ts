@@ -238,7 +238,7 @@ export default class CoreAuthPg extends NullSessProvider {
                     "  from s_at.t_account u\n" +
                     "  left join (select a.ck_id,\n" +
                     "               array_agg(a.ck_d_info) as key,\n" +
-                    "               array_agg(ainf.cv_value) as value\n" +
+                    "               array_agg(pkg_json_account.f_decode_attr(ainf.cv_value, a.cr_type)) as value\n" +
                     "          from (select ac.ck_id, inf.ck_id as ck_d_info, inf.cr_type\n" +
                     "                  from s_at.t_account ac, s_at.t_d_info inf) a\n" +
                     "          left join s_at.t_account_info ainf\n" +

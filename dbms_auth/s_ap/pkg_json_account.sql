@@ -12,7 +12,7 @@ CREATE OR REPLACE FUNCTION pkg_json_account.f_get_field_info(
     RETURNS text
     LANGUAGE 'plpgsql'
     SECURITY DEFINER 
-    SET search_path=public, pkg, pkg_account, s_at
+    SET search_path=public, pkg, pkg_account, ${user.table}
 AS $BODY$
 declare
   -- переменные пакета
@@ -20,7 +20,7 @@ declare
   
   vv_res jsonb := '[]'::jsonb;
   vot_rec record;
-  vot_d_info s_at.t_d_info;
+  vot_d_info ${user.table}.t_d_info;
   vv_required varchar := 'false';
   vv_value text := '';
 begin
@@ -32,7 +32,7 @@ begin
   perform pkg.p_reset_response();--(pn_user);
   --JSON -> rowtype
   if pk_d_info is null then
-  	for vot_rec in (select ck_id from s_at.t_d_info) loop
+  	for vot_rec in (select ck_id from ${user.table}.t_d_info) loop
   		vv_res := vv_res || (pkg_json_account.f_get_field_info(pv_master, vot_rec.ck_id))::jsonb;
     end loop;
     return vv_res::text;
@@ -40,12 +40,12 @@ begin
   if pv_master is not null then
   	select cv_value
   	into vv_value
-  	from s_at.t_account_info where ck_account = pv_master::uuid;
+  	from ${user.table}.t_account_info where ck_account = pv_master::uuid;
   end if;
   select 
   	t.*
   	into strict vot_d_info
-  from s_at.t_d_info t
+  from ${user.table}.t_d_info t
   	where t.ck_id = pk_d_info;
   if vot_d_info.cl_required = 1 then
     vv_required := 'true';
@@ -66,6 +66,48 @@ begin
   	));
   end if;
   if vot_d_info.cr_type = 'textarea' then
+  	return json_build_array(json_build_object(
+  		'type', 'IFIELD',
+		'cv_name', vot_d_info.cv_description,
+		'column', coalesce(pv_column, vot_d_info.ck_id),
+		'datatype', 'textarea',
+		'cl_dataset', 0,
+		'cv_displayed', vot_d_info.ck_id,
+    'info', vot_d_info.cv_description,
+		'ck_page_object', sys_guid(),
+		'required', vv_required,
+		'defaultvalue', vv_value
+  	));
+  end if;
+  if vot_d_info.cr_type = 'json' then
+  	return json_build_array(json_build_object(
+  		'type', 'IFIELD',
+		'cv_name', vot_d_info.cv_description,
+		'column', coalesce(pv_column, vot_d_info.ck_id),
+		'datatype', 'textarea',
+		'cl_dataset', 0,
+		'cv_displayed', vot_d_info.ck_id,
+    'info', vot_d_info.cv_description,
+		'ck_page_object', sys_guid(),
+		'required', vv_required,
+		'defaultvalue', vv_value
+  	));
+  end if;
+  if vot_d_info.cr_type = 'array' then
+  	return json_build_array(json_build_object(
+  		'type', 'IFIELD',
+		'cv_name', vot_d_info.cv_description,
+		'column', coalesce(pv_column, vot_d_info.ck_id),
+		'datatype', 'textarea',
+		'cl_dataset', 0,
+		'cv_displayed', vot_d_info.ck_id,
+    'info', vot_d_info.cv_description,
+		'ck_page_object', sys_guid(),
+		'required', vv_required,
+		'defaultvalue', vv_value
+  	));
+  end if;
+  if vot_d_info.cr_type = 'object' then
   	return json_build_array(json_build_object(
   		'type', 'IFIELD',
 		'cv_name', vot_d_info.cv_description,
@@ -144,6 +186,45 @@ end;$BODY$;
 ALTER FUNCTION pkg_json_account.f_get_field_info(character varying, character varying, character varying)
     OWNER TO s_ap;
 
+CREATE FUNCTION pkg_json_account.f_decode_attr(pv_value varchar, pk_data_type varchar) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER PARALLEL SAFE
+    SET search_path TO 'pkg_json_account', 'public'
+    AS $$
+begin
+
+  if pk_data_type = 'localization' or pk_data_type = 'enum' or pk_data_type = 'date' or pk_data_type = 'text' then
+    return to_jsonb(pv_value);
+  end if;
+  
+  if pk_data_type = 'integer' then
+    return to_jsonb(pv_value::bigint);
+  end if;
+
+  if pk_data_type = 'numeric' then
+    return to_jsonb(pv_value::decimal);
+  end if;
+  
+  if pk_data_type = 'boolean' then
+    if pv_value is null then 
+      return null;
+    end if;
+    return  to_jsonb(pv_value::bool);
+  end if;
+  
+  --  or pk_data_type = 'global'
+  if pk_data_type = 'array' or pk_data_type = 'object' or pk_data_type = 'json' then
+    if pv_value ~ '^[\[\{]' then
+      return pv_value::jsonb;
+    end if;
+    return null;
+  end if;
+
+  return to_jsonb(pv_value);
+end;
+$$;
+
+ALTER FUNCTION pkg_json_account.f_decode_attr(pv_value varchar, pk_data_type varchar) OWNER TO s_ap;
+
 CREATE OR REPLACE FUNCTION pkg_json_account.f_get_user(
 	pv_login character varying DEFAULT NULL::character varying,
 	pv_password character varying DEFAULT NULL::character varying,
@@ -152,15 +233,15 @@ CREATE OR REPLACE FUNCTION pkg_json_account.f_get_user(
     RETURNS character varying
     LANGUAGE 'plpgsql'
     SECURITY DEFINER 
-    SET search_path=public, pkg, pkg_account, s_at
+    SET search_path=public, pkg, pkg_account, ${user.table}
 AS $BODY$
 declare
   -- переменные пакета
   gv_error sessvarstr;
 
   -- переменные функции
-  vot_account s_at.t_account;
-  vot_auth_token s_at.t_auth_token;
+  vot_account ${user.table}.t_account;
+  vot_auth_token ${user.table}.t_auth_token;
 begin
   -- инициализация/получение переменных пакета
   gv_error = sessvarstr_declare('pkg', 'gv_error', '');
@@ -174,7 +255,7 @@ begin
     select 
       t.* 
       into vot_auth_token
-    from s_at.t_auth_token t 
+    from ${user.table}.t_auth_token t 
       where t.ck_id = pv_token and CURRENT_TIMESTAMP BETWEEN t.ct_start and t.ct_expire;
     
     if vot_auth_token.ck_account is not null and vot_auth_token.cl_single = 1 then
@@ -188,7 +269,7 @@ begin
   select
     *
     into vot_account
-  from s_at.t_account
+  from ${user.table}.t_account
     where (upper(cv_login) = upper(pv_login) and cl_deleted = 0::smallint and cv_hash_password = pkg_account.f_create_hash(cv_salt, pv_password)) or (vot_auth_token.ck_account is not null and cl_deleted = 0::smallint and ck_id = vot_auth_token.ck_account);
   -- логируем данные
   if pl_audit = 1 then
@@ -211,7 +292,7 @@ CREATE OR REPLACE FUNCTION pkg_json_account.f_modify_account(
     RETURNS text
     LANGUAGE 'plpgsql'
     SECURITY DEFINER 
-    SET search_path=public, pkg, pkg_account, s_at
+    SET search_path=public, pkg, pkg_account, ${user.table}
 AS $BODY$
 declare
   -- переменные пакета
@@ -219,7 +300,7 @@ declare
   gl_warning sessvari;
 
   -- переменные функции
-  vot_account s_at.t_account;
+  vot_account ${user.table}.t_account;
   vl_deleted smallint;
   vct_account_info jsonb := '[]'::jsonb;
   vv_action  varchar(1);
@@ -237,7 +318,7 @@ begin
   vot_account.ck_id = nullif(trim(pc_json#>>'{data,ck_id}'), '')::uuid;
   select ac.cl_deleted
    into vl_deleted
-   from s_at.t_account ac where vot_account.ck_id is not null and ac.ck_id = vot_account.ck_id;
+   from ${user.table}.t_account ac where vot_account.ck_id is not null and ac.ck_id = vot_account.ck_id;
   vot_account.cv_login = nullif(trim(pc_json#>>'{data,cv_login}'), '');
   vot_account.cv_name = nullif(trim(pc_json#>>'{data,cv_name}'), '');
   vot_account.cv_hash_password = nullif(trim(pc_json#>>'{data,cv_hash_password}'), '');
@@ -258,7 +339,7 @@ begin
     select 
     	inf.ck_id as ck_d_info,
     	jr.value as cv_value
-    from s_at.t_d_info as inf
+    from ${user.table}.t_d_info as inf
   	join jsonb_each(pc_json->'data') as jr
   	on inf.ck_id = jr.key
   ) as jt;
@@ -284,14 +365,14 @@ CREATE OR REPLACE FUNCTION pkg_json_account.f_modify_account_info(
     RETURNS text
     LANGUAGE 'plpgsql'
     SECURITY DEFINER 
-    SET search_path=public, pkg, pkg_account, s_at
+    SET search_path=public, pkg, pkg_account, ${user.table}
 AS $BODY$
 declare
   -- переменные пакета
   gv_error sessvarstr;
 
   -- переменные функции
-  vot_account_info s_at.t_account_info;
+  vot_account_info ${user.table}.t_account_info;
   vv_action  varchar(1);
 begin
   -- инициализация/получение переменных пакета
@@ -331,14 +412,14 @@ CREATE OR REPLACE FUNCTION pkg_json_account.f_modify_account_role(
     RETURNS text
     LANGUAGE 'plpgsql'
     SECURITY DEFINER 
-    SET search_path=public, pkg, pkg_account, s_at
+    SET search_path=public, pkg, pkg_account, ${user.table}
 AS $BODY$
 declare
   -- переменные пакета
   gv_error sessvarstr;
 
   -- переменные функции
-  vot_account_role s_at.t_account_role;
+  vot_account_role ${user.table}.t_account_role;
   vot_account_role_r record;
   vv_action  varchar(1);
 begin
@@ -382,14 +463,14 @@ CREATE OR REPLACE FUNCTION pkg_json_account.f_modify_action(
     RETURNS text
     LANGUAGE 'plpgsql'
     SECURITY DEFINER 
-    SET search_path=public, pkg_account, s_at
+    SET search_path=public, pkg_account, ${user.table}
 AS $BODY$
 declare
   -- переменные пакета
   gv_error sessvarstr;
 
   -- переменные функции
-  vot_action s_at.t_action;
+  vot_action ${user.table}.t_action;
   vv_action  varchar(1);
 begin
   -- инициализация/получение переменных пакета
@@ -428,14 +509,14 @@ CREATE OR REPLACE FUNCTION pkg_json_account.f_modify_action_role(
     RETURNS text
     LANGUAGE 'plpgsql'
     SECURITY DEFINER 
-    SET search_path=public, pkg, pkg_account, s_at
+    SET search_path=public, pkg, pkg_account, ${user.table}
 AS $BODY$
 declare
   -- переменные пакета
   gv_error sessvarstr;
 
   -- переменные функции
-  vot_role_action s_at.t_role_action;
+  vot_role_action ${user.table}.t_role_action;
   vot_role_action_r record;
   vv_action  varchar(1);
 begin
@@ -479,14 +560,14 @@ CREATE OR REPLACE FUNCTION pkg_json_account.f_modify_d_info(
     RETURNS text
     LANGUAGE 'plpgsql'
     SECURITY DEFINER 
-    SET search_path=public, pkg_account, s_at
+    SET search_path=public, pkg_account, ${user.table}
 AS $BODY$
 declare
   -- переменные пакета
   gv_error sessvarstr;
 
   -- переменные функции
-  vot_d_info s_at.t_d_info;
+  vot_d_info ${user.table}.t_d_info;
   vv_action  varchar(1);
 begin
   -- инициализация/получение переменных пакета
@@ -527,14 +608,14 @@ CREATE OR REPLACE FUNCTION pkg_json_account.f_modify_role(
     RETURNS text
     LANGUAGE 'plpgsql'
     SECURITY DEFINER 
-    SET search_path=public, pkg, pkg_account, s_at
+    SET search_path=public, pkg, pkg_account, ${user.table}
 AS $BODY$
 declare
   -- переменные пакета
   gv_error sessvarstr;
 
   -- переменные функции
-  vot_role s_at.t_role;
+  vot_role ${user.table}.t_role;
   vv_action  varchar(1);
 begin
   -- инициализация/получение переменных пакета
@@ -574,14 +655,14 @@ CREATE OR REPLACE FUNCTION pkg_json_account.f_modify_role_account(
     RETURNS text
     LANGUAGE 'plpgsql'
     SECURITY DEFINER 
-    SET search_path=public, pkg, pkg_account, s_at
+    SET search_path=public, pkg, pkg_account, ${user.table}
 AS $BODY$
 declare
   -- переменные пакета
   gv_error sessvarstr;
 
   -- переменные функции
-  vot_account_role s_at.t_account_role;
+  vot_account_role ${user.table}.t_account_role;
   vot_account_role_r record;
   vv_action  varchar(1);
 begin
@@ -625,14 +706,14 @@ CREATE OR REPLACE FUNCTION pkg_json_account.f_modify_role_action(
     RETURNS text
     LANGUAGE 'plpgsql'
     SECURITY DEFINER 
-    SET search_path=public, pkg_account, s_at
+    SET search_path=public, pkg_account, ${user.table}
 AS $BODY$
 declare
   -- переменные пакета
   gv_error sessvarstr;
 
   -- переменные функции
-  vot_role_action s_at.t_role_action;
+  vot_role_action ${user.table}.t_role_action;
   vot_role_action_r record;
   vv_action  varchar(1);
 begin
@@ -676,14 +757,14 @@ CREATE OR REPLACE FUNCTION pkg_json_account.f_modify_auth_token(
     RETURNS text
     LANGUAGE 'plpgsql'
     SECURITY DEFINER 
-    SET search_path=public, pkg_account, s_at
+    SET search_path=public, pkg_account, ${user.table}
 AS $BODY$
 declare
   -- переменные пакета
   gv_error sessvarstr;
 
   -- переменные функции
-  vot_auth_token s_at.t_auth_token;
+  vot_auth_token ${user.table}.t_auth_token;
   vv_action  varchar(1);
 begin
   -- инициализация/получение переменных пакета

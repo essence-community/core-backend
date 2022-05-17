@@ -9,7 +9,7 @@ ALTER SCHEMA pkg_json_patcher OWNER TO s_ap;
 
 CREATE FUNCTION pkg_json_patcher.f_modify_patch(pv_user character varying, pk_session character varying, pc_json jsonb) RETURNS character varying
     LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 's_at', 'pkg_json_patcher', 'pkg_patcher', 'public'
+    SET search_path TO '${user.table}', 'pkg_json_patcher', 'pkg_patcher', 'public'
     AS $$
 declare
   -- переменные пакета
@@ -17,7 +17,7 @@ declare
   u sessvarstr;
 
   -- переменные функции
-  pot_create_patch  s_at.t_create_patch;
+  pot_create_patch  ${user.table}.t_create_patch;
   vv_action varchar(1);
 begin
   -- инициализация/получение переменных пакета

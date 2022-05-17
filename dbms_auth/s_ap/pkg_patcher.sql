@@ -4,9 +4,9 @@ DROP SCHEMA IF EXISTS pkg_patcher cascade;
 
 CREATE SCHEMA pkg_patcher AUTHORIZATION s_ap;
 
-CREATE FUNCTION pkg_patcher.p_modify_patch(pv_action character varying, INOUT pot_create_patch s_at.t_create_patch) RETURNS s_at.t_create_patch
+CREATE FUNCTION pkg_patcher.p_modify_patch(pv_action character varying, INOUT pot_create_patch ${user.table}.t_create_patch) RETURNS ${user.table}.t_create_patch
     LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'pkg_patcher', 's_at', 'public'
+    SET search_path TO 'pkg_patcher', '${user.table}', 'public'
     AS $$
 declare
   -- переменные пакета
@@ -25,7 +25,7 @@ begin
     gv_error = sessvarstr_declare('pkg', 'gv_error', '');
 
     if pv_action = d::varchar then
-        delete from s_at.t_create_patch where ck_id = pot_create_patch.ck_id;
+        delete from ${user.table}.t_create_patch where ck_id = pot_create_patch.ck_id;
         return;
     end if;
     if nullif(gv_error::varchar, '') is not null then
@@ -35,9 +35,9 @@ begin
       if pot_create_patch.ck_id is null then
         pot_create_patch.ck_id := uuid_generate_v4();
       end if;
-      insert into s_at.t_create_patch values (pot_create_patch.*);
+      insert into ${user.table}.t_create_patch values (pot_create_patch.*);
     elsif pv_action = u::varchar then
-      update s_at.t_create_patch set
+      update ${user.table}.t_create_patch set
         (cv_file_name, ck_user, ct_change) = (pot_create_patch.cv_file_name, pot_create_patch.ck_user, pot_create_patch.ct_change)
       where ck_id = pot_create_patch.ck_id;
       if not found then
@@ -47,17 +47,17 @@ begin
 end;
 $$;
 
-ALTER FUNCTION pkg_patcher.p_modify_patch(pv_action character varying, INOUT pot_create_patch s_at.t_create_patch) OWNER TO s_ap;
+ALTER FUNCTION pkg_patcher.p_modify_patch(pv_action character varying, INOUT pot_create_patch ${user.table}.t_create_patch) OWNER TO s_ap;
 
 CREATE FUNCTION pkg_patcher.p_lock_patch(pk_id uuid) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 's_at', 'pkg_patcher', 'public'
+    SET search_path TO '${user.table}', 'pkg_patcher', 'public'
     AS $$
 declare
   vn_lock bigint;
 begin
   if pk_id is not null then
-    select 1 into vn_lock from s_at.t_create_patch where ck_id = pk_id for update nowait;
+    select 1 into vn_lock from ${user.table}.t_create_patch where ck_id = pk_id for update nowait;
   end if;
 end;
 $$;

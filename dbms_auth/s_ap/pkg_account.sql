@@ -11,7 +11,7 @@ CREATE OR REPLACE FUNCTION pkg_account.f_create_hash(
     RETURNS character varying
     LANGUAGE 'plpgsql'
     SECURITY DEFINER 
-    SET search_path=public, pkg_account, s_at
+    SET search_path=public, pkg_account, ${user.table}
 AS $BODY$
 declare
     -- количество хэширования
@@ -39,13 +39,13 @@ CREATE OR REPLACE FUNCTION pkg_account.p_lock_account(
     RETURNS void
     LANGUAGE 'plpgsql'
     SECURITY DEFINER 
-    SET search_path=public, pkg, pkg_account, s_at
+    SET search_path=public, pkg, pkg_account, ${user.table}
 AS $BODY$
 declare
   vn_lock bigint;
 begin
   if pk_id is not null then
-    select 1 into vn_lock from s_at.t_account where ck_id = pk_id::uuid for update nowait;
+    select 1 into vn_lock from ${user.table}.t_account where ck_id = pk_id::uuid for update nowait;
   end if;
 end;
 $BODY$;
@@ -58,13 +58,13 @@ CREATE OR REPLACE FUNCTION pkg_account.p_lock_action(
     RETURNS void
     LANGUAGE 'plpgsql'
     SECURITY DEFINER 
-    SET search_path=public, pkg, pkg_account, s_at
+    SET search_path=public, pkg, pkg_account, ${user.table}
 AS $BODY$
 declare
   vn_lock bigint;
 begin
   if pk_id is not null then
-    select 1 into vn_lock from s_at.t_action where ck_id = pk_id::bigint for update nowait;
+    select 1 into vn_lock from ${user.table}.t_action where ck_id = pk_id::bigint for update nowait;
   end if;
 end;
 $BODY$;
@@ -77,13 +77,13 @@ CREATE OR REPLACE FUNCTION pkg_account.p_lock_d_info(
     RETURNS void
     LANGUAGE 'plpgsql'
     SECURITY DEFINER 
-    SET search_path=public, pkg, pkg_account, s_at
+    SET search_path=public, pkg, pkg_account, ${user.table}
 AS $BODY$
 declare
   vn_lock bigint;
 begin
   if pk_id is not null then
-    select 1 into vn_lock from s_at.t_d_info where ck_id = pk_id for update nowait;
+    select 1 into vn_lock from ${user.table}.t_d_info where ck_id = pk_id for update nowait;
   end if;
 end;
 $BODY$;
@@ -96,13 +96,13 @@ CREATE OR REPLACE FUNCTION pkg_account.p_lock_role(
     RETURNS void
     LANGUAGE 'plpgsql'
     SECURITY DEFINER 
-    SET search_path=public, pkg, pkg_account, s_at
+    SET search_path=public, pkg, pkg_account, ${user.table}
 AS $BODY$
 declare
   vn_lock bigint;
 begin
   if pk_id is not null then
-    select 1 into vn_lock from s_at.t_role where ck_id = pk_id::uuid for update nowait;
+    select 1 into vn_lock from ${user.table}.t_role where ck_id = pk_id::uuid for update nowait;
   end if;
 end;
 $BODY$;
@@ -112,12 +112,12 @@ ALTER FUNCTION pkg_account.p_lock_role(character varying)
 
 CREATE OR REPLACE FUNCTION pkg_account.p_modify_account(
 	pv_action character varying,
-	INOUT pot_account s_at.t_account,
+	INOUT pot_account ${user.table}.t_account,
 	pct_account_info jsonb DEFAULT NULL::jsonb)
-    RETURNS s_at.t_account
+    RETURNS ${user.table}.t_account
     LANGUAGE 'plpgsql'
     SECURITY DEFINER 
-    SET search_path=public, pkg, pkg_account, s_at
+    SET search_path=public, pkg, pkg_account, ${user.table}
 AS $BODY$
 declare
   -- переменные пакета
@@ -149,11 +149,11 @@ begin
       return;
     end if;
     if pot_account.cl_deleted = 1::smallint then
-      delete from s_at.t_account_info where ck_account = pot_account.ck_id;
-      delete from s_at.t_account_role where ck_account = pot_account.ck_id;
-      delete from s_at.t_account where ck_id = pot_account.ck_id;
+      delete from ${user.table}.t_account_info where ck_account = pot_account.ck_id;
+      delete from ${user.table}.t_account_role where ck_account = pot_account.ck_id;
+      delete from ${user.table}.t_account where ck_id = pot_account.ck_id;
     else
-      update s_at.t_account
+      update ${user.table}.t_account
       set (cl_deleted,ck_user,ct_change) = 
       (1::smallint,pot_account.ck_user,pot_account.ct_change)
       where ck_id = pot_account.ck_id;
@@ -175,7 +175,7 @@ begin
   if pv_action = i::varchar then
     for vcur_account in (
       select 1
-      from s_at.t_account
+      from ${user.table}.t_account
       where upper(cv_login) = upper(pot_account.cv_login)
       ) loop
         perform pkg.p_set_error(203);
@@ -183,7 +183,7 @@ begin
     if pct_account_info is not null then
       for vcur_d_info in (
       select inf.*
-      from s_at.t_d_info inf
+      from ${user.table}.t_d_info inf
       join jsonb_to_recordset(pct_account_info) as t(ck_d_info varchar, cv_value varchar)
       	on inf.ck_id = t.ck_d_info
       where inf.cl_required = 1 and nullif(trim(t.cv_value), '') is null
@@ -193,7 +193,7 @@ begin
     elseif pct_account_info is null then
       for vcur_d_info in (
         select inf.*
-        from s_at.t_d_info inf
+        from ${user.table}.t_d_info inf
         where inf.cl_required = 1
       ) loop
         perform pkg.p_set_error(200, vcur_d_info.cv_description);
@@ -209,9 +209,9 @@ begin
   	pot_account.ck_id := public.uuid_generate_v4();
     pot_account.cv_salt := substring(encode(digest(pot_account.cv_login || pot_account.ct_change::varchar, 'sha256'), 'hex'), 0, 11);
     pot_account.cv_hash_password := pkg_account.f_create_hash(pot_account.cv_salt, pot_account.cv_hash_password);
-    insert into s_at.t_account values (pot_account.*);
+    insert into ${user.table}.t_account values (pot_account.*);
     if pct_account_info is not null then
-      insert into s_at.t_account_info(ck_account, ck_d_info, cv_value, ck_user, ct_change)
+      insert into ${user.table}.t_account_info(ck_account, ck_d_info, cv_value, ck_user, ct_change)
       select pot_account.ck_id, t.ck_d_info, t.cv_value, pot_account.ck_user, pot_account.ct_change 
       from jsonb_to_recordset(pct_account_info) as t(ck_d_info varchar, cv_value varchar);
     end if;
@@ -221,21 +221,21 @@ begin
    	  return;
   end if;
   if pot_account.cv_hash_password is null then
-     update s_at.t_account
+     update ${user.table}.t_account
      set (cv_login,cv_name,cv_surname,cv_patronymic,cv_email,cv_timezone,cl_deleted,ck_user,ct_change) = 
      (pot_account.cv_login,pot_account.cv_name,pot_account.cv_surname,pot_account.cv_patronymic,pot_account.cv_email,pot_account.cv_timezone,pot_account.cl_deleted,pot_account.ck_user,pot_account.ct_change)
      where ck_id = pot_account.ck_id;
   else
  	   pot_account.cv_salt := substring(encode(digest(pot_account.cv_login || pot_account.ct_change::varchar, 'sha256'), 'hex'), 0, 11);
      pot_account.cv_hash_password := pkg_account.f_create_hash(pot_account.cv_salt, pot_account.cv_hash_password);
-     update s_at.t_account
+     update ${user.table}.t_account
      set (cv_login,cv_salt,cv_hash_password,cv_name,cv_surname,cv_patronymic,cv_email,cv_timezone,cl_deleted,ck_user,ct_change) = 
      (pot_account.cv_login,pot_account.cv_salt,pot_account.cv_hash_password,pot_account.cv_name,pot_account.cv_surname,pot_account.cv_patronymic,pot_account.cv_email,pot_account.cv_timezone,pot_account.cl_deleted,pot_account.ck_user,pot_account.ct_change)
      where ck_id = pot_account.ck_id;
   end if;
 
   if pct_account_info is not null then
-      insert into s_at.t_account (ck_account, ck_d_info, cv_value, cl_deleted, ck_user, ct_change)
+      insert into ${user.table}.t_account (ck_account, ck_d_info, cv_value, cl_deleted, ck_user, ct_change)
       select pot_account.ck_id, t.ck_d_info, t.cv_value, pot_account.ck_user, pot_account.cl_deleted, pot_account.ct_change 
       from jsonb_to_recordset(pct_account_info) as t(ck_d_info varchar, cv_value varchar)
       on conflict(ck_account,ck_d_info) 
@@ -243,16 +243,16 @@ begin
   end if;
 end;$BODY$;
 
-ALTER FUNCTION pkg_account.p_modify_account(character varying, s_at.t_account, jsonb)
+ALTER FUNCTION pkg_account.p_modify_account(character varying, ${user.table}.t_account, jsonb)
     OWNER TO s_su;
 
 CREATE OR REPLACE FUNCTION pkg_account.p_modify_account_info(
 	pv_action character varying,
-	INOUT pot_account_info s_at.t_account_info)
-    RETURNS s_at.t_account_info
+	INOUT pot_account_info ${user.table}.t_account_info)
+    RETURNS ${user.table}.t_account_info
     LANGUAGE 'plpgsql'
     SECURITY DEFINER 
-    SET search_path=public, pkg, pkg_account, s_at
+    SET search_path=public, pkg, pkg_account, ${user.table}
 AS $BODY$
 declare
   -- переменные пакета
@@ -272,19 +272,19 @@ begin
 
   -- код функции
   if pv_action = d::varchar then
-    for vot_account_info in (select 1 from s_at.t_d_info where cl_required = 1 and ck_id = pot_account_info.ck_d_info) loop
+    for vot_account_info in (select 1 from ${user.table}.t_d_info where cl_required = 1 and ck_id = pot_account_info.ck_d_info) loop
       perform pkg.p_set_error(51, 'Обязательные поля нельзя удалять');
       return;
     end loop;
-    delete from s_at.t_account_info where ck_id = pot_account_info.ck_id;
+    delete from ${user.table}.t_account_info where ck_id = pot_account_info.ck_id;
     return;
   end if;
   if pv_action = i::varchar then
    pot_account_info.ck_id = public.uuid_generate_v4();
-   insert into s_at.t_account_info values (pot_account_info.*);
+   insert into ${user.table}.t_account_info values (pot_account_info.*);
    return;
   end if;
-  update s_at.t_account_info
+  update ${user.table}.t_account_info
     set (cv_value,ck_user,ct_change) = 
     (pot_account_info.cv_value,pot_account_info.ck_user,pot_account_info.ct_change)
   where ck_id = pot_account_info.ck_id;
@@ -294,19 +294,19 @@ begin
 end;
 $BODY$;
 
-ALTER FUNCTION pkg_account.p_modify_account_info(character varying, s_at.t_account_info)
+ALTER FUNCTION pkg_account.p_modify_account_info(character varying, ${user.table}.t_account_info)
     OWNER TO s_ap;
 
-COMMENT ON FUNCTION pkg_account.p_modify_account_info(character varying, s_at.t_account_info)
+COMMENT ON FUNCTION pkg_account.p_modify_account_info(character varying, ${user.table}.t_account_info)
     IS 'Добавление/редактирование/удаление доп информации пользователя';
 
 CREATE OR REPLACE FUNCTION pkg_account.p_modify_account_role(
 	pv_action character varying,
-	INOUT pot_account_role s_at.t_account_role)
-    RETURNS s_at.t_account_role
+	INOUT pot_account_role ${user.table}.t_account_role)
+    RETURNS ${user.table}.t_account_role
     LANGUAGE 'plpgsql'
     SECURITY DEFINER 
-    SET search_path=public, pkg, pkg_account, s_at
+    SET search_path=public, pkg, pkg_account, ${user.table}
 AS $BODY$
 declare
   -- переменные пакета
@@ -325,15 +325,15 @@ begin
 
   -- код функции
   if pv_action = d::varchar then  
-    delete from s_at.t_account_role where ck_role = pot_account_role.ck_role and ck_account = pot_account_role.ck_account;
+    delete from ${user.table}.t_account_role where ck_role = pot_account_role.ck_role and ck_account = pot_account_role.ck_account;
     return;
   end if;
   if pv_action = i::varchar then
    pot_account_role.ck_id := public.uuid_generate_v4();
-   insert into s_at.t_account_role values (pot_account_role.*);
+   insert into ${user.table}.t_account_role values (pot_account_role.*);
    return;
   end if;
-  update s_at.t_account_role
+  update ${user.table}.t_account_role
     set (ck_user,ct_change) = 
     (pot_role_action.ck_user,pot_role_action.ct_change)
   where ck_role = pot_account_role.ck_role and ck_account = pot_account_role.ck_account;
@@ -343,19 +343,19 @@ begin
 end;
 $BODY$;
 
-ALTER FUNCTION pkg_account.p_modify_account_role(character varying, s_at.t_account_role)
+ALTER FUNCTION pkg_account.p_modify_account_role(character varying, ${user.table}.t_account_role)
     OWNER TO s_ap;
 
-COMMENT ON FUNCTION pkg_account.p_modify_account_role(character varying, s_at.t_account_role)
+COMMENT ON FUNCTION pkg_account.p_modify_account_role(character varying, ${user.table}.t_account_role)
     IS 'Добавление/редактирование/удаление связи уз с ролями';
 
 CREATE OR REPLACE FUNCTION pkg_account.p_modify_action(
 	pv_action character varying,
-	INOUT pot_action s_at.t_action)
-    RETURNS s_at.t_action
+	INOUT pot_action ${user.table}.t_action)
+    RETURNS ${user.table}.t_action
     LANGUAGE 'plpgsql'
     SECURITY DEFINER 
-    SET search_path=public, pkg, pkg_account, s_at
+    SET search_path=public, pkg, pkg_account, ${user.table}
 AS $BODY$
 declare
   -- переменные пакета
@@ -375,11 +375,11 @@ begin
 
   -- код функции
   if pv_action = d::varchar then
-    for vot_rc in (select 1 from s_at.t_role_action where ck_action = pot_action.ck_id) loop
+    for vot_rc in (select 1 from ${user.table}.t_role_action where ck_action = pot_action.ck_id) loop
       perform pkg.p_set_error(204);
       return;
     end loop;
-    delete from s_at.t_action where ck_id = pot_action.ck_id;
+    delete from ${user.table}.t_action where ck_id = pot_action.ck_id;
     return;
   end if;
   if pot_action.cv_name is null then
@@ -392,14 +392,14 @@ begin
    if pot_action.ck_id is null then
       pot_action.ck_id = nextval('seq_action'::regclass);
    end if;
-   for vot_action in (select 1 from s_at.t_action where ck_id = pot_action.ck_id) loop
+   for vot_action in (select 1 from ${user.table}.t_action where ck_id = pot_action.ck_id) loop
   	perform pkg.p_set_error(201, 'meta:3755233db59d4305861c327dab09f8b0');
     return;
    end loop;
-   insert into s_at.t_action values (pot_action.*);
+   insert into ${user.table}.t_action values (pot_action.*);
    return;
   end if;
-  update s_at.t_action
+  update ${user.table}.t_action
     set (cv_name,cv_description,ck_user,ct_change) = 
     (pot_action.cv_name,pot_action.cv_description,pot_action.ck_user,pot_action.ct_change)
   where ck_id = pot_action.ck_id;
@@ -409,19 +409,19 @@ begin
 end;
 $BODY$;
 
-ALTER FUNCTION pkg_account.p_modify_action(character varying, s_at.t_action)
+ALTER FUNCTION pkg_account.p_modify_action(character varying, ${user.table}.t_action)
     OWNER TO s_ap;
 
-COMMENT ON FUNCTION pkg_account.p_modify_action(character varying, s_at.t_action)
+COMMENT ON FUNCTION pkg_account.p_modify_action(character varying, ${user.table}.t_action)
     IS 'Добавление/редактирование/удаление действия';
 
 CREATE OR REPLACE FUNCTION pkg_account.p_modify_d_info(
 	pv_action character varying,
-	INOUT pot_d_info s_at.t_d_info)
-    RETURNS s_at.t_d_info
+	INOUT pot_d_info ${user.table}.t_d_info)
+    RETURNS ${user.table}.t_d_info
     LANGUAGE 'plpgsql'
     SECURITY DEFINER 
-    SET search_path=public, pkg, pkg_account, s_at
+    SET search_path=public, pkg, pkg_account, ${user.table}
 AS $BODY$
 declare
   -- переменные пакета
@@ -441,8 +441,8 @@ begin
   -- код функции
   if pv_action = d::varchar then
     
-    delete from s_at.t_account_info where ck_d_info = pot_d_info.ck_id;
-    delete from s_at.t_d_info where ck_id = pot_d_info.ck_id;
+    delete from ${user.table}.t_account_info where ck_d_info = pot_d_info.ck_id;
+    delete from ${user.table}.t_d_info where ck_id = pot_d_info.ck_id;
     return;
   end if;
   if pot_d_info.ck_id is null then
@@ -458,14 +458,14 @@ begin
     return;
   end if;
   if pv_action = i::varchar then
-   for vot_d_info in (select 1 from s_at.t_d_info where ck_id = pot_d_info.ck_id) loop
+   for vot_d_info in (select 1 from ${user.table}.t_d_info where ck_id = pot_d_info.ck_id) loop
       perform pkg.p_set_error(201, 'meta:e0cd88534f90436da2b3b5eeae0ae340');
       return;
    end loop;
-   insert into s_at.t_d_info values (pot_d_info.*);
+   insert into ${user.table}.t_d_info values (pot_d_info.*);
    return;
   end if;
-  update s_at.t_d_info
+  update ${user.table}.t_d_info
     set (cv_description,cl_required,ck_user,ct_change) = 
     (pot_d_info.cv_description,pot_d_info.cl_required,pot_d_info.ck_user,pot_d_info.ct_change)
   where ck_id = pot_d_info.ck_id;
@@ -475,19 +475,19 @@ begin
 end;
 $BODY$;
 
-ALTER FUNCTION pkg_account.p_modify_d_info(character varying, s_at.t_d_info)
+ALTER FUNCTION pkg_account.p_modify_d_info(character varying, ${user.table}.t_d_info)
     OWNER TO s_ap;
 
-COMMENT ON FUNCTION pkg_account.p_modify_d_info(character varying, s_at.t_d_info)
+COMMENT ON FUNCTION pkg_account.p_modify_d_info(character varying, ${user.table}.t_d_info)
     IS 'Добавление/редактирование/удаление информации о дополнительных полях';
 
 CREATE OR REPLACE FUNCTION pkg_account.p_modify_role(
 	pv_action character varying,
-	INOUT pot_role s_at.t_role)
-    RETURNS s_at.t_role
+	INOUT pot_role ${user.table}.t_role)
+    RETURNS ${user.table}.t_role
     LANGUAGE 'plpgsql'
     SECURITY DEFINER 
-    SET search_path=public, pkg, pkg_account, s_at
+    SET search_path=public, pkg, pkg_account, ${user.table}
 AS $BODY$
 declare
   -- переменные пакета
@@ -506,12 +506,12 @@ begin
 
   -- код функции
   if pv_action = d::varchar then
-    for vot_role in (select 1 from s_at.t_account_role where ck_role = pot_role.ck_id) loop
+    for vot_role in (select 1 from ${user.table}.t_account_role where ck_role = pot_role.ck_id) loop
       perform pkg.p_set_error(204);
       return;
     end loop;
-    delete from s_at.t_role_action where ck_role = pot_role.ck_id;
-    delete from s_at.t_role where ck_id = pot_role.ck_id;
+    delete from ${user.table}.t_role_action where ck_role = pot_role.ck_id;
+    delete from ${user.table}.t_role where ck_id = pot_role.ck_id;
     return;
   end if;
   if pot_role.cv_name is null then
@@ -521,15 +521,15 @@ begin
     return;
   end if;
   if pv_action = i::varchar then
-   for vot_role in (select 1 from s_at.t_role where cv_name = pot_role.cv_name) loop
+   for vot_role in (select 1 from ${user.table}.t_role where cv_name = pot_role.cv_name) loop
      perform pkg.p_set_error(201, 'meta:e0cd88534f90436da2b3b5eeae0ae340');
      return;
    end loop;
    pot_role.ck_id = public.uuid_generate_v4();
-   insert into s_at.t_role values (pot_role.*);
+   insert into ${user.table}.t_role values (pot_role.*);
    return;
   end if;
-  update s_at.t_role
+  update ${user.table}.t_role
     set (cv_name,cv_description,ck_user,ct_change) = 
     (pot_role.cv_name,pot_role.cv_description,pot_role.ck_user,pot_role.ct_change)
   where ck_id = pot_role.ck_id;
@@ -539,19 +539,19 @@ begin
 end;
 $BODY$;
 
-ALTER FUNCTION pkg_account.p_modify_role(character varying, s_at.t_role)
+ALTER FUNCTION pkg_account.p_modify_role(character varying, ${user.table}.t_role)
     OWNER TO s_ap;
 
-COMMENT ON FUNCTION pkg_account.p_modify_role(character varying, s_at.t_role)
+COMMENT ON FUNCTION pkg_account.p_modify_role(character varying, ${user.table}.t_role)
     IS 'Добавление/редактирование/удаление роли';
 
 CREATE OR REPLACE FUNCTION pkg_account.p_modify_role_action(
 	pv_action character varying,
-	INOUT pot_role_action s_at.t_role_action)
-    RETURNS s_at.t_role_action
+	INOUT pot_role_action ${user.table}.t_role_action)
+    RETURNS ${user.table}.t_role_action
     LANGUAGE 'plpgsql'
     SECURITY DEFINER 
-    SET search_path=public, pkg, pkg_account, s_at
+    SET search_path=public, pkg, pkg_account, ${user.table}
 AS $BODY$
 declare
   -- переменные пакета
@@ -570,15 +570,15 @@ begin
 
   -- код функции
   if pv_action = d::varchar then  
-    delete from s_at.t_role_action where ck_role = pot_role_action.ck_role and ck_action = pot_role_action.ck_action;
+    delete from ${user.table}.t_role_action where ck_role = pot_role_action.ck_role and ck_action = pot_role_action.ck_action;
     return;
   end if;
   if pv_action = i::varchar then
    pot_role_action.ck_id = public.uuid_generate_v4();
-   insert into s_at.t_role_action values (pot_role_action.*);
+   insert into ${user.table}.t_role_action values (pot_role_action.*);
    return;
   end if;
-  update s_at.t_role_action
+  update ${user.table}.t_role_action
     set (ck_user,ct_change) = 
     (pot_role_action.ck_user,pot_role_action.ct_change)
   where ck_role = pot_role_action.ck_role and ck_action = pot_role_action.ck_action;
@@ -588,10 +588,10 @@ begin
 end;
 $BODY$;
 
-ALTER FUNCTION pkg_account.p_modify_role_action(character varying, s_at.t_role_action)
+ALTER FUNCTION pkg_account.p_modify_role_action(character varying, ${user.table}.t_role_action)
     OWNER TO s_ap;
 
-COMMENT ON FUNCTION pkg_account.p_modify_role_action(character varying, s_at.t_role_action)
+COMMENT ON FUNCTION pkg_account.p_modify_role_action(character varying, ${user.table}.t_role_action)
     IS 'Добавлени/редактирование/удаление связи ролей и экшенов';
 
 CREATE OR REPLACE FUNCTION pkg_account.p_lock_auth_token(
@@ -599,13 +599,13 @@ CREATE OR REPLACE FUNCTION pkg_account.p_lock_auth_token(
     RETURNS void
     LANGUAGE 'plpgsql'
     SECURITY DEFINER 
-    SET search_path=public, pkg, pkg_account, s_at
+    SET search_path=public, pkg, pkg_account, ${user.table}
 AS $BODY$
 declare
   vn_lock bigint;
 begin
   if pk_id is not null then
-    select 1 into vn_lock from s_at.t_auth_token where ck_id = pk_id for update nowait;
+    select 1 into vn_lock from ${user.table}.t_auth_token where ck_id = pk_id for update nowait;
   end if;
 end;
 $BODY$;
@@ -615,11 +615,11 @@ ALTER FUNCTION pkg_account.p_lock_auth_token(character varying)
 
 CREATE OR REPLACE FUNCTION pkg_account.p_modify_auth_token(
 	pv_action character varying,
-	INOUT pot_auth_token s_at.t_auth_token)
-    RETURNS s_at.t_auth_token
+	INOUT pot_auth_token ${user.table}.t_auth_token)
+    RETURNS ${user.table}.t_auth_token
     LANGUAGE 'plpgsql'
     SECURITY DEFINER 
-    SET search_path=public, pkg, pkg_account, s_at
+    SET search_path=public, pkg, pkg_account, ${user.table}
 AS $BODY$
 declare
   -- переменные пакета
@@ -639,13 +639,13 @@ begin
 
   -- код функции
   if pv_action = d::varchar then  
-    delete from s_at.t_auth_token where ck_id = pot_auth_token.ck_id;
+    delete from ${user.table}.t_auth_token where ck_id = pot_auth_token.ck_id;
     return;
   end if;
   if pv_action = i::varchar then
     select ac.cl_deleted
       into vl_deleted
-    from s_at.t_account ac where vot_account.ck_id is not null and ac.ck_id = vot_account.ck_id;
+    from ${user.table}.t_account ac where vot_account.ck_id is not null and ac.ck_id = vot_account.ck_id;
     if vl_deleted = 1::smallint then
       perform pkg.p_set_error(51, 'b26c57fa632e4567895b9c31f6085ee8');
     end if;
@@ -657,10 +657,10 @@ begin
     end if;
     vv_salt := encode(digest(pot_auth_token.ck_account::varchar || pot_auth_token.ct_start::varchar, 'sha256'), 'hex');
     pot_auth_token.ck_id = substring(pkg_account.f_create_hash(vv_salt, public.sys_guid()),0,50);
-    insert into s_at.t_auth_token values (pot_auth_token.*);
+    insert into ${user.table}.t_auth_token values (pot_auth_token.*);
    return;
   end if;
-  update s_at.t_auth_token
+  update ${user.table}.t_auth_token
     set (ct_expire,ck_user,ct_change) = 
     (pot_auth_token.ct_expire,pot_auth_token.ck_user,pot_auth_token.ct_change)
   where ck_id = pot_auth_token.ck_id;
@@ -670,8 +670,8 @@ begin
 end;
 $BODY$;
 
-ALTER FUNCTION pkg_account.p_modify_auth_token(character varying, s_at.t_auth_token)
+ALTER FUNCTION pkg_account.p_modify_auth_token(character varying, ${user.table}.t_auth_token)
     OWNER TO s_ap;
 
-COMMENT ON FUNCTION pkg_account.p_modify_auth_token(character varying, s_at.t_auth_token)
+COMMENT ON FUNCTION pkg_account.p_modify_auth_token(character varying, ${user.table}.t_auth_token)
     IS 'Добавлени/редактирование/удаление токенов';
