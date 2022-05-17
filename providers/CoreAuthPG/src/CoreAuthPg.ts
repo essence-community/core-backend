@@ -221,30 +221,23 @@ export default class CoreAuthPg extends NullSessProvider {
         this.log.trace("Cache users...");
         return this.dataSource
             .executeStmt(
-                "select json_object(array['ck_id',\n" +
-                    "                   'cv_login',\n" +
-                    "                   'cv_name',\n" +
-                    "                   'cv_surname',\n" +
-                    "                   'cv_patronymic',\n" +
-                    "                   'cv_email',\n" +
-                    "                   'cv_timezone']::varchar[] || coalesce(info.key::varchar[], array[]::varchar[]),\n" +
-                    "                   array[u.ck_id,\n" +
-                    "                   u.cv_login,\n" +
-                    "                   u.cv_name,\n" +
-                    "                   u.cv_surname,\n" +
-                    "                   u.cv_patronymic,\n" +
-                    "                   u.cv_email,\n" +
-                    "                   u.cv_timezone]::varchar[] || coalesce(info.value::varchar[], array[]::varchar[])) as json\n" +
-                    "  from s_at.t_account u\n" +
-                    "  left join (select a.ck_id,\n" +
-                    "               array_agg(a.ck_d_info) as key,\n" +
-                    "               array_agg(pkg_json_account.f_decode_attr(ainf.cv_value, a.cr_type)) as value\n" +
-                    "          from (select ac.ck_id, inf.ck_id as ck_d_info, inf.cr_type\n" +
-                    "                  from s_at.t_account ac, s_at.t_d_info inf) a\n" +
-                    "          left join s_at.t_account_info ainf\n" +
-                    "            on a.ck_d_info = ainf.ck_d_info and a.ck_id = ainf.ck_account\n" +
-                    "         group by a.ck_id) as info\n" +
-                    "    on u.ck_id = info.ck_id",
+                "select jsonb_build_object('ck_id', u.ck_id,\n" + 
+                "                   'cv_login', u.cv_login,\n" + 
+                "                   'cv_name', u.cv_name,\n" + 
+                "                   'cv_surname', u.cv_surname,\n" + 
+                "                   'cv_patronymic', u.cv_patronymic,\n" + 
+                "                   'cv_email', u.cv_email,\n" + 
+                "                   'cv_timezone', u.cv_timezone) || coalesce(info.attr, '{}'::jsonb) as json\n" + 
+                "  from s_at.t_account u\n" + 
+                "  left join (select a.ck_id,\n" + 
+                "                jsonb_object_agg(a.ck_d_info, pkg_json_account.f_decode_attr(ainf.cv_value, a.cr_type)) as attr\n" + 
+                "          from (select ac.ck_id, inf.ck_id as ck_d_info, inf.cr_type\n" + 
+                "                  from s_at.t_account ac, s_at.t_d_info inf) a\n" + 
+                "          left join s_at.t_account_info ainf\n" + 
+                "            on a.ck_d_info = ainf.ck_d_info and a.ck_id = ainf.ck_account\n" + 
+                "          where ainf.cv_value is not null\n" + 
+                "         group by a.ck_id) as info\n" + 
+                "    on u.ck_id = info.ck_id\n",
                 null,
                 null,
                 null,
