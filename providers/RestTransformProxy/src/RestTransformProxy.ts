@@ -470,7 +470,7 @@ export default class RestTransformProxy extends NullProvider {
             params.httpsAgent = JSON.parse(this.params.httpsAgent);
         }
         if (params.httpsAgent) {
-            const httpsAgent: AgentOptions = (
+            const httpsAgent: AgentOptions = typeof params.httpsAgent === "string" && (
                 params.httpsAgent as string
             ).startsWith("{")
                 ? JSON.parse(params.httpsAgent as string)
@@ -521,8 +521,12 @@ export default class RestTransformProxy extends NullProvider {
             params.httpsAgent = new HttpsAgent(httpsAgent);
         }
 
+        if (this.params.httpAgent) {
+            params.httpAgent = JSON.parse(this.params.httpAgent);
+        }
+
         if (params.httpAgent) {
-            const httpAgent = (params.httpAgent as string).startsWith("{")
+            const httpAgent = typeof params.httpsAgent === "string" && (params.httpAgent as string).startsWith("{")
                 ? JSON.parse(params.httpAgent as string)
                 : params.httpAgent;
 
