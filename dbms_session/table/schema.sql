@@ -1,5 +1,5 @@
 --liquibase formatted sql
---changeset artemov_i:init_schema_bpmn dbms:postgresql splitStatements:false stripComments:false
+--changeset artemov_i:init_session_schema dbms:postgresql splitStatements:false stripComments:false
 CREATE SCHEMA ${user.table};
 
 -- ${user.table}.t_cache definition
