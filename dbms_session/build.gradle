@@ -31,11 +31,11 @@ dependencies {
 liquibase {
   activities {
     schema {
-      changeLogFile 'db.changelog.integr.xml'
-      defaultsFile 'liquibase.integr.properties'
+      changeLogFile 'db.changelog.schema.xml'
+      defaultsFile 'liquibase.schema.properties'
     }
   }
-  runList = 'meta,schema'
+  runList = 'schema'
 }
 
 project.ext.getProperties().each {
