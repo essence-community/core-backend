@@ -45,6 +45,7 @@ CREATE INDEX cin_i_session_2 ON ${user.table}.t_session USING btree (ct_expire, 
 CREATE UNIQUE INDEX cin_i_session_3 ON ${user.table}.t_session USING btree (ck_id, ct_expire);
 CREATE UNIQUE INDEX cin_i_session_4 ON ${user.table}.t_session USING btree (ck_id, ct_expire, cl_delete);
 CREATE UNIQUE INDEX cin_i_session_5 ON ${user.table}.t_session USING btree (ck_id, cl_delete);
+CREATE INDEX cin_i_session_6 ON ${user.table}.t_session USING btree (cl_delete);
 
 -- Column comments
 
