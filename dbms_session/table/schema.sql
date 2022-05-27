@@ -9,8 +9,8 @@ CREATE SCHEMA ${user.table};
 -- DROP TABLE ${user.table}.t_cache;
 
 CREATE TABLE ${user.table}.t_cache (
-	ct_create timestamptz NOT NULL DEFAULT now(), -- Аудит время создания записи
-	ct_change timestamptz NOT NULL DEFAULT now(), -- Айдит время обновление записи
+	ct_create timestamp NOT NULL DEFAULT now(), -- Аудит время создания записи
+	ct_change timestamp NOT NULL DEFAULT now(), -- Айдит время обновление записи
 	ck_user varchar(100) NOT NULL DEFAULT 999999, -- Пользователь последний модифицирующий
 	ck_id varchar NOT NULL, -- Идентификатор
 	cct_data text NOT NULL, -- Данные
@@ -31,12 +31,12 @@ COMMENT ON COLUMN ${user.table}.t_cache.cct_data IS 'Данные';
 -- DROP TABLE ${user.table}.t_session;
 
 CREATE TABLE ${user.table}.t_session (
-	ct_create timestamptz NOT NULL DEFAULT now(), -- Аудит время создания записи
-	ct_change timestamptz NOT NULL DEFAULT now(), -- Айдит время обновление записи
+	ct_create timestamp NOT NULL DEFAULT now(), -- Аудит время создания записи
+	ct_change timestamp NOT NULL DEFAULT now(), -- Айдит время обновление записи
 	ck_user varchar(100) NOT NULL DEFAULT 999999, -- Пользователь последний модифицирующий
 	ck_id varchar NOT NULL, -- Идентификатор сессии
 	cct_data text NOT NULL, -- Данные сессии
-	ct_expire timestamptz NOT NULL, -- Дата истечения сессии
+	ct_expire timestamp NOT NULL, -- Дата истечения сессии
 	cl_delete bool NULL, -- Признак удаления
 	CONSTRAINT cin_p_session PRIMARY KEY (ck_id)
 );
@@ -64,8 +64,8 @@ COMMENT ON COLUMN ${user.table}.t_session.cl_delete IS 'Признак удал�
 -- DROP TABLE ${user.table}.t_user;
 
 CREATE TABLE ${user.table}.t_user (
-	ct_create timestamptz NOT NULL DEFAULT now(), -- Аудит время создания записи
-	ct_change timestamptz NOT NULL DEFAULT now(), -- Айдит время обновление записи
+	ct_create timestamp NOT NULL DEFAULT now(), -- Аудит время создания записи
+	ct_change timestamp NOT NULL DEFAULT now(), -- Айдит время обновление записи
 	ck_user varchar(100) NOT NULL DEFAULT 999999, -- Пользователь последний модифицирующий
 	ck_id varchar NOT NULL, -- Идентификатор пользователя
 	ck_d_provider varchar NOT NULL, -- Индетификатор провайдера
