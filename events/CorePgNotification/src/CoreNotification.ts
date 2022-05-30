@@ -116,13 +116,7 @@ export default class CoreNotification extends NullEvent {
         }));
         const params = { json: JSON.stringify(json) };
         const sqlNotification =
-            "select t.*\n" +
-            "  from t_notification t\n" +
-            " where current_timestamp between t.cd_st and t.cd_en\n" +
-            "   and t.cl_sent = 0\n" +
-            "   and t.ck_user in\n" +
-            "       (select ck_id from json_to_recordset(:json) as x(ck_id text))\n" +
-            "   for update skip locked";
+            "select pkg_json_notification.f_get_notification(:json::jsonb) as cv_json";
 
         this.dataSource.open().then((conn) =>
             conn
@@ -130,10 +124,11 @@ export default class CoreNotification extends NullEvent {
                 .then(
                     (data) =>
                         new Promise<void>((resolve, reject) => {
-                            const rows = [];
-                            data.stream.on("data", (chunk) => rows.push(chunk));
+                            let preRows = [] as any[];
+                            data.stream.on("data", (chunk) => preRows = [...preRows, ...JSON.parse(chunk.cv_json)]);
                             data.stream.on("error", (err) => reject(err));
                             data.stream.on("end", () => {
+                                const rows = preRows.filter((val) => typeof val === "object");
                                 if (rows.length) {
                                     const sendRows = rows.map((row) =>
                                         this.sendNotification(row.ck_user, row),
@@ -202,9 +197,20 @@ export default class CoreNotification extends NullEvent {
      */
     private sendNotification(user, row) {
         return new Promise<void | Record<string, any>>((resolve) => {
+            let res = {
+                json: JSON.stringify({
+                    data: {
+                        ...row,
+                        cl_sent: 1,
+                    },
+                    service: {
+                        cv_action: "U",
+                    },
+                }),
+            };
             try {
                 const msg = JSON.parse(row.cv_message);
-                const text = JSON.stringify([
+                let text = JSON.stringify([
                     {
                         data: {
                             ck_id: row.ck_id,
@@ -214,7 +220,7 @@ export default class CoreNotification extends NullEvent {
                     },
                 ]);
                 if (!isEmpty(msg.export_excel)) {
-                    const exportExcel = JSON.stringify([
+                    text = JSON.stringify([
                         {
                             data: {
                                 url: msg.export_excel,
@@ -227,13 +233,14 @@ export default class CoreNotification extends NullEvent {
                         data: {
                             ckUser: user,
                             nameProvider: this.params.authProvider,
-                            text: exportExcel,
+                            text,
                         },
                         target: "cluster",
                     });
+                    return;
                 }
                 if (!isEmpty(msg.reloadpageobject)) {
-                    const reloadMsg = JSON.stringify([
+                    text = JSON.stringify([
                         {
                             data: msg.reloadpageobject,
                             event: "reloadpageobject",
@@ -244,26 +251,17 @@ export default class CoreNotification extends NullEvent {
                         data: {
                             ckUser: user,
                             nameProvider: this.params.authProvider,
-                            text: reloadMsg,
-                        },
-                        target: "cluster",
-                    });
-                }
-                if (!isEmpty(msg.cv_error)) {
-                    sendProcess({
-                        command: "sendNotification",
-                        data: {
-                            ckUser: user,
-                            nameProvider: this.params.authProvider,
                             text,
                         },
                         target: "cluster",
                     });
+                    return;
                 }
                 if (
                     !isEmpty(msg.cv_error) ||
                     !isEmpty(msg.jt_message) ||
-                    !isEmpty(msg.jt_form_message)
+                    !isEmpty(msg.jt_form_message) ||
+                    Object.keys(msg).length
                 ) {
                     sendProcess({
                         command: "sendNotification",
@@ -275,20 +273,11 @@ export default class CoreNotification extends NullEvent {
                         target: "cluster",
                     });
                 }
-                resolve({
-                    json: JSON.stringify({
-                        data: {
-                            ...row,
-                            cl_sent: 1,
-                        },
-                        service: {
-                            cv_action: "U",
-                        },
-                    }),
-                });
             } catch (e) {
                 logger.error(`Message: ${JSON.stringify(row)}`, e);
-                resolve();
+                res = undefined;
+            } finally {
+                resolve(res);
             }
         });
     }
