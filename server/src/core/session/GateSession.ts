@@ -307,8 +307,8 @@ export class GateSession implements ISessCtrl {
         return null;
     }
 
-    private async prolongationSession(context: IContext, isSave = true) {
-        if (dateBetween(moment(), moment(context.request.session.expires).clone().subtract(5, 'minute'), moment(context.request.session.expires).clone())) {
+    private async prolongationSession(context?: IContext, isSave = true) {
+        if (context && dateBetween(moment(), moment(context.request.session.expires).clone().subtract(5, 'minute'), moment(context.request.session.expires).clone())) {
             context.request.session.cookie.expires = new Date(Date.now() + context.request.session.cookie.maxAge);
             context.request.session.expires =
                 context.request.session.cookie.expires;

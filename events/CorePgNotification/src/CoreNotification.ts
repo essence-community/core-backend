@@ -10,18 +10,24 @@ import { delay, isObject, noop } from "lodash";
 const logger = Logger.getLogger("CoreNotification");
 
 export default class CoreNotification extends NullEvent {
-    public static getParamsInfo(): IParamsInfo {
+    public static getParamsInfo (): IParamsInfo {
         return {
             authProvider: {
                 name: "Наименвание провайдера авторизации",
                 type: "string",
+            },
+            timeoutTimer: {
+                name: "Время опроса сервера в сек",
+                type: "integer",
+                defaultValue: 5,
             },
             ...PostgresDB.getParamsInfo(),
         };
     }
     private dataSource: PostgresDB;
     private eventConnect: Connection;
-    constructor(name: string, params: ICCTParams) {
+    private timer?: NodeJS.Timeout;
+    constructor (name: string, params: ICCTParams) {
         super(name, params);
         this.params = initParams(CoreNotification.getParamsInfo(), this.params);
         this.dataSource = new PostgresDB(`${this.name}_events`, {
@@ -39,7 +45,7 @@ export default class CoreNotification extends NullEvent {
     /**
      * Инициализация
      */
-    public async init(reload?: boolean): Promise<void> {
+    public async init (reload?: boolean): Promise<void> {
         if (this.eventConnect) {
             const conn = this.eventConnect;
             this.eventConnect = null;
@@ -54,18 +60,24 @@ export default class CoreNotification extends NullEvent {
             logger.error(`Ошибка оповещения ${this.name} ${err.message}`, err);
             this.reload();
         });
+        if (this.timer) {
+            clearTimeout(this.timer);
+            this.timer = undefined;
+        }
         return this.initEvents();
     }
-    /**
-     * Подключаем слежение к таблице
-     */
-    public initEvents(): Promise<void> {
-        logger.info(`Init event provider ${this.name}`);
+
+    private readMessage = () => {
+        if (this.timer) {
+            clearTimeout(this.timer);
+            this.timer = undefined;
+        }
         sendProcess({
             callback: {
-                command: "eventNotification",
+                command: "callEventPlugin",
                 data: {
                     name: this.name,
+                    command: "eventCorePgNotification",
                 },
                 target: "eventNode",
             },
@@ -75,6 +87,17 @@ export default class CoreNotification extends NullEvent {
             },
             target: "cluster",
         });
+        this.timer = setTimeout(
+            () => this.readMessage(),
+            this.params.timeoutTimer * 1000,
+        );
+    };
+    /**
+     * Подключаем слежение к таблице
+     */
+    public initEvents (): Promise<void> {
+        logger.info(`Init event provider ${this.name}`);
+        this.readMessage();
         const conn = this.eventConnect.getCurrentConnection();
         conn.on("notification", (msg) => {
             logger.debug("Notification %j", msg);
@@ -83,20 +106,7 @@ export default class CoreNotification extends NullEvent {
                 payload.table &&
                 payload.table.toLowerCase().endsWith("t_notification")
             ) {
-                sendProcess({
-                    callback: {
-                        command: "eventNotification",
-                        data: {
-                            name: this.name,
-                        },
-                        target: "eventNode",
-                    },
-                    command: "getWsUsers",
-                    data: {
-                        nameProvider: this.params.authProvider,
-                    },
-                    target: "cluster",
-                });
+                this.readMessage();
             }
         });
         return conn.query("LISTEN events");
@@ -106,8 +116,9 @@ export default class CoreNotification extends NullEvent {
      * Поиск оповещений
      * @param processData объект с юзерами
      */
-    public async eventNotification(ckUsers?: string[]): Promise<void> {
-        logger.debug(`LoadEventNotification: %j`, ckUsers);
+    public async eventCorePgNotification (data?: any): Promise<void> {
+        logger.debug("LoadEventNotification: %j", data);
+        const ckUsers = data?.users;
         if (isEmpty(ckUsers)) {
             return;
         }
@@ -125,15 +136,24 @@ export default class CoreNotification extends NullEvent {
                     (data) =>
                         new Promise<void>((resolve, reject) => {
                             let preRows = [] as any[];
-                            data.stream.on("data", (chunk) => preRows = [...preRows, ...JSON.parse(chunk.cv_json)]);
+                            data.stream.on(
+                                "data",
+                                (chunk) =>
+                                    (preRows = [
+                                        ...preRows,
+                                        ...JSON.parse(chunk.cv_json),
+                                    ]),
+                            );
                             data.stream.on("error", (err) => reject(err));
                             data.stream.on("end", () => {
-                                const rows = preRows.filter((val) => typeof val === "object");
+                                const rows = preRows.filter(
+                                    (val) => typeof val === "object",
+                                );
                                 if (rows.length) {
                                     const sendRows = rows.map((row) =>
                                         this.sendNotification(row.ck_user, row),
                                     );
-                                    return Promise.all(sendRows)
+                                    return conn.commit().then(() => Promise.all(sendRows)
                                         .then((values) =>
                                             this.updateNotification(
                                                 conn,
@@ -143,7 +163,7 @@ export default class CoreNotification extends NullEvent {
                                             ),
                                         )
                                         .then(() => resolve())
-                                        .catch((err) => reject(err));
+                                        .catch((err) => reject(err)));
                                 }
                                 return resolve();
                             });
@@ -175,12 +195,12 @@ export default class CoreNotification extends NullEvent {
      * @param params
      * @returns {*|Promise.<TResult>}
      */
-    private async updateNotification(conn: Connection, params = []) {
+    private async updateNotification (conn: Connection, params = []) {
         if (params.length) {
             return Promise.all(
                 params.map((param) =>
                     conn.executeStmt(
-                        "select PKG_JSON_NOTIFICATION.f_modify_notification(pc_json => :json) as result",
+                        "select PKG_JSON_NOTIFICATION.f_modify_notification(pc_json => :json::jsonb) as result",
                         param,
                     ),
                 ),
@@ -195,13 +215,13 @@ export default class CoreNotification extends NullEvent {
      * @param row {Object} строка сообщения
      * @returns {Promise}
      */
-    private sendNotification(user, row) {
+    private sendNotification (user, row) {
         return new Promise<void | Record<string, any>>((resolve) => {
             let res = {
                 json: JSON.stringify({
                     data: {
                         ...row,
-                        cl_sent: 1,
+                        cl_sent: 2,
                     },
                     service: {
                         cv_action: "U",
@@ -237,7 +257,7 @@ export default class CoreNotification extends NullEvent {
                         },
                         target: "cluster",
                     });
-                    return;
+                    return resolve(res);
                 }
                 if (!isEmpty(msg.reloadpageobject)) {
                     text = JSON.stringify([
@@ -255,7 +275,7 @@ export default class CoreNotification extends NullEvent {
                         },
                         target: "cluster",
                     });
-                    return;
+                    return resolve(res);
                 }
                 if (
                     !isEmpty(msg.cv_error) ||
@@ -272,19 +292,30 @@ export default class CoreNotification extends NullEvent {
                         },
                         target: "cluster",
                     });
+                    return resolve(res);
                 }
+                return resolve(res);
             } catch (e) {
                 logger.error(`Message: ${JSON.stringify(row)}`, e);
-                res = undefined;
-            } finally {
-                resolve(res);
+                res = {
+                    json: JSON.stringify({
+                        data: {
+                            ...row,
+                            cl_sent: 0,
+                        },
+                        service: {
+                            cv_action: "U",
+                        },
+                    }),
+                };
+                return resolve(res);
             }
         });
     }
     /**
      * Перезагрузка оповещение в случае сбоя
      */
-    private reload() {
+    private reload () {
         this.init().then(noop, (err) => {
             logger.error(`Ошибка оповещения ${this.name} ${err.message}`, err);
             delay(this.reload, 15000);

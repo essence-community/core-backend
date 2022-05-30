@@ -50,7 +50,7 @@ class NotificationController {
      * Установка маски
      * @param isMask
      */
-    public changeMask(isMask) {
+    public changeMask = (isMask) => {
         setTimeout(
             () => {
                 this.sendNotificationAll(
@@ -71,7 +71,7 @@ class NotificationController {
         );
     }
 
-    public async onRequest(request: websocket.request) {
+    public onRequest = async (request: websocket.request) => {
         if (
             !request.resourceURL.query ||
             !(request.resourceURL.query as ParsedQs).session
@@ -151,20 +151,15 @@ class NotificationController {
      * Получить все подключеные id пользователей
      * @param nameProvider
      */
-    public getIdUsers(nameProvider?: string): string[] {
-        const names = {};
-        forEach(this.notificationClient || {}, (userObj) => {
-            forEach(userObj || {}, (conn) => {
-                if (
-                    (nameProvider &&
-                        conn.session.nameProvider === nameProvider) ||
-                    !nameProvider
-                ) {
-                    names[(conn as any).session.idUser] = true;
-                }
-            });
-        });
-        return Object.keys(names);
+    public getIdUsers = (nameProvider?: string) => {
+        const allConn = Object.values(this.notificationClient || {}).reduce(
+            (arr, value) => [...arr, ...Object.values(value)],
+            [],
+        ) as IWSConnect[];
+        if (!nameProvider) {
+            return allConn.map((conn) => conn.session.idUser)
+        }
+        return allConn.filter((conn) => conn.session.nameProvider === nameProvider).map((conn) => conn.session.idUser);
     }
 
     /**
@@ -173,11 +168,11 @@ class NotificationController {
      * @param nameProvider наименование провайдера
      * @param text текст сообщения
      */
-    public sendNotification(
+    public sendNotification = (
         ckUser: string,
         nameProvider: string,
         text: string,
-    ) {
+    ) => {
         const allConn = Object.values(this.notificationClient || {}).reduce(
             (arr, value) => [...arr, ...Object.values(value)],
             [],
@@ -199,7 +194,7 @@ class NotificationController {
      * Отправка всем пользователям
      * @param text текст сообщения
      */
-    public sendNotificationAll(text: string) {
+    public sendNotificationAll = (text: string) => {
         forEach(this.notificationClient || {}, (userObj) => {
             forEach(userObj || {}, (conn) => conn.sendUTF(text));
         });
@@ -208,7 +203,7 @@ class NotificationController {
      * Обновление информации о пользователе
      * @param ckUser индификатор пользователя
      */
-    public updateUserInfo(nameProvider?: string, ckUser?: string) {
+    public updateUserInfo = (nameProvider?: string, ckUser?: string) => {
         const allConn = Object.values(this.notificationClient || {}).reduce(
             (arr, value) => [...arr, ...Object.values(value)],
             [],
@@ -284,7 +279,7 @@ class NotificationController {
     /**
      * Проверка пользователей на актуальность сессий
      */
-    public checkConnection() {
+    public checkConnection = () => {
         const allConn = Object.values(this.notificationClient || {}).reduce(
             (arr, value) => [...arr, ...Object.values(value)],
             [],

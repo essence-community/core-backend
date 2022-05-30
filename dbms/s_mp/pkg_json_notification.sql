@@ -8,7 +8,7 @@ CREATE SCHEMA pkg_json_notification
 
 ALTER SCHEMA pkg_json_notification OWNER TO s_mp;
 
-CREATE FUNCTION pkg_json_notification.f_modify_notification(pv_user varchar DEFAULT NULL::bigint, pv_session varchar DEFAULT NULL::varchar, pc_json jsonb DEFAULT NULL::jsonb) RETURNS varchar
+CREATE FUNCTION pkg_json_notification.f_modify_notification(pv_user varchar DEFAULT NULL::varchar, pv_session varchar DEFAULT NULL::varchar, pc_json jsonb DEFAULT NULL::jsonb) RETURNS varchar
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'pkg_json_notification', 'public'
     AS $$
@@ -87,26 +87,27 @@ $$;
 
 ALTER FUNCTION pkg_json_notification.add_notification(pv_user varchar DEFAULT NULL::bigint, pv_session varchar DEFAULT NULL::varchar, pv_user_message varchar DEFAULT NULL::varchar, pv_type_message varchar DEFAULT NULL::varchar, pv_message varchar DEFAULT NULL::varchar) OWNER TO s_mp;
 
-
 CREATE OR REPLACE FUNCTION pkg_json_notification.f_get_notification(pc_json jsonb) RETURNS varchar
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 'pkg_json_notification', 's_mt', 'public'
     AS $$
 declare 
-vv_rec record;
+vv_rec t_notification;
 vv_res jsonb := '[]'::jsonb;
 begin
-  for vv_rec in (select to_jsonb(t) as json
+  for vv_rec in (select t.*
         from t_notification t
       where current_timestamp between t.cd_st and t.cd_en
         and t.cl_sent = 0
         and t.ck_user in
             (select ck_id from jsonb_to_recordset(pc_json) as x(ck_id text))
         for update skip locked) loop
-            vv_res := vv_res || jsonb_build_array(vv_rec.json);
-        end loop;
+    vv_res := vv_res || jsonb_build_array(to_jsonb(vv_rec));
+    vv_rec.cl_sent = 1;
+    perform pkg_notification.p_modify_notification('U', vv_rec);
+  end loop;
         
-    return vv_res::varchar;
+  return vv_res::varchar;
 end;
 $$;
 

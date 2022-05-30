@@ -17,12 +17,18 @@ export default class CoreNotification extends NullEvent {
                 name: "Наименвание провайдера авторизации",
                 type: "string",
             },
+            timeoutTimer: {
+                name: "Время опроса сервера в сек",
+                type: "integer",
+                defaultValue: 5,
+            },
             ...OracleDB.getParamsInfo(),
         };
     }
     private dataSource: OracleDB;
     private eventConnect: any;
     private checktimer: any;
+    private timer?: NodeJS.Timeout;
     constructor(name: string, params: ICCTParams) {
         super(name, params);
         this.params = initParams(CoreNotification.getParamsInfo(), this.params);
@@ -73,16 +79,17 @@ export default class CoreNotification extends NullEvent {
         );
         return this.initEvents();
     }
-    /**
-     * Подключаем слежение к таблице
-     */
-    public initEvents(): Promise<void> {
-        logger.info(`Init event provider ${this.name}`);
+    private readMessage = () => {
+        if (this.timer) {
+            clearTimeout(this.timer);
+            this.timer = undefined;
+        }
         sendProcess({
             callback: {
-                command: "eventNotification",
+                command: "callEventPlugin",
                 data: {
                     name: this.name,
+                    command: "eventCoreOracleNotification",
                 },
                 target: "eventNode",
             },
@@ -92,23 +99,18 @@ export default class CoreNotification extends NullEvent {
             },
             target: "cluster",
         });
+        this.timer = setTimeout(() => this.readMessage(), this.params.timeoutTimer * 1000);
+    }
+    /**
+     * Подключаем слежение к таблице
+     */
+    public initEvents(): Promise<void> {
+        logger.info(`Init event provider ${this.name}`);
+        this.readMessage();
         return this.eventConnect.subscribe(`core_notification_${this.name}`, {
             callback: (event) => {
                 logger.debug(`Event provider ${this.name}: ${event}`);
-                sendProcess({
-                    callback: {
-                        command: "eventNotification",
-                        data: {
-                            name: this.name,
-                        },
-                        target: "eventNode",
-                    },
-                    command: "getWsUsers",
-                    data: {
-                        nameProvider: this.params.authProvider,
-                    },
-                    target: "cluster",
-                });
+                this.readMessage();
             },
             qos: this.dataSource.oracledb.SUBSCR_QOS_BEST_EFFORT,
             sql: "select * from t_notification",
@@ -119,8 +121,9 @@ export default class CoreNotification extends NullEvent {
      * Поиск оповещений
      * @param processData объект с юзерами
      */
-    public async eventNotification(ckUsers?: string[]): Promise<void> {
-        logger.debug(`LoadEventNotification: ${ckUsers}`);
+    public async eventCoreOracleNotification(data?: any): Promise<void> {
+        logger.debug("LoadEventNotification: %j", data);
+        const ckUsers = data?.users;
         if (isEmpty(ckUsers)) {
             return;
         }
