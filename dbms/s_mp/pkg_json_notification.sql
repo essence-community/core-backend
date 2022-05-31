@@ -85,7 +85,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_json_notification.add_notification(pv_user varchar DEFAULT NULL::varchar, pv_session varchar DEFAULT NULL::varchar, pv_user_message varchar DEFAULT NULL::varchar, pv_type_message varchar DEFAULT NULL::varchar, pv_message varchar DEFAULT NULL::varchar) OWNER TO s_mp;
+ALTER FUNCTION pkg_json_notification.add_notification(pv_user varchar, pv_session varchar, pv_user_message varchar, pv_type_message varchar, pv_message varchar) OWNER TO s_mp;
 
 CREATE OR REPLACE FUNCTION pkg_json_notification.f_get_notification(pc_json jsonb) RETURNS varchar
     LANGUAGE plpgsql SECURITY DEFINER
