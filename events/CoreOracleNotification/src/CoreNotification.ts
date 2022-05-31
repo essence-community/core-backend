@@ -261,7 +261,7 @@ export default class CoreNotification extends NullEvent {
         return new Promise<void | Record<string, any>>((resolve) => {
             try {
                 const msg = JSON.parse(row.cv_message);
-                const text = JSON.stringify([
+                let text = JSON.stringify([
                     {
                         data: {
                             ck_id: row.ck_id,
@@ -271,7 +271,7 @@ export default class CoreNotification extends NullEvent {
                     },
                 ]);
                 if (!isEmpty(msg.export_excel)) {
-                    const exportExcel = JSON.stringify([
+                    text = JSON.stringify([
                         {
                             data: {
                                 url: msg.export_excel,
@@ -284,13 +284,26 @@ export default class CoreNotification extends NullEvent {
                         data: {
                             ckUser: user,
                             nameProvider: this.params.authProvider,
-                            text: exportExcel,
+                            text,
                         },
                         target: "cluster",
                     });
+                    sendProcess({
+                        command: "sendServerAdminCmdAll",
+                        data: {
+                            command: "sendNotification",
+                            data: {
+                                ckUser: user,
+                                nameProvider: this.params.authProvider,
+                                text,
+                            },
+                            target: "cluster",
+                        },
+                        target: "clusterAdmin",
+                    });
                 }
                 if (!isEmpty(msg.reloadpageobject)) {
-                    const reloadMsg = JSON.stringify([
+                    text = JSON.stringify([
                         {
                             data: msg.reloadpageobject,
                             event: "reloadpageobject",
@@ -301,9 +314,22 @@ export default class CoreNotification extends NullEvent {
                         data: {
                             ckUser: user,
                             nameProvider: this.params.authProvider,
-                            text: reloadMsg,
+                            text,
                         },
                         target: "cluster",
+                    });
+                    sendProcess({
+                        command: "sendServerAdminCmdAll",
+                        data: {
+                            command: "sendNotification",
+                            data: {
+                                ckUser: user,
+                                nameProvider: this.params.authProvider,
+                                text,
+                            },
+                            target: "cluster",
+                        },
+                        target: "clusterAdmin",
                     });
                 }
                 if (
@@ -319,6 +345,19 @@ export default class CoreNotification extends NullEvent {
                             text,
                         },
                         target: "cluster",
+                    });
+                    sendProcess({
+                        command: "sendServerAdminCmdAll",
+                        data: {
+                            command: "sendNotification",
+                            data: {
+                                ckUser: user,
+                                nameProvider: this.params.authProvider,
+                                text,
+                            },
+                            target: "cluster",
+                        },
+                        target: "clusterAdmin",
                     });
                 }
                 resolve({

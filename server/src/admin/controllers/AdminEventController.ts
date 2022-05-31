@@ -171,6 +171,30 @@ class AdminEventController {
                 );
             });
         },
+        sendServerAdminCmdAll: (data) => {
+            Object.entries(this.servers).forEach(([name, server]) => {
+                const conn = server.send;
+                if (!conn) {
+                    return;
+                }
+                logger.trace(
+                    "sendServerAdminCmdAll: Server: %s, command: %s, target: %s",
+                    name,
+                    data.command,
+                    data.target,
+                );
+                conn.sendBytes(
+                    MSG.encode({
+                        data: {
+                            command: data.command,
+                            data: data.data,
+                            target: data.target,
+                        },
+                        event: "callProcess",
+                    }),
+                );
+            });
+        },
         sendServerAdminCmd: (data) => {
             const conn = this.servers[data.server].send;
             if (!conn) {
