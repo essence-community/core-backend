@@ -487,8 +487,8 @@ begin
     vot_page.cr_type = nullif(trim(pc_json#>>'{data,drag,cr_type}'), '')::bigint;
     vot_page.cv_name = nullif(trim(pc_json#>>'{data,drag,cv_name}'), '');
     vot_page.cn_order = nullif(trim(pc_json#>>'{data,drag,cn_order}'), '')::bigint;
-    vot_page.cl_menu = nullif(trim(pc_json#>>'{data,drag,cl_menu}'), '')::smallint;
-    vot_page.cl_static = nullif(trim(pc_json#>>'{data,drag,cl_static}'), '')::smallint;
+    vot_page.cl_menu = coalesce(nullif(trim(pc_json#>>'{data,drag,cl_menu}'), ''), '1')::smallint;
+    vot_page.cl_static = coalesce(nullif(trim(pc_json#>>'{data,drag,cl_static}'), ''), '0')::smallint;
     vot_page.cv_url = nullif(trim(pc_json#>>'{data,drag,cv_url}'), '');
     vot_page.ck_icon = nullif(trim(pc_json#>>'{data,drag,ck_icon}'), '');
     vot_page.ck_view = nullif(trim(pc_json#>>'{data,drag,ck_view}'), '');
@@ -500,8 +500,8 @@ begin
     vot_page.cr_type = nullif(trim(pc_json#>>'{data,cr_type}'), '')::bigint;
     vot_page.cv_name = nullif(trim(pc_json#>>'{data,cv_name}'), '');
     vot_page.cn_order = nullif(trim(pc_json#>>'{data,cn_order}'), '')::bigint;
-    vot_page.cl_menu = nullif(trim(pc_json#>>'{data,cl_menu}'), '')::smallint;
-    vot_page.cl_static = nullif(trim(pc_json#>>'{data,cl_static}'), '')::smallint;
+    vot_page.cl_menu = coalesce(nullif(trim(pc_json#>>'{data,cl_menu}'), ''), '1')::smallint;
+    vot_page.cl_static = coalesce(nullif(trim(pc_json#>>'{data,cl_static}'), ''), '0')::smallint;
     vot_page.cv_url = nullif(trim(pc_json#>>'{data,cv_url}'), '');
     vot_page.ck_icon = nullif(trim(pc_json#>>'{data,ck_icon}'), '');
     vot_page.ck_view = nullif(trim(pc_json#>>'{data,ck_view}'), '');

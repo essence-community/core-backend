@@ -1547,7 +1547,7 @@ begin
     if pot_page.cv_name is null then
       perform pkg.p_set_error(2);
     end if;
-    if pot_page.cl_static is null and pot_page.cr_type <> 3 then
+    if pot_page.cl_static is null and pot_page.cr_type = 2 then
       perform pkg.p_set_error(7);
     end if;
     if pot_page.cr_type = 3 then
