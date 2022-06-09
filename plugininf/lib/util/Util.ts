@@ -107,6 +107,7 @@ export function encryptPassword (
         const typeRead = data.substring(1, data.indexOf("}"));
         switch (typeRead) {
             case "privatekey":
+            case "env":
             case "aes-128-gcm":
             case "aes-192-gcm":
             case "aes-256-gcm":
