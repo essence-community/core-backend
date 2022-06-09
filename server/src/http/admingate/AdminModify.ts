@@ -177,7 +177,7 @@ export default class AdminModify {
                     );
                 }
                 return db.insert(json.data).then(async () => {
-                    await (db as any).compactDatafile();
+                    await (db as any).compactDatafile?.();
                     return [
                         {
                             ck_id: json.data.ck_id,
@@ -226,7 +226,7 @@ export default class AdminModify {
                         },
                     )
                     .then(async () => {
-                        await (db as any).compactDatafile();
+                        await (db as any).compactDatafile?.();
                         return [
                             {
                                 ck_id: ckId,
@@ -241,7 +241,7 @@ export default class AdminModify {
                         ck_id: json.data.ck_id,
                     })
                     .then(async () => {
-                        await (db as any).compactDatafile();
+                        await (db as any).compactDatafile?.();
                         return [
                             {
                                 ck_id: json.data.ck_id,

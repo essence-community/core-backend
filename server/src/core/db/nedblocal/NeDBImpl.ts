@@ -7,7 +7,7 @@ import ILocalDB, {
     UpdateQuery,
 } from "@ungate/plugininf/lib/db/local/ILocalDB";
 import { sendProcess } from "@ungate/plugininf/lib/util/ProcessSender";
-import { isEmpty } from "@ungate/plugininf/lib/util/Util";
+import { debounce, isEmpty } from "@ungate/plugininf/lib/util/Util";
 import { isArray } from "lodash";
 import { EventEmitter } from "events";
 
@@ -15,12 +15,14 @@ export class NeDBImpl<T> extends EventEmitter implements ILocalDB<T> {
     public dbname: string;
     public db: nedb.INeDb;
     public isTemp: boolean;
+    private compactTimeout: number = 5000;
 
-    constructor(dbname: string, db: nedb.INeDb, isTemp: boolean) {
+    constructor(dbname: string, db: nedb.INeDb, isTemp: boolean, compactTimeout = 5000) {
         super();
         this.dbname = dbname;
         this.db = db;
         this.isTemp = isTemp;
+        this.compactTimeout = compactTimeout;
     }
 
     public find(filter?: FilterQuery<Document<T>>): Promise<Document<T>[]> {
@@ -90,7 +92,10 @@ export class NeDBImpl<T> extends EventEmitter implements ILocalDB<T> {
                     },
                     { multi: true, upsert: true, returnUpdatedDocs: false },
                 )
-                    .then(() => resolve())
+                    .then(() => {
+                        this.compactDatafileDef();
+                        return resolve();
+                    })
                     .catch((err) => reject(err));
             } else {
                 this.emit("insert", object);
@@ -99,6 +104,7 @@ export class NeDBImpl<T> extends EventEmitter implements ILocalDB<T> {
                         err.message += ` db ${this.dbname}`;
                         return reject(err);
                     }
+                    this.compactDatafileDef();
                     this.emit("inserted", object);
                     sendProcess({
                         command: "sendAllServerCallDb",
@@ -134,6 +140,7 @@ export class NeDBImpl<T> extends EventEmitter implements ILocalDB<T> {
                     err.message += ` db ${this.dbname}`;
                     return reject(err);
                 }
+                this.compactDatafileDef();
                 this.emit("updated", filter, update, options);
                 sendProcess({
                     command: "sendAllServerCallDb",
@@ -162,6 +169,7 @@ export class NeDBImpl<T> extends EventEmitter implements ILocalDB<T> {
                     err.message += ` db ${this.dbname}`;
                     return reject(err);
                 }
+                this.compactDatafileDef();
                 this.emit("removed", filter, options);
                 sendProcess({
                     command: "sendAllServerCallDb",
@@ -190,6 +198,7 @@ export class NeDBImpl<T> extends EventEmitter implements ILocalDB<T> {
         });
     }
 
+    public compactDatafileDef = debounce(() => this.compactDatafile(), this.compactTimeout);
     public compactDatafile() {
         return new Promise<void>((resolve) => {
             this.db.persistence.compactDatafile();
