@@ -16,4 +16,10 @@ export abstract class IRowPatch {
             ? "null"
             : `'${moment(val).format("YYYY-MM-DDTHH:mm:ss.SSSZZ")}'`;
     }
+    public toBinary(key: string) {
+        const val = this.row[key];
+        return isEmpty(val) || (val && val.length === 0)
+            ? "null"
+            : `DECODE('${(Buffer.from(val)).toString('base64')}', 'BASE64')`;
+    }
 }

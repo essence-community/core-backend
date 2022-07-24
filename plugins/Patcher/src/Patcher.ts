@@ -28,6 +28,7 @@ import { IPluginParams, IStorage } from "./Patcher.types";
 import { IJson } from "./Patcher.types";
 import { S3Storage } from "./S3Storage";
 import { Constant } from "@ungate/plugininf/lib/Constants";
+import { patchReport } from "./report/ReportPatch";
 
 export class Patcher extends NullPlugin implements IStorage {
     public static getParamsInfo(): IParamsInfo {
@@ -151,6 +152,12 @@ export class Patcher extends NullPlugin implements IStorage {
                 nameBd = "core_auth";
                 this.calcMd5(path.join(temp, "user"));
                 zip.addLocalFolder(path.join(temp, "user"), "user");
+            } else if (json.service.cv_action === "report") {
+                await patchReport(temp, json, gateContext.connection);
+                include.push("report/report.xml");
+                nameBd = "core_report";
+                this.calcMd5(path.join(temp, "report"));
+                zip.addLocalFolder(path.join(temp, "report"), "report");
             } else {
                 await patchMeta(temp, json, gateContext.connection);
                 include.push("meta/meta.xml");
