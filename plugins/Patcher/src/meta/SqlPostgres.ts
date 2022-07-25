@@ -339,7 +339,7 @@ export const sqlPageVariable =
     "from\n" +
     "    s_mt.t_page_variable vp\n" +
     " where vp.ck_page in (select value from json_array_elements_text(:cct_page::json))\n" +
-    "order by vp.cv_name asc, vp.ct_change asc\n";
+    "order by vp.cv_name asc\n";
 export const sqlPageAction =
     "select\n" +
     "    ap.ck_id,\n" +
@@ -351,7 +351,7 @@ export const sqlPageAction =
     "from\n" +
     "    s_mt.t_page_action ap\n" +
     " where ap.ck_page in (select value from json_array_elements_text(:cct_page::json))\n" +
-    "order by ap.cr_type\n";
+    "order by ap.cr_type asc, ap.ck_id asc\n";
 export const sqlSysSetting =
     "select\n" +
     "    ck_id,\n" +
@@ -396,7 +396,7 @@ export const sqlLocalization =
     "from\n" +
     "    s_mt.t_localization\n" +
     " where ck_d_lang in (select value from json_array_elements_text(:cct_lang::json))\n" +
-    " order by ck_d_lang asc, ct_change asc, ck_id asc\n";
+    " order by ck_d_lang asc, ck_id asc\n";
 export const sqlLocalizationMessage =
     "select\n" +
     "    ck_id,\n" +
@@ -408,7 +408,7 @@ export const sqlLocalizationMessage =
     "from\n" +
     "    s_mt.t_localization\n" +
     " where cr_namespace = 'message'\n" +
-    " order by ck_d_lang asc, ct_change asc, ck_id asc\n";
+    " order by ck_d_lang asc, ck_id asc\n";
 export const sqlQueryPage =
     "with recursive page_object as (\n" +
     "    select\n" +
@@ -516,5 +516,4 @@ export const sqlLocalizationPage =
     "order by\n" +
     "    p.ck_id asc,\n" +
     "    l.ck_d_lang asc,\n" +
-    "    l.ct_change asc,\n" +
     "    l.ck_id asc\n";

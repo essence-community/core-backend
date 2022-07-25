@@ -114,7 +114,6 @@ export const sqlAsset =
 "                from\n" + 
 "                    json_array_elements_text(:cct_report::json)\n" + 
 "            )\n" + 
-"                or\n" + 
 "    )\n";
 export const sqlAData =
 "select\n" + 
