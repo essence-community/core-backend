@@ -8,7 +8,7 @@ export abstract class IRowPatch {
     public abstract toRow(): string;
     public toStringOrNull(key: string, defaultValue: string = "null") {
         let val = this.row[key];
-        if (typeof val === "object" || Array.isArray(val)) {
+        if (!isEmpty(val) && (typeof val === "object" || Array.isArray(val))) {
             val = JSON.stringify(val);
         }
         if (!isEmpty(val) && typeof val !== "string") {

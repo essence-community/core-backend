@@ -14,7 +14,6 @@ export class Asset extends IRowPatch {
             this.toStringOrNull("cv_name"),
             this.toStringOrNull("cv_template"),
             this.toStringOrNull("ck_engine"),
-            this.toStringOrNull("cv_recipe"),
             this.toStringOrNull("cct_parameter"),
             this.toStringOrNull("cv_helpers"),
             this.toStringOrNull("ck_user"),
