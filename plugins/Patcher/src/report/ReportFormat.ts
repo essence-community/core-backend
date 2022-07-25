@@ -4,7 +4,7 @@ import { IRowPatch } from "../IRowPatch";
 const formatSqlPostgres =
 "INSERT INTO s_ut.t_report_format\n" + 
 "(ck_id, ck_report, ck_d_format, cct_parameter, ck_asset, ck_user, ct_change)\n" + 
-"VALUES((%s)::uuid, (%s)::uuid, %s, %s, (%s)::uuid, %s, %s)\n" + 
+"VALUES((%s)::uuid, (%s)::uuid, %s, (%s)::jsonb, (%s)::uuid, %s, %s)\n" + 
 "on conflict (ck_id) do update set ck_id = excluded.ck_id, ck_report = excluded.ck_report, ck_d_format = excluded.ck_d_format, cct_parameter = excluded.cct_parameter, ck_asset = excluded.ck_asset, ck_user = excluded.ck_user, ct_change = excluded.ct_change;\n";
 
 export class ReportFormat extends IRowPatch {

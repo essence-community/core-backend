@@ -4,7 +4,7 @@ import { IRowPatch } from "../IRowPatch";
 const formatSqlPostgres =
 "INSERT INTO s_ut.t_authorization\n" + 
 "(ck_id, cv_name, cv_plugin, cct_parameter, ck_user, ct_change)\n" + 
-"VALUES(%s, %s, %s, %s, %s, %s)\n" + 
+"VALUES(%s, %s, %s, (%s)::jsonb, %s, %s)\n" + 
 "on conflict (ck_id) do NOTHING;\n";
 
 export class AData extends IRowPatch {

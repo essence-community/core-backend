@@ -7,7 +7,13 @@ export abstract class IRowPatch {
     }
     public abstract toRow(): string;
     public toStringOrNull(key: string, defaultValue: string = "null") {
-        const val = this.row[key];
+        let val = this.row[key];
+        if (typeof val === "object" || Array.isArray(val)) {
+            val = JSON.stringify(val);
+        }
+        if (!isEmpty(val) && typeof val !== "string") {
+            val = `${val}`;
+        }
         return isEmpty(val) ? defaultValue : `'${val.replace(/'/g, "''")}'`;
     }
     public toTimestamp(key: string) {
