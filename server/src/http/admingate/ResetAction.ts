@@ -21,15 +21,7 @@ export default async function resetAction(
     const json = JSON.parse(gateContext.query.inParams.json || "{}");
     const serverName = json.service[serverColumn] || json.data[serverColumn];
     const cvName = json.data[column];
-    sendProcess({
-        command,
-        data: {
-            name: cvName,
-            nameContext: json.data["ck_context"],
-            session: gateContext.session,
-        },
-        target,
-    });
+    
     sendProcess({
         command: "sendServerAdminCmd",
         data: {
@@ -44,6 +36,18 @@ export default async function resetAction(
         },
         target: "clusterAdmin",
     });
+
+    setTimeout(() => {
+        sendProcess({
+            command,
+            data: {
+                name: cvName,
+                nameContext: json.data["ck_context"],
+                session: gateContext.session,
+            },
+            target,
+        });
+    }, 500);
 
     return [
         {
