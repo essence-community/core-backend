@@ -2,7 +2,6 @@ import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import IContext from "@ungate/plugininf/lib/IContext";
 import { sendProcess, TTarget } from "@ungate/plugininf/lib/util/ProcessSender";
 import { isEmpty } from "@ungate/plugininf/lib/util/Util";
-import Constants from "../../core/Constants";
 
 export default async function resetAction(
     gateContext: IContext,
@@ -22,30 +21,29 @@ export default async function resetAction(
     const json = JSON.parse(gateContext.query.inParams.json || "{}");
     const serverName = json.service[serverColumn] || json.data[serverColumn];
     const cvName = json.data[column];
-    if (!serverName || serverName === Constants.GATE_NODE_NAME) {
-        sendProcess({
+    sendProcess({
+        command,
+        data: {
+            name: cvName,
+            nameContext: json.data["ck_context"],
+            session: gateContext.session,
+        },
+        target,
+    });
+    sendProcess({
+        command: "sendServerAdminCmd",
+        data: {
             command,
             data: {
                 name: cvName,
+                nameContext: json.data["ck_context"],
                 session: gateContext.session,
             },
+            server: serverName,
             target,
-        });
-    } else {
-        sendProcess({
-            command: "sendServerAdminCmd",
-            data: {
-                command,
-                data: {
-                    name: cvName,
-                    session: gateContext.session,
-                },
-                server: serverName,
-                target,
-            },
-            target: "clusterAdmin",
-        });
-    }
+        },
+        target: "clusterAdmin",
+    });
 
     return [
         {

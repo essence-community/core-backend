@@ -309,7 +309,6 @@ class PluginManager {
         }
         return [];
     }
-
     public getGateSessProviders(context: string) {
         return Object.values(GateProvider[context]).filter(
             (provider: NullSessProvider) => provider.isAuth,
@@ -324,29 +323,28 @@ class PluginManager {
     }
 
     public async removeGateProvider(context: string, key: string) {
-        await GateProvider[context][key].destroy();
-        delete GateProvider[context][key];
+        await Promise.all((context ? [GateProvider[context]] : Object.values(GateProvider)).map(async (ContextProvider) => {
+            try {
+                await ContextProvider[key].destroy();
+                delete ContextProvider[key];
+            } catch (e) {
+                delete ContextProvider[key];
+            }
+        }));
         return true;
     }
 
     public async removeAllGateProvider(context?: string) {
         const rows = [];
-        if (context) {
-            Object.values(GateProvider[context]).forEach((pl) => {
-                rows.push(pl.destroy());
-            });
-            await Promise.all(rows);
-            GateProvider[context] = {};
-        } else {
-            Object.values(GateProvider)
-                .reduce((res, obj) => {
-                    return res.concat(Object.values(obj));
-                }, [])
-                .forEach((pl) => {
-                    rows.push(pl.destroy());
-                });
-            await Promise.all(rows);
-        }
+        await Promise.all((context ? [GateProvider[context]] : Object.values(GateProvider))
+        .map((ContextProvider) => Promise.all(Object.values(ContextProvider).map(async (provider) => {
+            try {
+                await provider.destroy();
+                delete ContextProvider[provider.name];
+            } catch (e) {
+                delete ContextProvider[provider.name];
+            }
+        }))));
         return true;
     }
 

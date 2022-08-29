@@ -29,27 +29,13 @@ class ProcessController {
             log.info(
                 `Start init provider ${data.name} process: ${process.env.UNGATE_HTTP_ID}`,
             );
-            Mask.mask(data.session)
-                .then(() =>
-                    Promise.all(
-                        providers.map((provider) =>
-                            provider.init(true).then(
-                                () => {
-                                    log.info(
-                                        `End init provider ${data.name} process: ${process.env.UNGATE_HTTP_ID}`,
-                                    );
-                                    return;
-                                },
-                                (err) => {
-                                    log.error(err);
-                                    return;
-                                },
-                            ),
-                        ),
-                    ),
-                )
-                .then(() => Mask.unmask(data.session))
-                .catch(() => Mask.unmask(data.session));
+            Promise.all(
+                providers.map((provider) =>
+                    PluginManager.removeGateProvider(data.nameContext, provider.name),
+                ),
+            )
+                .then(() => true)
+                .catch(() => true);
         }
     }
 
@@ -63,28 +49,9 @@ class ProcessController {
         log.info(
             `Start init provider all process: ${process.env.UNGATE_HTTP_ID}`,
         );
-        Mask.mask(data.session)
-            .then(() => {
-                PluginManager.getGateProviders(data.nameContext).forEach(
-                    (provider) => {
-                        rows.push(provider.init(true));
-                    },
-                );
-                return Promise.all(rows).then(
-                    () => {
-                        log.info(
-                            `End init provider all process: ${process.env.UNGATE_HTTP_ID}`,
-                        );
-                        return Mask.unmask(data.session);
-                    },
-                    (err) => {
-                        log.error(err);
-                        return Mask.unmask(data.session);
-                    },
-                );
-            })
+        PluginManager.removeAllGateProvider(data.nameContext)
             .then(noop)
-            .catch(() => Mask.unmask(data.session));
+            .catch(noop);
     }
 
     /**
