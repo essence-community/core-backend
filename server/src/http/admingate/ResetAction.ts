@@ -23,7 +23,7 @@ export default async function resetAction(
     const cvName = json.data[column];
     
     sendProcess({
-        command: "sendServerAdminCmd",
+        command: "sendServerAdminCmdAll",
         data: {
             command,
             data: {
@@ -31,7 +31,6 @@ export default async function resetAction(
                 nameContext: json.data["ck_context"],
                 session: gateContext.session,
             },
-            server: serverName,
             target,
         },
         target: "clusterAdmin",
