@@ -148,8 +148,7 @@ export function decryptPassword (value: string) {
     if (
         typeof value !== "string" ||
         isEmpty(value) ||
-        value.indexOf("{") !== 0 ||
-        !Constant.isUseEncrypt
+        value.indexOf("{") !== 0
     ) {
         return value;
     }
@@ -165,9 +164,9 @@ export function decryptPassword (value: string) {
         case "aes-128-ccm":
         case "aes-192-ccm":
         case "aes-256-ccm":
-            return decryptAes(type as any, hash);
+            return Constant.isUseEncrypt ? decryptAes(type as any, hash) : value;
         case "privatekey":
-            return decryptUseKey(hash);
+            return Constant.isUseEncrypt ? decryptUseKey(hash) : value;
         default:
             return value;
     }
