@@ -209,7 +209,8 @@ function parseParam (conf: IParamInfo, value: any) {
         case "form_nested":
             let objValue = value;
             if (value && typeof value === "string" && value.charAt(0) === "{") {
-                objValue = JSON.parse(value);
+                const decryptPass = decryptPassword(value);
+                objValue = JSON.parse(decryptPass);
             }
             return Object.entries(conf.childs).reduce((res, [key, obj]) => {
                 if (!isEmpty((objValue || {})[key])) {
@@ -238,6 +239,9 @@ function parseParam (conf: IParamInfo, value: any) {
             }, {});
         case "form_repeater":
             let arr = value;
+            if (value && typeof value === "string" && value.charAt(0) === "{") {
+                arr = decryptPassword(value);
+            }
             if (value && typeof value === "string" && value.charAt(0) === "[") {
                 arr = JSON.parse(value);
             }
