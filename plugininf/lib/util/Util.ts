@@ -176,30 +176,36 @@ function parseParam (conf: IParamInfo, value: any) {
     switch (conf.type) {
         case "string":
         case "long_string":
-            return conf.checkvalue
-                ? conf.checkvalue(toString(value))
-                : toString(value);
         case "password": {
             const decryptPass = decryptPassword(toString(value));
             return conf.checkvalue ? conf.checkvalue(decryptPass) : decryptPass;
         }
         case "boolean": {
             if (isString(value)) {
+                const decryptPass = decryptPassword(value);
+                const val = decryptPass === "true" || decryptPass === "1" || decryptPass === "yes" || decryptPass === "on"
                 return conf.checkvalue
-                    ? conf.checkvalue(value === "true" || value === "1")
-                    : value === "true" || value === "1";
+                    ? conf.checkvalue(val)
+                    : val;
             }
             return conf.checkvalue ? conf.checkvalue(!!value) : !!value;
         }
         case "integer":
         case "numeric":
+            if (isString(value)) {
+                const decryptPass = decryptPassword(value);
+                return conf.checkvalue
+                    ? conf.checkvalue(toNumber(decryptPass))
+                    : toNumber(decryptPass);
+            }
             return conf.checkvalue
                 ? conf.checkvalue(toNumber(value))
                 : toNumber(value);
         case "date":
+            const decryptPass = decryptPassword(value);
             return conf.checkvalue
-                ? conf.checkvalue(moment(value).toDate())
-                : moment(value).toDate();
+                ? conf.checkvalue(moment(decryptPass).toDate())
+                : moment(decryptPass).toDate();
         case "form_nested":
             let objValue = value;
             if (value && typeof value === "string" && value.charAt(0) === "{") {
