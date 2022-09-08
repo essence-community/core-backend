@@ -1078,6 +1078,7 @@ declare
   vj_data   jsonb;
   vv_action varchar(1);
   vk_main   varchar(32);
+  vk_key   varchar;
 begin
   -- инициализация/получение переменных пакета
   gv_error = sessvarstr_declare('pkg', 'gv_error', '');
@@ -1099,6 +1100,7 @@ begin
 	cv_description varchar(2000) NOT NULL DEFAULT 'Необходимо актуализировать'::character varying, -- Описание сервиса
   */
   vj_data := COALESCE(pc_json#>'{data,cct_data}', pc_json#>'{data}');
+  vk_key := COALESCE(nullif(trim(pc_json#>'{service,value_key}'), ''), nullif(trim(vj_data#>>'{ck_id}'), ''));
   pot_query.ck_id = nullif(trim(vj_data#>>'{ck_id}'), '');
   pot_query.cc_query = nullif(vj_data#>>'{cc_query}', '');
   pot_query.ck_provider = nullif(trim(vj_data#>>'{ck_provider}'), '');
@@ -1117,7 +1119,7 @@ begin
   end if;
 
   --проверяем и сохраняем данные
-  pot_query := pkg_meta.p_modify_query(vv_action, pot_query);
+  pot_query := pkg_meta.p_modify_query(vv_action, vk_key, pot_query);
   --логируем данные
   perform pkg_log.p_save(pv_user, pk_session, pc_json, 'pkg_json_meta.f_modify_query', pot_query.ck_id, vv_action);
   return '{"ck_id":"' || coalesce(pot_query.ck_id, '') || '","cv_error":' || pkg.p_form_response() || '}';

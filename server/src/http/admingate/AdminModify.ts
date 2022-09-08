@@ -187,7 +187,7 @@ export default class AdminModify {
                 });
             }
             case "u": {
-                const ckId = json.data.ck_id;
+                const ckId = json.service.value_key || json.data.ck_id;
                 if (getParamsInfo || json.data.cct_params) {
                     this.deepChange(
                         json.data,
