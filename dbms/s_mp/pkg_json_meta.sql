@@ -1100,7 +1100,7 @@ begin
 	cv_description varchar(2000) NOT NULL DEFAULT 'Необходимо актуализировать'::character varying, -- Описание сервиса
   */
   vj_data := COALESCE(pc_json#>'{data,cct_data}', pc_json#>'{data}');
-  vk_key := COALESCE(nullif(trim(pc_json#>'{service,value_key}'), ''), nullif(trim(vj_data#>>'{ck_id}'), ''));
+  vk_key := COALESCE(nullif(trim(pc_json#>>'{service,value_key}'), ''), nullif(trim(vj_data#>>'{ck_id}'), ''));
   pot_query.ck_id = nullif(trim(vj_data#>>'{ck_id}'), '');
   pot_query.cc_query = nullif(vj_data#>>'{cc_query}', '');
   pot_query.ck_provider = nullif(trim(vj_data#>>'{ck_provider}'), '');
