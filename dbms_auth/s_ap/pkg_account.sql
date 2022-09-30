@@ -3,7 +3,7 @@
 DROP SCHEMA IF EXISTS pkg_account cascade;
 
 CREATE SCHEMA pkg_account
-    AUTHORIZATION s_ap;
+    AUTHORIZATION ${user.update};
 
 CREATE OR REPLACE FUNCTION pkg_account.f_create_hash(
 	pv_salt character varying,
@@ -29,7 +29,7 @@ end;
 $BODY$;
 
 ALTER FUNCTION pkg_account.f_create_hash(character varying, character varying)
-    OWNER TO s_ap;
+    OWNER TO ${user.update};
 
 COMMENT ON FUNCTION pkg_account.f_create_hash(character varying, character varying)
     IS 'Создание hash пароля';
@@ -51,7 +51,7 @@ end;
 $BODY$;
 
 ALTER FUNCTION pkg_account.p_lock_account(character varying)
-    OWNER TO s_ap;
+    OWNER TO ${user.update};
 
 CREATE OR REPLACE FUNCTION pkg_account.p_lock_action(
 	pk_id character varying)
@@ -70,7 +70,7 @@ end;
 $BODY$;
 
 ALTER FUNCTION pkg_account.p_lock_action(character varying)
-    OWNER TO s_ap;
+    OWNER TO ${user.update};
 
 CREATE OR REPLACE FUNCTION pkg_account.p_lock_d_info(
 	pk_id character varying)
@@ -89,7 +89,7 @@ end;
 $BODY$;
 
 ALTER FUNCTION pkg_account.p_lock_d_info(character varying)
-    OWNER TO s_ap;
+    OWNER TO ${user.update};
 
 CREATE OR REPLACE FUNCTION pkg_account.p_lock_role(
 	pk_id character varying)
@@ -108,7 +108,7 @@ end;
 $BODY$;
 
 ALTER FUNCTION pkg_account.p_lock_role(character varying)
-    OWNER TO s_ap;
+    OWNER TO ${user.update};
 
 CREATE OR REPLACE FUNCTION pkg_account.p_modify_account(
 	pv_action character varying,
@@ -244,7 +244,7 @@ begin
 end;$BODY$;
 
 ALTER FUNCTION pkg_account.p_modify_account(character varying, ${user.table}.t_account, jsonb)
-    OWNER TO s_su;
+    OWNER TO ${user.update};
 
 CREATE OR REPLACE FUNCTION pkg_account.p_modify_account_info(
 	pv_action character varying,
@@ -295,7 +295,7 @@ end;
 $BODY$;
 
 ALTER FUNCTION pkg_account.p_modify_account_info(character varying, ${user.table}.t_account_info)
-    OWNER TO s_ap;
+    OWNER TO ${user.update};
 
 COMMENT ON FUNCTION pkg_account.p_modify_account_info(character varying, ${user.table}.t_account_info)
     IS 'Добавление/редактирование/удаление доп информации пользователя';
@@ -344,7 +344,7 @@ end;
 $BODY$;
 
 ALTER FUNCTION pkg_account.p_modify_account_role(character varying, ${user.table}.t_account_role)
-    OWNER TO s_ap;
+    OWNER TO ${user.update};
 
 COMMENT ON FUNCTION pkg_account.p_modify_account_role(character varying, ${user.table}.t_account_role)
     IS 'Добавление/редактирование/удаление связи уз с ролями';
@@ -410,7 +410,7 @@ end;
 $BODY$;
 
 ALTER FUNCTION pkg_account.p_modify_action(character varying, ${user.table}.t_action)
-    OWNER TO s_ap;
+    OWNER TO ${user.update};
 
 COMMENT ON FUNCTION pkg_account.p_modify_action(character varying, ${user.table}.t_action)
     IS 'Добавление/редактирование/удаление действия';
@@ -476,7 +476,7 @@ end;
 $BODY$;
 
 ALTER FUNCTION pkg_account.p_modify_d_info(character varying, ${user.table}.t_d_info)
-    OWNER TO s_ap;
+    OWNER TO ${user.update};
 
 COMMENT ON FUNCTION pkg_account.p_modify_d_info(character varying, ${user.table}.t_d_info)
     IS 'Добавление/редактирование/удаление информации о дополнительных полях';
@@ -540,7 +540,7 @@ end;
 $BODY$;
 
 ALTER FUNCTION pkg_account.p_modify_role(character varying, ${user.table}.t_role)
-    OWNER TO s_ap;
+    OWNER TO ${user.update};
 
 COMMENT ON FUNCTION pkg_account.p_modify_role(character varying, ${user.table}.t_role)
     IS 'Добавление/редактирование/удаление роли';
@@ -589,7 +589,7 @@ end;
 $BODY$;
 
 ALTER FUNCTION pkg_account.p_modify_role_action(character varying, ${user.table}.t_role_action)
-    OWNER TO s_ap;
+    OWNER TO ${user.update};
 
 COMMENT ON FUNCTION pkg_account.p_modify_role_action(character varying, ${user.table}.t_role_action)
     IS 'Добавлени/редактирование/удаление связи ролей и экшенов';
@@ -611,7 +611,7 @@ end;
 $BODY$;
 
 ALTER FUNCTION pkg_account.p_lock_auth_token(character varying)
-    OWNER TO s_ap;
+    OWNER TO ${user.update};
 
 CREATE OR REPLACE FUNCTION pkg_account.p_modify_auth_token(
 	pv_action character varying,
@@ -671,7 +671,7 @@ end;
 $BODY$;
 
 ALTER FUNCTION pkg_account.p_modify_auth_token(character varying, ${user.table}.t_auth_token)
-    OWNER TO s_ap;
+    OWNER TO ${user.update};
 
 COMMENT ON FUNCTION pkg_account.p_modify_auth_token(character varying, ${user.table}.t_auth_token)
     IS 'Добавлени/редактирование/удаление токенов';

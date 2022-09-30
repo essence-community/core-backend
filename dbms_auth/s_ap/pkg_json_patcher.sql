@@ -3,9 +3,9 @@
 DROP SCHEMA IF EXISTS pkg_json_patcher cascade;
 
 CREATE SCHEMA pkg_json_patcher
-    AUTHORIZATION s_ap;
+    AUTHORIZATION ${user.update};
 
-ALTER SCHEMA pkg_json_patcher OWNER TO s_ap;
+ALTER SCHEMA pkg_json_patcher OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_json_patcher.f_modify_patch(pv_user character varying, pk_session character varying, pc_json jsonb) RETURNS character varying
     LANGUAGE plpgsql SECURITY DEFINER
@@ -55,4 +55,4 @@ begin
 end;
 $$;
 
-ALTER FUNCTION pkg_json_patcher.f_modify_patch(character varying, character varying, jsonb) OWNER TO s_ap;
+ALTER FUNCTION pkg_json_patcher.f_modify_patch(character varying, character varying, jsonb) OWNER TO ${user.update};

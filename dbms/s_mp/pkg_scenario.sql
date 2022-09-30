@@ -3,10 +3,10 @@
 DROP SCHEMA IF EXISTS pkg_scenario cascade;
 
 CREATE SCHEMA pkg_scenario
-    AUTHORIZATION s_mp;
+    AUTHORIZATION ${user.update};
 
 
-ALTER SCHEMA pkg_scenario OWNER TO s_mp;
+ALTER SCHEMA pkg_scenario OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_scenario.p_modify_action(pv_action character varying, INOUT pot_action s_mt.t_action) RETURNS s_mt.t_action
     LANGUAGE plpgsql SECURITY DEFINER
@@ -59,7 +59,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_scenario.p_modify_action(pv_action character varying, INOUT pot_action s_mt.t_action) OWNER TO s_mp;
+ALTER FUNCTION pkg_scenario.p_modify_action(pv_action character varying, INOUT pot_action s_mt.t_action) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_scenario.p_modify_scenario(pv_action character varying, INOUT pot_scenario s_mt.t_scenario) RETURNS s_mt.t_scenario
     LANGUAGE plpgsql SECURITY DEFINER
@@ -122,7 +122,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_scenario.p_modify_scenario(pv_action character varying, INOUT pot_scenario s_mt.t_scenario) OWNER TO s_mp;
+ALTER FUNCTION pkg_scenario.p_modify_scenario(pv_action character varying, INOUT pot_scenario s_mt.t_scenario) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_scenario.p_modify_step(pv_action character varying, INOUT pot_step s_mt.t_step) RETURNS s_mt.t_step
     LANGUAGE plpgsql SECURITY DEFINER
@@ -176,7 +176,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_scenario.p_modify_step(pv_action character varying, INOUT pot_step s_mt.t_step) OWNER TO s_mp;
+ALTER FUNCTION pkg_scenario.p_modify_step(pv_action character varying, INOUT pot_step s_mt.t_step) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_scenario.p_lock_scenario(pk_id character varying) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
@@ -192,7 +192,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_scenario.p_lock_scenario(pk_id character varying) OWNER TO s_mp;
+ALTER FUNCTION pkg_scenario.p_lock_scenario(pk_id character varying) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_scenario.p_lock_step(pk_id character varying) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
@@ -208,4 +208,4 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_scenario.p_lock_step(pk_id character varying) OWNER TO s_mp;
+ALTER FUNCTION pkg_scenario.p_lock_step(pk_id character varying) OWNER TO ${user.update};

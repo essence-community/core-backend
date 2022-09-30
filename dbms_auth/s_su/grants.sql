@@ -10,9 +10,9 @@ GRANT USAGE ON SCHEMA pkg_json_patcher TO s_ac;
 
 GRANT USAGE ON SCHEMA s_at TO s_ac;
 
-GRANT USAGE ON SCHEMA public TO s_ap;
+GRANT USAGE ON SCHEMA public TO ${user.update};
 
-GRANT USAGE ON SCHEMA s_at TO s_ap;
+GRANT USAGE ON SCHEMA s_at TO ${user.update};
 
 --гранты на выполнение
 
@@ -50,54 +50,54 @@ GRANT EXECUTE ON FUNCTION pkg_json_patcher.f_modify_patch(pv_user character vary
 
 GRANT EXECUTE ON FUNCTION pkg_json_account.f_modify_auth_token(pv_user character varying, pk_session character varying, pc_json jsonb) TO s_ac;
 
-GRANT ALL ON SEQUENCE public.seq_log TO s_ap;
+GRANT ALL ON SEQUENCE public.seq_log TO ${user.update};
 
-GRANT ALL ON SEQUENCE public.seq_action TO s_ap;
+GRANT ALL ON SEQUENCE public.seq_action TO ${user.update};
 
 GRANT SELECT ON TABLE public.dual TO s_ac;
 
-GRANT SELECT, UPDATE, INSERT, DELETE ON TABLE public.dual TO s_ap;
+GRANT SELECT, UPDATE, INSERT, DELETE ON TABLE public.dual TO ${user.update};
 
 GRANT SELECT ON TABLE s_at.t_account TO s_ac;
 
-GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE s_at.t_account TO s_ap;
+GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE s_at.t_account TO ${user.update};
 
 GRANT SELECT ON TABLE s_at.t_account_ext TO s_ac;
 
-GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE s_at.t_account_ext TO s_ap;
+GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE s_at.t_account_ext TO ${user.update};
 
 GRANT SELECT ON TABLE s_at.t_account_info TO s_ac;
 
-GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE s_at.t_account_info TO s_ap;
+GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE s_at.t_account_info TO ${user.update};
 
 GRANT SELECT ON TABLE s_at.t_account_role TO s_ac;
 
-GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE s_at.t_account_role TO s_ap;
+GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE s_at.t_account_role TO ${user.update};
 
 GRANT SELECT ON TABLE s_at.t_action TO s_ac;
 
-GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE s_at.t_action TO s_ap;
+GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE s_at.t_action TO ${user.update};
 
 GRANT SELECT ON TABLE s_at.t_d_info TO s_ac;
 
-GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE s_at.t_d_info TO s_ap;
+GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE s_at.t_d_info TO ${user.update};
 
 GRANT SELECT ON TABLE s_at.t_log TO s_ac;
 
-GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE s_at.t_log TO s_ap;
+GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE s_at.t_log TO ${user.update};
 
 GRANT SELECT ON TABLE s_at.t_role TO s_ac;
 
-GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE s_at.t_role TO s_ap;
+GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE s_at.t_role TO ${user.update};
 
 GRANT SELECT ON TABLE s_at.t_role_action TO s_ac;
 
-GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE s_at.t_role_action TO s_ap;
+GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE s_at.t_role_action TO ${user.update};
 
 GRANT SELECT ON TABLE s_at.t_create_patch TO s_ac;
 
-GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE s_at.t_create_patch TO s_ap;
+GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE s_at.t_create_patch TO ${user.update};
 
 GRANT SELECT ON TABLE s_at.t_auth_token TO s_ac;
 
-GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE s_at.t_auth_token TO s_ap;
+GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE s_at.t_auth_token TO ${user.update};

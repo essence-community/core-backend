@@ -3,10 +3,10 @@
 DROP SCHEMA IF EXISTS pkg_json_semaphore cascade;
 
 CREATE SCHEMA pkg_json_semaphore
-    AUTHORIZATION s_mp;
+    AUTHORIZATION ${user.update};
 
 
-ALTER SCHEMA pkg_json_semaphore OWNER TO s_mp;
+ALTER SCHEMA pkg_json_semaphore OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_json_semaphore.f_modify_semaphore(pv_user character varying DEFAULT NULL::bigint, pv_session character varying DEFAULT NULL::character varying, pc_json jsonb DEFAULT NULL::jsonb) RETURNS character varying
     LANGUAGE plpgsql SECURITY DEFINER
@@ -38,4 +38,4 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_json_semaphore.f_modify_semaphore(pv_user character varying, pv_session character varying, pc_json jsonb) OWNER TO s_mp;
+ALTER FUNCTION pkg_json_semaphore.f_modify_semaphore(pv_user character varying, pv_session character varying, pc_json jsonb) OWNER TO ${user.update};

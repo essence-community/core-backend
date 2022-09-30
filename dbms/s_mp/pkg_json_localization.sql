@@ -3,10 +3,10 @@
 DROP SCHEMA IF EXISTS pkg_json_localization cascade;
 
 CREATE SCHEMA pkg_json_localization
-    AUTHORIZATION s_mp;
+    AUTHORIZATION ${user.update};
 
 
-ALTER SCHEMA pkg_json_localization OWNER TO s_mp;
+ALTER SCHEMA pkg_json_localization OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_json_localization.f_modify_lang(pv_user character varying, pk_session character varying, pc_json jsonb) RETURNS character varying
     LANGUAGE plpgsql SECURITY DEFINER
@@ -57,7 +57,7 @@ begin
 end;
 $$;
 
-ALTER FUNCTION pkg_json_localization.f_modify_lang(character varying, character varying, jsonb) OWNER TO s_mp;
+ALTER FUNCTION pkg_json_localization.f_modify_lang(character varying, character varying, jsonb) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_json_localization.f_modify_default_localization(pv_user character varying, pk_session character varying, pc_json jsonb) RETURNS character varying
     LANGUAGE plpgsql SECURITY DEFINER
@@ -111,7 +111,7 @@ begin
 end;
 $$;
 
-ALTER FUNCTION pkg_json_localization.f_modify_default_localization(character varying, character varying, jsonb) OWNER TO s_mp;
+ALTER FUNCTION pkg_json_localization.f_modify_default_localization(character varying, character varying, jsonb) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_json_localization.f_modify_localization(pv_user character varying, pk_session character varying, pc_json jsonb) RETURNS character varying
     LANGUAGE plpgsql SECURITY DEFINER
@@ -167,4 +167,4 @@ begin
 end;
 $$;
 
-ALTER FUNCTION pkg_json_localization.f_modify_localization(character varying, character varying, jsonb) OWNER TO s_mp;
+ALTER FUNCTION pkg_json_localization.f_modify_localization(character varying, character varying, jsonb) OWNER TO ${user.update};

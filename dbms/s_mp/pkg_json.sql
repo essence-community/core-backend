@@ -3,10 +3,10 @@
 DROP SCHEMA IF EXISTS pkg_json cascade;
 
 CREATE SCHEMA pkg_json
-    AUTHORIZATION s_mp;
+    AUTHORIZATION ${user.update};
 
 
-ALTER SCHEMA pkg_json OWNER TO s_mp;
+ALTER SCHEMA pkg_json OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_json.f_get_object(pk_start character varying) RETURNS character varying
     LANGUAGE plpgsql SECURITY DEFINER PARALLEL SAFE
@@ -45,10 +45,11 @@ begin
                                  pkg_json.f_decode_attr(t.cv_value, t.ck_d_data_type)) as attr_po
            from
            (select ca2.ck_attr,
-                   a2.ck_d_data_type,
+                   coalesce(da.ck_parent, a2.ck_d_data_type) as ck_d_data_type,
                    coalesce(poa.cv_value, oa.cv_value, ca2.cv_value) as cv_value
               from s_mt.t_class_attr ca2
               join s_mt.t_attr a2 on a2.ck_id = ca2.ck_attr
+              join s_mt.t_d_attr_data_type da on da.ck_id = a2.ck_d_data_type
               left join s_mt.t_object_attr oa on o.ck_id = oa.ck_object and ca2.ck_id = oa.ck_class_attr
               left join s_mt.t_page_object_attr poa on poa.ck_page_object = po.ck_id and poa.ck_class_attr = ca2.ck_id
              where ca2.ck_class = c.ck_id and ca2.ck_id not in 
@@ -72,7 +73,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_json.f_get_object(pk_start character varying) OWNER TO s_mp;
+ALTER FUNCTION pkg_json.f_get_object(pk_start character varying) OWNER TO ${user.update};
 
 
 CREATE FUNCTION pkg_json.f_decode_attr(pv_value varchar, pk_data_type varchar) RETURNS jsonb
@@ -90,7 +91,7 @@ begin
   end if;
 
   if pk_data_type = 'numeric' then
-    return to_jsonb(pv_value::decimal);
+    return to_jsonb(pv_value::numeric);
   end if;
   
   if pk_data_type = 'boolean' then
@@ -102,6 +103,9 @@ begin
   
   --  or pk_data_type = 'global'
   if pk_data_type = 'array' or pk_data_type = 'object' or pk_data_type = 'global' or pk_data_type = 'order' then
+    if pv_value is null then 
+      return null;
+    end if;
     if pv_value ~ '^[\[\{]' then
       return pv_value::jsonb;
     end if;
@@ -113,7 +117,7 @@ begin
 end;
 $$;
 
-ALTER FUNCTION pkg_json.f_decode_attr(pv_value varchar, pk_data_type varchar) OWNER TO s_mp;
+ALTER FUNCTION pkg_json.f_decode_attr(pv_value varchar, pk_data_type varchar) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_json.f_merge_jsonb(res jsonb, keyValue varchar, val jsonb) RETURNS jsonb
     LANGUAGE sql SECURITY DEFINER PARALLEL SAFE
@@ -121,14 +125,14 @@ CREATE FUNCTION pkg_json.f_merge_jsonb(res jsonb, keyValue varchar, val jsonb) R
     AS $$
     select coalesce(res, '{}'::jsonb) || jsonb_build_object(keyValue, coalesce(res->keyValue,'[]'::jsonb) || val)
 $$;
-ALTER FUNCTION pkg_json.f_merge_jsonb(res jsonb, keyValue varchar, val jsonb) OWNER TO s_mp;
+ALTER FUNCTION pkg_json.f_merge_jsonb(res jsonb, keyValue varchar, val jsonb) OWNER TO ${user.update};
 
 CREATE AGGREGATE pkg_json.f_agg_merge_jsonb (varchar, jsonb)
 (
     sfunc = pkg_json.f_merge_jsonb,
     stype = jsonb
 );
-ALTER AGGREGATE pkg_json.f_agg_merge_jsonb(varchar, jsonb) OWNER TO s_mp;
+ALTER AGGREGATE pkg_json.f_agg_merge_jsonb(varchar, jsonb) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_json.f_get_origin_object(pk_start character varying) RETURNS character varying
     LANGUAGE plpgsql SECURITY DEFINER PARALLEL SAFE
@@ -154,10 +158,11 @@ begin
                                  pkg_json.f_decode_attr(t.cv_value, t.ck_d_data_type)) as attr_po
            from
            (select ca2.ck_attr,
-                   a2.ck_d_data_type,
+                   coalesce(da.ck_parent, a2.ck_d_data_type) as ck_d_data_type,
                    coalesce(oa.cv_value, ca2.cv_value) as cv_value
               from s_mt.t_class_attr ca2
               join s_mt.t_attr a2 on a2.ck_id = ca2.ck_attr
+              join s_mt.t_d_attr_data_type da on da.ck_id = a2.ck_d_data_type
               left join s_mt.t_object_attr oa on o.ck_id = oa.ck_object and ca2.ck_id = oa.ck_class_attr
              where ca2.ck_class = c.ck_id and ca2.ck_id not in 
              (select ck_class_attr from s_mt.t_class_hierarchy ch where ch.ck_class_attr in 
@@ -177,4 +182,4 @@ begin
 end;
 $$;
 
-ALTER FUNCTION pkg_json.f_get_origin_object(pk_start character varying) OWNER TO s_mp;
+ALTER FUNCTION pkg_json.f_get_origin_object(pk_start character varying) OWNER TO ${user.update};

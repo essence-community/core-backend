@@ -3,7 +3,7 @@
 DROP SCHEMA IF EXISTS pkg_json_account cascade;
 
 CREATE SCHEMA pkg_json_account
-    AUTHORIZATION s_ap;
+    AUTHORIZATION ${user.update};
 
 CREATE OR REPLACE FUNCTION pkg_json_account.f_get_field_info(
 	pv_master character varying DEFAULT NULL::character varying,
@@ -184,7 +184,7 @@ return vv_res::text;
 end;$BODY$;
 
 ALTER FUNCTION pkg_json_account.f_get_field_info(character varying, character varying, character varying)
-    OWNER TO s_ap;
+    OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_json_account.f_decode_attr(pv_value varchar, pk_data_type varchar) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER PARALLEL SAFE
@@ -223,7 +223,7 @@ begin
 end;
 $$;
 
-ALTER FUNCTION pkg_json_account.f_decode_attr(pv_value varchar, pk_data_type varchar) OWNER TO s_ap;
+ALTER FUNCTION pkg_json_account.f_decode_attr(pv_value varchar, pk_data_type varchar) OWNER TO ${user.update};
 
 CREATE OR REPLACE FUNCTION pkg_json_account.f_get_user(
 	pv_login character varying DEFAULT NULL::character varying,
@@ -280,7 +280,7 @@ begin
 $BODY$;
 
 ALTER FUNCTION pkg_json_account.f_get_user(character varying, character varying, character varying, smallint)
-    OWNER TO s_ap;
+    OWNER TO ${user.update};
 
 COMMENT ON FUNCTION pkg_json_account.f_get_user(character varying, character varying, character varying, smallint)
     IS 'Поиск пользователя';
@@ -353,7 +353,7 @@ begin
   end;$BODY$;
 
 ALTER FUNCTION pkg_json_account.f_modify_account(character varying, character varying, jsonb)
-    OWNER TO s_ap;
+    OWNER TO ${user.update};
 
 COMMENT ON FUNCTION pkg_json_account.f_modify_account(character varying, character varying, jsonb)
     IS 'добавление/редактирование/удаление пользователя';
@@ -400,7 +400,7 @@ begin
   end;$BODY$;
 
 ALTER FUNCTION pkg_json_account.f_modify_account_info(character varying, character varying, jsonb)
-    OWNER TO s_ap;
+    OWNER TO ${user.update};
 
 COMMENT ON FUNCTION pkg_json_account.f_modify_account_info(character varying, character varying, jsonb)
     IS 'добавление/редактирование/удаление доп атрибуты пользователя';
@@ -451,7 +451,7 @@ end;
 $BODY$;
 
 ALTER FUNCTION pkg_json_account.f_modify_account_role(character varying, character varying, jsonb)
-    OWNER TO s_ap;
+    OWNER TO ${user.update};
 
 COMMENT ON FUNCTION pkg_json_account.f_modify_account_role(character varying, character varying, jsonb)
     IS 'добавление/редактирование/удаление роли пользователя';
@@ -497,7 +497,7 @@ begin
   end;$BODY$;
 
 ALTER FUNCTION pkg_json_account.f_modify_action(character varying, character varying, jsonb)
-    OWNER TO s_ap;
+    OWNER TO ${user.update};
 
 COMMENT ON FUNCTION pkg_json_account.f_modify_action(character varying, character varying, jsonb)
     IS 'добавление/редактирование/удаление действий';
@@ -548,7 +548,7 @@ end;
 $BODY$;
 
 ALTER FUNCTION pkg_json_account.f_modify_action_role(character varying, character varying, jsonb)
-    OWNER TO s_ap;
+    OWNER TO ${user.update};
 
 COMMENT ON FUNCTION pkg_json_account.f_modify_action_role(character varying, character varying, jsonb)
     IS 'добавление/редактирование/удаление связи экшенов с ролями';
@@ -596,7 +596,7 @@ begin
 $BODY$;
 
 ALTER FUNCTION pkg_json_account.f_modify_d_info(character varying, character varying, jsonb)
-    OWNER TO s_ap;
+    OWNER TO ${user.update};
 
 COMMENT ON FUNCTION pkg_json_account.f_modify_d_info(character varying, character varying, jsonb)
     IS 'добавление/редактирование/удаление дополнительных полей';
@@ -643,7 +643,7 @@ end;
 $BODY$;
 
 ALTER FUNCTION pkg_json_account.f_modify_role(character varying, character varying, jsonb)
-    OWNER TO s_ap;
+    OWNER TO ${user.update};
 
 COMMENT ON FUNCTION pkg_json_account.f_modify_role(character varying, character varying, jsonb)
     IS 'добавление/редактирование/удаление роли';
@@ -694,7 +694,7 @@ end;
 $BODY$;
 
 ALTER FUNCTION pkg_json_account.f_modify_role_account(character varying, character varying, jsonb)
-    OWNER TO s_ap;
+    OWNER TO ${user.update};
 
 COMMENT ON FUNCTION pkg_json_account.f_modify_role_account(character varying, character varying, jsonb)
     IS 'добавление/редактирование/удаление роли у пользователей';
@@ -745,7 +745,7 @@ end;
 $BODY$;
 
 ALTER FUNCTION pkg_json_account.f_modify_role_action(character varying, character varying, jsonb)
-    OWNER TO s_ap;
+    OWNER TO ${user.update};
 
 COMMENT ON FUNCTION pkg_json_account.f_modify_role_action(character varying, character varying, jsonb)
     IS 'добавление/редактирование/удаление связи ролей и действий';
@@ -793,7 +793,7 @@ end;
 $BODY$;
 
 ALTER FUNCTION pkg_json_account.f_modify_auth_token(character varying, character varying, jsonb)
-    OWNER TO s_ap;
+    OWNER TO ${user.update};
 
 COMMENT ON FUNCTION pkg_json_account.f_modify_auth_token(character varying, character varying, jsonb)
     IS 'добавление/редактирование/удаление токенов';

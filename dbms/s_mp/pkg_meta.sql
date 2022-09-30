@@ -3,10 +3,10 @@
 DROP SCHEMA IF EXISTS pkg_meta cascade;
 
 CREATE SCHEMA pkg_meta
-   AUTHORIZATION s_mp;
+   AUTHORIZATION ${user.update};
 
 
-ALTER SCHEMA pkg_meta OWNER TO s_mp;
+ALTER SCHEMA pkg_meta OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_meta.p_check_separator(pv_action character varying, pot_page_object_attr s_mt.t_page_object_attr, pot_object_attr s_mt.t_object_attr, pot_class_attr s_mt.t_class_attr) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
@@ -129,7 +129,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_meta.p_check_separator(pv_action character varying, pot_page_object_attr s_mt.t_page_object_attr, pot_object_attr s_mt.t_object_attr, pot_class_attr s_mt.t_class_attr) OWNER TO s_mp;
+ALTER FUNCTION pkg_meta.p_check_separator(pv_action character varying, pot_page_object_attr s_mt.t_page_object_attr, pot_object_attr s_mt.t_object_attr, pot_class_attr s_mt.t_class_attr) OWNER TO ${user.update};
 
 COMMENT ON FUNCTION pkg_meta.p_check_separator(pv_action character varying, pot_page_object_attr s_mt.t_page_object_attr, pot_object_attr s_mt.t_object_attr, pot_class_attr s_mt.t_class_attr) IS 'Значения атрибутов  decimalseparator и thousandseparator в классах Column Numeric и Field Numeric не могут совпадать';
 
@@ -289,7 +289,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_meta.p_copy_object(pk_id character varying, pk_parent character varying) OWNER TO s_mp;
+ALTER FUNCTION pkg_meta.p_copy_object(pk_id character varying, pk_parent character varying) OWNER TO ${user.update};
 
 COMMENT ON FUNCTION pkg_meta.p_copy_object(pk_id character varying, pk_parent character varying) IS 'Копирование объектов';
 
@@ -352,7 +352,7 @@ begin
                       having count(adt.ck_id) = 0) loop
       perform pkg.p_set_error(37, 'meta:fc586c6328d047cf92fb85c145d307a9'); /* Недопустимый тип атрибута, см. С_Тип атрибута */
     end loop;
-    pot_attr.cv_data_type_extra := pkg_meta.p_decode_data_type_extra(pot_attr.cv_data_type_extra, pot_attr.ck_d_data_type);
+    pot_attr.cv_data_type_extra := pkg_meta.f_decode_data_type_extra(pot_attr.cv_data_type_extra, pot_attr.ck_d_data_type);
     /* Наименование атрибута должно быть уникально */
     if pv_action = i::varchar then
       for pcur_type in (select 1
@@ -380,11 +380,11 @@ begin
 end;
 $$;
 
-ALTER FUNCTION pkg_meta.p_modify_attr(pv_action character varying, INOUT pot_attr s_mt.t_attr) OWNER TO s_mp;
+ALTER FUNCTION pkg_meta.p_modify_attr(pv_action character varying, INOUT pot_attr s_mt.t_attr) OWNER TO ${user.update};
 
 COMMENT ON FUNCTION pkg_meta.p_modify_attr(pv_action character varying, INOUT pot_attr s_mt.t_attr) IS 'Создание/обновление/удаление атрибутов  t_attr';
 
-CREATE FUNCTION pkg_meta.p_decode_data_type_extra(pv_value text, vk_data_type varchar, vl_class_attr smallint DEFAULT 0::smallint) RETURNS text
+CREATE FUNCTION pkg_meta.f_decode_data_type_extra(pv_value text, pk_data_type varchar, vl_class_attr smallint DEFAULT 0::smallint) RETURNS text
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 's_mt', 'pkg_meta', 'public'
     AS $$
@@ -393,13 +393,15 @@ declare
   -- переменные функции
   vv_value text;
   vl_extra smallint;
+  vk_data_type varchar;
   v_rec record;
 begin
   vv_value := pv_value;
+  vk_data_type := pk_data_type;
 
   select cl_extra
     into strict vl_extra
-  from s_mt.t_d_attr_data_type where ck_id = vk_data_type;
+  from s_mt.t_d_attr_data_type where ck_id = pk_data_type; 
 
   if vl_extra <> 1 then
     RETURN NULL::text;
@@ -425,10 +427,9 @@ begin
 end;
 $$;
 
-ALTER FUNCTION pkg_meta.p_decode_data_type_extra(text, varchar, smallint) OWNER TO s_mp;
+ALTER FUNCTION pkg_meta.f_decode_data_type_extra(text, varchar, smallint) OWNER TO ${user.update};
 
-COMMENT ON FUNCTION pkg_meta.p_decode_data_type_extra(text, varchar, smallint) IS 'Преобразование и проверка дополнительного типа';
-
+COMMENT ON FUNCTION pkg_meta.f_decode_data_type_extra(text, varchar, smallint) IS 'Преобразование и проверка дополнительного типа';
 
 CREATE FUNCTION pkg_meta.p_modify_class(pv_action character varying, INOUT pot_class s_mt.t_class, pl_new_id smallint DEFAULT 1::smallint) RETURNS s_mt.t_class
     LANGUAGE plpgsql SECURITY DEFINER
@@ -500,7 +501,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_meta.p_modify_class(pv_action character varying, INOUT pot_class s_mt.t_class, pl_new_id smallint) OWNER TO s_mp;
+ALTER FUNCTION pkg_meta.p_modify_class(pv_action character varying, INOUT pot_class s_mt.t_class, pl_new_id smallint) OWNER TO ${user.update};
 
 COMMENT ON FUNCTION pkg_meta.p_modify_class(pv_action character varying, INOUT pot_class s_mt.t_class, pl_new_id smallint) IS 'Создание/обновление/удаление классов t_class';
 
@@ -547,7 +548,7 @@ begin
       into vk_d_data_type
     from s_mt.t_attr where ck_id = pot_class_attr.ck_attr;
     
-    pot_class_attr.cv_data_type_extra := pkg_meta.p_decode_data_type_extra(pot_class_attr.cv_data_type_extra, vk_d_data_type, 1::smallint);
+    pot_class_attr.cv_data_type_extra := pkg_meta.f_decode_data_type_extra(pot_class_attr.cv_data_type_extra, vk_d_data_type, 1::smallint);
 
     for rec in (
       select 1 
@@ -582,7 +583,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_meta.p_modify_class_attr(pv_action character varying, INOUT pot_class_attr s_mt.t_class_attr) OWNER TO s_mp;
+ALTER FUNCTION pkg_meta.p_modify_class_attr(pv_action character varying, INOUT pot_class_attr s_mt.t_class_attr) OWNER TO ${user.update};
 
 COMMENT ON FUNCTION pkg_meta.p_modify_class_attr(pv_action character varying, INOUT pot_class_attr s_mt.t_class_attr) IS 'Создание/обновление/удаление настроек класса объекта  t_class_attr';
 
@@ -654,7 +655,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_meta.p_modify_class_hierarchy(pv_action character varying, INOUT pot_class_hierarchy s_mt.t_class_hierarchy) OWNER TO s_mp;
+ALTER FUNCTION pkg_meta.p_modify_class_hierarchy(pv_action character varying, INOUT pot_class_hierarchy s_mt.t_class_hierarchy) OWNER TO ${user.update};
 
 COMMENT ON FUNCTION pkg_meta.p_modify_class_hierarchy(pv_action character varying, INOUT pot_class_hierarchy s_mt.t_class_hierarchy) IS 'Создание/обновление/удаление дерева зависимостей класса объектов t_class_hierarchy';
 
@@ -1173,7 +1174,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_meta.p_modify_module(pv_action character varying, INOUT pot_module s_mt.t_module) OWNER TO s_mp;
+ALTER FUNCTION pkg_meta.p_modify_module(pv_action character varying, INOUT pot_module s_mt.t_module) OWNER TO ${user.update};
 
 COMMENT ON FUNCTION pkg_meta.p_modify_module(pv_action character varying, INOUT pot_module s_mt.t_module) IS 'Создание/обновление/удаление модулей на странице t_module';
 
@@ -1392,7 +1393,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_meta.p_modify_object(pv_action character varying, INOUT pot_object s_mt.t_object) OWNER TO s_mp;
+ALTER FUNCTION pkg_meta.p_modify_object(pv_action character varying, INOUT pot_object s_mt.t_object) OWNER TO ${user.update};
 
 COMMENT ON FUNCTION pkg_meta.p_modify_object(pv_action character varying, INOUT pot_object s_mt.t_object) IS 'Создание/обновление/удаление объекта t_object';
 
@@ -1483,7 +1484,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_meta.p_modify_object_attr(pv_action character varying, INOUT pot_object_attr s_mt.t_object_attr) OWNER TO s_mp;
+ALTER FUNCTION pkg_meta.p_modify_object_attr(pv_action character varying, INOUT pot_object_attr s_mt.t_object_attr) OWNER TO ${user.update};
 
 COMMENT ON FUNCTION pkg_meta.p_modify_object_attr(pv_action character varying, INOUT pot_object_attr s_mt.t_object_attr) IS 'Создание/обновление/удаление дефолтных значений аттрибутов объекта t_object_attr';
 
@@ -1759,7 +1760,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_meta.p_modify_page(pv_action character varying, INOUT pot_page s_mt.t_page, pn_action_view bigint, pn_action_edit bigint) OWNER TO s_mp;
+ALTER FUNCTION pkg_meta.p_modify_page(pv_action character varying, INOUT pot_page s_mt.t_page, pn_action_view bigint, pn_action_edit bigint) OWNER TO ${user.update};
 
 COMMENT ON FUNCTION pkg_meta.p_modify_page(pv_action character varying, INOUT pot_page s_mt.t_page, pn_action_view bigint, pn_action_edit bigint) IS 'Создание/обновление/удаление Страниц t_page, вместе с t_page_action';
 
@@ -1817,7 +1818,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_meta.p_modify_page_attr(pv_action character varying, INOUT pot_page_attr s_mt.t_page_attr) OWNER TO s_mp;
+ALTER FUNCTION pkg_meta.p_modify_page_attr(pv_action character varying, INOUT pot_page_attr s_mt.t_page_attr) OWNER TO ${user.update};
 
 COMMENT ON FUNCTION pkg_meta.p_modify_page_attr(pv_action character varying, INOUT pot_page_attr s_mt.t_page_attr) IS 'Создание/обновление/удаление настроек страницы';
 
@@ -2116,7 +2117,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_meta.p_modify_page_object(pv_action character varying, INOUT pot_page_object s_mt.t_page_object) OWNER TO s_mp;
+ALTER FUNCTION pkg_meta.p_modify_page_object(pv_action character varying, INOUT pot_page_object s_mt.t_page_object) OWNER TO ${user.update};
 
 COMMENT ON FUNCTION pkg_meta.p_modify_page_object(pv_action character varying, INOUT pot_page_object s_mt.t_page_object) IS 'Создание/обновление/удаление обьектов на странице t_page_object';
 
@@ -2320,7 +2321,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_meta.p_modify_page_object_attr(pv_action character varying, INOUT pot_page_object_attr s_mt.t_page_object_attr) OWNER TO s_mp;
+ALTER FUNCTION pkg_meta.p_modify_page_object_attr(pv_action character varying, INOUT pot_page_object_attr s_mt.t_page_object_attr) OWNER TO ${user.update};
 
 COMMENT ON FUNCTION pkg_meta.p_modify_page_object_attr(pv_action character varying, INOUT pot_page_object_attr s_mt.t_page_object_attr) IS 'Создание/обновление/удаление настроек объекта на странице t_page_object_attr';
 
@@ -2432,7 +2433,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_meta.p_modify_page_variable(pv_action character varying, INOUT pot_page_variable s_mt.t_page_variable) OWNER TO s_mp;
+ALTER FUNCTION pkg_meta.p_modify_page_variable(pv_action character varying, INOUT pot_page_variable s_mt.t_page_variable) OWNER TO ${user.update};
 
 COMMENT ON FUNCTION pkg_meta.p_modify_page_variable(pv_action character varying, INOUT pot_page_variable s_mt.t_page_variable) IS 'Создание/обновление/удаление глобальных переменных на странице t_page_variable';
 
@@ -2482,7 +2483,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_meta.p_modify_provider(pv_action character varying, INOUT pot_provider s_mt.t_provider) OWNER TO s_mp;
+ALTER FUNCTION pkg_meta.p_modify_provider(pv_action character varying, INOUT pot_provider s_mt.t_provider) OWNER TO ${user.update};
 
 COMMENT ON FUNCTION pkg_meta.p_modify_provider(pv_action character varying, INOUT pot_provider s_mt.t_provider) IS 'Создание/обновление/удаление провайдеров данных t_provider';
 
@@ -2531,11 +2532,11 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_meta.p_modify_sys_setting(pv_action character varying, INOUT pot_sys_setting s_mt.t_sys_setting) OWNER TO s_mp;
+ALTER FUNCTION pkg_meta.p_modify_sys_setting(pv_action character varying, INOUT pot_sys_setting s_mt.t_sys_setting) OWNER TO ${user.update};
 
 COMMENT ON FUNCTION pkg_meta.p_modify_sys_setting(pv_action character varying, INOUT pot_sys_setting s_mt.t_sys_setting) IS 'Создание/обновление/удаление глобальных настроек приложения t_sys_setting';
 
-CREATE FUNCTION pkg_meta.p_decode_attr_variable(pv_value varchar, pk_class varchar, pc_json jsonb, pk_attr varchar DEFAULT null::varchar, pv_user varchar DEFAULT '-1'::varchar) RETURNS varchar
+CREATE FUNCTION pkg_meta.f_decode_attr_variable(pv_value varchar, pk_class varchar, pc_json jsonb, pk_attr varchar DEFAULT null::varchar, pv_user varchar DEFAULT '-1'::varchar) RETURNS varchar
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 's_mt', 'pkg_localization', 'pkg_meta', 'public'
     AS $$
@@ -2548,7 +2549,8 @@ declare
   vv_rec record;
   vv_action varchar(1);
   vv_value varchar := pv_value;
-  vk_data_type varchar; 
+  vk_data_type varchar;
+  vk_data_type_parent varchar; 
   vv_data_type_extra varchar;
   vot_localization s_mt.t_localization;
 begin
@@ -2563,19 +2565,24 @@ begin
   end if;
 
   if pk_class is not null then
-    select a.ck_d_data_type, coalesce(ca.cv_data_type_extra, a.cv_data_type_extra, '[]') as cv_data_type_extra
-      into strict vk_data_type, vv_data_type_extra
+    select a.ck_d_data_type, da.ck_parent, coalesce(ca.cv_data_type_extra, a.cv_data_type_extra, '[]') as cv_data_type_extra
+      into strict vk_data_type, vk_data_type_parent, vv_data_type_extra
     from s_mt.t_class_attr ca 
-    join s_mt.t_attr a on ca.ck_attr = a.ck_id 
+    join s_mt.t_attr a on ca.ck_attr = a.ck_id
+    join s_mt.t_d_attr_data_type da on da.ck_id = a.ck_d_data_type
     where ca.ck_id = pk_class;
   elsif pk_attr is not null then
-    select a.ck_d_data_type, coalesce(a.cv_data_type_extra, '[]') as cv_data_type_extra
-      into strict vk_data_type, vv_data_type_extra
+    select a.ck_d_data_type, da.ck_parent, coalesce(a.cv_data_type_extra, '[]') as cv_data_type_extra
+      into strict vk_data_type, vk_data_type_parent, vv_data_type_extra
     from s_mt.t_attr a
+    join s_mt.t_d_attr_data_type da on da.ck_id = a.ck_d_data_type
     where a.ck_id = pk_attr;
   end if;
-  
 
+  if vk_data_type_parent is not null then
+    vk_data_type := vk_data_type_parent;
+  end if;
+  
   if vk_data_type = 'text' then
     if vv_value is not null 
       and substr(vv_value, 0, 5) = 'new:'
@@ -2588,6 +2595,9 @@ begin
   vv_value := nullif(trim(pv_value), '');
 
   if vk_data_type = 'localization' then
+    if vv_value is null then
+      return vv_value;
+    end if;
     if vv_value is not null 
       and substr(vv_value, 0, 5) = 'new:'
       and length(vv_value) > 4 then 
@@ -2610,23 +2620,57 @@ begin
     return vv_value;
   end if;
   
-  if vk_data_type = 'date' or vk_data_type = 'integer' or vk_data_type = 'numeric' then
-    if pk_attr is not null and vv_value is null then 
-      perform pkg.p_set_error(80);
+  if vk_data_type = 'date' then
+    if vv_value is null then
+      return vv_value;
     end if;
+    return vv_value;
+  end if;
+
+  if vk_data_type = 'integer' then
+    if vv_value is null then
+      return vv_value;
+    end if;
+    begin 
+      perform pv_value::bigint;
+    exception
+      when others then
+        perform pkg.p_set_error(81, vk_data_type);
+        return vv_value;
+    end;
+    return vv_value;
+  end if;
+
+  if vk_data_type = 'numeric' then
+    if vv_value is null then
+      return vv_value;
+    end if;
+    begin 
+      perform pv_value::numeric;
+    exception
+      when others then
+        perform pkg.p_set_error(81, vk_data_type);
+        return vv_value;
+    end;
     return vv_value;
   end if;
   
   if vk_data_type = 'boolean' then
-    if vv_value = 'true' or vv_value = '1' then 
+    if vv_value is null then
+      return vv_value;
+    end if;
+    if vv_value = 'true' or vv_value = '1' or vv_value = 'yes' or vv_value = 'on' then 
       vv_value := 'true';
-    else 
+    else
       vv_value := 'false';
     end if;
     return vv_value;
   end if;
   
   if vk_data_type = 'enum' then
+    if vv_value is null then
+      return vv_value;
+    end if;
     for vv_rec in (select 1 
        where not exists (select value from jsonb_array_elements_text(vv_data_type_extra::jsonb) where vv_value is not null and value = vv_value)) loop
        perform pkg.p_set_error(80);
@@ -2635,15 +2679,22 @@ begin
   end if;
 
   if vk_data_type = 'array' or vk_data_type = 'object' or vk_data_type = 'global' or vk_data_type = 'order' then
-    if pk_attr is not null and vv_value is null then 
-      perform pkg.p_set_error(80);
-    end if; 
+    if vv_value is null then
+      return vv_value;
+    end if;
     begin 
       perform pv_value::jsonb;
     exception
       when others then
         perform pkg.p_set_error(81, vk_data_type);
+        return vv_value;
     end;
+    if vk_data_type = 'object' and jsonb_typeof(pv_value::jsonb) <> 'object' then
+        perform pkg.p_set_error(81, vk_data_type);
+    end if;
+    if vk_data_type = 'array' and jsonb_typeof(pv_value::jsonb) <> 'array' then
+        perform pkg.p_set_error(81, vk_data_type);
+    end if;
     return vv_value;
   end if;
 
@@ -2654,9 +2705,9 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_meta.p_decode_attr_variable(varchar,varchar,jsonb,varchar,varchar) OWNER TO s_mp;
+ALTER FUNCTION pkg_meta.f_decode_attr_variable(varchar,varchar,jsonb,varchar,varchar) OWNER TO ${user.update};
 
-COMMENT ON FUNCTION pkg_meta.p_decode_attr_variable(varchar,varchar,jsonb,varchar,varchar) IS 'Преобразование cv_value в varchar';
+COMMENT ON FUNCTION pkg_meta.f_decode_attr_variable(varchar,varchar,jsonb,varchar,varchar) IS 'Преобразование cv_value в varchar';
 
 CREATE FUNCTION pkg_meta.p_refresh_page_object(pk_page character varying) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
@@ -3055,7 +3106,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_meta.p_refresh_page_object(pk_page character varying) OWNER TO s_mp;
+ALTER FUNCTION pkg_meta.p_refresh_page_object(pk_page character varying) OWNER TO ${user.update};
 
 COMMENT ON FUNCTION pkg_meta.p_refresh_page_object(pk_page character varying) IS 'Перепривязка объетов страницы';
 
@@ -3112,7 +3163,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_meta.p_modify_query(pv_action character varying, pk_key character varying, INOUT pot_query s_mt.t_query) OWNER TO s_mp;
+ALTER FUNCTION pkg_meta.p_modify_query(pv_action character varying, pk_key character varying, INOUT pot_query s_mt.t_query) OWNER TO ${user.update};
 
 COMMENT ON FUNCTION pkg_meta.p_modify_query(pv_action character varying, pk_key character varying, INOUT pot_query s_mt.t_query) IS 'Создание/обновление/удаление сервисов';
 
@@ -3129,7 +3180,7 @@ begin
 end;
 $$;
 
-ALTER FUNCTION pkg_meta.p_lock_attr(pk_id character varying) OWNER TO s_mp;
+ALTER FUNCTION pkg_meta.p_lock_attr(pk_id character varying) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_meta.p_lock_class(pk_id character varying) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
@@ -3144,7 +3195,7 @@ begin
 end;
 $$;
 
-ALTER FUNCTION pkg_meta.p_lock_class(pk_id character varying) OWNER TO s_mp;
+ALTER FUNCTION pkg_meta.p_lock_class(pk_id character varying) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_meta.p_lock_module(pk_id character varying) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
@@ -3159,7 +3210,7 @@ begin
 end;
 $$;
 
-ALTER FUNCTION pkg_meta.p_lock_module(pk_id character varying) OWNER TO s_mp;
+ALTER FUNCTION pkg_meta.p_lock_module(pk_id character varying) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_meta.p_lock_object(pk_id character varying) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
@@ -3174,7 +3225,7 @@ begin
 end;
 $$;
 
-ALTER FUNCTION pkg_meta.p_lock_object(pk_id character varying) OWNER TO s_mp;
+ALTER FUNCTION pkg_meta.p_lock_object(pk_id character varying) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_meta.p_lock_page(pk_id character varying) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
@@ -3189,7 +3240,7 @@ begin
 end;
 $$;
 
-ALTER FUNCTION pkg_meta.p_lock_page(pk_id character varying) OWNER TO s_mp;
+ALTER FUNCTION pkg_meta.p_lock_page(pk_id character varying) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_meta.p_lock_page_object(pk_id character varying) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
@@ -3204,7 +3255,7 @@ begin
 end;
 $$;
 
-ALTER FUNCTION pkg_meta.p_lock_page_object(pk_id character varying) OWNER TO s_mp;
+ALTER FUNCTION pkg_meta.p_lock_page_object(pk_id character varying) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_meta.p_lock_provider(pk_id character varying) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
@@ -3219,7 +3270,7 @@ begin
 end;
 $$;
 
-ALTER FUNCTION pkg_meta.p_lock_provider(pk_id character varying) OWNER TO s_mp;
+ALTER FUNCTION pkg_meta.p_lock_provider(pk_id character varying) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_meta.p_lock_sys_setting(pk_id character varying) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
@@ -3234,7 +3285,7 @@ begin
 end;
 $$;
 
-ALTER FUNCTION pkg_meta.p_lock_sys_setting(pk_id character varying) OWNER TO s_mp;
+ALTER FUNCTION pkg_meta.p_lock_sys_setting(pk_id character varying) OWNER TO ${user.update};
 
 CREATE OR REPLACE FUNCTION pkg_meta.p_modify_page_all_object(pc_json jsonb, pv_action character varying, pv_user character varying, pv_parent_object character varying DEFAULT NULL::character varying) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
@@ -3555,4 +3606,4 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_meta.p_modify_page_all_object(jsonb, varchar, varchar, varchar) OWNER TO s_mp;
+ALTER FUNCTION pkg_meta.p_modify_page_all_object(jsonb, varchar, varchar, varchar) OWNER TO ${user.update};

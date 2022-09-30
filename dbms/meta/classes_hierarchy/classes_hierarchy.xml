@@ -60,6 +60,7 @@
     <include file="MetaClassHierarchy_8457.sql" relativeToChangelogFile="true"/>
     <include file="MetaClassHierarchy_84599990888B6BCCE053809BA8C00CC8.sql" relativeToChangelogFile="true"/>
     <include file="MetaClassHierarchy_858DBC49DF354ECCA2F57F36DAF4E37A.sql" relativeToChangelogFile="true"/>
+    <include file="MetaClassHierarchy_8672B08AF8C044BC963186193AA923F5.sql" relativeToChangelogFile="true"/>
     <include file="MetaClassHierarchy_871CB755C589248AE053809BA8C0F31E.sql" relativeToChangelogFile="true"/>
     <include file="MetaClassHierarchy_8C96F9B255F5407FBCB8DE9189B15F39.sql" relativeToChangelogFile="true"/>
     <include file="MetaClassHierarchy_8D547C621A02626CE053809BA8C0882B.sql" relativeToChangelogFile="true"/>

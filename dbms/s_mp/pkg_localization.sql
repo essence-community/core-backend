@@ -3,9 +3,9 @@
 DROP SCHEMA IF EXISTS pkg_localization cascade;
 
 CREATE SCHEMA pkg_localization
-    AUTHORIZATION s_mp;
+    AUTHORIZATION ${user.update};
 
-ALTER SCHEMA pkg_localization OWNER TO s_mp;
+ALTER SCHEMA pkg_localization OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_localization.p_modify_lang(pv_action character varying, INOUT pot_d_lang s_mt.t_d_lang) RETURNS s_mt.t_d_lang
     LANGUAGE plpgsql SECURITY DEFINER
@@ -101,7 +101,7 @@ begin
 end;
 $$;
 
-ALTER FUNCTION pkg_localization.p_modify_lang(pv_action character varying, INOUT pot_d_lang s_mt.t_d_lang) OWNER TO s_mp;
+ALTER FUNCTION pkg_localization.p_modify_lang(pv_action character varying, INOUT pot_d_lang s_mt.t_d_lang) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_localization.p_modify_localization(pv_action character varying, INOUT pot_localization s_mt.t_localization) RETURNS s_mt.t_localization
     LANGUAGE plpgsql SECURITY DEFINER
@@ -176,7 +176,7 @@ begin
 end;
 $$;
 
-ALTER FUNCTION pkg_localization.p_modify_localization(pv_action character varying, INOUT pot_localization s_mt.t_localization) OWNER TO s_mp;
+ALTER FUNCTION pkg_localization.p_modify_localization(pv_action character varying, INOUT pot_localization s_mt.t_localization) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_localization.p_add_new_localization(INOUT pot_localization s_mt.t_localization) RETURNS s_mt.t_localization
     LANGUAGE plpgsql SECURITY DEFINER
@@ -221,7 +221,7 @@ begin
 end;
 $$;
 
-ALTER FUNCTION pkg_localization.p_add_new_localization(INOUT pot_localization s_mt.t_localization) OWNER TO s_mp;
+ALTER FUNCTION pkg_localization.p_add_new_localization(INOUT pot_localization s_mt.t_localization) OWNER TO ${user.update};
 
 
 CREATE FUNCTION pkg_localization.p_lock_d_lang(pk_id character varying) RETURNS void
@@ -238,7 +238,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_localization.p_lock_d_lang(pk_id character varying) OWNER TO s_mp;
+ALTER FUNCTION pkg_localization.p_lock_d_lang(pk_id character varying) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_localization.p_lock_localization(pk_id character varying, pk_d_lang character varying) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
@@ -254,4 +254,4 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_localization.p_lock_localization(character varying, character varying) OWNER TO s_mp;
+ALTER FUNCTION pkg_localization.p_lock_localization(character varying, character varying) OWNER TO ${user.update};

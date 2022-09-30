@@ -3,10 +3,10 @@
 DROP SCHEMA IF EXISTS pkg_json_util cascade;
 
 CREATE SCHEMA pkg_json_util
-    AUTHORIZATION s_mp;
+    AUTHORIZATION ${user.update};
 
 
-ALTER SCHEMA pkg_json_util OWNER TO s_mp;
+ALTER SCHEMA pkg_json_util OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_json_util.f_check_string_is_percentage(pv_string character varying) RETURNS integer
     LANGUAGE plpgsql SECURITY DEFINER
@@ -21,7 +21,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_json_util.f_check_string_is_percentage(pv_string character varying) OWNER TO s_mp;
+ALTER FUNCTION pkg_json_util.f_check_string_is_percentage(pv_string character varying) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_json_util.f_string_to_rows(pv_string character varying) RETURNS public.ct_varchar
     LANGUAGE plpgsql SECURITY DEFINER
@@ -36,4 +36,4 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_json_util.f_string_to_rows(pv_string character varying) OWNER TO s_mp;
+ALTER FUNCTION pkg_json_util.f_string_to_rows(pv_string character varying) OWNER TO ${user.update};

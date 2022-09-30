@@ -2,7 +2,7 @@
 --changeset artemov_i:pkg_patcher dbms:postgresql runOnChange:true splitStatements:false stripComments:false
 DROP SCHEMA IF EXISTS pkg_patcher cascade;
 
-CREATE SCHEMA pkg_patcher AUTHORIZATION s_ap;
+CREATE SCHEMA pkg_patcher AUTHORIZATION ${user.update};
 
 CREATE FUNCTION pkg_patcher.p_modify_patch(pv_action character varying, INOUT pot_create_patch ${user.table}.t_create_patch) RETURNS ${user.table}.t_create_patch
     LANGUAGE plpgsql SECURITY DEFINER
@@ -47,7 +47,7 @@ begin
 end;
 $$;
 
-ALTER FUNCTION pkg_patcher.p_modify_patch(pv_action character varying, INOUT pot_create_patch ${user.table}.t_create_patch) OWNER TO s_ap;
+ALTER FUNCTION pkg_patcher.p_modify_patch(pv_action character varying, INOUT pot_create_patch ${user.table}.t_create_patch) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_patcher.p_lock_patch(pk_id uuid) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
@@ -63,4 +63,4 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_patcher.p_lock_patch(pk_id uuid) OWNER TO s_ap;
+ALTER FUNCTION pkg_patcher.p_lock_patch(pk_id uuid) OWNER TO ${user.update};

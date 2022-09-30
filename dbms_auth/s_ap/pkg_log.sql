@@ -3,10 +3,10 @@
 DROP SCHEMA IF EXISTS pkg_log cascade;
 
 CREATE SCHEMA pkg_log
-    AUTHORIZATION s_ap;
+    AUTHORIZATION ${user.update};
 
 
-ALTER SCHEMA pkg_log OWNER TO s_ap;
+ALTER SCHEMA pkg_log OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_log.p_save(pv_user character varying, pv_session character varying, pc_json jsonb, pv_table character varying, pv_id character varying, pv_action character varying) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
@@ -24,4 +24,4 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_log.p_save(pv_user character varying, pv_session character varying, pc_json jsonb, pv_table character varying, pv_id character varying, pv_action character varying) OWNER TO s_ap;
+ALTER FUNCTION pkg_log.p_save(pv_user character varying, pv_session character varying, pc_json jsonb, pv_table character varying, pv_id character varying, pv_action character varying) OWNER TO ${user.update};

@@ -3,10 +3,10 @@
 DROP SCHEMA IF EXISTS pkg_notification cascade;
 
 CREATE SCHEMA pkg_notification
-    AUTHORIZATION s_mp;
+    AUTHORIZATION ${user.update};
 
 
-ALTER SCHEMA pkg_notification OWNER TO s_mp;
+ALTER SCHEMA pkg_notification OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_notification.p_modify_notification(pv_action character varying, INOUT pot_notification s_mt.t_notification) RETURNS s_mt.t_notification
     LANGUAGE plpgsql SECURITY DEFINER
@@ -52,7 +52,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_notification.p_modify_notification(pv_action character varying, INOUT pot_notification s_mt.t_notification) OWNER TO s_mp;
+ALTER FUNCTION pkg_notification.p_modify_notification(pv_action character varying, INOUT pot_notification s_mt.t_notification) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_notification.p_lock_notification(pk_id character varying) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
@@ -68,4 +68,4 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_notification.p_lock_notification(pk_id character varying) OWNER TO s_mp;
+ALTER FUNCTION pkg_notification.p_lock_notification(pk_id character varying) OWNER TO ${user.update};

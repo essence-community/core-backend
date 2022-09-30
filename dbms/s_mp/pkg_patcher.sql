@@ -2,7 +2,7 @@
 --changeset artemov_i:pkg_patcher dbms:postgresql runOnChange:true splitStatements:false stripComments:false
 DROP SCHEMA IF EXISTS pkg_patcher cascade;
 
-CREATE SCHEMA pkg_patcher AUTHORIZATION s_mp;
+CREATE SCHEMA pkg_patcher AUTHORIZATION ${user.update};
 
 CREATE OR REPLACE FUNCTION pkg_patcher.p_clear_attr(pv_class character varying, pj_json jsonb)
  RETURNS void
@@ -807,7 +807,7 @@ begin
 end;
 $$;
 
-ALTER FUNCTION pkg_patcher.p_modify_patch(pv_action character varying, INOUT pot_create_patch s_mt.t_create_patch) OWNER TO s_mp;
+ALTER FUNCTION pkg_patcher.p_modify_patch(pv_action character varying, INOUT pot_create_patch s_mt.t_create_patch) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_patcher.p_lock_patch(pk_id uuid) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
@@ -822,7 +822,7 @@ begin
 end;
 $$;
 
-ALTER FUNCTION pkg_patcher.p_lock_patch(pk_id uuid) OWNER TO s_mp;
+ALTER FUNCTION pkg_patcher.p_lock_patch(pk_id uuid) OWNER TO ${user.update};
 
 CREATE OR REPLACE FUNCTION pkg_patcher.p_find_static_in_meta_localization()
  RETURNS void

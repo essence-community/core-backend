@@ -3,10 +3,10 @@
 DROP SCHEMA IF EXISTS pkg_util cascade;
 
 CREATE SCHEMA pkg_util
-    AUTHORIZATION s_mp;
+    AUTHORIZATION ${user.update};
 
 
-ALTER SCHEMA pkg_util OWNER TO s_mp;
+ALTER SCHEMA pkg_util OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_util.f_check_string_is_percentage(pv_string character varying) RETURNS integer
     LANGUAGE plpgsql SECURITY DEFINER
@@ -27,7 +27,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_util.f_check_string_is_percentage(pv_string character varying) OWNER TO s_mp;
+ALTER FUNCTION pkg_util.f_check_string_is_percentage(pv_string character varying) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_util.f_get_global_from_string(pv_string character varying DEFAULT NULL::character varying, pv_attr character varying DEFAULT NULL::character varying) RETURNS public.ct_varchar
     LANGUAGE plpgsql SECURITY DEFINER
@@ -79,7 +79,7 @@ begin
 end;$$;
 
 
-ALTER FUNCTION pkg_util.f_get_global_from_string(pv_string character varying, pv_attr character varying) OWNER TO s_mp;
+ALTER FUNCTION pkg_util.f_get_global_from_string(pv_string character varying, pv_attr character varying) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_util.f_string_to_rows(pv_string character varying, pv_delimeter character varying DEFAULT ','::character varying) RETURNS public.ct_varchar
     LANGUAGE plpgsql SECURITY DEFINER
@@ -91,4 +91,4 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_util.f_string_to_rows(pv_string character varying, pv_delimeter character varying) OWNER TO s_mp;
+ALTER FUNCTION pkg_util.f_string_to_rows(pv_string character varying, pv_delimeter character varying) OWNER TO ${user.update};

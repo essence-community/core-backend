@@ -3,10 +3,10 @@
 DROP SCHEMA IF EXISTS pkg cascade;
 
 CREATE SCHEMA pkg
-    AUTHORIZATION s_mp;
+    AUTHORIZATION ${user.update};
 
 
-ALTER SCHEMA pkg OWNER TO s_mp;
+ALTER SCHEMA pkg OWNER TO ${user.update};
 
 /*
   i sessvarstr;
@@ -79,7 +79,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg.p_form_response() OWNER TO s_mp;
+ALTER FUNCTION pkg.p_form_response() OWNER TO ${user.update};
 
 CREATE FUNCTION pkg.p_reset_response(pv_user character varying DEFAULT NULL::bigint) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
@@ -119,7 +119,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg.p_reset_response(pv_user character varying) OWNER TO s_mp;
+ALTER FUNCTION pkg.p_reset_response(pv_user character varying) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg.p_set_error(pk_id bigint, pv_macro_1 character varying DEFAULT NULL::character varying, pv_macro_2 character varying DEFAULT NULL::character varying, pv_macro_3 character varying DEFAULT NULL::character varying, pv_macro_4 character varying DEFAULT NULL::character varying, pv_macro_5 character varying DEFAULT NULL::character varying) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
@@ -138,7 +138,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg.p_set_error(pk_id bigint, pv_macro_1 character varying, pv_macro_2 character varying, pv_macro_3 character varying, pv_macro_4 character varying, pv_macro_5 character varying) OWNER TO s_mp;
+ALTER FUNCTION pkg.p_set_error(pk_id bigint, pv_macro_1 character varying, pv_macro_2 character varying, pv_macro_3 character varying, pv_macro_4 character varying, pv_macro_5 character varying) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg.p_set_info(pk_id bigint, pv_macro_1 character varying DEFAULT NULL::character varying, pv_macro_2 character varying DEFAULT NULL::character varying, pv_macro_3 character varying DEFAULT NULL::character varying, pv_macro_4 character varying DEFAULT NULL::character varying, pv_macro_5 character varying DEFAULT NULL::character varying) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
@@ -157,7 +157,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg.p_set_info(pk_id bigint, pv_macro_1 character varying, pv_macro_2 character varying, pv_macro_3 character varying, pv_macro_4 character varying, pv_macro_5 character varying) OWNER TO s_mp;
+ALTER FUNCTION pkg.p_set_info(pk_id bigint, pv_macro_1 character varying, pv_macro_2 character varying, pv_macro_3 character varying, pv_macro_4 character varying, pv_macro_5 character varying) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg.p_set_msg_macro(pk_id bigint, pv_macro_1 character varying DEFAULT NULL::character varying, pv_macro_2 character varying DEFAULT NULL::character varying, pv_macro_3 character varying DEFAULT NULL::character varying, pv_macro_4 character varying DEFAULT NULL::character varying, pv_macro_5 character varying DEFAULT NULL::character varying) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
@@ -198,7 +198,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg.p_set_msg_macro(pk_id bigint, pv_macro_1 character varying, pv_macro_2 character varying, pv_macro_3 character varying, pv_macro_4 character varying, pv_macro_5 character varying) OWNER TO s_mp;
+ALTER FUNCTION pkg.p_set_msg_macro(pk_id bigint, pv_macro_1 character varying, pv_macro_2 character varying, pv_macro_3 character varying, pv_macro_4 character varying, pv_macro_5 character varying) OWNER TO ${user.update};
 
 COMMENT ON FUNCTION pkg.p_set_msg_macro(pk_id bigint, pv_macro_1 character varying, pv_macro_2 character varying, pv_macro_3 character varying, pv_macro_4 character varying, pv_macro_5 character varying) IS 'Установка макросов для сообщений';
 
@@ -219,7 +219,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg.p_set_warning(pk_id bigint, pv_macro_1 character varying, pv_macro_2 character varying, pv_macro_3 character varying, pv_macro_4 character varying, pv_macro_5 character varying) OWNER TO s_mp;
+ALTER FUNCTION pkg.p_set_warning(pk_id bigint, pv_macro_1 character varying, pv_macro_2 character varying, pv_macro_3 character varying, pv_macro_4 character varying, pv_macro_5 character varying) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg.sp_add(spv_macro character varying) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
@@ -237,7 +237,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg.sp_add(spv_macro character varying) OWNER TO s_mp;
+ALTER FUNCTION pkg.sp_add(spv_macro character varying) OWNER TO ${user.update};
 
 COMMENT ON FUNCTION pkg.sp_add(spv_macro character varying) IS 'саб-метод для добавления записии в коллекцию варчаров';
 
@@ -260,4 +260,4 @@ begin
 end;
 $$;
 
-ALTER FUNCTION pkg.f_check_error(code varchar, err varchar) OWNER TO s_mp;
+ALTER FUNCTION pkg.f_check_error(code varchar, err varchar) OWNER TO ${user.update};

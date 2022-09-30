@@ -3,10 +3,10 @@
 DROP SCHEMA IF EXISTS pkg_user cascade;
 
 CREATE SCHEMA pkg_user
-    AUTHORIZATION s_ap;
+    AUTHORIZATION ${user.update};
 
 
-ALTER SCHEMA pkg_user OWNER TO s_ap;
+ALTER SCHEMA pkg_user OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_user.f_get_context(pv_attribute character varying) RETURNS character varying
     LANGUAGE plpgsql SECURITY DEFINER
@@ -22,7 +22,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_user.f_get_context(pv_attribute character varying) OWNER TO s_ap;
+ALTER FUNCTION pkg_user.f_get_context(pv_attribute character varying) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_user.p_modify_user(pct_user public.ct_user, pv_hash character varying DEFAULT NULL::character varying) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
@@ -89,7 +89,7 @@ begin
 end;
 $$;
 
-ALTER FUNCTION pkg_user.p_modify_user(pct_user public.ct_user, pv_hash character varying) OWNER TO s_ap;
+ALTER FUNCTION pkg_user.p_modify_user(pct_user public.ct_user, pv_hash character varying) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_user.p_modify_user_action(pct_user_action public.ct_user_action, pv_hash character varying DEFAULT NULL::character varying) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
@@ -120,7 +120,7 @@ begin
 end;
 $$;
 
-ALTER FUNCTION pkg_user.p_modify_user_action(pct_user_action public.ct_user_action, pv_hash character varying) OWNER TO s_ap;
+ALTER FUNCTION pkg_user.p_modify_user_action(pct_user_action public.ct_user_action, pv_hash character varying) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_user.p_modify_user_department(pct_user_department public.ct_user_department, pv_hash character varying DEFAULT NULL::character varying) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
@@ -152,7 +152,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_user.p_modify_user_department(pct_user_department public.ct_user_department, pv_hash character varying) OWNER TO s_ap;
+ALTER FUNCTION pkg_user.p_modify_user_department(pct_user_department public.ct_user_department, pv_hash character varying) OWNER TO ${user.update};
 
 
 CREATE FUNCTION pkg_user.p_set_context(pv_attribute character varying, pv_value character varying) RETURNS void
@@ -169,4 +169,4 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_user.p_set_context(pv_attribute character varying, pv_value character varying) OWNER TO s_ap;
+ALTER FUNCTION pkg_user.p_set_context(pv_attribute character varying, pv_value character varying) OWNER TO ${user.update};

@@ -3,10 +3,10 @@
 DROP SCHEMA IF EXISTS pkg_semaphore cascade;
 
 CREATE SCHEMA pkg_semaphore
-    AUTHORIZATION s_mp;
+    AUTHORIZATION ${user.update};
 
 
-ALTER SCHEMA pkg_semaphore OWNER TO s_mp;
+ALTER SCHEMA pkg_semaphore OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_semaphore.p_dec(pk_id character varying) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
@@ -37,7 +37,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_semaphore.p_dec(pk_id character varying) OWNER TO s_mp;
+ALTER FUNCTION pkg_semaphore.p_dec(pk_id character varying) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_semaphore.p_get(pk_id character varying) RETURNS double precision
     LANGUAGE plpgsql SECURITY DEFINER
@@ -61,7 +61,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_semaphore.p_get(pk_id character varying) OWNER TO s_mp;
+ALTER FUNCTION pkg_semaphore.p_get(pk_id character varying) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_semaphore.p_inc(pk_id character varying) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
@@ -92,4 +92,4 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_semaphore.p_inc(pk_id character varying) OWNER TO s_mp;
+ALTER FUNCTION pkg_semaphore.p_inc(pk_id character varying) OWNER TO ${user.update};

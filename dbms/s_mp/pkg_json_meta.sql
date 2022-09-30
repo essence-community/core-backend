@@ -3,10 +3,10 @@
 DROP SCHEMA IF EXISTS pkg_json_meta cascade;
 
 CREATE SCHEMA pkg_json_meta
-    AUTHORIZATION s_mp;
+    AUTHORIZATION ${user.update};
 
 
-ALTER SCHEMA pkg_json_meta OWNER TO s_mp;
+ALTER SCHEMA pkg_json_meta OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_json_meta.f_copy_object(pv_user character varying, pv_session character varying, pc_json jsonb) RETURNS character varying
     LANGUAGE plpgsql SECURITY DEFINER
@@ -48,7 +48,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_json_meta.f_copy_object(pv_user character varying, pv_session character varying, pc_json jsonb) OWNER TO s_mp;
+ALTER FUNCTION pkg_json_meta.f_copy_object(pv_user character varying, pv_session character varying, pc_json jsonb) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_json_meta.f_modify_attr(pv_user character varying, pk_session character varying, pc_json jsonb) RETURNS character varying
     LANGUAGE plpgsql SECURITY DEFINER
@@ -101,7 +101,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_json_meta.f_modify_attr(pv_user character varying, pk_session character varying, pc_json jsonb) OWNER TO s_mp;
+ALTER FUNCTION pkg_json_meta.f_modify_attr(pv_user character varying, pk_session character varying, pc_json jsonb) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_json_meta.f_modify_class(pv_user character varying, pk_session character varying, pc_json jsonb) RETURNS character varying
     LANGUAGE plpgsql SECURITY DEFINER
@@ -153,7 +153,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_json_meta.f_modify_class(pv_user character varying, pk_session character varying, pc_json jsonb) OWNER TO s_mp;
+ALTER FUNCTION pkg_json_meta.f_modify_class(pv_user character varying, pk_session character varying, pc_json jsonb) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_json_meta.f_modify_class_attr(pv_user character varying, pk_session character varying, pc_json jsonb) RETURNS character varying
     LANGUAGE plpgsql SECURITY DEFINER
@@ -180,7 +180,7 @@ begin
   vot_class_attr.ck_class = nullif(trim(pc_json#>>'{service,ck_main}'), '');
   vot_class_attr.ck_attr = nullif(trim(pc_json#>>'{data,ck_attr}'), '');
   vot_class_attr.cv_data_type_extra = nullif(trim(pc_json#>>'{data,cv_data_type_extra}'), '');
-  vot_class_attr.cv_value = pkg_meta.p_decode_attr_variable((pc_json#>>'{data,cv_value}'), vot_class_attr.ck_id, pc_json, vot_class_attr.ck_attr, pv_user);
+  vot_class_attr.cv_value = pkg_meta.f_decode_attr_variable((pc_json#>>'{data,cv_value}'), vot_class_attr.ck_id, pc_json, vot_class_attr.ck_attr, pv_user);
   vot_class_attr.cl_required = trim(pc_json#>>'{data,cl_required}')::int2;
   vot_class_attr.cl_empty = trim(pc_json#>>'{data,cl_empty}')::int2;
   vot_class_attr.ck_user = pv_user;
@@ -204,7 +204,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_json_meta.f_modify_class_attr(pv_user character varying, pk_session character varying, pc_json jsonb) OWNER TO s_mp;
+ALTER FUNCTION pkg_json_meta.f_modify_class_attr(pv_user character varying, pk_session character varying, pc_json jsonb) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_json_meta.f_modify_class_hierarchy(pv_user character varying, pk_session character varying, pc_json jsonb) RETURNS character varying
     LANGUAGE plpgsql SECURITY DEFINER
@@ -252,7 +252,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_json_meta.f_modify_class_hierarchy(pv_user character varying, pk_session character varying, pc_json jsonb) OWNER TO s_mp;
+ALTER FUNCTION pkg_json_meta.f_modify_class_hierarchy(pv_user character varying, pk_session character varying, pc_json jsonb) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_json_meta.f_modify_module(pv_user character varying, pk_session character varying, pc_json jsonb) RETURNS character varying
     LANGUAGE plpgsql SECURITY DEFINER
@@ -307,7 +307,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_json_meta.f_modify_module(pv_user character varying, pk_session character varying, pc_json jsonb) OWNER TO s_mp;
+ALTER FUNCTION pkg_json_meta.f_modify_module(pv_user character varying, pk_session character varying, pc_json jsonb) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_json_meta.f_modify_object(pv_user character varying, pk_session character varying, pc_json jsonb) RETURNS character varying
     LANGUAGE plpgsql SECURITY DEFINER
@@ -400,7 +400,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_json_meta.f_modify_object(pv_user character varying, pk_session character varying, pc_json jsonb) OWNER TO s_mp;
+ALTER FUNCTION pkg_json_meta.f_modify_object(pv_user character varying, pk_session character varying, pc_json jsonb) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_json_meta.f_modify_object_attr(pv_user character varying, pk_session character varying, pc_json jsonb) RETURNS character varying
     LANGUAGE plpgsql SECURITY DEFINER
@@ -429,7 +429,7 @@ begin
   vot_object_attr.ck_id = nullif(trim(pc_json#>>'{data,ck_id}'), '');
   vot_object_attr.ck_object = nullif(trim(pc_json#>>'{service,ck_main}'), '');
   vot_object_attr.ck_class_attr = nullif(trim(pc_json#>>'{data,ck_class_attr}'), '');
-  vot_object_attr.cv_value = pkg_meta.p_decode_attr_variable((pc_json#>>'{data,cv_value}'), vot_object_attr.ck_class_attr, pc_json, pv_user);
+  vot_object_attr.cv_value = pkg_meta.f_decode_attr_variable((pc_json#>>'{data,cv_value}'), vot_object_attr.ck_class_attr, pc_json, pv_user);
   vot_object_attr.ck_user = pv_user;
   vot_object_attr.ct_change = CURRENT_TIMESTAMP;
   vv_action = (pc_json#>>'{service,cv_action}');
@@ -452,7 +452,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_json_meta.f_modify_object_attr(pv_user character varying, pk_session character varying, pc_json jsonb) OWNER TO s_mp;
+ALTER FUNCTION pkg_json_meta.f_modify_object_attr(pv_user character varying, pk_session character varying, pc_json jsonb) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_json_meta.f_modify_page(pv_user character varying, pk_session character varying, pc_json jsonb) RETURNS character varying
     LANGUAGE plpgsql SECURITY DEFINER
@@ -550,7 +550,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_json_meta.f_modify_page(pv_user character varying, pk_session character varying, pc_json jsonb) OWNER TO s_mp;
+ALTER FUNCTION pkg_json_meta.f_modify_page(pv_user character varying, pk_session character varying, pc_json jsonb) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_json_meta.f_modify_page_attr(pv_user character varying, pk_session character varying, pc_json jsonb) RETURNS character varying
     LANGUAGE plpgsql SECURITY DEFINER
@@ -576,7 +576,7 @@ begin
   vot_page_attr.ck_id = nullif(trim(pc_json#>>'{data,ck_id}'), '');
   vot_page_attr.ck_page = nullif(trim(pc_json#>>'{master,ck_id}'), '');
   vot_page_attr.ck_attr = nullif(trim(pc_json#>>'{data,ck_attr}'), '');
-  vot_page_attr.cv_value = pkg_meta.p_decode_attr_variable((pc_json#>>'{data,cv_value}'), null, pc_json, vot_page_attr.ck_attr, pv_user);
+  vot_page_attr.cv_value = pkg_meta.f_decode_attr_variable((pc_json#>>'{data,cv_value}'), null, pc_json, vot_page_attr.ck_attr, pv_user);
   vot_page_attr.ck_user = pv_user;
   vot_page_attr.ct_change = CURRENT_TIMESTAMP;
   vv_action = (pc_json#>>'{service,cv_action}');
@@ -598,7 +598,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_json_meta.f_modify_page_attr(pv_user character varying, pk_session character varying, pc_json jsonb) OWNER TO s_mp;
+ALTER FUNCTION pkg_json_meta.f_modify_page_attr(pv_user character varying, pk_session character varying, pc_json jsonb) OWNER TO ${user.update};
 
 
 CREATE FUNCTION pkg_json_meta.f_modify_page_object(pv_user character varying, pk_session character varying, pc_json jsonb) RETURNS character varying
@@ -656,7 +656,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_json_meta.f_modify_page_object(pv_user character varying, pk_session character varying, pc_json jsonb) OWNER TO s_mp;
+ALTER FUNCTION pkg_json_meta.f_modify_page_object(pv_user character varying, pk_session character varying, pc_json jsonb) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_json_meta.f_modify_page_object_attr(pv_user character varying, pk_session character varying, pc_json jsonb) RETURNS character varying
     LANGUAGE plpgsql SECURITY DEFINER
@@ -686,7 +686,7 @@ begin
   vot_page_object_attr.ck_id = nullif(trim(pc_json#>>'{data,ck_id}'), '');
   vot_page_object_attr.ck_page_object = nullif(trim(pc_json#>>'{service,ck_main}'), '');
   vot_page_object_attr.ck_class_attr = nullif(trim(pc_json#>>'{data,ck_class_attr}'), '');
-  vot_page_object_attr.cv_value = pkg_meta.p_decode_attr_variable((pc_json#>>'{data,cv_value}'), vot_page_object_attr.ck_class_attr, pc_json, pv_user);
+  vot_page_object_attr.cv_value = pkg_meta.f_decode_attr_variable((pc_json#>>'{data,cv_value}'), vot_page_object_attr.ck_class_attr, pc_json, pv_user);
   vot_page_object_attr.ck_user = pv_user;
   vot_page_object_attr.ct_change = CURRENT_TIMESTAMP;
   vv_action = (pc_json#>>'{service,cv_action}');
@@ -710,7 +710,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_json_meta.f_modify_page_object_attr(pv_user character varying, pk_session character varying, pc_json jsonb) OWNER TO s_mp;
+ALTER FUNCTION pkg_json_meta.f_modify_page_object_attr(pv_user character varying, pk_session character varying, pc_json jsonb) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_json_meta.f_modify_page_variable(pv_user character varying, pv_session character varying, pc_json jsonb) RETURNS character varying
     LANGUAGE plpgsql SECURITY DEFINER
@@ -758,7 +758,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_json_meta.f_modify_page_variable(pv_user character varying, pv_session character varying, pc_json jsonb) OWNER TO s_mp;
+ALTER FUNCTION pkg_json_meta.f_modify_page_variable(pv_user character varying, pv_session character varying, pc_json jsonb) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_json_meta.f_modify_provider(pv_user character varying, pv_session character varying, pc_json jsonb) RETURNS character varying
     LANGUAGE plpgsql SECURITY DEFINER
@@ -817,7 +817,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_json_meta.f_modify_provider(pv_user character varying, pv_session character varying, pc_json jsonb) OWNER TO s_mp;
+ALTER FUNCTION pkg_json_meta.f_modify_provider(pv_user character varying, pv_session character varying, pc_json jsonb) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_json_meta.f_modify_sys_setting(pv_user character varying, pv_session character varying, pc_json jsonb) RETURNS character varying
     LANGUAGE plpgsql SECURITY DEFINER
@@ -873,7 +873,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_json_meta.f_modify_sys_setting(pv_user character varying, pv_session character varying, pc_json jsonb) OWNER TO s_mp;
+ALTER FUNCTION pkg_json_meta.f_modify_sys_setting(pv_user character varying, pv_session character varying, pc_json jsonb) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_json_meta.f_refresh_page_object(pv_user character varying, pv_session character varying, pc_json jsonb) RETURNS character varying
     LANGUAGE plpgsql SECURITY DEFINER
@@ -918,7 +918,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_json_meta.f_refresh_page_object(pv_user character varying, pv_session character varying, pc_json jsonb) OWNER TO s_mp;
+ALTER FUNCTION pkg_json_meta.f_refresh_page_object(pv_user character varying, pv_session character varying, pc_json jsonb) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_json_meta.f_modify_page_all(pv_user character varying, pk_session character varying, pc_json jsonb) RETURNS character varying
     LANGUAGE plpgsql SECURITY DEFINER
@@ -1062,7 +1062,7 @@ begin
 end;
 $$;
 
-ALTER FUNCTION pkg_json_meta.f_modify_page_all(pv_user character varying, pv_session character varying, pc_json jsonb) OWNER TO s_mp;
+ALTER FUNCTION pkg_json_meta.f_modify_page_all(pv_user character varying, pv_session character varying, pc_json jsonb) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_json_meta.f_modify_query(pv_user character varying, pk_session character varying, pc_json jsonb) RETURNS character varying
     LANGUAGE plpgsql SECURITY DEFINER
@@ -1127,4 +1127,4 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_json_meta.f_modify_query(pv_user character varying, pk_session character varying, pc_json jsonb) OWNER TO s_mp;
+ALTER FUNCTION pkg_json_meta.f_modify_query(pv_user character varying, pk_session character varying, pc_json jsonb) OWNER TO ${user.update};

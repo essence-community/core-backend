@@ -3,10 +3,10 @@
 DROP SCHEMA IF EXISTS pkg_json_report cascade;
 
 CREATE SCHEMA pkg_json_report
-    AUTHORIZATION s_mp;
+    AUTHORIZATION ${user.update};
 
 
-ALTER SCHEMA pkg_json_report OWNER TO s_mp;
+ALTER SCHEMA pkg_json_report OWNER TO ${user.update};
 
 CREATE OR REPLACE FUNCTION pkg_json_report.f_modify_dynamic_report(
 	pv_user character varying,
@@ -66,7 +66,7 @@ END;
 $BODY$;
 
 ALTER FUNCTION pkg_json_report.f_modify_dynamic_report(character varying, character varying, jsonb)
-    OWNER TO s_mp;
+    OWNER TO ${user.update};
 
 COMMENT ON FUNCTION pkg_json_report.f_modify_dynamic_report(character varying, character varying, jsonb)
     IS 'Преобработка json для универсальной печати ';

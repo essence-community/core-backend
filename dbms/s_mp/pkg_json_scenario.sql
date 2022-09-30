@@ -3,10 +3,10 @@
 DROP SCHEMA IF EXISTS pkg_json_scenario cascade;
 
 CREATE SCHEMA pkg_json_scenario
-    AUTHORIZATION s_mp;
+    AUTHORIZATION ${user.update};
 
 
-ALTER SCHEMA pkg_json_scenario OWNER TO s_mp;
+ALTER SCHEMA pkg_json_scenario OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_json_scenario.f_modify_action(pv_user character varying, pv_session character varying, pc_json jsonb) RETURNS character varying
     LANGUAGE plpgsql SECURITY DEFINER
@@ -78,7 +78,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_json_scenario.f_modify_action(pv_user character varying, pv_session character varying, pc_json jsonb) OWNER TO s_mp;
+ALTER FUNCTION pkg_json_scenario.f_modify_action(pv_user character varying, pv_session character varying, pc_json jsonb) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_json_scenario.f_modify_scenario(pv_user character varying, pv_session character varying, pc_json jsonb) RETURNS character varying
     LANGUAGE plpgsql SECURITY DEFINER
@@ -125,7 +125,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_json_scenario.f_modify_scenario(pv_user character varying, pv_session character varying, pc_json jsonb) OWNER TO s_mp;
+ALTER FUNCTION pkg_json_scenario.f_modify_scenario(pv_user character varying, pv_session character varying, pc_json jsonb) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_json_scenario.f_modify_step(pv_user character varying, pv_session character varying, pc_json jsonb) RETURNS character varying
     LANGUAGE plpgsql SECURITY DEFINER
@@ -173,4 +173,4 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_json_scenario.f_modify_step(pv_user character varying, pv_session character varying, pc_json jsonb) OWNER TO s_mp;
+ALTER FUNCTION pkg_json_scenario.f_modify_step(pv_user character varying, pv_session character varying, pc_json jsonb) OWNER TO ${user.update};

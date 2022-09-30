@@ -3,10 +3,10 @@
 DROP SCHEMA IF EXISTS pkg_report cascade;
 
 CREATE SCHEMA pkg_report
-    AUTHORIZATION s_mp;
+    AUTHORIZATION ${user.update};
 
 
-ALTER SCHEMA pkg_report OWNER TO s_mp;
+ALTER SCHEMA pkg_report OWNER TO ${user.update};
 
 CREATE OR REPLACE FUNCTION pkg_report.p_modify_dynamic_report(
 	pv_action character varying,
@@ -98,7 +98,7 @@ end;
 $BODY$;
 
 ALTER FUNCTION pkg_report.p_modify_dynamic_report(character varying, s_mt.t_dynamic_report, s_mt.t_query)
-    OWNER TO s_mp;
+    OWNER TO ${user.update};
 
 COMMENT ON FUNCTION pkg_report.p_modify_dynamic_report(character varying, s_mt.t_dynamic_report, s_mt.t_query)
     IS 'Добавление/Редактирование/Удаление запросов для универсальной печати';

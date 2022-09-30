@@ -3,10 +3,10 @@
 DROP SCHEMA IF EXISTS pkg_json_user cascade;
 
 CREATE SCHEMA pkg_json_user
-    AUTHORIZATION s_mp;
+    AUTHORIZATION ${user.update};
 
 
-ALTER SCHEMA pkg_json_user OWNER TO s_mp;
+ALTER SCHEMA pkg_json_user OWNER TO ${user.update};
 
 
 CREATE FUNCTION pkg_json_user.f_get_context(pv_attribute character varying) RETURNS character varying
@@ -18,7 +18,7 @@ begin
 end;
 $$;
 
-ALTER FUNCTION pkg_json_user.f_get_context(pv_attribute character varying) OWNER TO s_mp;
+ALTER FUNCTION pkg_json_user.f_get_context(pv_attribute character varying) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_json_user.f_modify_user(pc_json jsonb, pv_hash character varying) RETURNS character varying
     LANGUAGE plpgsql SECURITY DEFINER
@@ -62,7 +62,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_json_user.f_modify_user(pc_json jsonb, pv_hash character varying) OWNER TO s_mp;
+ALTER FUNCTION pkg_json_user.f_modify_user(pc_json jsonb, pv_hash character varying) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_json_user.f_modify_user_action(pc_json jsonb, pv_hash character varying) RETURNS character varying
     LANGUAGE plpgsql SECURITY DEFINER
@@ -96,7 +96,7 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_json_user.f_modify_user_action(pc_json jsonb, pv_hash character varying) OWNER TO s_mp;
+ALTER FUNCTION pkg_json_user.f_modify_user_action(pc_json jsonb, pv_hash character varying) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_json_user.f_modify_user_department(pc_json jsonb, pv_hash character varying) RETURNS character varying
     LANGUAGE plpgsql SECURITY DEFINER
@@ -129,4 +129,4 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_json_user.f_modify_user_department(pc_json jsonb, pv_hash character varying) OWNER TO s_mp;
+ALTER FUNCTION pkg_json_user.f_modify_user_department(pc_json jsonb, pv_hash character varying) OWNER TO ${user.update};
