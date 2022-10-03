@@ -72,79 +72,83 @@ class NotificationController {
     }
 
     public onRequest = async (request: websocket.request) => {
-        if (
-            !request.resourceURL.query ||
-            !(request.resourceURL.query as ParsedQs).session
-        ) {
-            return;
-        }
-        const sessionId = decodeURIComponent(
-            (Array.isArray((request.resourceURL.query as ParsedQs).session)
-                ? (request.resourceURL.query as ParsedQs).session[0]
-                : (request.resourceURL.query as ParsedQs).session) as string,
-        );
-        const connection = request.accept(
-            "notification",
-            request.origin,
-        ) as IWSConnect;
-        const configSession = (await this.contexts.slice(1).reduce(
-            (res, context) => {
-                if (res) {
-                    return res;
-                }
-                return (context.sessCtrl as GateSession)
+        try {
+            if (
+                !request.resourceURL.query ||
+                !(request.resourceURL.query as ParsedQs).session
+            ) {
+                return;
+            }
+            const sessionId = decodeURIComponent(
+                (Array.isArray((request.resourceURL.query as ParsedQs).session)
+                    ? (request.resourceURL.query as ParsedQs).session[0]
+                    : (request.resourceURL.query as ParsedQs).session) as string,
+            );
+            const connection = request.accept(
+                "notification",
+                request.origin,
+            ) as IWSConnect;
+            const configSession = (await this.contexts.slice(1).reduce(
+                (res, context) => {
+                    if (res) {
+                        return res;
+                    }
+                    return (context.sessCtrl as GateSession)
+                        .loadSession(null, sessionId, true)
+                        .then((session) =>
+                            session ? { session, context } : session,
+                        );
+                },
+                (this.contexts[0].sessCtrl as GateSession)
                     .loadSession(null, sessionId, true)
                     .then((session) =>
-                        session ? { session, context } : session,
-                    );
-            },
-            (this.contexts[0].sessCtrl as GateSession)
-                .loadSession(null, sessionId, true)
-                .then((session) =>
-                    session ? { session, context: this.contexts[0] } : session,
-                ),
-        )) as {
-            session: ISession;
-            context: IContextPlugin;
-        };
-        if (configSession) {
-            const { session, context } = configSession;
-            logger.info(`WS Connect ${JSON.stringify(session)}`);
-            connection.sessionId = session.session;
-            connection.gateContext = context;
-            connection.session = session;
-            const buf = Buffer.alloc(6);
-            crypto.randomFillSync(buf);
-            connection.uniqhash = buf.toString("hex");
-            connection.on("close", () => {
-                const obj =
+                        session ? { session, context: this.contexts[0] } : session,
+                    ),
+            )) as {
+                session: ISession;
+                context: IContextPlugin;
+            };
+            if (configSession) {
+                const { session, context } = configSession;
+                logger.info(`WS Connect ${JSON.stringify(session)}`);
+                connection.sessionId = session.session;
+                connection.gateContext = context;
+                connection.session = session;
+                const buf = Buffer.alloc(6);
+                crypto.randomFillSync(buf);
+                connection.uniqhash = buf.toString("hex");
+                connection.on("close", () => {
+                    const obj =
+                        this.notificationClient[
+                            `${session.idUser}:${session.nameProvider}`
+                        ];
+                    delete obj[connection.uniqhash];
+                });
+                if (
                     this.notificationClient[
                         `${session.idUser}:${session.nameProvider}`
-                    ];
-                delete obj[connection.uniqhash];
-            });
-            if (
-                this.notificationClient[
-                    `${session.idUser}:${session.nameProvider}`
-                ]
-            ) {
-                this.notificationClient[
-                    `${session.idUser}:${session.nameProvider}`
-                ][connection.uniqhash] = connection;
-            } else {
-                this.notificationClient[
-                    `${session.idUser}:${session.nameProvider}`
-                ] = {
-                    [connection.uniqhash]: connection,
-                };
+                    ]
+                ) {
+                    this.notificationClient[
+                        `${session.idUser}:${session.nameProvider}`
+                    ][connection.uniqhash] = connection;
+                } else {
+                    this.notificationClient[
+                        `${session.idUser}:${session.nameProvider}`
+                    ] = {
+                        [connection.uniqhash]: connection,
+                    };
+                }
+                return;
             }
-            return;
+            logger.debug("Close %s", sessionId);
+            connection.sendCloseFrame(
+                4001,
+                "Session not found, specified query requires authentication",
+            );
+        } catch (err) {
+            logger.error("Fail connect", err);
         }
-        logger.debug("Close %s", sessionId);
-        connection.sendCloseFrame(
-            4001,
-            "Session not found, specified query requires authentication",
-        );
     }
 
     /**
