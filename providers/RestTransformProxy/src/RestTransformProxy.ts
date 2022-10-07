@@ -280,7 +280,7 @@ export default class RestTransformProxy extends NullProvider {
             return param[name];
         }
         if (config.breakExecute) {
-            const parser = parseSync(config.appendParams);
+            const parser = parseSync(config.breakExecute);
             const res = parser.runer<IRestEssenceProxyConfig>({
                 get: (key: string, isKeyEmpty: boolean) => {
                     if (key === "callRequest") {
@@ -303,7 +303,7 @@ export default class RestTransformProxy extends NullProvider {
             }
         }
         if (config.breakExecuteAsync) {
-            const parser = parseAsync(config.appendParamsAsync);
+            const parser = parseAsync(config.breakExecuteAsync);
             const res = await parser.runer<IRestEssenceProxyConfig>({
                 get: (key: string, isKeyEmpty: boolean) => {
                     if (key === "callRequest") {
