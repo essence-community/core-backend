@@ -8,7 +8,7 @@ from (
         when value ? ''cv_data_type_extra_value'' then value->>''cv_data_type_extra_value''
         else value#>>''{}'' end as ck_id
     from
-        jsonb_array_elements((:json::jsonb#>>''{filter,cv_data_type_extra}'')::jsonb)
+        jsonb_array_elements((coalesce(nullif(:json::jsonb#>>''{filter,gv_data_type_extra_cur}'', ''''), :json::jsonb#>>''{filter,cv_data_type_extra}''))::jsonb)
 ) as t
 where ( &FILTER )
  /*##filter.ck_id*/and t.ck_id = :json::jsonb#>>''{filter,ck_id}''/*filter.ck_id##*/

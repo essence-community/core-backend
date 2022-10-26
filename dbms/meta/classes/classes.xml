@@ -67,6 +67,7 @@
     <include file="MetaClass_8E6AC2B44FCB8D3BE053809BA8C0E74D.sql" relativeToChangelogFile="true"/>
     <include file="MetaClass_8FFC6C4564B84157E053809BA8C00266.sql" relativeToChangelogFile="true"/>
     <include file="MetaClass_9.sql" relativeToChangelogFile="true"/>
+    <include file="MetaClass_92D23B81FAEA445DAB66C6651F1F0479.sql" relativeToChangelogFile="true"/>
     <include file="MetaClass_97.sql" relativeToChangelogFile="true"/>
     <include file="MetaClass_9964E8D5F6C04D9F85AC78E6EFBD72F1.sql" relativeToChangelogFile="true"/>
     <include file="MetaClass_9CC06E8D9D7E4791BA1C6232DAF60CDD.sql" relativeToChangelogFile="true"/>

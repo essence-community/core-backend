@@ -42,6 +42,8 @@ INSERT INTO s_mt.t_class_hierarchy
     select '94' as ck_id, '32' as ck_class_parent, '18' as ck_class_child, '138' as ck_class_attr, '-11' as ck_user, '2018-02-22T00:00:00.000+0000'::timestamp with time zone as ct_change
     union all
     select '63' as ck_id, '35' as ck_class_parent, '18' as ck_class_child, '172' as ck_class_attr, '-11' as ck_user, '2018-02-22T00:00:00.000+0000'::timestamp with time zone as ct_change
+    union all
+    select 'FA8D5FABCDC44BFF816942C14E6C28F1' as ck_id, '92D23B81FAEA445DAB66C6651F1F0479' as ck_class_parent, '18' as ck_class_child, '5A77102C08BB468EA5E45DCF6036C048' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2022-10-24T11:39:31.885+0000'::timestamp with time zone as ct_change
  ) as t
  where t.ck_class_parent in (select ck_id from s_mt.t_class) and t.ck_class_child in (select ck_id from s_mt.t_class)
  on conflict on constraint cin_c_class_hierarchy_1 do update set ck_class_parent = excluded.ck_class_parent, ck_class_child = excluded.ck_class_child, ck_class_attr = excluded.ck_class_attr, ck_user = excluded.ck_user, ct_change = excluded.ct_change;

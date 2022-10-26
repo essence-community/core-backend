@@ -46,6 +46,8 @@ INSERT INTO s_mt.t_class_hierarchy
     select 'EAA1EB370989422689188E72C3CFD01B' as ck_id, '8' as ck_class_parent, '8C96F9B255F5407FBCB8DE9189B15F39' as ck_class_child, '30' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2021-11-18T12:15:34.260+0000'::timestamp with time zone as ct_change
     union all
     select '1' as ck_id, '8' as ck_class_parent, '9' as ck_class_child, '8' as ck_class_attr, '-11' as ck_user, '2018-02-22T00:00:00.000+0000'::timestamp with time zone as ct_change
+    union all
+    select '96015FCB37494A2DA8F753421152E042' as ck_id, '92D23B81FAEA445DAB66C6651F1F0479' as ck_class_parent, '8' as ck_class_child, '5A77102C08BB468EA5E45DCF6036C048' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2022-10-24T11:39:14.832+0000'::timestamp with time zone as ct_change
  ) as t
  where t.ck_class_parent in (select ck_id from s_mt.t_class) and t.ck_class_child in (select ck_id from s_mt.t_class)
  on conflict on constraint cin_c_class_hierarchy_1 do update set ck_class_parent = excluded.ck_class_parent, ck_class_child = excluded.ck_class_child, ck_class_attr = excluded.ck_class_attr, ck_user = excluded.ck_user, ct_change = excluded.ct_change;

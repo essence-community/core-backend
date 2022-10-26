@@ -415,8 +415,7 @@ begin
         from jsonb_array_elements(vv_value::jsonb);
       end if;
       if vl_class_attr = 0 and (vv_value is null or vv_value not like '[%]') then 
-        perform pkg.p_set_error(37, 'meta:d22e05d47f7c42909a6c0086c11d4a5f');
-        return vv_value;
+        return NULL::text;
       elsif vl_class_attr = 1 and vv_value is not null and vv_value not like '[%]' then
         return NULL::text;
       end if;
@@ -2536,7 +2535,7 @@ ALTER FUNCTION pkg_meta.p_modify_sys_setting(pv_action character varying, INOUT 
 
 COMMENT ON FUNCTION pkg_meta.p_modify_sys_setting(pv_action character varying, INOUT pot_sys_setting s_mt.t_sys_setting) IS 'Создание/обновление/удаление глобальных настроек приложения t_sys_setting';
 
-CREATE FUNCTION pkg_meta.f_decode_attr_variable(pv_value varchar, pk_class varchar, pc_json jsonb, pk_attr varchar DEFAULT null::varchar, pv_user varchar DEFAULT '-1'::varchar) RETURNS varchar
+CREATE FUNCTION pkg_meta.f_decode_attr_variable(pv_value varchar, pk_class varchar, pc_json jsonb, pk_attr varchar DEFAULT null::varchar, pv_user varchar DEFAULT '-1'::varchar, pv_data_type_extra varchar DEFAULT null::varchar) RETURNS varchar
     LANGUAGE plpgsql SECURITY DEFINER
     SET search_path TO 's_mt', 'pkg_localization', 'pkg_meta', 'public'
     AS $$
@@ -2582,6 +2581,16 @@ begin
   if vk_data_type_parent is not null then
     vk_data_type := vk_data_type_parent;
   end if;
+
+  if nullif(nullif(trim(pv_data_type_extra), ''), '[]') is not null then
+    if pv_data_type_extra like '%cv_data_type_extra_value%' then
+        select (json_agg(value->>'cv_data_type_extra_value'))::text
+        into vv_data_type_extra
+        from jsonb_array_elements(pv_data_type_extra::jsonb);
+    else
+      vv_data_type_extra := pv_data_type_extra;
+    end if;
+  end if;
   
   if vk_data_type = 'text' then
     if vv_value is not null 
@@ -2619,6 +2628,23 @@ begin
     end if;
     return vv_value;
   end if;
+
+  if vk_data_type = 'enum' then
+    if vv_value is null then
+      return vv_value;
+    end if;
+    for vv_rec in (select 1 
+       where not exists (select value from jsonb_array_elements_text(vv_data_type_extra::jsonb) where value = vv_value)) loop
+       perform pkg.p_set_error(80);
+    end loop;
+    return vv_value;
+  end if;
+
+  if vv_value is not null 
+    and substr(vv_value, 0, 5) = 'new:'
+    and length(vv_value) > 4 then
+    vv_value := nullif(trim(substr(vv_value, 5)), '');
+  end if;  
   
   if vk_data_type = 'date' then
     if vv_value is null then
@@ -2666,17 +2692,6 @@ begin
     end if;
     return vv_value;
   end if;
-  
-  if vk_data_type = 'enum' then
-    if vv_value is null then
-      return vv_value;
-    end if;
-    for vv_rec in (select 1 
-       where not exists (select value from jsonb_array_elements_text(vv_data_type_extra::jsonb) where vv_value is not null and value = vv_value)) loop
-       perform pkg.p_set_error(80);
-    end loop;
-    return vv_value;
-  end if;
 
   if vk_data_type = 'array' or vk_data_type = 'object' or vk_data_type = 'global' or vk_data_type = 'order' then
     if vv_value is null then
@@ -2705,9 +2720,9 @@ end;
 $$;
 
 
-ALTER FUNCTION pkg_meta.f_decode_attr_variable(varchar,varchar,jsonb,varchar,varchar) OWNER TO ${user.update};
+ALTER FUNCTION pkg_meta.f_decode_attr_variable(varchar,varchar,jsonb,varchar,varchar,varchar) OWNER TO ${user.update};
 
-COMMENT ON FUNCTION pkg_meta.f_decode_attr_variable(varchar,varchar,jsonb,varchar,varchar) IS 'Преобразование cv_value в varchar';
+COMMENT ON FUNCTION pkg_meta.f_decode_attr_variable(varchar,varchar,jsonb,varchar,varchar,varchar) IS 'Преобразование cv_value в varchar';
 
 CREATE FUNCTION pkg_meta.p_refresh_page_object(pk_page character varying) RETURNS void
     LANGUAGE plpgsql SECURITY DEFINER
