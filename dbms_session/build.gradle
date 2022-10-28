@@ -30,6 +30,10 @@ dependencies {
 
 liquibase {
   activities {
+    init {
+      changeLogFile 'init/db.changelog.init.xml'
+      defaultsFile 'init/liquibase.init.properties'
+    }
     schema {
       changeLogFile 'db.changelog.schema.xml'
       defaultsFile 'liquibase.schema.properties'
