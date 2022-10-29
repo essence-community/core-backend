@@ -236,6 +236,11 @@ export default abstract class NullContext implements IContextPlugin {
                                 name: "Session store typeorm database",
                                 type: "string",
                             },
+                            schema: {
+                                name: "Session store typeorm schema",
+                                type: "string",
+                                defaultValue: "public",
+                            },
                             typeOrmExtra: {
                                 name: "Session store typeorm extraParam",
                                 description: "JSON extra param",
