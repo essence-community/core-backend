@@ -148,7 +148,8 @@ export function decryptPassword (value: string) {
     if (
         typeof value !== "string" ||
         isEmpty(value) ||
-        value.indexOf("{") !== 0
+        value.indexOf("{") !== 0 ||
+        value === "{}"
     ) {
         return value;
     }

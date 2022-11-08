@@ -120,7 +120,7 @@ export default abstract class NullContext implements IContextPlugin {
                         try {
                             return JSON.parse(value);
                         } catch (e) {
-                            logger.warn("Parse config helmet", e);
+                            logger.warn("Parse config helmet %s", value, e);
                             return undefined;
                         }
                     }
