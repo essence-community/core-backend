@@ -35,6 +35,8 @@ INSERT INTO s_mt.t_class_hierarchy
     union all
     select '128' as ck_id, '18' as ck_class_parent, '77' as ck_class_child, '27' as ck_class_attr, '-11' as ck_user, '2018-02-22T00:00:00.000+0000'::timestamp with time zone as ct_change
     union all
+    select '239C5C4FB98F409BBDB0F7A1CEBCFCEF' as ck_id, '18' as ck_class_parent, '7C133EA0021A44A0864B82F7BC40F183' as ck_class_child, 'AEAE3F4A3E864A648D66BB31A5F26BAF' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2022-11-08T14:34:33.061+0000'::timestamp with time zone as ct_change
+    union all
     select '5BAE3378AF3744848ED597A74E54B902' as ck_id, '18' as ck_class_parent, '8C96F9B255F5407FBCB8DE9189B15F39' as ck_class_child, '31' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2021-11-18T12:15:34.260+0000'::timestamp with time zone as ct_change
     union all
     select '10' as ck_id, '18' as ck_class_parent, '9' as ck_class_child, '27' as ck_class_attr, '-11' as ck_user, '2018-02-22T00:00:00.000+0000'::timestamp with time zone as ct_change
