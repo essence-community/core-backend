@@ -420,7 +420,11 @@ export default class RestTransformProxy extends NullProvider {
                     });
                     return;
                 }
-                formData.append(key, value, {
+                if (isEmpty(value)){
+                    return;
+                }
+                formData.append(key, Array.isArray(value) || typeof value === "object" ? JSON.stringify(value) : `${value}`, {
+                    contentType: Array.isArray(value) || typeof value === "object" ? "application/json" : "text/plain",
                     filename: key,
                 });
             });
