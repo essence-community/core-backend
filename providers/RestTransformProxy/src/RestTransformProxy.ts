@@ -423,9 +423,8 @@ export default class RestTransformProxy extends NullProvider {
                 if (isEmpty(value)){
                     return;
                 }
-                formData.append(key, Array.isArray(value) || typeof value === "object" ? JSON.stringify(value) : `${value}`, {
+                formData.append(key, Buffer.from(Array.isArray(value) || typeof value === "object" ? JSON.stringify(value) : `${value}`), {
                     contentType: Array.isArray(value) || typeof value === "object" ? "application/json" : "text/plain",
-                    filename: key,
                 });
             });
             params.data = formData;
