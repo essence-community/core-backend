@@ -192,7 +192,9 @@ export default class RestEssenceProxy extends NullProvider {
                         (gateContext.request.body as IFormData).fields[
                             key
                         ].forEach((item) => {
-                            formData.append(key, item);
+                            formData.append(key, item, {
+                                filename: key,
+                            });
                         });
                     }
                 });

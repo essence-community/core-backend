@@ -420,7 +420,9 @@ export default class RestTransformProxy extends NullProvider {
                     });
                     return;
                 }
-                formData.append(key, value);
+                formData.append(key, value, {
+                    filename: key,
+                });
             });
             params.data = formData;
             params.headers = {
