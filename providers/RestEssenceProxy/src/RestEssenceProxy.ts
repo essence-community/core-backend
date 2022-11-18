@@ -192,7 +192,7 @@ export default class RestEssenceProxy extends NullProvider {
                         (gateContext.request.body as IFormData).fields[
                             key
                         ].forEach((item) => {
-                            if (isEmpty(item)){
+                            if (typeof item === "undefined" || item === null){
                                 return;
                             }
                             formData.append(key, Buffer.from(Array.isArray(item) || typeof item === "object" ? JSON.stringify(item) : `${item}`), {
