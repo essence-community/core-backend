@@ -58,6 +58,7 @@ export default class CoreIntegration extends NullProvider {
             connectString: this.params.connectString,
             connectionTimeoutMillis: this.params.connectionTimeoutMillis,
             idleTimeoutMillis: this.params.idleTimeoutMillis,
+            setConnectionParam: this.params.setConnectionParam,
             partRows: this.params.partRows,
             poolMax: this.params.poolMax,
             poolMin: this.params.poolMin,

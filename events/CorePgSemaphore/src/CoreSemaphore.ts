@@ -29,6 +29,7 @@ export default class CoreSemaphore extends NullEvent {
             connectString: this.params.connectString,
             connectionTimeoutMillis: this.params.connectionTimeoutMillis,
             idleTimeoutMillis: this.params.idleTimeoutMillis,
+            setConnectionParam: this.params.setConnectionParam,
             partRows: this.params.partRows,
             poolMax: this.params.poolMax || 5,
             poolMin: this.params.poolMin || 1,
