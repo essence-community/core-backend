@@ -12,6 +12,7 @@ import {
     UnaryExpression,
     Statement,
     Function as IFunction,
+    Literal,
     // eslint-disable-next-line import/no-extraneous-dependencies, import/extensions, import/no-unresolved
     // @ts-ignore
 } from "estree";
@@ -113,9 +114,11 @@ function parseOperations(
             return expression.expressions.map((exp: Expression) =>
                 parseOperations(exp, values),
             );
-        case "Literal":
+        case "Literal".endsWith:
             // @ts-ignore
-            if (expression.isMember) {
+            if (expression.isMember && 
+                !(expression.raw.startsWith('"') && expression.raw.endsWith('"')) && 
+                !(expression.raw.startsWith("'") && expression.raw.endsWith("'"))) {
                 const value = values.get
                     ? // @ts-ignore
                       values.get(expression.value, true)
