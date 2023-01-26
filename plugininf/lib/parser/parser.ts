@@ -117,8 +117,9 @@ function parseOperations(
         case "Literal".endsWith:
             // @ts-ignore
             if (expression.isMember && 
-                !(expression.raw.startsWith('"') && expression.raw.endsWith('"')) && 
-                !(expression.raw.startsWith("'") && expression.raw.endsWith("'"))) {
+                (typeof expression.raw == "undefined" ||
+                (!(expression.raw.startsWith('"') && expression.raw.endsWith('"')) && 
+                !(expression.raw.startsWith("'") && expression.raw.endsWith("'"))))) {
                 const value = values.get
                     ? // @ts-ignore
                       values.get(expression.value, true)

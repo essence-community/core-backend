@@ -137,8 +137,9 @@ async function parseOperations(
         case "Literal":
             // @ts-ignore
             if (expression.isMember && 
-                !(expression.raw.startsWith('"') && expression.raw.endsWith('"')) && 
-                !(expression.raw.startsWith("'") && expression.raw.endsWith("'"))) {
+                (typeof expression.raw == "undefined" ||
+                (!(expression.raw.startsWith('"') && expression.raw.endsWith('"')) && 
+                !(expression.raw.startsWith("'") && expression.raw.endsWith("'"))))) {
                 const value = await (values.get
                     ? // @ts-ignore
                       values.get(expression.value, true)
