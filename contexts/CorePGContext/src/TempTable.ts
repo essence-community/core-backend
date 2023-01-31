@@ -6,7 +6,8 @@ import { ICoreParams } from "./CoreContext";
 import { IRufusLogger } from "rufus";
 import IGlobalObject from "@ungate/plugininf/lib/IGlobalObject";
 import { IPropertyContext } from "./ICoreController";
-import { isEmpty } from "@ungate/plugininf/lib/util/Util";
+import { isEmpty, debounce } from "@ungate/plugininf/lib/util/Util";
+import { initProcess } from "@ungate/plugininf/lib/util/ProcessSender";
 import {
     IPageData,
     IQueryData,
@@ -17,6 +18,8 @@ import {
     IObjectData,
 } from "./CoreContext.types";
 const createTempTable = (global as any as IGlobalObject).createTempTable;
+
+const MAX_TIME_WAIT = 5000;
 
 export class TempTable {
     private sysSettings =
@@ -117,6 +120,22 @@ export class TempTable {
         this.params = params;
         this.logger = logger;
         this.name = name;
+        initProcess({
+            reloadPageCache: debounce(() => {
+                if (process.env.UNGATE_HTTP_ID !== "1") {
+                    return;
+                }
+                Promise.all([
+                    this.loadPages(),
+                    this.loadQuery(),
+                    this.loadQueryAction(),
+                    this.loadModify(),
+                    this.loadModifyAction(),
+                    this.loadMessage(),
+                    this.loadSysSetting(),
+                ]).catch((err) => logger.error(err));
+            }, MAX_TIME_WAIT)
+        }, "cluster");
     }
 
     public loadSysSetting(): Promise<void> {
