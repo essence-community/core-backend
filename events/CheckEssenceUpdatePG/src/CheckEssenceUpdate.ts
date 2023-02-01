@@ -8,6 +8,7 @@ import { sendProcess } from "@ungate/plugininf/lib/util/ProcessSender";
 import { initParams } from "@ungate/plugininf/lib/util/Util";
 import { delay, noop } from "lodash";
 import { ReadStreamToArray } from "@ungate/plugininf/lib/stream/Util";
+import * as moment from 'moment';
 const logger = Logger.getLogger("CorePgNotification");
 
 export default class CheckEssenceUpdate extends NullEvent {
@@ -23,7 +24,7 @@ export default class CheckEssenceUpdate extends NullEvent {
     }
     private dataSource: PostgresDB;
     private eventConnect: Connection;
-    private startDate = new Date();
+    private startDate = moment().toISOString();
     private timer?: NodeJS.Timeout;
     constructor (name: string, params: ICCTParams) {
         super(name, params);
@@ -66,7 +67,7 @@ export default class CheckEssenceUpdate extends NullEvent {
             .then((res) => ReadStreamToArray(res.stream))
             .then((arr) => {
                 if (arr.length) {
-                    this.startDate = arr[0].ct_change;
+                    this.startDate = moment(arr[0].ct_change).toISOString();
                 }
             });
     }
@@ -113,7 +114,7 @@ export default class CheckEssenceUpdate extends NullEvent {
     private execute () {
         return this.dataSource
             .executeStmt(
-                "select t.* from t_page_update_history t where t.ct_change > :ct_change order by t.ct_change asc",
+                "select t.* from t_page_update_history t where t.ct_change > :ct_change::timestamptz order by t.ct_change asc",
                 undefined,
                 {
                     ct_change: this.startDate,
@@ -129,7 +130,7 @@ export default class CheckEssenceUpdate extends NullEvent {
                         },
                         target: "cluster",
                     });
-                    this.startDate = rows.pop().ct_change;
+                    this.startDate = moment(rows.pop().ct_change).toISOString();
                 }
             })
             .catch((err) => {
