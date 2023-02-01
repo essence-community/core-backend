@@ -114,7 +114,7 @@ export default class CheckEssenceUpdate extends NullEvent {
     private execute () {
         return this.dataSource
             .executeStmt(
-                "select t.* from t_page_update_history t where t.ct_change > :ct_change::timestamptz order by t.ct_change asc",
+                "select t.* from s_mt.t_page_update_history t where date_trunc('second', t.ct_change) > date_trunc('second', :ct_change::timestamptz) order by t.ct_change asc",
                 undefined,
                 {
                     ct_change: this.startDate,
