@@ -1311,7 +1311,7 @@ begin
       end loop;
     end if;
     -- Проверяем на смену родителя, нельзя в дочерний 
-    if pv_action = u::varchar then
+    if pv_action = u::varchar and pot_object.ck_parent is not null then
       for pcur_cnt in (
         with recursive vt_object as (
               select
@@ -1329,10 +1329,8 @@ begin
                   p.ck_parent = rp.ck_id
           )
           select 1
-          from s_mt.t_object o
-          where o.ck_id = pot_object.ck_id 
-          and o.ck_parent <> pot_object.ck_parent 
-          and pot_object.ck_parent in (select ck_id from vt_object)
+          from vt_object o
+          where o.ck_id = pot_object.ck_parent 
       ) loop
           perform pkg.p_set_error(51, '588e2ab956f14295a82048271de5ad5a');
       end loop;
@@ -1990,7 +1988,7 @@ begin
     end if;
 
     -- Проверяем на смену родителя, нельзя в дочерний 
-    if pv_action = u::varchar then
+    if pv_action = u::varchar and pot_page_object.ck_parent is not null then
       for vcur_object in (
         with recursive vt_page_object as (
               select
@@ -2008,10 +2006,8 @@ begin
                   p.ck_parent = rp.ck_id
           )
           select 1
-          from s_mt.t_page_object po
-          where po.ck_id = pot_page_object.ck_id 
-          and po.ck_parent <> pot_page_object.ck_parent 
-          and pot_page_object.ck_parent in (select ck_id from vt_page_object)
+          from s_mt.vt_page_object po
+          where po.ck_id = pot_page_object.ck_parent 
       ) loop
           perform pkg.p_set_error(51, '588e2ab956f14295a82048271de5ad5a');
       end loop;
