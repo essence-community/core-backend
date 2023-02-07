@@ -2006,7 +2006,7 @@ begin
                   p.ck_parent = rp.ck_id
           )
           select 1
-          from s_mt.vt_page_object po
+          from vt_page_object po
           where po.ck_id = pot_page_object.ck_parent 
       ) loop
           perform pkg.p_set_error(51, '588e2ab956f14295a82048271de5ad5a');
