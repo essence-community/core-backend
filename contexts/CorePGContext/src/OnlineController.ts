@@ -41,15 +41,9 @@ export default class OnlineController implements ICoreController {
         "                pkg_json.f_get_object(po.ck_id)::jsonb as json\n" + 
         "            from\n" + 
         "                t_page p\n" + 
-        "            left join t_page_object po on\n" + 
+        "            join t_page_object po on\n" + 
         "                p.ck_id = po.ck_page\n" + 
-        "            join t_page_action pa on\n" + 
-        "                pa.ck_page = p.ck_id\n" + 
-        "            where po.ck_parent is null\n" +
-        "               and (\n" +
-        "                    p.ck_id = :ck_page\n" +
-        "                or p.cv_url = :cv_url\n" +
-        "                  )\n" +
+        "            where po.ck_parent is null and po.ck_id is not null\n" +
         "            order by\n" + 
         "                po.ck_page,\n" + 
         "                po.cn_order\n" + 
@@ -59,12 +53,12 @@ export default class OnlineController implements ICoreController {
         ")\n" + 
         "select\n" + 
         "    tp.ck_page,\n" + 
-        "    tp.children,\n" + 
+        "    coalesce(tp.children::text, '[]') as children,\n" +  
         "        (\n" + 
         "            select\n" + 
         "                jsonb_object_agg(pv.cv_name, pv.cv_value)\n" + 
         "            from\n" + 
-        "                s_mt.t_page_variable pv\n" + 
+        "                t_page_variable pv\n" + 
         "            where\n" + 
         "                pv.ck_page = tp.ck_page\n" + 
         "        ) as global_value,\n" + 
@@ -94,15 +88,19 @@ export default class OnlineController implements ICoreController {
         "           where\n" +
         "               pa.ck_page = tp.ck_page)::text, '{}')::jsonb  as route \n" +
         "from\n" + 
-        "    temp_page tp\n" + 
-        "join t_page p\n" + 
+        "    t_page p\n" + 
+        "left join temp_page tp\n" + 
         "    on p.ck_id = tp.ck_page\n" + 
         "left join t_page_action pav on\n" + 
         "    pav.ck_page = p.ck_id and pav.cr_type = 'view'\n" + 
         "left join t_page_action pae on\n" + 
         "    pae.ck_page = p.ck_id and pae.cr_type = 'edit'\n" + 
-        "left join s_mt.t_icon i on\n" + 
-        "    i.ck_id = p.ck_icon\n";
+        "left join t_icon i on\n" + 
+        "    i.ck_id = p.ck_icon\n" +
+        " where  (\n" +
+        "                    p.ck_id = :ck_page\n" +
+        "                or p.cv_url = :cv_url\n" +
+        "                  )\n";
     private pageObjectFindSql =
         "select po.ck_id, pa.cn_action, pkg_json.f_get_object(po.ck_id) as json\n" +
         "   from t_page_object po\n" +
