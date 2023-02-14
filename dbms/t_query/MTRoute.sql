@@ -150,7 +150,7 @@ select
     coalesce((select
           jsonb_object_agg(pa.ck_attr, pa.cv_value)
       from
-              t_page_attr pa
+              s_mt.t_page_attr pa
        where
              pa.ck_page = op.ck_id)::text, ''{}'')::jsonb  as json 
 from
