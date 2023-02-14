@@ -25,48 +25,84 @@ export class TempTable {
     private sysSettings =
         "select s.ck_id, s.cv_value, s.cv_description from s_mt.t_sys_setting s";
     private pageSql =
-        "select\n" +
-        "    t.ck_page,\n" +
-        "    t.cv_url,\n" +
-        "    t.cv_name,\n" +
-        "    t.cn_action,\n" +
-        "    jsonb_agg(t.json ORDER BY t.cn_order) as children,\n" +
-        "    (\n" +
-        "        select\n" +
-        "            jsonb_object_agg(pv.cv_name, pv.cv_value)\n" +
-        "        from\n" +
-        "            s_mt.t_page_variable pv\n" +
-        "        where\n" +
-        "            pv.ck_page = t.ck_page\n" +
-        "    ) as global_value\n" +
-        "from\n" +
-        "    (\n" +
-        "        select\n" +
-        "            p.ck_id as ck_page,\n" +
-        "            p.cv_url,\n" +
-        "            p.cv_name,\n" +
-        "            po.cn_order,\n" +
-        "            pa.cn_action,\n" +
-        "            pkg_json.f_get_object(po.ck_id)::jsonb as json\n" +
-        "        from\n" +
-        "            t_page p\n" +
-        "        left join t_page_object po on\n" +
-        "            p.ck_id = po.ck_page\n" +
-        "        join t_page_action pa on\n" +
-        "            pa.ck_page = p.ck_id\n" +
-        "        where\n" +
-        "            pa.cr_type is not null\n" +
-        "            and pa.cr_type = 'view'\n" +
-        "            and po.ck_parent is null\n" +
-        "        order by\n" +
-        "            po.ck_page,\n" +
-        "            po.cn_order\n" +
-        "    ) as t\n" +
-        "group by\n" +
-        "    t.ck_page,\n" +
-        "    t.cv_url,\n" +
-        "    t.cv_name,\n" +
-        "    t.cn_action\n";
+        "with temp_page as (\n" + 
+        "    select\n" + 
+        "        t.ck_page,\n" + 
+        "        jsonb_agg(t.json ORDER BY t.cn_order) as children,\n" + 
+        "        (\n" + 
+        "            select\n" + 
+        "                jsonb_object_agg(pv.cv_name, pv.cv_value)\n" + 
+        "            from\n" + 
+        "                s_mt.t_page_variable pv\n" + 
+        "            where\n" + 
+        "                pv.ck_page = t.ck_page\n" + 
+        "        ) as global_value\n" + 
+        "    from\n" + 
+        "        (\n" + 
+        "            select\n" + 
+        "                p.ck_id as ck_page,\n" + 
+        "                po.cn_order,\n" + 
+        "                pkg_json.f_get_object(po.ck_id)::jsonb as json\n" + 
+        "            from\n" + 
+        "                t_page p\n" + 
+        "            left join t_page_object po on\n" + 
+        "                p.ck_id = po.ck_page\n" + 
+        "            join t_page_action pa on\n" + 
+        "                pa.ck_page = p.ck_id\n" + 
+        "            where po.ck_parent is null\n" + 
+        "            order by\n" + 
+        "                po.ck_page,\n" + 
+        "                po.cn_order\n" + 
+        "        ) as t\n" + 
+        "    group by\n" + 
+        "        t.ck_page\n" + 
+        ")\n" + 
+        "select\n" + 
+        "    tp.ck_page,\n" + 
+        "    tp.children,\n" + 
+        "        (\n" + 
+        "            select\n" + 
+        "                jsonb_object_agg(pv.cv_name, pv.cv_value)\n" + 
+        "            from\n" + 
+        "                s_mt.t_page_variable pv\n" + 
+        "            where\n" + 
+        "                pv.ck_page = tp.ck_page\n" + 
+        "        ) as global_value,\n" +  
+        "    pav.cn_action as cn_action,\n" + 
+        "    p.cv_url,\n" + 
+        "    p.cv_name,\n" + 
+        "    jsonb_build_object(\n" + 
+        "    'ck_id', p.ck_id,\n" + 
+        "    'ck_parent', p.ck_parent,\n" + 
+        "    'cv_name', p.cv_name,\n" + 
+        "    'cn_order', p.cn_order,\n" + 
+        "    'cl_menu', p.cl_menu,\n" + 
+        "    'cl_static', p.cl_static,\n" + 
+        "    'cv_url', p.cv_url,\n" + 
+        "    'ck_icon', p.ck_icon,\n" + 
+        "    'ck_view', p.ck_view,\n" + 
+        "    'cv_redirect_url', p.cv_redirect_url,\n" + 
+        "    'cl_multi', p.cl_multi,\n" + 
+        "    'cn_action_view', pav.cn_action,\n" + 
+        "    'cn_action_edit', pae.cn_action,\n" + 
+        "    'cv_icon_name', i.cv_name,\n" + 
+        "    'cv_icon_font', i.cv_font\n" + 
+        "    ) || coalesce((select\n" +
+        "           jsonb_object_agg(pa.ck_attr, pa.cv_value)\n" +
+        "           from\n" +
+        "               t_page_attr pa\n" +
+        "           where\n" +
+        "               pa.ck_page = tp.ck_page)::text, '{}')::jsonb  as route \n" + 
+        "from\n" + 
+        "    temp_page tp\n" + 
+        "join t_page p\n" + 
+        "    on p.ck_id = tp.ck_page\n" + 
+        "left join t_page_action pav on\n" + 
+        "    pav.ck_page = p.ck_id and pav.cr_type = 'view'\n" + 
+        "left join t_page_action pae on\n" + 
+        "    pae.ck_page = p.ck_id and pae.cr_type = 'edit'\n" + 
+        "left join s_mt.t_icon i on\n" + 
+        "    i.ck_id = p.ck_icon\n";
     private querySql =
         "select q.ck_id, q.ck_provider, q.cc_query, q.cr_type, q.cr_access, q.cn_action\n" +
         "from t_query q";
@@ -225,11 +261,15 @@ export class TempTable {
                                     cv_name: row.cv_name,
                                     cv_url: row.cv_url,
                                     children,
+                                    route: isObject(row.route)
+                                        ? row.route
+                                        : JSON.parse(
+                                            row.route || "{}",
+                                        ),
                                     global_value: isObject(row.global_value)
                                         ? row.global_value
                                         : JSON.parse(
                                               row.global_value || "{}",
-                                              replaceNull,
                                           ),
                                 };
                                 if (

@@ -13,6 +13,8 @@ select
   t.ck_icon,
   t.cv_icon_name,
   t.cv_icon_font,
+  t.cv_redirect_url,
+  t.cl_multi,
   t.leaf,
   t.root,
   t.cn_action_view,
@@ -38,6 +40,8 @@ from(
         p.ck_icon,
         i.cv_icon_name,
         i.cv_icon_font,
+        p.cv_redirect_url,
+        p.cl_multi,
         case
           when not exists(SELECT 1 FROM s_mt.t_page m WHERE m.ck_parent = p.ck_id) then ''true''
           else ''false''
@@ -73,6 +77,8 @@ from(
         p.ck_icon,
         i.cv_icon_name,
         i.cv_icon_font,
+        p.cv_redirect_url,
+        p.cl_multi,
         case
           when not exists(SELECT 1 FROM s_mt.t_page m WHERE m.ck_parent = p.ck_id) then ''true''
           else ''false''
@@ -108,6 +114,8 @@ from(
       q.ck_icon,
       q.cv_icon_name,
       q.cv_icon_font,
+      q.cv_redirect_url,
+      q.cl_multi,
       q.leaf,
       q.root,
       q.cn_action_view,

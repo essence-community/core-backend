@@ -15,6 +15,8 @@ with recursive t1(
     ck_icon,
     cl_menu,
     ck_view,
+    cv_redirect_url,
+    cl_multi,
     cv_app_url,
     lvl,
     root,
@@ -37,6 +39,8 @@ with recursive t1(
         p.ck_icon,
         p.cl_menu,
         p.ck_view,
+        p.cv_redirect_url,
+        p.cl_multi,
         par.cv_url as cv_app_url,
         1 as lvl,
         p.cv_name  as root,
@@ -74,6 +78,8 @@ union all /* выберем их дочернии элементы в рекур
         p.ck_icon,
         p.cl_menu,
         p.ck_view,
+        p.cv_redirect_url,
+        p.cl_multi,
         op.cv_app_url,
         op.lvl+1 as lvl,
         op.cv_name as root,
@@ -132,12 +138,21 @@ select
     op.cv_url,
     op.ck_icon,
     op.ck_view,
+    op.cv_redirect_url,
+    op.cl_multi,
     op.cv_app_url,
     op.cv_icon_name,
     op.cv_icon_font,
     case when not exists(select 1 from t3 m where m.ck_parent = op.ck_id) then ''true'' else ''false'' end as leaf,
     op.root,
-    op.cn_action_edit
+    op.cn_action_view,
+    op.cn_action_edit,
+    coalesce((select
+          jsonb_object_agg(pa.ck_attr, pa.cv_value)
+      from
+              t_page_attr pa
+       where
+             pa.ck_page = op.ck_id)::text, ''{}'')::jsonb  as json 
 from
     t3 op
 order by

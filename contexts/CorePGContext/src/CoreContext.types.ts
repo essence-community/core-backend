@@ -38,6 +38,7 @@ export interface IPageData {
     cv_url?: string;
     children: Record<string, any>[];
     global_value: Record<string, string>;
+    route: Record<string, string>;
 }
 
 export interface IObjectData {

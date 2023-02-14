@@ -492,6 +492,8 @@ begin
     vot_page.cv_url = nullif(trim(pc_json#>>'{data,drag,cv_url}'), '');
     vot_page.ck_icon = nullif(trim(pc_json#>>'{data,drag,ck_icon}'), '');
     vot_page.ck_view = nullif(trim(pc_json#>>'{data,drag,ck_view}'), '');
+    vot_page.cv_redirect_url = nullif(trim(pc_json#>>'{data,drag,cv_redirect_url}'), '');
+    vot_page.cl_multi = coalesce(nullif(trim(pc_json#>>'{data,drag,cl_multi}'), ''), '0')::smallint;
     vn_action_view = nullif(trim(pc_json#>>'{data,drag,cn_action_view}'), '')::bigint;
     vn_action_edit = nullif(trim(pc_json#>>'{data,drag,cn_action_edit}'), '')::bigint;
   else 
@@ -505,6 +507,8 @@ begin
     vot_page.cv_url = nullif(trim(pc_json#>>'{data,cv_url}'), '');
     vot_page.ck_icon = nullif(trim(pc_json#>>'{data,ck_icon}'), '');
     vot_page.ck_view = nullif(trim(pc_json#>>'{data,ck_view}'), '');
+    vot_page.cv_redirect_url = nullif(trim(pc_json#>>'{data,cv_redirect_url}'), '');
+    vot_page.cl_multi = coalesce(nullif(trim(pc_json#>>'{data,cl_multi}'), ''), '0')::smallint;
     vn_action_view = nullif(trim(pc_json#>>'{data,cn_action_view}'), '')::bigint;
     vn_action_edit = nullif(trim(pc_json#>>'{data,cn_action_edit}'), '')::bigint;
   end if;

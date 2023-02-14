@@ -1648,10 +1648,8 @@ begin
                   p.ck_parent = rp.ck_id
           )
           select 1
-          from s_mt.t_page p
-          where p.ck_id = pot_page.ck_id 
-          and p.ck_parent <> pot_page.ck_parent 
-          and pot_page.ck_parent in (select ck_id from vt_page)
+          from vt_page p
+          where p.ck_id = pot_page.ck_parent
       ) loop
           perform pkg.p_set_error(51, '588e2ab956f14295a82048271de5ad5a');
       end loop;

@@ -23,6 +23,7 @@ import OnlineController from "./OnlineController";
 import { TempTable } from "./TempTable";
 import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
 import { IUserDbData } from "@ungate/plugininf/lib/ISession";
+import Constant from "@ungate/plugininf/lib/Constants";
 const logger = Logger.getLogger("CoreContext");
 const Mask = (global as any as IGlobalObject).maskgate;
 export interface ICoreParams extends IContextParams {
@@ -39,8 +40,10 @@ export interface ICoreParams extends IContextParams {
     pageObjectsQueryName: string;
     pageObjectQueryName: string;
     versionApi: Record<string, "1" | "2" | "3">;
+    headerPrefixSetting: string;
 }
-
+/** Префикс Header */
+const PREFIX_HEADER = "ESSENCE-";
 export default class CoreContext extends NullContext {
     public static getParamsInfo(): IParamsInfo {
         /* tslint:disable:object-literal-sort-keys */
@@ -98,6 +101,11 @@ export default class CoreContext extends NullContext {
             pageObjectsQueryName: {
                 defaultValue: "MTGetPageObjects",
                 name: "Наименование запроса на возращение объектов страницы",
+                type: "string",
+            },
+            headerPrefixSetting: {
+                defaultValue: PREFIX_HEADER,
+                name: "Префикс header параметров",
                 type: "string",
             },
             ...PostgresDB.getParamsInfo(),

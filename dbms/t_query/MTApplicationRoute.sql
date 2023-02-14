@@ -14,6 +14,8 @@ INSERT INTO s_mt.t_query (ck_id, ck_provider, ck_user, ct_change, cr_type, cr_ac
     p.ck_icon,
     p.cl_menu,
     p.ck_view,
+    p.cv_redirect_url,
+    p.cl_multi,
     (
         jsonb_build_object(''childs'', (coalesce(nullif(tv.cct_config#>>''{children}'', ''''), ''[]''))::jsonb)
         || (coalesce(nullif(tv.cct_config#>>''{bc}'', ''''), ''{}''))::jsonb

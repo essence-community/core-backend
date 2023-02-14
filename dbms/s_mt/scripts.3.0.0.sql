@@ -26,3 +26,9 @@ COMMENT ON COLUMN s_mt.t_page_update_history.ct_change IS 'Время измен
 CREATE TRIGGER notify_page_update_event
 AFTER INSERT ON s_mt.t_page_update_history
   FOR EACH ROW EXECUTE PROCEDURE notify_event();
+
+--changeset artemov_i:added_multi_page dbms:postgresql splitStatements:false stripComments:false
+ALTER TABLE s_mt.t_page ADD cv_redirect_url varchar NULL;
+COMMENT ON COLUMN s_mt.t_page.cv_redirect_url IS 'Ссылка на внешний ресурс';
+ALTER TABLE s_mt.t_page ADD cl_multi int2 NOT NULL DEFAULT 0;
+COMMENT ON COLUMN s_mt.t_page.cl_multi IS 'Признак что страницу можжно открывать во множестве';

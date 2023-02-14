@@ -48,6 +48,16 @@ export default class OfflineController implements ICoreController {
             cv_description: "Версия шлюза",
             cv_value: gateContext.gateVersion,
         });
+        Object.entries(gateContext.request.headers).forEach(([key, value]) => {
+            const keyUpper = key.toLocaleUpperCase();
+            if (keyUpper.startsWith(this.params.headerPrefixSetting)) {
+                data.push({
+                    ck_id: `g_sys_header_${key.substring(this.params.headerPrefixSetting.length)}`,
+                    cv_description: `Header ${key}`,
+                    cv_value: Array.isArray(value) ? JSON.stringify(value) : value,
+                });
+            }
+        });
         if (js) {
             const str = "window.SETTINGS = " + JSON.stringify(data) + ";";
             gateContext.response.writeHead(200, {
@@ -203,6 +213,7 @@ export default class OfflineController implements ICoreController {
                         {
                             children: doc.children,
                             global_value: doc.global_value,
+                            route: doc.route,
                         },
                     ]),
                     type: "success",
