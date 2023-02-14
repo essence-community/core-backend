@@ -185,8 +185,7 @@ export const sqlPage =
     "    1 as lvl\n" +
     "from\n" +
     "    s_mt.t_page\n" +
-    "where ck_parent is null and\n" +
-    "    ck_id in (select value from json_array_elements_text(:cct_page::json))\n" +
+    "where ck_parent is null\n" +
     "union all\n" +
     "select\n" +
     "    p.ck_id,\n" +
@@ -206,7 +205,6 @@ export const sqlPage =
     "    s_mt.t_page p\n" +
     "join page rp on\n" +
     "    p.ck_parent = rp.ck_id \n" +
-    "where p.ck_id in (select value from json_array_elements_text(:cct_page::json))\n" +
     ")\n" +
     "select\n" +
     "    ck_id,\n" +
@@ -222,7 +220,8 @@ export const sqlPage =
     "    ck_view,\n" +
     "    cl_menu\n" +
     "from\n" +
-    "    page\n" +
+    "    page p\n" +
+    "where p.ck_id in (select value from json_array_elements_text(:cct_page::json))\n" +
     "order by lvl asc, cn_order asc, cv_name asc\n";
 export const sqlPageObject =
     "with recursive page_object as (\n" +
@@ -352,6 +351,18 @@ export const sqlPageAction =
     "    s_mt.t_page_action ap\n" +
     " where ap.ck_page in (select value from json_array_elements_text(:cct_page::json))\n" +
     "order by ap.cr_type asc, ap.ck_id asc\n";
+export const sqlPageAttr =
+    "select\n" +
+    "    ap.ck_id,\n" +
+    "    ap.ck_page,\n" +
+    "    ap.ck_attr,\n" +
+    "    ap.cv_value,\n" +
+    "    ap.ck_user,\n" +
+    "    ap.ct_change\n" +
+    "from\n" +
+    "    s_mt.t_page_attr ap\n" +
+    " where ap.ck_page in (select value from json_array_elements_text(:cct_page::json))\n" +
+    "order by ap.ck_attr asc, ap.ck_id asc\n";
 export const sqlSysSetting =
     "select\n" +
     "    ck_id,\n" +

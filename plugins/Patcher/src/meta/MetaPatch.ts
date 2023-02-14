@@ -41,6 +41,8 @@ import {
     sqlSysSetting,
 } from "./SqlPostgres";
 import { SysSetting } from "./SysSetting";
+import { sqlPageAttr } from './SqlPostgres';
+import { PageAttr } from "./PageAttr";
 
 export async function patchMeta(dir: string, json: IJson, conn: Connection) {
     const includePage: string[] = [];
@@ -233,12 +235,42 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
                         `select pkg_patcher.p_remove_page('${row.ck_id}');\n`,
                     );
                 }
+                page[row.ck_id].write(
+                    `delete s_mt.t_page_attr where ck_page='${row.ck_id}';\n`,
+                );
                 page[row.ck_id].write(new Page(row).toRow());
                 includePage.push(`Page_${row.ck_id}`);
             });
             resPage.stream.on("error", (err) => reject(err));
             resPage.stream.on("end", () => resolve());
         });
+        await conn
+            .executeStmt(
+                sqlPageAttr,
+                {
+                    cct_page: JSON.stringify(json.data.cct_page),
+                },
+                {},
+                {
+                    autoCommit: true,
+                    resultSet: true,
+                },
+            )
+            .then(
+                (res) =>
+                    new Promise<void>((resolve, reject) => {
+                        res.stream.on("data", (row) => {
+                            if (!page[row.ck_page]) {
+                                return;
+                            }
+                            page[row.ck_page].write(
+                                new PageAttr(row).toRow(),
+                            );
+                        });
+                        res.stream.on("error", (err) => reject(err));
+                        res.stream.on("end", () => resolve());
+                    }),
+            );
         await conn
             .executeStmt(
                 sqlPageAction,
@@ -255,6 +287,9 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
                 (res) =>
                     new Promise<void>((resolve, reject) => {
                         res.stream.on("data", (row) => {
+                            if (!page[row.ck_page]) {
+                                return;
+                            }
                             page[row.ck_page].write(
                                 new PageAction(row).toRow(),
                             );
@@ -263,6 +298,7 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
                         res.stream.on("end", () => resolve());
                     }),
             );
+        
         await conn
             .executeStmt(
                 sqlPageVariable,
@@ -279,6 +315,9 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
                 (res) =>
                     new Promise<void>((resolve, reject) => {
                         res.stream.on("data", (row) => {
+                            if (!page[row.ck_page]) {
+                                return;
+                            }
                             page[row.ck_page].write(
                                 new PageVariable(row).toRow(),
                             );
@@ -303,6 +342,9 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
                 (res) =>
                     new Promise<void>((resolve, reject) => {
                         res.stream.on("data", (row) => {
+                            if (!page[row.ck_page]) {
+                                return;
+                            }
                             page[row.ck_page].write(new MObject(row).toRow());
                         });
                         res.stream.on("error", (err) => reject(err));
@@ -325,6 +367,9 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
                 (res) =>
                     new Promise<void>((resolve, reject) => {
                         res.stream.on("data", (row) => {
+                            if (!page[row.ck_page]) {
+                                return;
+                            }
                             page[row.ck_page].write(
                                 new ObjectAttr(row).toRow(),
                             );
@@ -349,6 +394,9 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
                 (res) =>
                     new Promise<void>((resolve, reject) => {
                         res.stream.on("data", (row) => {
+                            if (!page[row.ck_page]) {
+                                return;
+                            }
                             page[row.ck_page].write(
                                 new PageObject(row).toRow(),
                             );
@@ -373,6 +421,9 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
                 (res) =>
                     new Promise<void>((resolve, reject) => {
                         res.stream.on("data", (row) => {
+                            if (!page[row.ck_page]) {
+                                return;
+                            }
                             page[row.ck_page].write(
                                 new PageObjectAttr(row).toRow(),
                             );
@@ -397,6 +448,9 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
                 (res) =>
                     new Promise<void>((resolve, reject) => {
                         res.stream.on("data", (row) => {
+                            if (!page[row.ck_page]) {
+                                return;
+                            }
                             page[row.ck_page].write(
                                 new PageObjectMaster(row).toRow(),
                             );
@@ -422,6 +476,9 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
                     new Promise<void>((resolve, reject) => {
                         const ckPages: Record<string, boolean> = {};
                         res.stream.on("data", (row) => {
+                            if (!page[row.ck_page]) {
+                                return;
+                            }
                             if (ckPages[row.ck_page]) {
                                 page[row.ck_page].write("    union all\n");
                             } else {
