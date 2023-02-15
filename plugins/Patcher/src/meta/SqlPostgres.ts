@@ -182,6 +182,8 @@ export const sqlPage =
     "    ct_change,\n" +
     "    cl_menu,\n" +
     "    ck_view,\n" +
+    "    cv_redirect_url,\n" +
+    "    cl_multi,\n" +
     "    1 as lvl\n" +
     "from\n" +
     "    s_mt.t_page\n" +
@@ -200,6 +202,8 @@ export const sqlPage =
     "    p.ct_change,\n" +
     "    p.cl_menu,\n" +
     "    p.ck_view,\n" +
+    "    p.cv_redirect_url,\n" +
+    "    p.cl_multi,\n" +
     "    rp.lvl+1 as lvl\n" +
     "from\n" +
     "    s_mt.t_page p\n" +
@@ -218,6 +222,8 @@ export const sqlPage =
     "    ck_user,\n" +
     "    ct_change,\n" +
     "    ck_view,\n" +
+    "    cv_redirect_url,\n" +
+    "    cl_multi,\n" +
     "    cl_menu\n" +
     "from\n" +
     "    page p\n" +
