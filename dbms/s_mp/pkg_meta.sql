@@ -1664,8 +1664,8 @@ begin
         insert into s_mt.t_page values (pot_page.*);
       elsif pv_action = u::varchar then
         update s_mt.t_page set
-          (ck_id, ck_parent, cr_type, cv_name, cn_order, cl_menu, cl_static, cv_url, ck_icon, ck_view, ck_user, ct_change) = 
-          (pot_page.ck_id, pot_page.ck_parent, pot_page.cr_type, pot_page.cv_name, pot_page.cn_order, pot_page.cl_menu, pot_page.cl_static, pot_page.cv_url, pot_page.ck_icon, pot_page.ck_view, pot_page.ck_user, pot_page.ct_change)
+          (ck_id, ck_parent, cr_type, cv_name, cn_order, cl_menu, cl_static, cv_url, ck_icon, ck_view, ck_user, ct_change, cv_redirect_url, cl_multi) = 
+          (pot_page.ck_id, pot_page.ck_parent, pot_page.cr_type, pot_page.cv_name, pot_page.cn_order, pot_page.cl_menu, pot_page.cl_static, pot_page.cv_url, pot_page.ck_icon, pot_page.ck_view, pot_page.ck_user, pot_page.ct_change, pot_page.cv_redirect_url, pot_page.cl_multi)
         where ck_id = pot_page.ck_id;
 
         if not found then
