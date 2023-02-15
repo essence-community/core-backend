@@ -35,7 +35,7 @@ export default class OnlineController implements ICoreController {
         "            p.ck_parent,\n" + 
         "            p.cv_url as cv_app_url,\n" + 
         "            p.cv_name as root,\n" + 
-        "            jsonb_build_array(p.cv_name) as cv_tree_path\n" + 
+        "            jsonb_build_array(jsonb_build_object('cv_name', p.cv_name, 'ck_id', p.ck_id)) as cct_tree_path\n" + 
         "        from\n" + 
         "            s_mt.t_page p\n" + 
         "        where p.ck_parent is null and p.cr_type = 3\n" + 
@@ -45,7 +45,7 @@ export default class OnlineController implements ICoreController {
         "            p.ck_parent,\n" + 
         "            op.cv_app_url,\n" + 
         "            op.root,\n" + 
-        "            op.cv_tree_path || jsonb_build_array(p.cv_name) as cv_tree_path\n" + 
+        "            op.cct_tree_path || jsonb_build_array(jsonb_build_object('cv_name', p.cv_name, 'ck_id', p.ck_id)) as cct_tree_path\n" + 
         "        from\n" + 
         "            temp_tree_page op\n" + 
         "        join s_mt.t_page p on\n" + 
@@ -105,7 +105,7 @@ export default class OnlineController implements ICoreController {
         "    'cv_icon_font', i.cv_font,\n" + 
         "    'cv_app_url', ttp.cv_app_url,\n" + 
         "    'root', ttp.root,\n" + 
-        "    'cv_tree_path', ttp.cv_tree_path,\n" + 
+        "    'cct_tree_path', ttp.cct_tree_path,\n" + 
         "    'leaf', 'true'\n" + 
         "    ) || coalesce((select\n" + 
         "           jsonb_object_agg(pa.ck_attr, pa.cv_value)\n" + 
