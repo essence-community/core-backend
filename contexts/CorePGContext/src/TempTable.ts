@@ -25,7 +25,29 @@ export class TempTable {
     private sysSettings =
         "select s.ck_id, s.cv_value, s.cv_description from s_mt.t_sys_setting s";
     private pageSql =
-        "with temp_page as (\n" + 
+        "with recursive temp_tree_page as (\n" + 
+        "    select\n" + 
+        "            p.ck_id,\n" + 
+        "            p.ck_parent,\n" + 
+        "            p.cv_url as cv_app_url,\n" + 
+        "            p.cv_name as root,\n" + 
+        "            jsonb_build_array(p.cv_name) as cv_tree_path\n" + 
+        "        from\n" + 
+        "            s_mt.t_page p\n" + 
+        "        where p.ck_parent is null and p.cr_type = 3\n" + 
+        "    union all\n" + 
+        "        select\n" + 
+        "            p.ck_id,\n" + 
+        "            p.ck_parent,\n" + 
+        "            op.cv_app_url,\n" + 
+        "            op.root,\n" + 
+        "            op.cv_tree_path || jsonb_build_array(p.cv_name) as cv_tree_path\n" + 
+        "        from\n" + 
+        "            temp_tree_page op\n" + 
+        "        join s_mt.t_page p on\n" + 
+        "            op.ck_id = p.ck_parent\n" + 
+        "),\n" + 
+        "temp_page as (\n" + 
         "    select\n" + 
         "        t.ck_page,\n" + 
         "        jsonb_agg(t.json ORDER BY t.cn_order) as children\n" + 
@@ -49,7 +71,7 @@ export class TempTable {
         ")\n" + 
         "select\n" + 
         "    p.ck_id as ck_page,\n" + 
-        "    coalesce(tp.children::text, '[]') as children,\n" +  
+        "    coalesce(tp.children::text, '[]') as children,\n" + 
         "        (\n" + 
         "            select\n" + 
         "                jsonb_object_agg(pv.cv_name, pv.cv_value)\n" + 
@@ -57,7 +79,7 @@ export class TempTable {
         "                t_page_variable pv\n" + 
         "            where\n" + 
         "                pv.ck_page = p.ck_id\n" + 
-        "        ) as global_value,\n" +  
+        "        ) as global_value,\n" + 
         "    pav.cn_action as cn_action,\n" + 
         "    p.cv_url,\n" + 
         "    p.cv_name,\n" + 
@@ -76,16 +98,22 @@ export class TempTable {
         "    'cn_action_view', pav.cn_action,\n" + 
         "    'cn_action_edit', pae.cn_action,\n" + 
         "    'cv_icon_name', i.cv_name,\n" + 
-        "    'cv_icon_font', i.cv_font\n" + 
-        "    ) || coalesce((select\n" +
-        "           jsonb_object_agg(pa.ck_attr, pa.cv_value)\n" +
-        "           from\n" +
-        "               t_page_attr pa\n" +
-        "           where\n" +
+        "    'cv_icon_font', i.cv_font,\n" + 
+        "    'cv_app_url', ttp.cv_app_url,\n" + 
+        "    'root', ttp.root,\n" + 
+        "    'cv_tree_path', ttp.cv_tree_path,\n" + 
+        "    'leaf', 'true'\n" + 
+        "    ) || coalesce((select\n" + 
+        "           jsonb_object_agg(pa.ck_attr, pa.cv_value)\n" + 
+        "           from\n" + 
+        "               t_page_attr pa\n" + 
+        "           where\n" + 
         "               pa.ck_page = p.ck_id)::text, '{}')::jsonb  as route \n" + 
         "from\n" + 
         "    t_page p\n" + 
-        "left join temp_page tp\n" +  
+        "join temp_tree_page ttp \n" + 
+        "    on ttp.ck_id = p.ck_id\n" + 
+        "left join temp_page tp\n" + 
         "    on p.ck_id = tp.ck_page\n" + 
         "left join t_page_action pav on\n" + 
         "    pav.ck_page = p.ck_id and pav.cr_type = 'view'\n" + 
