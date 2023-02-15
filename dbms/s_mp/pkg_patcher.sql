@@ -921,6 +921,13 @@ begin
   if found then
     return;
   end if;
+  update s_mt.t_page_action
+     set (ck_id, cn_action, ck_user, ct_change) =
+         (ck_id, pn_action, pk_user, pt_change)
+   where ck_page = pk_page and cr_type = pr_type;
+  if found then
+    return;
+  end if;
   begin
     insert into s_mt.t_page_action
       (ck_id, ck_page, cr_type, cn_action, ck_user, ct_change)

@@ -2,7 +2,7 @@
 --changeset patcher-core:Page_2 dbms:postgresql runOnChange:true splitStatements:false stripComments:false
 select pkg_patcher.p_remove_page('2');
 
-delete s_mt.t_page_attr where ck_page = '2';
+delete from s_mt.t_page_attr where ck_page = '2';
 INSERT INTO s_mt.t_page (ck_id, ck_parent, cr_type, cv_name, cn_order, cl_static, cv_url, ck_icon, ck_view, ck_user, ct_change, cl_menu, cv_redirect_url, cl_multi)VALUES('2', '5', 2, '3d972180d11e47eb84913bab82a0e7c9', 1, 0, null, '266', 'system', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-06-25T06:35:53.143+0000', 1, null, 0) on conflict (ck_id) do update set ck_parent = excluded.ck_parent, ck_view=excluded.ck_view, cr_type = excluded.cr_type, cv_name = excluded.cv_name, cn_order = excluded.cn_order, cl_static = excluded.cl_static, cv_url = excluded.cv_url, ck_icon = excluded.ck_icon, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cl_menu = excluded.cl_menu, cl_multi = excluded.cl_multi, cv_redirect_url = excluded.cv_redirect_url;
 select pkg_patcher.p_merge_page_action('22', '2', 'edit', 512, '-11', '2018-02-23T00:00:00.000+0000');
 select pkg_patcher.p_merge_page_action('21', '2', 'view', 511, '-11', '2018-02-23T00:00:00.000+0000');

@@ -32,3 +32,6 @@ ALTER TABLE s_mt.t_page ADD cv_redirect_url varchar NULL;
 COMMENT ON COLUMN s_mt.t_page.cv_redirect_url IS 'Ссылка на внешний ресурс';
 ALTER TABLE s_mt.t_page ADD cl_multi int2 NOT NULL DEFAULT 0;
 COMMENT ON COLUMN s_mt.t_page.cl_multi IS 'Признак что страницу можжно открывать во множестве';
+
+--changeset artemov_i:added_check_action_unic dbms:postgresql splitStatements:false stripComments:false
+ALTER TABLE s_mt.t_page_action ADD CONSTRAINT cin_c_page_action_2 UNIQUE (ck_page,cr_type);

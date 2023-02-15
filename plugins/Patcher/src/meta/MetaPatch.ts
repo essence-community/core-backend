@@ -236,7 +236,7 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
                     );
                 }
                 page[row.ck_id].write(
-                    `delete s_mt.t_page_attr where ck_page='${row.ck_id}';\n`,
+                    `delete from s_mt.t_page_attr where ck_page='${row.ck_id}';\n`,
                 );
                 page[row.ck_id].write(new Page(row).toRow());
                 includePage.push(`Page_${row.ck_id}`);
