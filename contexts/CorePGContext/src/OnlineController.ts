@@ -44,10 +44,6 @@ export default class OnlineController implements ICoreController {
         "            join t_page_object po on\n" + 
         "                p.ck_id = po.ck_page\n" + 
         "            where po.ck_parent is null and po.ck_id is not null\n" +
-        "                  and (\n" +
-        "                    p.ck_id = :ck_page\n" +
-        "                or p.cv_url = :cv_url\n" +
-        "                  )\n" +
         "            order by\n" + 
         "                po.ck_page,\n" + 
         "                po.cn_order\n" + 
@@ -56,7 +52,7 @@ export default class OnlineController implements ICoreController {
         "        t.ck_page\n" + 
         ")\n" + 
         "select distinct\n" + 
-        "    tp.ck_page,\n" + 
+        "    p.ck_id as ck_page,\n" + 
         "    coalesce(tp.children::text, '[]') as children,\n" +  
         "        (\n" + 
         "            select\n" + 
