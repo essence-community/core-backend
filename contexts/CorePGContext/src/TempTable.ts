@@ -55,28 +55,24 @@ export class TempTable {
         "        from\n" + 
         "            (\n" + 
         "                select\n" + 
-        "                    p.ck_id,\n" + 
+        "                    pp.ck_id,\n" + 
         "                    po.cn_order,\n" + 
         "                    pkg_json.f_get_object(po.ck_id)::jsonb as json\n" + 
         "                from\n" + 
-        "                    t_page p\n" + 
+        "                    t_page pp\n" + 
         "                join t_page_object po on\n" + 
-        "                    p.ck_id = po.ck_page\n" + 
-        "                where po.ck_parent is null and po.ck_id is not null and p.ck_id = '1'\n" + 
-        "                order by\n" + 
-        "                    po.ck_page,\n" + 
-        "                    po.cn_order\n" + 
+        "                    pp.ck_id = po.ck_page\n" + 
+        "                where po.ck_parent is null and po.ck_id is not null and pp.ck_id = p.ck_id \n" + 
         "            ) as t\n" + 
-        "            where t.ck_id = p.ck_id    \n" + 
         "        )::text, '[null]'), '[]') as children,\n" + 
-        "        (\n" + 
+        "        coalesce((\n" + 
         "            select\n" + 
         "                jsonb_object_agg(pv.cv_name, pv.cv_value)\n" + 
         "            from\n" + 
         "                t_page_variable pv\n" + 
         "            where\n" + 
         "                pv.ck_page = p.ck_id\n" + 
-        "        ) as global_value,\n" + 
+        "        )::text, '{}') as global_value,\n" + 
         "    pav.cn_action as cn_action,\n" + 
         "    p.cv_url,\n" + 
         "    p.cv_name,\n" + 
