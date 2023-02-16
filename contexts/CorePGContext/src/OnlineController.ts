@@ -50,32 +50,29 @@ export default class OnlineController implements ICoreController {
         "            temp_tree_page op\n" + 
         "        join s_mt.t_page p on\n" + 
         "            op.ck_id = p.ck_parent\n" + 
-        "),\n" + 
-        "temp_page as (\n" + 
-        "    select\n" + 
-        "        t.ck_page,\n" + 
-        "        jsonb_agg(t.json ORDER BY t.cn_order) as children\n" + 
-        "    from\n" + 
-        "        (\n" + 
-        "            select\n" + 
-        "                p.ck_id as ck_page,\n" + 
-        "                po.cn_order,\n" + 
-        "                pkg_json.f_get_object(po.ck_id)::jsonb as json\n" + 
-        "            from\n" + 
-        "                t_page p\n" + 
-        "            join t_page_object po on\n" + 
-        "                p.ck_id = po.ck_page\n" + 
-        "            where po.ck_parent is null and po.ck_id is not null\n" + 
-        "            order by\n" + 
-        "                po.ck_page,\n" + 
-        "                po.cn_order\n" + 
-        "        ) as t\n" + 
-        "    group by\n" + 
-        "        t.ck_page\n" + 
         ")\n" + 
         "select\n" + 
         "    p.ck_id as ck_page,\n" + 
-        "    coalesce(tp.children::text, '[]') as children,\n" + 
+        "    coalesce(nullif((\n" + 
+        "        select\n" + 
+        "            jsonb_agg(t.json ORDER BY t.cn_order) as children\n" + 
+        "        from\n" + 
+        "            (\n" + 
+        "                select\n" + 
+        "                    p.ck_id,\n" + 
+        "                    po.cn_order,\n" + 
+        "                    pkg_json.f_get_object(po.ck_id)::jsonb as json\n" + 
+        "                from\n" + 
+        "                    t_page p\n" + 
+        "                join t_page_object po on\n" + 
+        "                    p.ck_id = po.ck_page\n" + 
+        "                where po.ck_parent is null and po.ck_id is not null and p.ck_id = '1'\n" + 
+        "                order by\n" + 
+        "                    po.ck_page,\n" + 
+        "                    po.cn_order\n" + 
+        "            ) as t\n" + 
+        "            where t.ck_id = p.ck_id    \n" + 
+        "        )::text, '[null]'), '[]') as children,\n" + 
         "        (\n" + 
         "            select\n" + 
         "                jsonb_object_agg(pv.cv_name, pv.cv_value)\n" + 
@@ -117,15 +114,13 @@ export default class OnlineController implements ICoreController {
         "    t_page p\n" + 
         "join temp_tree_page ttp \n" + 
         "    on ttp.ck_id = p.ck_id\n" + 
-        "left join temp_page tp\n" + 
-        "    on p.ck_id = tp.ck_page\n" + 
         "left join t_page_action pav on\n" + 
         "    pav.ck_page = p.ck_id and pav.cr_type = 'view'\n" + 
         "left join t_page_action pae on\n" + 
         "    pae.ck_page = p.ck_id and pae.cr_type = 'edit'\n" + 
         "left join t_icon i on\n" + 
         "    i.ck_id = p.ck_icon\n" +
-        " where  (\n" +
+        " where p.cr_type = 2 and (\n" +
         "                    p.ck_id = :ck_page\n" +
         "                or p.cv_url = :cv_url\n" +
         "                  )\n";
