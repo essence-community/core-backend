@@ -91,6 +91,8 @@ export interface IRestEssenceProxyParams extends IParamsProvider {
     httpsAgent?: string;
     extraParam?: IPairValue[];
     extraParamEncrypt?: IPairValue[];
+    extraHeaderIn?: IPairValue[];
+    extraHeaderInEncrypt?: IPairValue[];
     defaultIncludeHeader?: {
         key: string;
     }[];
@@ -139,6 +141,38 @@ export default class RestTransformProxy extends NullProvider {
             extraParamEncrypt: {
                 type: "form_repeater",
                 name: "Дополнительные настройки шифрованые",
+                childs: {
+                    key: {
+                        type: "string",
+                        name: "Ключ",
+                        required: true,
+                    },
+                    value: {
+                        type: "password",
+                        name: "Значание",
+                        required: true,
+                    },
+                },
+            },
+            extraHeaderIn: {
+                type: "form_repeater",
+                name: "Дополнительные Header настройки",
+                childs: {
+                    key: {
+                        type: "string",
+                        name: "Ключ",
+                        required: true,
+                    },
+                    value: {
+                        type: "string",
+                        name: "Значание",
+                        required: true,
+                    },
+                },
+            },
+            extraHeaderInEncrypt: {
+                type: "form_repeater",
+                name: "Дополнительные Header настройки шифрованые",
                 childs: {
                     key: {
                         type: "string",
@@ -371,6 +405,18 @@ export default class RestTransformProxy extends NullProvider {
 
         if (urlGate) {
             params.url = url.format(urlGate);
+        }
+
+        if (this.params.extraHeaderIn) {
+            this.params.extraHeaderIn.forEach((val) => {
+                params.headers[val.key] = val.value;
+            });
+        }
+
+        if (this.params.extraHeaderInEncrypt) {
+            this.params.extraHeaderInEncrypt.forEach((val) => {
+                params.headers[val.key] = val.value;
+            });
         }
 
         if (config.json) {
