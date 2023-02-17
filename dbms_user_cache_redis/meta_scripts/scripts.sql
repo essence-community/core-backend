@@ -15,3 +15,8 @@ INSERT INTO s_mt.t_sys_setting (ck_id,cv_value,ck_user,ct_change,cv_description)
 INSERT INTO s_mt.t_sys_setting (ck_id,cv_value,ck_user,ct_change,cv_description)
     VALUES ('remote_storage_delete_query','UCRDelete','4fd05ca9-3a9e-4d66-82df-886dfa082113','2020-07-14 15:58:14.658','Сервис удаления пользовательских настроек')
     on conflict (ck_id) do update set cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
+
+--changeset artemov_i:rename dbms:postgresql runOnChange:true
+UPDATE s_mt.t_sys_setting
+SET cv_value='remote', ck_id='remote_storage_type'
+WHERE ck_id='use_remote_storage_cache';
