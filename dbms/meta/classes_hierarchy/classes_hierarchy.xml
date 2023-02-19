@@ -26,6 +26,7 @@
     <include file="MetaClassHierarchy_29.sql" relativeToChangelogFile="true"/>
     <include file="MetaClassHierarchy_2BB74480D7E2455B97AED5B3A070FE35.sql" relativeToChangelogFile="true"/>
     <include file="MetaClassHierarchy_30.sql" relativeToChangelogFile="true"/>
+    <include file="MetaClassHierarchy_3061ADE6780F432B93F17C1DCCC33D93.sql" relativeToChangelogFile="true"/>
     <include file="MetaClassHierarchy_31.sql" relativeToChangelogFile="true"/>
     <include file="MetaClassHierarchy_317.sql" relativeToChangelogFile="true"/>
     <include file="MetaClassHierarchy_32.sql" relativeToChangelogFile="true"/>
@@ -45,6 +46,7 @@
     <include file="MetaClassHierarchy_47AC6CC616C3493E923FAD5E79B28166.sql" relativeToChangelogFile="true"/>
     <include file="MetaClassHierarchy_4A7B7B56D5D544A7B81EB8D50EA8C8EC.sql" relativeToChangelogFile="true"/>
     <include file="MetaClassHierarchy_4BA159E82B434939AAD293411854ED95.sql" relativeToChangelogFile="true"/>
+    <include file="MetaClassHierarchy_508B0DE5C67B464CB3A5CED4DF778084.sql" relativeToChangelogFile="true"/>
     <include file="MetaClassHierarchy_57.sql" relativeToChangelogFile="true"/>
     <include file="MetaClassHierarchy_58.sql" relativeToChangelogFile="true"/>
     <include file="MetaClassHierarchy_5833D73B31E04F8ABE9D307DBCE845A9.sql" relativeToChangelogFile="true"/>
