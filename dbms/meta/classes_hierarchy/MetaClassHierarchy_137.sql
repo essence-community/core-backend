@@ -37,6 +37,8 @@ INSERT INTO s_mt.t_class_hierarchy
     union all
     select '208' as ck_id, '137' as ck_class_parent, '30' as ck_class_child, '621' as ck_class_attr, '-11' as ck_user, '2018-02-22T00:00:00.000+0000'::timestamp with time zone as ct_change
     union all
+    select '41C33253A8DE4E548D378D4C73ADFE5F' as ck_id, '137' as ck_class_parent, '3061ADE6780F432B93F17C1DCCC33D93' as ck_class_child, '621' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2023-02-19T12:45:35.711+0000'::timestamp with time zone as ct_change
+    union all
     select '207' as ck_id, '137' as ck_class_parent, '31' as ck_class_child, '621' as ck_class_attr, '-11' as ck_user, '2018-02-22T00:00:00.000+0000'::timestamp with time zone as ct_change
     union all
     select '566' as ck_id, '137' as ck_class_parent, '317' as ck_class_child, '621' as ck_class_attr, '-11' as ck_user, '2018-02-22T00:00:00.000+0000'::timestamp with time zone as ct_change
@@ -62,6 +64,8 @@ INSERT INTO s_mt.t_class_hierarchy
     select '379CF928DF5B4C8E94F84AA00328A5FD' as ck_id, '137' as ck_class_parent, '47AC6CC616C3493E923FAD5E79B28166' as ck_class_child, '621' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2020-04-09T00:00:00.000+0000'::timestamp with time zone as ct_change
     union all
     select '8DF601942D194983AD3053F0C3894E6F' as ck_id, '137' as ck_class_parent, '4A7B7B56D5D544A7B81EB8D50EA8C8EC' as ck_class_child, '621' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2020-08-27T10:01:28.259+0000'::timestamp with time zone as ct_change
+    union all
+    select '7B60DF352E8A477CB23CDADA985F6F9D' as ck_id, '137' as ck_class_parent, '508B0DE5C67B464CB3A5CED4DF778084' as ck_class_child, '621' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2023-02-19T12:45:14.957+0000'::timestamp with time zone as ct_change
     union all
     select '233' as ck_id, '137' as ck_class_parent, '58' as ck_class_child, '634' as ck_class_attr, '-11' as ck_user, '2018-02-22T00:00:00.000+0000'::timestamp with time zone as ct_change
     union all

@@ -25,6 +25,8 @@ INSERT INTO s_mt.t_class_hierarchy
     union all
     select '224' as ck_id, '1' as ck_class_parent, '30' as ck_class_child, '623' as ck_class_attr, '-11' as ck_user, '2018-02-22T00:00:00.000+0000'::timestamp with time zone as ct_change
     union all
+    select '8129A24CBDD5454DAA65769B5447157D' as ck_id, '1' as ck_class_parent, '3061ADE6780F432B93F17C1DCCC33D93' as ck_class_child, '623' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2023-02-19T12:45:35.711+0000'::timestamp with time zone as ct_change
+    union all
     select '223' as ck_id, '1' as ck_class_parent, '31' as ck_class_child, '623' as ck_class_attr, '-11' as ck_user, '2018-02-22T00:00:00.000+0000'::timestamp with time zone as ct_change
     union all
     select '226' as ck_id, '1' as ck_class_parent, '33' as ck_class_child, '623' as ck_class_attr, '-11' as ck_user, '2018-02-22T00:00:00.000+0000'::timestamp with time zone as ct_change
@@ -48,6 +50,8 @@ INSERT INTO s_mt.t_class_hierarchy
     select 'DC201ABB803C4196A350BE8CFD427FFB' as ck_id, '1' as ck_class_parent, '47AC6CC616C3493E923FAD5E79B28166' as ck_class_child, '623' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2020-04-09T00:00:00.000+0000'::timestamp with time zone as ct_change
     union all
     select '2EF0A80070544148A5AE453CCE8B72BF' as ck_id, '1' as ck_class_parent, '4A7B7B56D5D544A7B81EB8D50EA8C8EC' as ck_class_child, '623' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2020-08-27T10:02:12.675+0000'::timestamp with time zone as ct_change
+    union all
+    select '463012588CB0436982875EE4D5191B4D' as ck_id, '1' as ck_class_parent, '508B0DE5C67B464CB3A5CED4DF778084' as ck_class_child, '623' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2023-02-19T12:45:14.957+0000'::timestamp with time zone as ct_change
     union all
     select '1219ADF584634D82A7A83D7DB9662516' as ck_id, '1' as ck_class_parent, '5833D73B31E04F8ABE9D307DBCE845A9' as ck_class_child, '623' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2020-03-18T00:00:00.000+0000'::timestamp with time zone as ct_change
     union all

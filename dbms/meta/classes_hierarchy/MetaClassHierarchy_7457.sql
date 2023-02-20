@@ -23,6 +23,8 @@ INSERT INTO s_mt.t_class_hierarchy
     union all
     select '7990' as ck_id, '7457' as ck_class_parent, '30' as ck_class_child, '37172' as ck_class_attr, '20785' as ck_user, '2018-12-19T00:00:00.000+0000'::timestamp with time zone as ct_change
     union all
+    select 'BF0719D8058C4CE2B93E89BCC49D5CF7' as ck_id, '7457' as ck_class_parent, '3061ADE6780F432B93F17C1DCCC33D93' as ck_class_child, '37172' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2023-02-19T12:45:35.711+0000'::timestamp with time zone as ct_change
+    union all
     select '7992' as ck_id, '7457' as ck_class_parent, '31' as ck_class_child, '37172' as ck_class_attr, '20785' as ck_user, '2018-12-19T00:00:00.000+0000'::timestamp with time zone as ct_change
     union all
     select '7993' as ck_id, '7457' as ck_class_parent, '37' as ck_class_child, '37172' as ck_class_attr, '20785' as ck_user, '2018-12-19T00:00:00.000+0000'::timestamp with time zone as ct_change
@@ -32,6 +34,8 @@ INSERT INTO s_mt.t_class_hierarchy
     select '7985' as ck_id, '7457' as ck_class_parent, '4457' as ck_class_child, '37172' as ck_class_attr, '20785' as ck_user, '2018-12-19T00:00:00.000+0000'::timestamp with time zone as ct_change
     union all
     select 'F6F38A01BFFC4DEDBEFACCA7A568CEA7' as ck_id, '7457' as ck_class_parent, '4A7B7B56D5D544A7B81EB8D50EA8C8EC' as ck_class_child, '37172' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2020-08-27T10:02:47.317+0000'::timestamp with time zone as ct_change
+    union all
+    select 'F76FF0B780484608AC525507EABF6C2B' as ck_id, '7457' as ck_class_parent, '508B0DE5C67B464CB3A5CED4DF778084' as ck_class_child, '37172' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2023-02-19T12:45:14.957+0000'::timestamp with time zone as ct_change
     union all
     select '9D00BAD27C7A4828B7C37ECAEAA57BA3' as ck_id, '7457' as ck_class_parent, '5F229304828F4AADBF9B0BE6463B1248' as ck_class_child, '37172' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2022-05-27T11:16:47.642+0000'::timestamp with time zone as ct_change
     union all
