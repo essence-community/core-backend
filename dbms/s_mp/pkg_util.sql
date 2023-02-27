@@ -18,6 +18,10 @@ begin
        and trunc(cast(substring(pv_string from 1 for (char_length(pv_string) - 1)) as numeric)) = cast(substring(pv_string from 1 for (char_length(pv_string) - 1)) as numeric) /* integer */
      then 
      return 1;
+    elsif right(pv_string, 2) = 'px'
+    and trunc(cast(substring(pv_string from 1 for (char_length(pv_string) - 2)) as numeric)) = cast(substring(pv_string from 1 for (char_length(pv_string) - 2)) as numeric)
+     then
+     return 1;  
     end if;
     return 0;
   exception
