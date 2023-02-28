@@ -89,6 +89,8 @@ INSERT INTO s_mt.t_class_hierarchy
     union all
     select '871CB755C58C248AE053809BA8C0F31E' as ck_id, '137' as ck_class_parent, '871CB755C589248AE053809BA8C0F31E' as ck_class_child, '621' as ck_class_attr, '20785' as ck_user, '2019-05-15T00:00:00.000+0000'::timestamp with time zone as ct_change
     union all
+    select '2656802CCE6D42B4838742D22459DC6E' as ck_id, '137' as ck_class_parent, '8AE3079CC4F64CB9873777921A62CF14' as ck_class_child, '619' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2023-02-28T14:52:09.168+0000'::timestamp with time zone as ct_change
+    union all
     select 'EAC52733D70A4C019F1C993A7C766518' as ck_id, '137' as ck_class_parent, '8C96F9B255F5407FBCB8DE9189B15F39' as ck_class_child, '619' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2021-11-18T12:15:34.260+0000'::timestamp with time zone as ct_change
     union all
     select '8D3A50B6DE976276E053809BA8C0911C' as ck_id, '137' as ck_class_parent, '8D547C621A02626CE053809BA8C0882B' as ck_class_child, '621' as ck_class_attr, '20785' as ck_user, '2019-07-13T00:00:00.000+0000'::timestamp with time zone as ct_change
