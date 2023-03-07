@@ -1,0 +1,10 @@
+{
+    "name": "@ungate-plugin/pq-added-default-pagination-and-filter",
+    "version": "1.0.0",
+    "description": "Плагин модификации SQL",
+    "author": "Ivan Artemov (honyrik@gmail.com)",
+    "license": "MIT",
+    "dependencies": {
+        "@ungate/plugininf": "^1.0.0"
+    }
+}
