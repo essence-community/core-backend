@@ -19,7 +19,7 @@ from
 left join s_mt.t_page_attr pattr
     on attr.ck_id = pattr.ck_attr and pattr.ck_page = :json::jsonb#>>''{master,ck_id}''
 where nullif(:json::jsonb#>>''{master,ck_id}'', '''') is not null
-and attr.ck_id in (''defaultvalue'',''activerules'',''redirecturl'',''defaultvaluerule'')
+and attr.ck_id in (''defaultvalue'',''activerules'',''redirecturl'',''defaultvaluerule'',''titlerules'')
 /*##filter.ck_id*/ and pattr.ck_id = (:json::jsonb#>>''{filter,ck_id}'')/*filter.ck_id##*/
  ) as t
 where true
