@@ -1,3 +1,4 @@
+import * as moment from 'moment-timezone';
 import * as lodash from "lodash";
 /* tslint:disable:max-classes-per-file */
 /* tslint:disable triple-equals */
@@ -112,6 +113,7 @@ const utils = {
     encodeURIComponent,
     decodeURIComponent,
     Promise,
+    moment,
 };
 
 async function parseOperations(
