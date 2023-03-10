@@ -265,7 +265,7 @@ export default class PrepareQuery extends NullPlugin {
             } else {
                 inParam[param] = value;
             }
-        } else if (typeof value === "boolean") {
+        } else if (gateContext.connection?.name === "oracle" && typeof value === "boolean") {
             inParam[param] = value ? 1 : 0;
         } else if (Array.isArray(value)) {
             value.forEach((val, index) => {
