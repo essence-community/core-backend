@@ -14,6 +14,11 @@ const logger = Logger.getLogger("CorePgNotification");
 export default class CheckEssenceUpdate extends NullEvent {
     public static getParamsInfo (): IParamsInfo {
         return {
+            enableListen: {
+                name: "Включаем постояный слушатель",
+                type: "boolean",
+                defaultValue: false,
+            },
             timeoutTimer: {
                 name: "Период опроса",
                 type: "integer",
@@ -51,15 +56,12 @@ export default class CheckEssenceUpdate extends NullEvent {
             await this.dataSource.resetPool();
         }
         await this.dataSource.createPool();
-        this.eventConnect = await this.dataSource.open();
-        this.eventConnect.getCurrentConnection().on("error", (err) => {
-            logger.error(
-                `Ошибка отслеживания семафора ${this.name} ${err.message}`,
-                err,
-            );
-            this.reload();
-        });
-        return this.initEvents();
+        await this.initStartData();
+        await this.execute();
+        this.executeTimer();
+        if (this.params.enableListen) {
+            return this.initEvents();
+        }
     }
     public initStartData () {
         return this.dataSource
@@ -72,13 +74,34 @@ export default class CheckEssenceUpdate extends NullEvent {
             });
     }
     /**
-     * Подключение слежене
+     * Подключение отслеживания
      */
     public async initEvents () {
         logger.info(`Init event ${this.name}`);
-        await this.initStartData();
-        await this.execute();
-        this.executeTimer();
+        this.eventConnect = await this.dataSource.open();
+        this.eventConnect.getCurrentConnection().on("error", async (err) => {
+            logger.error(
+                `Ошибка отслеживания обновления t_page_update_history ${this.name} ${err.message}`,
+                err,
+            );
+            try {
+                await this.eventConnect.rollbackAndRelease();
+            } catch(e) {
+                logger.debug(
+                    e,
+                );
+            }
+            try {
+                if (this.dataSource.pool) {
+                    await this.dataSource.resetPool();
+                }
+            } catch(e) {
+                logger.debug(
+                    e,
+                );
+            }
+            this.initEvents();
+        });
         const conn = this.eventConnect.getCurrentConnection();
         conn.on("notification", (msg) => {
             logger.trace("Notification %j", msg);
@@ -114,7 +137,14 @@ export default class CheckEssenceUpdate extends NullEvent {
     private execute () {
         return this.dataSource
             .executeStmt(
-                "select t.* from s_mt.t_page_update_history t where date_trunc('second', t.ct_change) > date_trunc('second', :ct_change::timestamptz) order by t.ct_change asc",
+                "select\n" + 
+                "    t.*\n" + 
+                "from\n" + 
+                "    s_mt.t_page_update_history t\n" + 
+                "where\n" + 
+                "    date_trunc('second', t.ct_change) > date_trunc('second', :ct_change::timestamptz)\n" + 
+                "order by\n" + 
+                "    t.ct_change asc\n",
                 undefined,
                 {
                     ct_change: this.startDate,
@@ -134,7 +164,10 @@ export default class CheckEssenceUpdate extends NullEvent {
                 }
             })
             .catch((err) => {
-                logger.error(err);
+                logger.warn(err);
+                if (this.dataSource.pool) {
+                    return this.dataSource.resetPool();
+                }
             });
     }
     /**
@@ -147,7 +180,7 @@ export default class CheckEssenceUpdate extends NullEvent {
         }
         this.init().then(noop, (err) => {
             logger.error(
-                `Ошибка отслеживания семафора ${this.name} ${err.message}`,
+                `Ошибка отслеживания обновления t_page_update_history ${this.name} ${err.message}`,
                 err,
             );
             delay(this.reload, 15000);
