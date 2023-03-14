@@ -684,11 +684,11 @@ begin
                   where ck_id = 'skip_update_action_page'), ''), '[]')::jsonb) as t 
                 where t.value = ot_page.ck_id);
     
-    INSERT INTO s_mt.t_page_update_history
-      (ck_id, ct_change)
-      VALUES(pk_page, CURRENT_TIMESTAMP);
-
   end loop;
+
+  -- Added info history update
+  INSERT INTO s_mt.t_page_update_history (ck_id, ct_change)
+  VALUES(pk_page, CURRENT_TIMESTAMP);
 END;
 $function$
 ;
