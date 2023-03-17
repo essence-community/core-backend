@@ -20,7 +20,7 @@ from tt_user t
       or
       UPPER(t.cv_email) like ''%'' || UPPER(:json::json#>>''{filter,search}'') || ''%''
     )
- /*##filter.search*/
+ /*filter.search##*/
  order by &SORT
 offset &OFFSET rows
  fetch first &FETCH rows only
