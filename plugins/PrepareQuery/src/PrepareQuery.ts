@@ -34,6 +34,8 @@ export default class PrepareQuery extends NullPlugin {
             let removeBlock = [];
             let vlSort;
             let vlFilter;
+            let vlFetch = "1000";
+            let vlOffset = "0";
 
             if (matcher) {
                 do {
@@ -63,15 +65,11 @@ export default class PrepareQuery extends NullPlugin {
                 }
 
                 if (!isEmpty(jnFetch) && /^\d+$/.test(jnFetch)) {
-                    query.applyMacro("&FETCH", jnFetch);
-                } else {
-                    query.applyMacro("&FETCH", "0");
+                    vlFetch = jnFetch;
                 }
 
                 if (!isEmpty(jnOffset) && /^\d+$/.test(jnOffset)) {
-                    query.applyMacro("&OFFSET", jnOffset);
-                } else {
-                    query.applyMacro("&OFFSET", "1000");
+                    vlOffset = jnOffset;
                 }
 
                 if (!isEmpty(jlFilter)) {
@@ -232,6 +230,8 @@ export default class PrepareQuery extends NullPlugin {
             }
             query.applyMacro("&SORT", vlSort);
             query.applyMacro("&FILTER", vlFilter);
+            query.applyMacro("&OFFSET", vlOffset);
+            query.applyMacro("&FETCH", vlFetch);
             removeBlock.forEach((item) => {
                 query.applyMacro(
                     `/\x5c*\x5cs*##\x5cs*${item}\x5cs*\x5c*[\x5cs\x5cS]*?${item}\x5cs*##\x5cs*\x5c*/`,
