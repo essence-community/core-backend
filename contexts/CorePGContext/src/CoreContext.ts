@@ -16,14 +16,13 @@ import Logger from "@ungate/plugininf/lib/Logger";
 import NullContext from "@ungate/plugininf/lib/NullContext";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
 import { initParams } from "@ungate/plugininf/lib/util/Util";
-import { isObject } from "lodash";
+import { isObject, omit } from "lodash";
 import ICoreController from "./ICoreController";
 import OfflineController from "./OfflineController";
 import OnlineController from "./OnlineController";
 import { TempTable } from "./TempTable";
 import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
 import { IUserDbData } from "@ungate/plugininf/lib/ISession";
-import Constant from "@ungate/plugininf/lib/Constants";
 const logger = Logger.getLogger("CoreContext");
 const Mask = (global as any as IGlobalObject).maskgate;
 export interface ICoreParams extends IContextParams {
@@ -165,18 +164,7 @@ export default class CoreContext extends NullContext {
             ...initParams(CoreContext.getParamsInfo(), this.params),
             anonymousAction: 99999,
         };
-        this.dataSource = new PostgresDB(`${this.name}_context`, {
-            connectString: this.params.connectString,
-            connectionTimeoutMillis: this.params.connectionTimeoutMillis,
-            idleTimeoutMillis: this.params.idleTimeoutMillis,
-            setConnectionParam: this.params.setConnectionParam,
-            partRows: this.params.partRows,
-            poolMax: this.params.poolMax,
-            poolMin: this.params.poolMin,
-            user: this.params.user,
-            password: this.params.password,
-            queryTimeout: this.params.queryTimeout,
-        });
+        this.dataSource = new PostgresDB(`${this.name}_context`, omit(this.params, Object.keys(PostgresDB.getParamsInfo())) as any);
         this.params.modifyQueryName = this.params.modifyQueryName.toLowerCase();
         this.params.pageMetaQueryName =
             this.params.pageMetaQueryName.toLowerCase();

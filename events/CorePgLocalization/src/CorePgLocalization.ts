@@ -6,7 +6,7 @@ import Logger from "@ungate/plugininf/lib/Logger";
 import NullEvent from "@ungate/plugininf/lib/NullEvent";
 import { sendProcess } from "@ungate/plugininf/lib/util/ProcessSender";
 import { initParams } from "@ungate/plugininf/lib/util/Util";
-import { delay, noop } from "lodash";
+import { delay, noop, omit } from "lodash";
 const logger = Logger.getLogger("CorePgLocalization");
 
 export default class CorePgLocalization extends NullEvent {
@@ -23,18 +23,7 @@ export default class CorePgLocalization extends NullEvent {
             CorePgLocalization.getParamsInfo(),
             this.params,
         );
-        this.dataSource = new PostgresDB(`${this.name}_events`, {
-            connectString: this.params.connectString,
-            connectionTimeoutMillis: this.params.connectionTimeoutMillis,
-            idleTimeoutMillis: this.params.idleTimeoutMillis,
-            setConnectionParam: this.params.setConnectionParam,
-            partRows: this.params.partRows,
-            poolMax: this.params.poolMax,
-            poolMin: this.params.poolMin,
-            user: this.params.user,
-            password: this.params.password,
-            queryTimeout: this.params.queryTimeout,
-        });
+        this.dataSource = new PostgresDB(`${this.name}_events`, omit(this.params, Object.keys(PostgresDB.getParamsInfo())) as any);
     }
     /**
      * Инициализация

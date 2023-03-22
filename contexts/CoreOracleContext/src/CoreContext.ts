@@ -20,6 +20,7 @@ import OfflineController from "./OfflineController";
 import OnlineController from "./OnlineController";
 import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
 import { IUserDbData } from "@ungate/plugininf/lib/ISession";
+import { omit } from "lodash";
 const logger = Logger.getLogger("CoreContext");
 const Mask = (global as any as IGlobalObject).maskgate;
 
@@ -133,18 +134,7 @@ export default class CoreContext extends NullContext {
     ) {
         super(name, params, sessCtrl);
         this.params = initParams(CoreContext.getParamsInfo(), this.params);
-        this.dataSource = new OracleDB(`${this.name}_context`, {
-            connectString: this.params.connectString,
-            maxRows: this.params.maxRows,
-            partRows: this.params.partRows,
-            password: this.params.password,
-            poolMax: this.params.poolMax,
-            poolMin: this.params.poolMin,
-            prefetchRows: this.params.prefetchRows,
-            queryTimeout: this.params.queryTimeout,
-            queueTimeout: this.params.queueTimeout,
-            user: this.params.user,
-        });
+        this.dataSource = new OracleDB(`${this.name}_context`, omit(this.params, Object.keys(OracleDB.getParamsInfo())) as any);
         this.params.modifyQueryName = this.params.modifyQueryName.toLowerCase();
         this.params.pageMetaQueryName =
             this.params.pageMetaQueryName.toLowerCase();

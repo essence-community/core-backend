@@ -13,7 +13,7 @@ import NullSessProvider, {
 } from "@ungate/plugininf/lib/NullSessProvider";
 import { ReadStreamToArray } from "@ungate/plugininf/lib/stream/Util";
 import { initParams, isEmpty, debounce } from "@ungate/plugininf/lib/util/Util";
-import { noop, isObject } from "lodash";
+import { noop, isObject, omit } from "lodash";
 import ISession from "@ungate/plugininf/lib/ISession";
 import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
 
@@ -55,18 +55,7 @@ export default class CoreAuthPg extends NullSessProvider {
     ) {
         super(name, params, sessCtrl);
         this.params = initParams(CoreAuthPg.getParamsInfo(), this.params);
-        this.dataSource = new PostgresDB(`${this.name}_provider`, {
-            connectString: this.params.connectString,
-            connectionTimeoutMillis: this.params.connectionTimeoutMillis,
-            idleTimeoutMillis: this.params.idleTimeoutMillis,
-            setConnectionParam: this.params.setConnectionParam,
-            partRows: this.params.partRows,
-            poolMax: this.params.poolMax,
-            poolMin: this.params.poolMin,
-            user: this.params.user,
-            password: this.params.password,
-            queryTimeout: this.params.queryTimeout,
-        });
+        this.dataSource = new PostgresDB(`${this.name}_provider`, omit(this.params, Object.keys(PostgresDB.getParamsInfo())) as any);
         if (!isEmpty(this.params.guestAccount)) {
             this.afterSession = async (
                 context: IContext,

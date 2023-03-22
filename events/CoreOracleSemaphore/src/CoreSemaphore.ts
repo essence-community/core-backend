@@ -6,28 +6,14 @@ import NullEvent from "@ungate/plugininf/lib/NullEvent";
 import { ReadStreamToArray } from "@ungate/plugininf/lib/stream/Util";
 import { sendProcess } from "@ungate/plugininf/lib/util/ProcessSender";
 import { initParams } from "@ungate/plugininf/lib/util/Util";
-import { delay, noop } from "lodash";
+import { delay, noop, omit } from "lodash";
 const logger = Logger.getLogger("CoreNotification");
 const CHECK_TIMEOUT = 15000;
 
 export default class CoreSemaphore extends NullEvent {
     public static getParamsInfo(): IParamsInfo {
         return {
-            connectString: {
-                name: "Строка подключения к БД",
-                required: true,
-                type: "string",
-            },
-            password: {
-                name: "Пароль учетной записи БД",
-                required: true,
-                type: "string",
-            },
-            user: {
-                name: "Наименвание учетной записи БД",
-                required: true,
-                type: "string",
-            },
+            ...OracleDB.getParamsInfo(),
         };
     }
     private dataSource: OracleDB;
@@ -37,10 +23,9 @@ export default class CoreSemaphore extends NullEvent {
         super(name, params);
         this.params = initParams(CoreSemaphore.getParamsInfo(), this.params);
         this.dataSource = new OracleDB(`${this.name}_semaphore`, {
-            connectString: this.params.connectString,
-            password: this.params.password,
-            poolMax: 10,
-            user: this.params.user,
+            ...omit(this.params, Object.keys(OracleDB.getParamsInfo())) as any,
+            poolMax: this.params.poolMax || 10,
+            poolMin: this.params.poolMin || 0
         });
     }
     /**

@@ -8,7 +8,7 @@ import { IContextPluginResult } from "@ungate/plugininf/lib/IContextPlugin";
 import IGlobalObject from "@ungate/plugininf/lib/IGlobalObject";
 import NullContext from "@ungate/plugininf/lib/NullContext";
 import { initParams } from "@ungate/plugininf/lib/util/Util";
-import { noop } from "lodash";
+import { noop, omit } from "lodash";
 import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
 const createTempTable = (global as any as IGlobalObject).createTempTable;
 
@@ -42,18 +42,7 @@ export default class CoreIntegration extends NullContext {
         } else {
             this.caller = this.offlineInitContext;
         }
-        this.dataSource = new PostgresDB(`${this.name}_context`, {
-            connectString: this.params.connectString,
-            connectionTimeoutMillis: this.params.connectionTimeoutMillis,
-            idleTimeoutMillis: this.params.idleTimeoutMillis,
-            setConnectionParam: this.params.setConnectionParam,
-            partRows: this.params.partRows,
-            poolMax: this.params.poolMax,
-            poolMin: this.params.poolMin,
-            user: this.params.user,
-            password: this.params.password,
-            queryTimeout: this.params.queryTimeout,
-        });
+        this.dataSource = new PostgresDB(`${this.name}_context`, omit(this.params, Object.keys(PostgresDB.getParamsInfo())) as any);
     }
     /**
      * Инициализация плагина
