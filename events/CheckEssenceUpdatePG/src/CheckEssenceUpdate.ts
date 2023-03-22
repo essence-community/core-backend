@@ -6,7 +6,7 @@ import Logger from "@ungate/plugininf/lib/Logger";
 import NullEvent from "@ungate/plugininf/lib/NullEvent";
 import { sendProcess } from "@ungate/plugininf/lib/util/ProcessSender";
 import { initParams } from "@ungate/plugininf/lib/util/Util";
-import { delay, noop, omit } from "lodash";
+import { delay, noop, pick } from "lodash";
 import { ReadStreamToArray } from "@ungate/plugininf/lib/stream/Util";
 import * as moment from 'moment';
 const logger = Logger.getLogger("CorePgNotification");
@@ -38,7 +38,7 @@ export default class CheckEssenceUpdate extends NullEvent {
             this.params,
         );
         this.dataSource = new PostgresDB(`${this.name}_check_update`, {
-            ...omit(this.params, Object.keys(PostgresDB.getParamsInfo())) as any,
+            ...pick(this.params, ...Object.keys(PostgresDB.getParamsInfo())) as any,
             poolMax: this.params.poolMax || 5,
             poolMin: this.params.poolMin || 1,
         } as any);

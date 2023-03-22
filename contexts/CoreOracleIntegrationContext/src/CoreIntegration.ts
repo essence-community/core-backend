@@ -8,7 +8,7 @@ import { IContextPluginResult } from "@ungate/plugininf/lib/IContextPlugin";
 import IGlobalObject from "@ungate/plugininf/lib/IGlobalObject";
 import NullContext from "@ungate/plugininf/lib/NullContext";
 import { initParams } from "@ungate/plugininf/lib/util/Util";
-import { noop, omit } from "lodash";
+import { noop, pick } from "lodash";
 import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
 const createTempTable = (global as any as IGlobalObject).createTempTable;
 
@@ -45,7 +45,7 @@ export default class CoreOracleIntegration extends NullContext {
         } else {
             this.caller = this.offlineInitContext;
         }
-        this.dataSource = new OracleDB(`${this.name}_context`, omit(this.params, Object.keys(OracleDB.getParamsInfo())) as any);
+        this.dataSource = new OracleDB(`${this.name}_context`, pick(this.params, ...Object.keys(OracleDB.getParamsInfo())) as any);
     }
     /**
      * Инициализация плагина

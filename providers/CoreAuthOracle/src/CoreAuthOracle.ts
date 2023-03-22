@@ -13,7 +13,7 @@ import { ReadStreamToArray } from "@ungate/plugininf/lib/stream/Util";
 import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
 import * as moment from "moment";
 import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
-import { omit } from "lodash";
+import { pick } from "lodash";
 
 export default class CoreAuthOracle extends NullSessProvider {
     public static getParamsInfo(): IParamsInfo {
@@ -31,7 +31,7 @@ export default class CoreAuthOracle extends NullSessProvider {
     ) {
         super(name, params, sessCtrl);
         this.params = initParams(CoreAuthOracle.getParamsInfo(), this.params);
-        this.dataSource = new OracleDB(`${this.name}_provider`, omit(this.params, Object.keys(OracleDB.getParamsInfo())) as any);
+        this.dataSource = new OracleDB(`${this.name}_provider`, pick(this.params, ...Object.keys(OracleDB.getParamsInfo())) as any);
     }
 
     /**

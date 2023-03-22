@@ -6,7 +6,7 @@ import NullEvent from "@ungate/plugininf/lib/NullEvent";
 import { ReadStreamToArray } from "@ungate/plugininf/lib/stream/Util";
 import { sendProcess } from "@ungate/plugininf/lib/util/ProcessSender";
 import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
-import { delay, isObject, noop, omit } from "lodash";
+import { delay, isObject, noop, pick } from "lodash";
 const logger = Logger.getLogger("CoreNotification");
 const CHECK_TIMEOUT = 15000;
 
@@ -32,7 +32,7 @@ export default class CoreNotification extends NullEvent {
     constructor(name: string, params: ICCTParams) {
         super(name, params);
         this.params = initParams(CoreNotification.getParamsInfo(), this.params);
-        this.dataSource = new OracleDB(`${this.name}_events`, omit(this.params, Object.keys(OracleDB.getParamsInfo())) as any);
+        this.dataSource = new OracleDB(`${this.name}_events`, pick(this.params, ...Object.keys(OracleDB.getParamsInfo())) as any);
     }
     /**
      * Инициализация

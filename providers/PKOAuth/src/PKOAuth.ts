@@ -15,7 +15,7 @@ import { ReadStreamToArray } from "@ungate/plugininf/lib/stream/Util";
 import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
 import * as ActiveDirectory from "activedirectory";
 import { X509 } from "jsrsasign";
-import { isObject, omit, uniq } from "lodash";
+import { isObject, pick, uniq } from "lodash";
 import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
 
 const BASIC_PATTERN = "Basic";
@@ -78,7 +78,7 @@ export default class PKOAuth extends NullSessProvider {
     ) {
         super(name, params, sessCtrl);
         this.params = initParams(PKOAuth.getParamsInfo(), this.params);
-        this.dataSource = new PostgresDB(`${this.name}_provider`, omit(this.params, Object.keys(PostgresDB.getParamsInfo())) as any);
+        this.dataSource = new PostgresDB(`${this.name}_provider`, pick(this.params, ...Object.keys(PostgresDB.getParamsInfo())) as any);
         const userAttr = [
             "dn",
             "sAMAccountName",

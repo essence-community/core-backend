@@ -6,7 +6,7 @@ import NullEvent from "@ungate/plugininf/lib/NullEvent";
 import { ReadStreamToArray } from "@ungate/plugininf/lib/stream/Util";
 import { sendProcess } from "@ungate/plugininf/lib/util/ProcessSender";
 import { initParams } from "@ungate/plugininf/lib/util/Util";
-import { delay, noop, omit } from "lodash";
+import { delay, noop, pick } from "lodash";
 const logger = Logger.getLogger("CoreNotification");
 const CHECK_TIMEOUT = 15000;
 
@@ -23,7 +23,7 @@ export default class CoreSemaphore extends NullEvent {
         super(name, params);
         this.params = initParams(CoreSemaphore.getParamsInfo(), this.params);
         this.dataSource = new OracleDB(`${this.name}_semaphore`, {
-            ...omit(this.params, Object.keys(OracleDB.getParamsInfo())) as any,
+            ...pick(this.params, ...Object.keys(OracleDB.getParamsInfo())) as any,
             poolMax: this.params.poolMax || 10,
             poolMin: this.params.poolMin || 0
         });

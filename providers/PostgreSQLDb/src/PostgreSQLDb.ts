@@ -6,7 +6,7 @@ import IQuery from "@ungate/plugininf/lib/IQuery";
 import { IResultProvider } from "@ungate/plugininf/lib/IResult";
 import NullProvider from "@ungate/plugininf/lib/NullProvider";
 import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
-import { noop, omit } from "lodash";
+import { noop, pick } from "lodash";
 import CorePG from "./CorePG";
 import IPostgreSQLController from "./IPostgreSQLController";
 import OldPG from "./OldPG";
@@ -50,7 +50,7 @@ export default class PostgreSQLDb extends NullProvider {
     ) {
         super(name, params, sessCtrl);
         this.params = initParams(PostgreSQLDb.getParamsInfo(), this.params);
-        this.dataSource = new PostgresDB(`${this.name}_provider`, omit(this.params, Object.keys(PostgresDB.getParamsInfo())) as any);
+        this.dataSource = new PostgresDB(`${this.name}_provider`, pick(this.params, ...Object.keys(PostgresDB.getParamsInfo())) as any);
         if (params.core) {
             this.controller = new CorePG(
                 this.name,

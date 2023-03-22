@@ -12,7 +12,7 @@ import NullProvider from "@ungate/plugininf/lib/NullProvider";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
 import { initParams } from "@ungate/plugininf/lib/util/Util";
 import { isEmpty } from "@ungate/plugininf/lib/util/Util";
-import { isObject, noop, omit } from "lodash";
+import { isObject, noop, pick } from "lodash";
 import * as moment from "moment";
 import * as request from "request";
 import * as URL from "url";
@@ -49,7 +49,7 @@ export default class CoreOracleIntegration extends NullProvider {
             CoreOracleIntegration.getParamsInfo(),
             this.params,
         );
-        this.dataSource = new OracleDB(`${this.name}_provider`, omit(this.params, Object.keys(OracleDB.getParamsInfo())) as any);
+        this.dataSource = new OracleDB(`${this.name}_provider`, pick(this.params, ...Object.keys(OracleDB.getParamsInfo())) as any);
     }
 
     public async initContext(

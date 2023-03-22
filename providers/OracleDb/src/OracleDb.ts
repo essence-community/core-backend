@@ -6,7 +6,7 @@ import { IResultProvider } from "@ungate/plugininf/lib/IResult";
 import NullProvider from "@ungate/plugininf/lib/NullProvider";
 import { initParams } from "@ungate/plugininf/lib/util/Util";
 import { isEmpty } from "@ungate/plugininf/lib/util/Util";
-import { noop, omit } from "lodash";
+import { noop, pick } from "lodash";
 import * as moment from "moment";
 import CoreOracle from "./CoreOracle";
 import IOracleController from "./IOracleController";
@@ -56,7 +56,7 @@ export default class OracleDBPlugin extends NullProvider {
     ) {
         super(name, params, sessCtrl);
         this.params = initParams(OracleDBPlugin.getParamsInfo(), this.params);
-        this.dataSource = new OracleDB(`${this.name}_provider`, omit(this.params, Object.keys(OracleDB.getParamsInfo())) as any);
+        this.dataSource = new OracleDB(`${this.name}_provider`, pick(this.params, ...Object.keys(OracleDB.getParamsInfo())) as any);
         if (params.core) {
             this.controller = new CoreOracle(
                 this.name,

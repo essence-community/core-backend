@@ -16,7 +16,7 @@ import Logger from "@ungate/plugininf/lib/Logger";
 import NullContext from "@ungate/plugininf/lib/NullContext";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
 import { initParams } from "@ungate/plugininf/lib/util/Util";
-import { isObject, omit } from "lodash";
+import { isObject, pick } from "lodash";
 import ICoreController from "./ICoreController";
 import OfflineController from "./OfflineController";
 import OnlineController from "./OnlineController";
@@ -164,7 +164,7 @@ export default class CoreContext extends NullContext {
             ...initParams(CoreContext.getParamsInfo(), this.params),
             anonymousAction: 99999,
         };
-        this.dataSource = new PostgresDB(`${this.name}_context`, omit(this.params, Object.keys(PostgresDB.getParamsInfo())) as any);
+        this.dataSource = new PostgresDB(`${this.name}_context`, pick(this.params, ...Object.keys(PostgresDB.getParamsInfo())) as any);
         this.params.modifyQueryName = this.params.modifyQueryName.toLowerCase();
         this.params.pageMetaQueryName =
             this.params.pageMetaQueryName.toLowerCase();

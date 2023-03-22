@@ -6,7 +6,7 @@ import Logger from "@ungate/plugininf/lib/Logger";
 import NullEvent from "@ungate/plugininf/lib/NullEvent";
 import { sendProcess } from "@ungate/plugininf/lib/util/ProcessSender";
 import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
-import { delay, isObject, noop, omit } from "lodash";
+import { delay, isObject, noop, pick } from "lodash";
 const logger = Logger.getLogger("CoreNotification");
 
 export default class CoreNotification extends NullEvent {
@@ -30,7 +30,7 @@ export default class CoreNotification extends NullEvent {
     constructor (name: string, params: ICCTParams) {
         super(name, params);
         this.params = initParams(CoreNotification.getParamsInfo(), this.params);
-        this.dataSource = new PostgresDB(`${this.name}_events`, omit(this.params, Object.keys(PostgresDB.getParamsInfo())) as any);
+        this.dataSource = new PostgresDB(`${this.name}_events`, pick(this.params, ...Object.keys(PostgresDB.getParamsInfo())) as any);
     }
     /**
      * Инициализация
