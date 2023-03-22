@@ -2387,8 +2387,11 @@ begin
     if pot_page_variable.cv_name is null then
       perform pkg.p_set_error(2);
     end if;
-    if upper(pot_page_variable.cv_name) like 'G_SESS%' or upper(pot_page_variable.cv_name) like 'G_SYS%' then
+    if upper(pot_page_variable.cv_name) like 'G_SESS_%' or upper(pot_page_variable.cv_name) like 'G_SYS_%' then
       perform pkg.p_set_error(77);
+    end if;
+    if pot_page_variable.cv_name ~* '[\`\~/\.\\\!\-#%\?&\^\(\)\[\]\;\:\"\''\+\*]+' then
+      perform pkg.p_set_error(51, 'static:e42dc0232bf04b6d93283bf631671722');
     end if;
     if pot_page_variable.cv_description is null then
       perform pkg.p_set_error(26);

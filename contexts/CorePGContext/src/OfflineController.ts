@@ -17,6 +17,7 @@ import OnlineController from "./OnlineController";
 import { TempTable } from "./TempTable";
 import { IPropertyContext } from "./ICoreController";
 import { IRufusLogger } from "rufus";
+import { FIND_SYMBOL } from "./Util";
 
 export default class OfflineController implements ICoreController {
     public params: ICoreParams;
@@ -52,7 +53,7 @@ export default class OfflineController implements ICoreController {
             const keyUpper = key.toLocaleUpperCase();
             if (keyUpper.startsWith(this.params.headerPrefixSetting)) {
                 data.push({
-                    ck_id: `g_sys_header_${key.substring(this.params.headerPrefixSetting.length)}`,
+                    ck_id: `g_sys_header_${key.substring(this.params.headerPrefixSetting.length).replace(FIND_SYMBOL, "_")}`,
                     cv_description: `Header ${key}`,
                     cv_value: Array.isArray(value) ? JSON.stringify(value) : value,
                 });

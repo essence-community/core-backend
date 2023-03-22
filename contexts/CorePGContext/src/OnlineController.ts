@@ -14,7 +14,7 @@ import {
 import CoreContext, { ICoreParams } from "./CoreContext";
 import ICoreController, { IPropertyContext } from "./ICoreController";
 import { isObject, noop } from "lodash";
-import { replaceNull } from "./Util";
+import { FIND_SYMBOL, replaceNull } from "./Util";
 import { IRufusLogger } from "rufus";
 import { safePipe } from "@ungate/plugininf/lib/stream/Util";
 import { Transform } from "stream";
@@ -247,7 +247,7 @@ export default class OnlineController implements ICoreController {
                         const keyUpper = key.toLocaleUpperCase();
                         if (keyUpper.startsWith(this.params.headerPrefixSetting)) {
                             data.push({
-                                ck_id: `g_sys_header_${key.substring(this.params.headerPrefixSetting.length)}`,
+                                ck_id: `g_sys_header_${key.substring(this.params.headerPrefixSetting.length).replace(FIND_SYMBOL, "_")}`,
                                 cv_description: `Header ${key}`,
                                 cv_value: Array.isArray(value) ? JSON.stringify(value) : value,
                             });

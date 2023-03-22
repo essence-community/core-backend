@@ -11,3 +11,5 @@ export function replaceNull(key: string, value: any) {
     }
     return value;
 }
+
+export const FIND_SYMBOL = new RegExp("[/#=&?]+", "g");
