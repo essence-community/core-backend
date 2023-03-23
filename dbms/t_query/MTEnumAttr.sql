@@ -1,15 +1,46 @@
 --liquibase formatted sql
 --changeset artemov_i:MTEnumAttr dbms:postgresql runOnChange:true splitStatements:false stripComments:false
 INSERT INTO s_mt.t_query (ck_id, cc_query, ck_provider, ck_user, ct_change, cr_type, cr_access, cn_action, cv_description) VALUES ('MTEnumAttr', '/*MTEnumAttr*/
-select t.*
-from (
+with temp_arr as (
+  select '''' as ck_id from s_mt.t_attr where false
+  /*##filter.cv_data_type_extra*/
+  union all
   select
     case
-        when value ? ''cv_data_type_extra_value'' then value->>''cv_data_type_extra_value''
-        else value#>>''{}'' end as ck_id
+      when value ? ''cv_data_type_extra_value'' then value->>''cv_data_type_extra_value''
+      else value#>>''{}'' end as ck_id
     from
-        jsonb_array_elements((coalesce(nullif(:json::jsonb#>>''{filter,gv_data_type_extra_cur}'', ''''), :json::jsonb#>>''{filter,cv_data_type_extra}''))::jsonb)
-) as t
+      jsonb_array_elements(:json::jsonb#>''{filter,cv_data_type_extra}'')
+  /*filter.cv_data_type_extra##*/
+  /*##filter.ck_attr*/
+  union all
+  select
+    case
+      when arr.value ? ''cv_data_type_extra_value'' then arr.value->>''cv_data_type_extra_value''
+      else arr.value#>>''{}'' end as ck_id
+  from s_mt.t_attr attr
+  left join jsonb_array_elements(attr.cv_data_type_extra::jsonb) as arr
+    on nullif(attr.cv_data_type_extra, '''') is not null
+  where attr.ck_id = :json::jsonb#>>''{filter,ck_attr}''
+  /*##filter.cv_data_type_extra*/and false/*filter.cv_data_type_extra##*/
+  /*filter.ck_attr##*/
+  /*##filter.ck_class_attr*/
+  union all
+  select
+    case
+      when arr.value ? ''cv_data_type_extra_value'' then arr.value->>''cv_data_type_extra_value''
+      else arr.value#>>''{}'' end as ck_id
+  from s_mt.t_class_attr ca
+  join s_mt.t_attr attr
+    on ca.ck_attr = attr.ck_id
+  left join jsonb_array_elements((coalesce(nullif(ca.cv_data_type_extra, ''''), attr.cv_data_type_extra))::jsonb) as arr
+    on nullif(ca.cv_data_type_extra, '''') is not null or nullif(attr.cv_data_type_extra, '''') is not null
+  where ca.ck_id = :json::jsonb#>>''{filter,ck_class_attr}''
+  /*##filter.cv_data_type_extra*/and false/*filter.cv_data_type_extra##*/
+  /*filter.ck_class_attr##*/
+)
+select t.*
+from temp_arr as t
 where ( &FILTER )
  /*##filter.ck_id*/and t.ck_id = :json::jsonb#>>''{filter,ck_id}''/*filter.ck_id##*/
 order by &SORT
