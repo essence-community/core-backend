@@ -92,7 +92,7 @@ with recursive
         p.ck_id,
         p.ck_parent
       from s_mt.t_page p
-      where p.ck_id in (select t_p.ck_parent from temp_page_search t_p where t_p.ck_parent is not null and t_p.ck_parent not in (select ck_id from temp_page_search))
+      where p.ck_id in (select t_p.ck_parent from temp_page_search t_p where t_p.ck_parent is not null)
       union all
       select
         p.ck_id,

@@ -88,7 +88,7 @@ with recursive
         o.ck_id,
         o.ck_parent
       from s_mt.t_object o
-      where o.ck_id in (select t_o.ck_parent from temp_object_find t_o where t_o.ck_parent is not null and t_o.ck_parent not in (select ck_id from temp_object_find))
+      where o.ck_id in (select t_o.ck_parent from temp_object_find t_o where t_o.ck_parent is not null)
       union all
       select
         o.ck_id,
