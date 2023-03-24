@@ -73,34 +73,34 @@ with recursive
      ) as t
   ),
   temp_object_down as (
-    select o.*,
-           NULL::boolean as expanded
+    select o.ck_id,
+           o.ck_parent
     from s_mt.t_object o
     where o.ck_id in (select t_o.ck_id from temp_object_find t_o where t_o.ck_parent is null or t_o.ck_parent not in (select ck_id from temp_object_find))
     union all
-    select o.*,
-           NULL::boolean as expanded
+    select o.ck_id,
+           o.ck_parent
     from s_mt.t_object o 
     join temp_object_down q on o.ck_parent = q.ck_id
   ),
   temp_object_up as (
       select
-        o.*,
-        true as expanded
+        o.ck_id,
+        o.ck_parent
       from s_mt.t_object o
       where o.ck_id in (select t_o.ck_parent from temp_object_find t_o where t_o.ck_parent is not null and t_o.ck_parent not in (select ck_id from temp_object_find))
       union all
       select
-        o.*,
-        true as expanded
+        o.ck_id,
+        o.ck_parent
       from s_mt.t_object o
       join temp_object_up q on
         o.ck_id = q.ck_parent
     ),
   temp_object as (
-     select distinct o.* from temp_object_up o
+     select distinct o.ck_id, o.ck_parent from temp_object_up o
      union all
-     select o.* from temp_object_down o
+     select distinct o.ck_id, o.ck_parent from temp_object_down o
   )
   select q.ck_id,
          q.ck_class,
@@ -118,10 +118,13 @@ with recursive
          case when not exists(SELECT 1 FROM temp_object m WHERE m.ck_parent = q.ck_id) then ''true''
                 else ''false''
          end as leaf,
+         case when exists(SELECT 1 FROM temp_object_up m WHERE m.ck_id = q.ck_id) then true
+                else NULL::boolean
+         end as expanded,
          /* Поля аудита */
          q.ck_user,
          q.ct_change at time zone :sess_cv_timezone as ct_change
-    from temp_object q
+    from s_mt.t_object q
     -- получим классы объектов
     join s_mt.t_class c on c.ck_id = q.ck_class
     -- получим страницы, где используются объекты (если таковые имеются)
@@ -131,6 +134,8 @@ with recursive
                  join s_mt.t_page p
                    on p.ck_id = po.ck_page
                 group by po.ck_object) p_out on p_out.ck_object = q.ck_id
+    where q.ck_id in (select tp.ck_id from temp_object tp)
+    /*##filter.ck_id*/ and q.ck_id = (:json::jsonb#>>''{filter,ck_id}'')/*filter.ck_id##*/
    order by &SORT
    ', 'meta', '20783', '2019-05-30 15:22:49.352201+03', 'select', 'po_session', NULL, 'Список объектов')
 on conflict (ck_id) do update set cc_query = excluded.cc_query, ck_provider = excluded.ck_provider, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cr_type = excluded.cr_type, cr_access = excluded.cr_access, cn_action = excluded.cn_action, cv_description = excluded.cv_description;

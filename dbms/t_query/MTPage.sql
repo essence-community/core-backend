@@ -75,36 +75,36 @@ with recursive
     ),
     temp_page_down as (
       select
-        p.*,
-        NULL::boolean as expanded
+        p.ck_id,
+        p.ck_parent
       from s_mt.t_page p
       where p.ck_id in (select t_p.ck_id from temp_page_search t_p where t_p.ck_parent is null or t_p.ck_parent not in (select ck_id from temp_page_search))
       union all
       select
-        p.*,
-        NULL::boolean as expanded
+        p.ck_id,
+        p.ck_parent
       from s_mt.t_page p
       join temp_page_down q on
         p.ck_parent = q.ck_id
     ),
     temp_page_up as (
       select
-        p.*,
-        true as expanded
+        p.ck_id,
+        p.ck_parent
       from s_mt.t_page p
       where p.ck_id in (select t_p.ck_parent from temp_page_search t_p where t_p.ck_parent is not null and t_p.ck_parent not in (select ck_id from temp_page_search))
       union all
       select
-        p.*,
-        true as expanded
+        p.ck_id,
+        p.ck_parent
       from s_mt.t_page p
       join temp_page_up q on
         p.ck_id = q.ck_parent
     ),
     temp_page as (
-      select distinct p.* from temp_page_up p
+      select distinct p.ck_id, p.ck_parent from temp_page_up p
       union all
-      select p.* from temp_page_down p
+      select distinct p.ck_id, p.ck_parent from temp_page_down p
     )
 select
   t.ck_id,
@@ -148,20 +148,23 @@ from(
           when not exists(SELECT 1 FROM temp_page m WHERE m.ck_parent = q.ck_id) then ''true''
           else ''false''
       end as leaf,
-      q.expanded,
+      case when exists(SELECT 1 FROM temp_page_up m WHERE m.ck_id = q.ck_id) then true
+                else NULL::boolean
+         end as expanded,
       pa_view.cn_action as cn_action_view,
       pa_edit.cn_action as cn_action_edit,
       q.ck_view,
       tv.cv_description as cv_view_description,
       q.ck_user,
       q.ct_change
-    from temp_page q
+    from s_mt.t_page q
     left join s_mt.t_icon i on i.ck_id = q.ck_icon
     left join s_mt.t_page_action pa_view on q.cr_type = 2 and pa_view.ck_page = q.ck_id and pa_view.cr_type = ''view''
     left join s_mt.t_page_action pa_edit on q.cr_type = 2 and pa_edit.ck_page = q.ck_id and pa_edit.cr_type = ''edit''
     join s_mt.t_view tv on
     tv.ck_id = q.ck_view
     where true
+    and q.ck_id in (select tp.ck_id from temp_page tp)
     /*##filter.ck_id*/ and q.ck_id = (:json::jsonb#>>''{filter,ck_id}'')/*filter.ck_id##*/
     order by &SORT, q.cn_order asc
 )t
