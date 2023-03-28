@@ -672,6 +672,9 @@ begin
       s_mt.t_page_variable ap
     where ap.ck_page = ot_page.ck_id;
 
+    -- Remove attr page
+    delete from s_mt.t_page_attr where ck_page = ot_page.ck_id;
+
     -- Removing page
 
     delete 
