@@ -2867,6 +2867,17 @@ begin
   /* 5. Перепривяжем к странице объекты, которые уже были привязаны.
   Дочерняя иерархия объектов обновится автоматически. */
   for rec in (
+    with recursive
+      t_po_with_path as(
+        select po.ck_id, 0 as cn_level
+          from s_mt.t_page_object po
+         where po.ck_parent is null
+           and po.ck_page    = pk_page
+         union all
+        select po.ck_id, t.cn_level + 1 as cn_level
+          from s_mt.t_page_object po
+          join t_po_with_path as t on t.ck_id = po.ck_parent
+      )
     select
       po.ck_id,
       po.ck_object,
@@ -2878,16 +2889,18 @@ begin
       end as cl_reusable_obj,
       po_parent.ck_object as ck_parent_object,
       po.ck_user,
-      po.ct_change
+      po.ct_change,
+      (select v.cn_level from t_po_with_path v where v.ck_id = po.ck_id) as cn_level
     from s_mt.t_page_object po
-    join s_mt.t_object o
+    join s_mt.t_object o 
       on o.ck_id = po.ck_object
-    left join s_mt.t_page_object po_parent
+    left join s_mt.t_page_object po_parent 
       on po_parent.ck_id = po.ck_parent
-    where po.ck_page = pk_page
-        /* возьмем только объекты верхнего уровня + Reusable objects */
+   where po.ck_page = pk_page
+         /* возьмем только объекты верхнего уровня + Reusable objects */
      and (po.ck_parent is null or o.ck_parent is null)
-    order by cl_reusable_obj asc,
+   order by cl_reusable_obj asc,
+            cn_level asc,          -- те объекты, что выше к корню, обрабатываем раньше
             po.cn_order desc
   ) loop
     /* 5.1. Заполним запись, чтобы дальше использовать эти данные при вызове p_modify_page_object */
@@ -2912,9 +2925,8 @@ begin
            and po3.ck_object = rec.ck_parent_object
         limit 1;
       exception
-        when others then
-          
-          perform pkg.p_set_error(24);
+        when others then         
+          perform pkg.p_set_error(24, sqlerrm, pk_page, rec.ck_id, rec.ck_parent_object);
           return;
       end;
     end if;
