@@ -3,6 +3,7 @@ import { IPluginRequestContext } from "@ungate/plugininf/lib/IPlugin";
 import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
 import NullPlugin from "@ungate/plugininf/lib/NullPlugin";
 import { isEmpty } from "@ungate/plugininf/lib/util/Util";
+import {TAction} from '@ungate/plugininf/lib/IContext';
 
 
 export default class PQAddedDefaultPaginationAndFilter extends NullPlugin {
@@ -17,6 +18,9 @@ export default class PQAddedDefaultPaginationAndFilter extends NullPlugin {
         query: IGateQuery,
     ): Promise<void> {
         return new Promise((resolve) => {
+            if (gateContext.actionName !== "sql") {
+                return resolve();
+            }
             if (isEmpty(query.queryStr)) {
                 return resolve();
             }
