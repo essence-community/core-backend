@@ -59,13 +59,13 @@ export default class AssetsStorage extends NullPlugin {
             },
             dirDefault: {
                 defaultValue: "",
-                name: "Наименование папки куда сохранять",
+                name: "Наименование папки куда сохранять, по умолчанию",
                 type: "string",
             },
             dirColumn: {
                 defaultValue: "jt_inparam.cv_dir",
                 description:
-                    "jt_inparam - искать во входных данных<br/>jt_result - искать во после обработки<br/>jt_query - Тело запроса<br/>Пример: jt_inparam.json.filter.data",
+                    "jt_inparam - искать во входных данных<br/>jt_result - искать во после обработки<br/>jt_query - Тело запроса<br/>Пример: jt_inparam.json.filter.data,jt_result.0.cv_file_dir",
                 name: "Наименование колонки где находится наименование папки",
                 type: "string",
             },
@@ -97,9 +97,9 @@ export default class AssetsStorage extends NullPlugin {
                 type: "boolean",
             },
             keyFilePath: {
-                defaultValue: "jt_inparam.upload_file,jt_result.ck_file_uuid",
+                defaultValue: "jt_inparam.upload_file,jt_result.0.ck_file_uuid",
                 description:
-                    "jt_inparam - искать во входных данных<br/>jt_result - искать во после обработки<br/>jt_query - Тело запроса<br/>Пример: jt_inparam.json.filter.data",
+                    "jt_inparam - искать во входных данных<br/>jt_result - искать во после обработк массив<br/>jt_query - Тело запроса<br/>Пример: jt_inparam.json.filter.data,jt_result.0.ck_file_uuid",
                 name: "Путь индификатора файла",
                 type: "string",
             },
