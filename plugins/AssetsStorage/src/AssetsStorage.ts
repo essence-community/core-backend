@@ -144,6 +144,7 @@ export default class AssetsStorage extends NullPlugin {
                     ? JSON.parse(query.queryStr)
                     : query.queryStr,
         };
+        const json = JSON.parse(query.inParams.json || "{}");
         const dir =
             this.params.dirColumn?.split(",").reduce((resDir, param) => {
                 const foundDir = deepParam(param, inParam);
@@ -171,6 +172,8 @@ export default class AssetsStorage extends NullPlugin {
                                     .then(() => ({
                                         key: fileKey,
                                         nameField: key,
+                                        nameFile: value.originalFilename,
+                                        mimeType: value.headers["content-type"],
                                     })),
                             );
                         });
@@ -184,40 +187,23 @@ export default class AssetsStorage extends NullPlugin {
                     data: ResultStream(res.map((val) => ({ ck_id: val.key }))),
                 };
             }
+            const keys = new Set();
             res.forEach((val) => {
-                const arr = query.inParams[val.nameField];
+                const arr = json.data?.[val.nameField] || query.inParams[val.nameField];
+                keys.add(val.nameField);
                 if (arr) {
-                    arr.push(val.key);
+                    arr.push(val);
                 } else {
-                    query.inParams[val.nameField] = [val.key];
+                    (json.data || query.inParams)[val.nameField] = [val];
                 }
             });
-        }
-        const json = JSON.parse(query.inParams.json || "{}");
-        if (
-            json.service?.cv_action?.toUpperCase() === "D" ||
-            gateContext.request.method === "DELETE"
-        ) {
-            return new Promise(async (resolve, reject) => {
-                const fileKey = this.params.keyFilePath
-                    ?.split(",")
-                    .reduce((resDir, param) => {
-                        const foundDir = deepParam(param, inParam);
-                        return foundDir ? foundDir : resDir;
-                    }, "");
-                if (!isEmpty(fileKey)) {
-                    await this.controler.deletePath(
-                        isEmpty(dir) ? fileKey : `${dir}/${fileKey}`,
-                    );
+            if (Object.keys(json).length) {
+                query.inParams.json = JSON.stringify(json);
+            } else {
+                for(let nameField in keys.keys()) {
+                    query.inParams[nameField] = JSON.stringify(query.inParams[nameField]);
                 }
-                if (this.params.finalOut) {
-                    return resolve({
-                        type: "success",
-                        data: ResultStream([{ ck_id: fileKey }]),
-                    });
-                }
-                resolve();
-            });
+            }   
         }
         return;
     }
@@ -232,28 +218,37 @@ export default class AssetsStorage extends NullPlugin {
         PRequestContext: IPluginRequestContext,
         result: IResult,
     ): Promise<IResult | void> {
+        const json = JSON.parse(gateContext.query.inParams.json || "{}");
+        const dir =
+        this.params.dirColumn?.split(",").reduce((resDir, param) => {
+            const foundDir = deepParam(param, inParam);
+            return foundDir ? foundDir : resDir;
+        }, "") || this.params.dirDefault;
+        let inParam = {
+            jt_inparam:
+                typeof gateContext.request.body === "object" &&
+                (gateContext.request.body as IFormData).files
+                    ? {
+                          ...gateContext.query.inParams,
+                          ...(gateContext.request.body as IFormData).files,
+                      }
+                    : gateContext.query.inParams,
+            jt_query:
+                isString(gateContext.query.queryStr) &&
+                (gateContext.query.queryStr.trim().startsWith("{") ||
+                    gateContext.query.queryStr.trim().startsWith("["))
+                    ? JSON.parse(gateContext.query.queryStr)
+                    : gateContext.query.queryStr,
+        } as any;
         if (
             gateContext.actionName === "file" ||
             gateContext.actionName === "getfile"
         ) {
             const resStream = await ReadStreamToArray(result.data);
-            const inParam = {
+            inParam = {
+                ...inParam,
                 jt_result: resStream,
-                jt_inparam:
-                    typeof gateContext.request.body === "object" &&
-                    (gateContext.request.body as IFormData).files
-                        ? {
-                              ...gateContext.query.inParams,
-                              ...(gateContext.request.body as IFormData).files,
-                          }
-                        : gateContext.query.inParams,
-                jt_query:
-                    isString(gateContext.query.queryStr) &&
-                    (gateContext.query.queryStr.trim().startsWith("{") ||
-                        gateContext.query.queryStr.trim().startsWith("["))
-                        ? JSON.parse(gateContext.query.queryStr)
-                        : gateContext.query.queryStr,
-            };
+            }
             const dir =
                 this.params.dirColumn?.split(",").reduce((resDir, param) => {
                     const foundDir = deepParam(param, inParam);
@@ -285,6 +280,31 @@ export default class AssetsStorage extends NullPlugin {
                     },
                 ]),
             };
+        }
+        if (
+            json.service?.cv_action?.toUpperCase() === "D" ||
+            gateContext.request.method === "DELETE"
+        ) {
+            return new Promise(async (resolve, reject) => {
+                const fileKey = this.params.keyFilePath
+                    ?.split(",")
+                    .reduce((resDir, param) => {
+                        const foundDir = deepParam(param, inParam);
+                        return foundDir ? foundDir : resDir;
+                    }, "");
+                if (!isEmpty(fileKey)) {
+                    await this.controler.deletePath(
+                        isEmpty(dir) ? fileKey : `${dir}/${fileKey}`,
+                    );
+                }
+                if (this.params.finalOut) {
+                    return resolve({
+                        type: "success",
+                        data: ResultStream([{ ck_id: fileKey }]),
+                    });
+                }
+                resolve();
+            });
         }
         return;
     }
