@@ -171,6 +171,7 @@ export default class AssetsStorage extends NullPlugin {
                                     )
                                     .then(() => ({
                                         key: fileKey,
+                                        dir,
                                         nameField: key,
                                         nameFile: value.originalFilename,
                                         mimeType: value.headers["content-type"],
