@@ -191,10 +191,12 @@ export default class AssetsStorage extends NullPlugin {
             res.forEach((val) => {
                 const arr = json.data?.[val.nameField] || query.inParams[val.nameField];
                 keys.add(val.nameField);
-                if (arr) {
+                if (arr && !Array.isArray(arr)) {
+                    (json.data || query.inParams)[val.nameField] = [arr, val];
+                } if (arr && Array.isArray(arr)) {
                     arr.push(val);
-                } else {
-                    (json.data || query.inParams)[val.nameField] = [val];
+                }else {
+                    (json.data || query.inParams)[val.nameField] = val;
                 }
             });
             if (Object.keys(json).length) {
