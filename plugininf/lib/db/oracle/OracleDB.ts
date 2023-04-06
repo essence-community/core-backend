@@ -576,7 +576,7 @@ export default class OracleDB {
                   oconnect.getCurrentConnection(),
               );
         const isRelease = isEmpty(inConnection) || options.isRelease;
-        if (this.pool && this.log.isDebugEnabled()) {
+        if (this.pool && (this.log.isDebugEnabled() || this.log.isTraceEnabled())) {
             const logParam = { ...params };
             delete logParam.cv_password;
             delete logParam.cv_hash_password;

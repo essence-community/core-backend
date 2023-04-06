@@ -489,7 +489,7 @@ export default class PostgresDB {
               );
         const isRelease = isEmpty(inConnection) || options.isRelease;
 
-        if (this.log.isDebugEnabled()) {
+        if (this.log.isTraceEnabled()) {
             const logParam = { ...params };
             delete logParam.cv_password;
             delete logParam.cv_hash_password;
