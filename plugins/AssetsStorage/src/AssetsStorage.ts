@@ -174,6 +174,7 @@ export default class AssetsStorage extends NullPlugin {
                                         nameField: key,
                                         nameFile: value.originalFilename,
                                         mimeType: value.headers["content-type"],
+                                        size: value.size,
                                     })),
                             );
                         });
