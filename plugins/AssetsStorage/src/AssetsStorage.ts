@@ -244,11 +244,6 @@ export default class AssetsStorage extends NullPlugin {
         result: IResult,
     ): Promise<IResult | void> {
         const json = JSON.parse(gateContext.query.inParams.json || "{}");
-        const dir =
-        this.params.dirColumn?.split(",").reduce((resDir, param) => {
-            const foundDir = deepParam(param, inParam);
-            return foundDir ? foundDir : resDir;
-        }, "") || this.params.dirDefault;
         let inParam = {
             jt_inparam:
                 typeof gateContext.request.body === "object" &&
@@ -265,6 +260,11 @@ export default class AssetsStorage extends NullPlugin {
                     ? JSON.parse(gateContext.query.queryStr)
                     : gateContext.query.queryStr,
         } as any;
+        const dir =
+        this.params.dirColumn?.split(",").reduce((resDir, param) => {
+            const foundDir = deepParam(param, inParam);
+            return foundDir ? foundDir : resDir;
+        }, "") || this.params.dirDefault;
         if (
             gateContext.actionName === "file" ||
             gateContext.actionName === "getfile"
