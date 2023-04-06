@@ -207,6 +207,29 @@ export default class AssetsStorage extends NullPlugin {
                 }
             }   
         }
+        if (
+            this.params.finalOut && (
+            json.service?.cv_action?.toUpperCase() === "D" ||
+            gateContext.request.method === "DELETE")
+        ) {
+            return new Promise(async (resolve) => {
+                const fileKey = this.params.keyFilePath
+                    ?.split(",")
+                    .reduce((resDir, param) => {
+                        const foundDir = deepParam(param, inParam);
+                        return foundDir ? foundDir : resDir;
+                    }, "");
+                if (!isEmpty(fileKey)) {
+                    await this.controler.deletePath(
+                        isEmpty(dir) ? fileKey : `${dir}/${fileKey}`,
+                    );
+                }
+                return resolve({
+                    type: "success",
+                    data: ResultStream([{ ck_id: fileKey }]),
+                });
+            });
+        }
         return;
     }
     /**
@@ -287,7 +310,7 @@ export default class AssetsStorage extends NullPlugin {
             json.service?.cv_action?.toUpperCase() === "D" ||
             gateContext.request.method === "DELETE"
         ) {
-            return new Promise(async (resolve, reject) => {
+            return new Promise(async (resolve) => {
                 const fileKey = this.params.keyFilePath
                     ?.split(",")
                     .reduce((resDir, param) => {
@@ -298,12 +321,6 @@ export default class AssetsStorage extends NullPlugin {
                     await this.controler.deletePath(
                         isEmpty(dir) ? fileKey : `${dir}/${fileKey}`,
                     );
-                }
-                if (this.params.finalOut) {
-                    return resolve({
-                        type: "success",
-                        data: ResultStream([{ ck_id: fileKey }]),
-                    });
                 }
                 resolve();
             });
