@@ -1,4 +1,4 @@
-import * as moment from 'moment-timezone';
+import * as moment from "moment-timezone";
 import * as lodash from "lodash";
 /* tslint:disable:max-classes-per-file */
 /* tslint:disable triple-equals */
@@ -52,6 +52,12 @@ const operators: any = {
         parseOperations(left, values) && parseOperations(right, values),
     "+": ({ left, right }: LogicalExpression, values: IValues) =>
         parseOperations(left, values) + parseOperations(right, values),
+    "-": ({ left, right }: LogicalExpression, values: IValues) =>
+        parseOperations(left, values) - parseOperations(right, values),
+    "*": ({ left, right }: LogicalExpression, values: IValues) =>
+        parseOperations(left, values) * parseOperations(right, values),
+    "/": ({ left, right }: LogicalExpression, values: IValues) =>
+        parseOperations(left, values) / parseOperations(right, values),
     "<": ({ left, right }: LogicalExpression, values: IValues) =>
         parseOperations(left, values) < parseOperations(right, values),
     "==": ({ left, right }: LogicalExpression, values: IValues) =>
@@ -118,19 +124,25 @@ function parseOperations(
             );
         case "Literal".endsWith:
             // @ts-ignore
-            if (expression.isMember && 
+            if (
+                expression.isMember &&
                 (typeof expression.raw == "undefined" ||
-                (!(expression.raw.startsWith('"') && expression.raw.endsWith('"')) && 
-                !(expression.raw.startsWith("'") && expression.raw.endsWith("'"))))) {
+                    (!(
+                        expression.raw.startsWith('"') &&
+                        expression.raw.endsWith('"')
+                    ) &&
+                        !(
+                            expression.raw.startsWith("'") &&
+                            expression.raw.endsWith("'")
+                        )))
+            ) {
                 const value = values.get
                     ? // @ts-ignore
                       values.get(expression.value, true)
                     : // @ts-ignore
                       values[expression.value];
 
-                return (
-                    value === 0 ? value : value || expression.value
-                );
+                return value === 0 ? value : value || expression.value;
             }
             return expression.value;
         case "Identifier":
@@ -155,10 +167,10 @@ function parseOperations(
                   values.get(expression.name, true)
                 : // @ts-ignore
                   values[expression.name];
-            
-            return (
-                value === 0 ? value : value || (expression.isMember && expression.name)
-            );
+
+            return value === 0
+                ? value
+                : value || (expression.isMember && expression.name);
         case "AssignmentExpression":
             return parseOperations(expression.right, values);
         case "ObjectExpression":
@@ -293,6 +305,45 @@ function parseOperations(
                         return values.get ? values.get(key, true) : values[key];
                     },
                 });
+        case "BlockStatement":
+            const paramsBlock = {} as Record<string, any>;
+            let result = "";
+            const paramGetBlock = {
+                get: (key: string) => {
+                    if (
+                        Object.prototype.hasOwnProperty.call(paramsBlock, key)
+                    ) {
+                        return paramsBlock[key];
+                    }
+
+                    return values.get ? values.get(key, true) : values[key];
+                },
+            };
+
+            expression.body.forEach((ext) => {
+                switch (ext.type) {
+                    case "VariableDeclaration":
+                        ext.declarations.forEach((extVar) => {
+                            paramsBlock[
+                                parseOperations(extVar.id, paramGetBlock) ||
+                                    (extVar.id as any).name
+                            ] = extVar.init
+                                ? parseOperations(extVar.init, paramGetBlock)
+                                : undefined;
+                        });
+                        break;
+                    case "ReturnStatement":
+                        result = ext.argument
+                            ? parseOperations(ext.argument, paramsBlock)
+                            : "";
+                        break;
+                    default:
+                        parseOperations(ext as any, paramGetBlock);
+                        break;
+                }
+            });
+
+            return result;
         default:
             logger.error("expression not found: ", expression);
 

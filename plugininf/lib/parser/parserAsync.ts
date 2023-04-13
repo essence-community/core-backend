@@ -1,4 +1,4 @@
-import * as moment from 'moment-timezone';
+import * as moment from "moment-timezone";
 import * as lodash from "lodash";
 /* tslint:disable:max-classes-per-file */
 /* tslint:disable triple-equals */
@@ -63,6 +63,15 @@ const operators: any = {
         (await parseOperations(right, values)),
     "+": async ({ left, right }: LogicalExpression, values: IValues) =>
         (await parseOperations(left, values)) +
+        (await parseOperations(right, values)),
+    "-": async ({ left, right }: LogicalExpression, values: IValues) =>
+        (await parseOperations(left, values)) -
+        (await parseOperations(right, values)),
+    "*": async ({ left, right }: LogicalExpression, values: IValues) =>
+        (await parseOperations(left, values)) *
+        (await parseOperations(right, values)),
+    "/": async ({ left, right }: LogicalExpression, values: IValues) =>
+        (await parseOperations(left, values)) /
         (await parseOperations(right, values)),
     "<": async ({ left, right }: LogicalExpression, values: IValues) =>
         (await parseOperations(left, values)) <
@@ -138,19 +147,25 @@ async function parseOperations(
             );
         case "Literal":
             // @ts-ignore
-            if (expression.isMember && 
+            if (
+                expression.isMember &&
                 (typeof expression.raw == "undefined" ||
-                (!(expression.raw.startsWith('"') && expression.raw.endsWith('"')) && 
-                !(expression.raw.startsWith("'") && expression.raw.endsWith("'"))))) {
+                    (!(
+                        expression.raw.startsWith('"') &&
+                        expression.raw.endsWith('"')
+                    ) &&
+                        !(
+                            expression.raw.startsWith("'") &&
+                            expression.raw.endsWith("'")
+                        )))
+            ) {
                 const value = await (values.get
                     ? // @ts-ignore
                       values.get(expression.value, true)
                     : // @ts-ignore
                       values[expression.value]);
 
-                return (
-                    value === 0 ? value : value || expression.value
-                );
+                return value === 0 ? value : value || expression.value;
             }
             return expression.value;
         case "Identifier":
@@ -175,10 +190,10 @@ async function parseOperations(
                   values.get(expression.name, true)
                 : // @ts-ignore
                   values[expression.name]);
-            
-            return (
-                value === 0 ? value : value || (expression.isMember && expression.name)
-            );
+
+            return value === 0
+                ? value
+                : value || (expression.isMember && expression.name);
         case "AssignmentExpression":
             return await parseOperations(expression.right, values);
         case "ObjectExpression":
@@ -320,6 +335,62 @@ async function parseOperations(
                         return values.get ? values.get(key, true) : values[key];
                     },
                 });
+        case "BlockStatement":
+            const paramsBlock = {} as Record<string, any>;
+            let result = "";
+            const paramGetBlock = {
+                get: (key: string) => {
+                    if (
+                        Object.prototype.hasOwnProperty.call(paramsBlock, key)
+                    ) {
+                        return paramsBlock[key];
+                    }
+
+                    return values.get ? values.get(key, true) : values[key];
+                },
+            };
+
+            await expression.body.reduce(
+                (res, ext) =>
+                    res.then(async () => {
+                        switch (ext.type) {
+                            case "VariableDeclaration":
+                                await ext.declarations.reduce((res, extVar) =>
+                                    res.then(async () => {
+                                        paramsBlock[
+                                            (await parseOperations(
+                                                extVar.id,
+                                                paramGetBlock,
+                                            )) || (extVar.id as any).name
+                                        ] = extVar.init
+                                            ? await parseOperations(
+                                                  extVar.init,
+                                                  paramGetBlock,
+                                              )
+                                            : undefined;
+                                    }, Promise.resolve()),
+                                );
+                                break;
+                            case "ReturnStatement":
+                                result = ext.argument
+                                    ? await parseOperations(
+                                          ext.argument,
+                                          paramsBlock,
+                                      )
+                                    : "";
+                                break;
+                            default:
+                                await parseOperations(
+                                    ext as any,
+                                    paramGetBlock,
+                                );
+                                break;
+                        }
+                    }),
+                Promise.resolve(),
+            );
+
+            return result;
         default:
             logger.error("expression not found: ", expression);
 
