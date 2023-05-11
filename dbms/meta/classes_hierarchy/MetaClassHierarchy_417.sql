@@ -41,6 +41,8 @@ INSERT INTO s_mt.t_class_hierarchy
     union all
     select 'A4EEF048DA424C3285675F2B1D0D464D' as ck_id, '417' as ck_class_parent, '508B0DE5C67B464CB3A5CED4DF778084' as ck_class_child, '1850' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2023-02-19T12:45:14.957+0000'::timestamp with time zone as ct_change
     union all
+    select 'E34A2CDA2EE9477D8C1DD72E237E9D61' as ck_id, '417' as ck_class_parent, '84599990888B6BCCE053809BA8C00CC8' as ck_class_child, '1850' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2023-05-11T07:57:28.489+0000'::timestamp with time zone as ct_change
+    union all
     select '8D2BA0EF3703627EE053809BA8C0076B' as ck_id, '417' as ck_class_parent, '8D547C621A02626CE053809BA8C0882B' as ck_class_child, '1850' as ck_class_attr, '20785' as ck_user, '2019-07-13T00:00:00.000+0000'::timestamp with time zone as ct_change
     union all
     select 'CAEDBBF6EF3D494CB5EC8922BEB64B4B' as ck_id, '4A7B7B56D5D544A7B81EB8D50EA8C8EC' as ck_class_parent, '417' as ck_class_child, '030C24F8A7DF46BD87C420B866989703' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2020-08-27T09:58:56.697+0000'::timestamp with time zone as ct_change
