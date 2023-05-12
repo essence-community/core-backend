@@ -4,6 +4,7 @@ import { ICacheDb } from "@ungate/plugininf/lib/ISessCtrl";
 import IGlobalObject from "@ungate/plugininf/lib/IGlobalObject";
 import { IUserDbData } from "@ungate/plugininf/lib/ISession";
 import * as path from "path";
+import * as fs from "fs";
 import Constants from "../Constants";
 import { NeDBImpl } from "../db/nedblocal/NeDBImpl";
 import IContextConfig from "./IContextConfig";
@@ -56,13 +57,20 @@ export function loadProperty<T>(
                     Constants.NEDB_MULTI_HOST,
                 );
             }
+            let typeFile = "yaml";
+            let filename = path.join(Constants.NEDB_TEMP_DB, `${name}.yaml`);
+            if (!isTemp) {
+                filename = path.join(Constants.PROPERTY_DIR, `${name}.yaml`);
+                if (fs.existsSync(path.join(Constants.PROPERTY_DIR, `${name}.toml`))) {
+                    typeFile = "toml";
+                    filename = path.join(Constants.PROPERTY_DIR, `${name}.toml`)
+                }
+            }
             const db = new DataStore({
-                filename: isTemp
-                    ? path.join(Constants.NEDB_TEMP_DB, `${name}.yaml`)
-                    : path.join(Constants.PROPERTY_DIR, `${name}.toml`),
+                filename,
                 indexs: [{ fieldName: "ck_id", unique: true }],
                 nameDb: name,
-                tempDb: isTemp,
+                typeFile,
             });
             db.loadDatabase((err) => {
                 if (err) {

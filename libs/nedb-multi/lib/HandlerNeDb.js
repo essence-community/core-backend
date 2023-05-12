@@ -51,7 +51,7 @@ exports.create = (dbsMap) => (
             afterSerialization: options.afterSerialization,
             beforeDeserialization: options.beforeDeserialization,
             corruptAlertThreshold: options.corruptAlertThreshold,
-            persMethod: options.tempDb ? "yaml" : "toml",
+            persMethod: options.typeFile,
         });
         db.nameBd = options.nameBd;
         db.tempDb = options.tempDb;
