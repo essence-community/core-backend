@@ -3,7 +3,17 @@
 INSERT INTO s_mt.t_class_hierarchy
 (ck_id, ck_class_parent, ck_class_child, ck_class_attr, ck_user, ct_change)
  select t.ck_id, t.ck_class_parent, t.ck_class_child, t.ck_class_attr, t.ck_user, t.ct_change from (
+    select 'B08AAE8BFE5C4A26A62746CE543C2332' as ck_id, '137' as ck_class_parent, '9CC06E8D9D7E4791BA1C6232DAF60CDD' as ck_class_child, '619' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2023-05-13T13:32:06.375+0000'::timestamp with time zone as ct_change
+    union all
+    select '62246C7035354485A1F391306CC73E0C' as ck_id, '18' as ck_class_parent, '9CC06E8D9D7E4791BA1C6232DAF60CDD' as ck_class_child, '31' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2023-05-13T13:31:33.547+0000'::timestamp with time zone as ct_change
+    union all
+    select '55CB38B8FC5D4B1DAC84715B35C74EA8' as ck_id, '1807D17438814B31B75A279C4CBC6C0C' as ck_class_parent, '9CC06E8D9D7E4791BA1C6232DAF60CDD' as ck_class_child, '225864898ED0411FA0E5434CD3A85346' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2023-05-13T13:30:37.391+0000'::timestamp with time zone as ct_change
+    union all
+    select 'D05609828237434CB692D2C8550B4B27' as ck_id, '217' as ck_class_parent, '9CC06E8D9D7E4791BA1C6232DAF60CDD' as ck_class_child, '830' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2023-05-13T13:31:51.050+0000'::timestamp with time zone as ct_change
+    union all
     select '5E09EE59B98C45338C3A9A40158DADDC' as ck_id, '32' as ck_class_parent, '9CC06E8D9D7E4791BA1C6232DAF60CDD' as ck_class_child, '132' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-10-18T00:00:00.000+0000'::timestamp with time zone as ct_change
+    union all
+    select '5F65615CFFDA42DBB09D514834ED7A0E' as ck_id, '8' as ck_class_parent, '9CC06E8D9D7E4791BA1C6232DAF60CDD' as ck_class_child, '30' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2023-05-13T13:31:24.819+0000'::timestamp with time zone as ct_change
     union all
     select 'B6BC04C53EFF43DF84C03785E23073D4' as ck_id, '9CC06E8D9D7E4791BA1C6232DAF60CDD' as ck_class_parent, '19' as ck_class_child, '1CEDCCF877584C01B3BD292C10D65DC9' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-10-18T00:00:00.000+0000'::timestamp with time zone as ct_change
     union all
