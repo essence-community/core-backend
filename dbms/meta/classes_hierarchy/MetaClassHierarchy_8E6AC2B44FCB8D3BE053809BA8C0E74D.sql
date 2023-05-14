@@ -5,10 +5,6 @@ INSERT INTO s_mt.t_class_hierarchy
  select t.ck_id, t.ck_class_parent, t.ck_class_child, t.ck_class_attr, t.ck_user, t.ct_change from (
     select '8E65F4ADA4D249E19AC554B1BB3B1EC9' as ck_id, '1' as ck_class_parent, '8E6AC2B44FCB8D3BE053809BA8C0E74D' as ck_class_child, '623' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2023-05-13T13:22:02.239+0000'::timestamp with time zone as ct_change
     union all
-    select '06D02D9E5FD24A208F0198792C1B9F07' as ck_id, '10' as ck_class_parent, '8E6AC2B44FCB8D3BE053809BA8C0E74D' as ck_class_child, '40' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2023-05-13T13:28:26.313+0000'::timestamp with time zone as ct_change
-    union all
-    select 'B95758AC5A834ED69FAAD06C3B43CF09' as ck_id, '11' as ck_class_parent, '8E6AC2B44FCB8D3BE053809BA8C0E74D' as ck_class_child, '43' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2023-05-13T13:28:26.313+0000'::timestamp with time zone as ct_change
-    union all
     select '8E595EA2AB618D8FE053809BA8C044A5' as ck_id, '137' as ck_class_parent, '8E6AC2B44FCB8D3BE053809BA8C0E74D' as ck_class_child, '621' as ck_class_attr, '20785' as ck_user, '2019-07-23T00:00:00.000+0000'::timestamp with time zone as ct_change
     union all
     select '9F8DDAED2C464EE59A89709617D518FC' as ck_id, '17' as ck_class_parent, '8E6AC2B44FCB8D3BE053809BA8C0E74D' as ck_class_child, '524' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2023-05-13T13:28:26.313+0000'::timestamp with time zone as ct_change
@@ -18,8 +14,6 @@ INSERT INTO s_mt.t_class_hierarchy
     select '0E3E2FB9209E4C71B6A047C37E858185' as ck_id, '217' as ck_class_parent, '8E6AC2B44FCB8D3BE053809BA8C0E74D' as ck_class_child, '829' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2023-05-13T13:22:02.239+0000'::timestamp with time zone as ct_change
     union all
     select '8E809B5872E626FBE053809BA8C0A2F5' as ck_id, '32' as ck_class_parent, '8E6AC2B44FCB8D3BE053809BA8C0E74D' as ck_class_child, '138' as ck_class_attr, '20785' as ck_user, '2019-07-24T00:00:00.000+0000'::timestamp with time zone as ct_change
-    union all
-    select 'A9241C74254D40B1882E6E2B213CF14C' as ck_id, '36' as ck_class_parent, '8E6AC2B44FCB8D3BE053809BA8C0E74D' as ck_class_child, '254' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2023-05-13T13:28:26.313+0000'::timestamp with time zone as ct_change
     union all
     select 'EE7832C77FC0440BAFEBEE0754CE4168' as ck_id, '417' as ck_class_parent, '8E6AC2B44FCB8D3BE053809BA8C0E74D' as ck_class_child, '1850' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2023-05-13T13:22:02.239+0000'::timestamp with time zone as ct_change
     union all
@@ -32,8 +26,6 @@ INSERT INTO s_mt.t_class_hierarchy
     select 'E63662D15EFE4763BA8D5A2D28A0F2B6' as ck_id, '6457' as ck_class_parent, '8E6AC2B44FCB8D3BE053809BA8C0E74D' as ck_class_child, '36173' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2023-05-13T13:22:02.239+0000'::timestamp with time zone as ct_change
     union all
     select 'DD62CE67B88E4199A9408E22A1CE91E1' as ck_id, '7457' as ck_class_parent, '8E6AC2B44FCB8D3BE053809BA8C0E74D' as ck_class_child, '37172' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2023-05-13T13:22:02.239+0000'::timestamp with time zone as ct_change
-    union all
-    select 'E633E245B5CA4F9C927B69D2834E8B1C' as ck_id, '77' as ck_class_parent, '8E6AC2B44FCB8D3BE053809BA8C0E74D' as ck_class_child, '450' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2023-05-13T13:28:26.313+0000'::timestamp with time zone as ct_change
     union all
     select '5EAAEAEB49AD42B58DB864619F787F75' as ck_id, '871CB755C589248AE053809BA8C0F31E' as ck_class_parent, '8E6AC2B44FCB8D3BE053809BA8C0E74D' as ck_class_child, '876936326A5213F3E053809BA8C0487C' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2023-05-13T13:22:02.239+0000'::timestamp with time zone as ct_change
     union all

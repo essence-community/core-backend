@@ -5,10 +5,6 @@ INSERT INTO s_mt.t_class_hierarchy
  select t.ck_id, t.ck_class_parent, t.ck_class_child, t.ck_class_attr, t.ck_user, t.ct_change from (
     select 'F20C870B32BD47AC8C2FACF032B2B7EF' as ck_id, '1' as ck_class_parent, '664B30CA82FC453BAADF14EE7C102312' as ck_class_child, '623' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2021-02-10T16:46:17.657+0000'::timestamp with time zone as ct_change
     union all
-    select '52BE99BDF2FB4117A76F1D473210E025' as ck_id, '10' as ck_class_parent, '664B30CA82FC453BAADF14EE7C102312' as ck_class_child, '40' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2023-05-13T13:28:26.313+0000'::timestamp with time zone as ct_change
-    union all
-    select '3AF2614A2162434F9AEB61FFC99933E2' as ck_id, '11' as ck_class_parent, '664B30CA82FC453BAADF14EE7C102312' as ck_class_child, '43' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2023-05-13T13:28:26.313+0000'::timestamp with time zone as ct_change
-    union all
     select '2FE37BBA27C6413EA81CF9A6372AFF3A' as ck_id, '137' as ck_class_parent, '664B30CA82FC453BAADF14EE7C102312' as ck_class_child, '621' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2021-02-10T16:45:37.910+0000'::timestamp with time zone as ct_change
     union all
     select 'B6BEB9AF08B743E885DAB51F2B56BF8C' as ck_id, '17' as ck_class_parent, '664B30CA82FC453BAADF14EE7C102312' as ck_class_child, '524' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2023-05-13T13:28:26.313+0000'::timestamp with time zone as ct_change
@@ -32,8 +28,6 @@ INSERT INTO s_mt.t_class_hierarchy
     select '1BF8298D0AE340EC928820A3CB14E331' as ck_id, '6457' as ck_class_parent, '664B30CA82FC453BAADF14EE7C102312' as ck_class_child, '36173' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2023-05-13T13:22:02.239+0000'::timestamp with time zone as ct_change
     union all
     select 'DB36C35152BC467EAB66AD6C2F1BED99' as ck_id, '7457' as ck_class_parent, '664B30CA82FC453BAADF14EE7C102312' as ck_class_child, '37172' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2023-05-13T13:22:02.239+0000'::timestamp with time zone as ct_change
-    union all
-    select '8B99B16159574099B6197EA1B7BF9CAB' as ck_id, '77' as ck_class_parent, '664B30CA82FC453BAADF14EE7C102312' as ck_class_child, '450' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2023-05-13T13:28:26.313+0000'::timestamp with time zone as ct_change
     union all
     select '48FF0C90DAFC4AC88BD20F112189952A' as ck_id, '871CB755C589248AE053809BA8C0F31E' as ck_class_parent, '664B30CA82FC453BAADF14EE7C102312' as ck_class_child, '876936326A5213F3E053809BA8C0487C' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2021-02-10T16:44:58.494+0000'::timestamp with time zone as ct_change
     union all

@@ -3,8 +3,6 @@
 INSERT INTO s_mt.t_class_hierarchy
 (ck_id, ck_class_parent, ck_class_child, ck_class_attr, ck_user, ct_change)
  select t.ck_id, t.ck_class_parent, t.ck_class_child, t.ck_class_attr, t.ck_user, t.ct_change from (
-    select '805' as ck_id, '10' as ck_class_parent, '17' as ck_class_child, '40' as ck_class_attr, '-11' as ck_user, '2018-02-22T00:00:00.000+0000'::timestamp with time zone as ct_change
-    union all
     select '11997' as ck_id, '17' as ck_class_parent, '10457' as ck_class_child, '524' as ck_class_attr, '30021381' as ck_user, '2019-01-24T00:00:00.000+0000'::timestamp with time zone as ct_change
     union all
     select '5F722831E3BE4CA1B09E56A55CC665D6' as ck_id, '17' as ck_class_parent, '15593D209A1D46FC873706F69EE71E7A' as ck_class_child, '524' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2023-05-13T13:28:26.313+0000'::timestamp with time zone as ct_change
