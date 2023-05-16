@@ -114,6 +114,7 @@ with recursive
          q.cv_modify,
          lower(q.cv_name) as cv_name_lowered,
          c.cv_name as cv_class_name,
+         c.cl_dataset,
          p_out.cv_pages,
          case when not exists(SELECT 1 FROM temp_object m WHERE m.ck_parent = q.ck_id) then ''true''
                 else ''false''
