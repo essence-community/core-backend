@@ -73,10 +73,10 @@ class Logger {
 
     public static getLogger(str: string): rufus.IRufusLogger {
         const logger = rufus.getLogger(str);
-        logger.isDebugEnabled = () => logger.isEnabledFor(rufus.DEBUG);
+        logger.isDebugEnabled = () => logger.isEnabledFor(rufus.DEBUG) || logger.isEnabledFor(rufus.VERBOSE);
         logger.isTraceEnabled = () => logger.isEnabledFor(rufus.VERBOSE);
-        logger.isWarnEnabled = () => logger.isEnabledFor(rufus.WARNING);
-        logger.isInfoEnabled = () => logger.isEnabledFor(rufus.INFO);
+        logger.isWarnEnabled = () => logger.isEnabledFor(rufus.WARNING) || logger.isEnabledFor(rufus.DEBUG) || logger.isEnabledFor(rufus.VERBOSE);
+        logger.isInfoEnabled = () => logger.isEnabledFor(rufus.INFO) || logger.isEnabledFor(rufus.DEBUG) || logger.isEnabledFor(rufus.VERBOSE);
         logger.child = (...args) => logger.verbose(args);
         return logger as rufus.IRufusLogger;
     }
