@@ -50,7 +50,7 @@ export interface IContextParams extends ICCTParams {
         secret: string;
         unset: "keep" | "destroy";
         typeStore: "nedb" | "typeorm";
-        typeorm: {
+        typeorm?: {
             type: string;
             host: string;
             port: number;
@@ -69,6 +69,18 @@ export interface IContextParams extends ICCTParams {
             expires?: string;
             domain?: string;
         };
+    };
+
+    auditStore?: "typeorm";
+    auditTypeorm?: {
+        type: string;
+        host: string;
+        port: number;
+        username?: string;
+        password?: string;
+        database?: string;
+        typeOrmExtra?: string;
+        extra?: string;
     };
 }
 
@@ -89,5 +101,6 @@ export default interface IContextPlugin {
     ): Promise<boolean>;
     handleResult(gateContext: IContext, result: IResult): Promise<IResult>;
     maskResult(): Promise<IResult>;
+    audit(gateContext: IContext): void;
     destroy(): Promise<void>;
 }

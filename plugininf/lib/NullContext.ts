@@ -1,5 +1,5 @@
 /* tslint:disable:object-literal-sort-keys */
-import { isString } from "lodash";
+import { isString, noop } from "lodash";
 import { IRufusLogger } from "rufus";
 import ErrorGate from "./errors/ErrorGate";
 import { ISessCtrl } from "./ISessCtrl";
@@ -12,6 +12,7 @@ import IResult from "./IResult";
 import Logger from "./Logger";
 import ResultStream from "./stream/ResultStream";
 import { initParams } from "./util/Util";
+import { AuditService } from "./audit/AuditService";
 
 const findRegEx = new RegExp("^/(?<reg>[\x5cs\x5cS]*)/(?<key>[gimy]*)$");
 const logger = Logger.getLogger("NullContext");
@@ -376,6 +377,81 @@ export default abstract class NullContext implements IContextPlugin {
                 name: "Размер POST в байтах",
                 type: "integer",
             },
+            auditStore: {
+                name: "Audit type store",
+                description: "TypeOrm",
+                type: "combo",
+                displayField: "ck_id",
+                setGlobal: [{ out: "g_session_audit_type_store" }],
+                valueField: [{ in: "ck_id" }],
+                records: [{ ck_id: "typeorm" }],
+            },
+            auditTypeorm: {
+                name: "session type store",
+                type: "form_nested",
+                hidden: true,
+                hiddenRules: 'g_session_audit_type_store!="typeorm"',
+                childs: {
+                    type: {
+                        name: "Audit typeorm type",
+                        type: "combo",
+                        displayField: "ck_id",
+                        valueField: [{ in: "ck_id" }],
+                        records: [
+                            { ck_id: "postgres" },
+                            { ck_id: "mongodb" },
+                            { ck_id: "cockroachdb" },
+                            { ck_id: "mysql" },
+                            { ck_id: "mariadb" },
+                            { ck_id: "sqlite" },
+                            { ck_id: "capacitor" },
+                            { ck_id: "cordova" },
+                            { ck_id: "mssql" },
+                        ],
+                        defaultValue: "postgres",
+                    },
+                    host: {
+                        name: "Audit typeorm host",
+                        type: "string",
+                        required: true,
+                        defaultValue: "localhost",
+                    },
+                    port: {
+                        name: "Audit typeorm port",
+                        type: "integer",
+                        required: true,
+                    },
+                    username: {
+                        name: "Audit typeorm username",
+                        type: "string",
+                    },
+                    password: {
+                        name: "Audit typeorm password",
+                        type: "password",
+                    },
+                    database: {
+                        name: "Audit typeorm database",
+                        type: "string",
+                    },
+                    schema: {
+                        name: "Audit typeorm schema",
+                        type: "string",
+                        defaultValue: "public",
+                    },
+                    typeOrmExtra: {
+                        name: "Audit typeorm extraParam",
+                        description: "JSON extra param",
+                        type: "long_string",
+                        defaultValue: "{}",
+                    },
+                    extra: {
+                        name: "Audit typeorm extra driver",
+                        description: "JSON extra driver param",
+                        type: "long_string",
+                        defaultValue: "{}",
+                    },
+                },
+            },
             lvl_logger: {
                 displayField: "ck_id",
                 name: "Level logger",
@@ -498,7 +574,14 @@ export default abstract class NullContext implements IContextPlugin {
                 this.logger.addHandler(handler);
             }
         }
+
+        if (this.params.auditStore === "typeorm") {
+            const auditService = new AuditService(name, this.params.auditTypeorm);
+
+            this.audit = (context) => auditService.save(context);
+        }
     }
+    public audit = noop;
     public abstract init(reload?: boolean): Promise<void>;
     public abstract initContext(
         gateContext: IContext,

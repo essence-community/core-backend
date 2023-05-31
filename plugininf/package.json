@@ -24,6 +24,7 @@
         "request": "^2.88.2",
         "rufus": "^0.5.7",
         "soap": "^0.43.0",
+        "typeorm": "^0.2.34",
         "uuid": "^8.3.2"
     },
     "devDependencies": {

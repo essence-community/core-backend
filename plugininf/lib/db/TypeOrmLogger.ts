@@ -5,7 +5,7 @@ import { IRufusLogger } from "rufus";
 export class TypeOrmLogger implements ILogger {
     public logger: IRufusLogger;
     constructor(name: string) {
-        this.logger = Logger.getLogger(`${name}:TypeOrm`);
+        this.logger = Logger.getLogger(`TypeOrm:${name}`);
     }
     logQuery(query: string, parameters?: any[], queryRunner?: QueryRunner) {
         if (this.logger.isTraceEnabled()) {

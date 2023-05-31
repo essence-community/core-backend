@@ -71,6 +71,8 @@ class MainController {
             if (session) {
                 requestContext.setSession(session);
             }
+            // 2.1: Добавляем аудит
+            requestContext.gateContextPlugin.audit(requestContext);
             if (requestContext.queryName === Constants.QUERY_LOGOUT) {
                 if (session) {
                     await sessCtrl.logoutSession(requestContext);

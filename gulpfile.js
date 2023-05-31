@@ -103,6 +103,8 @@ gulp.task("build_path", () => {
     const tsProject = ts.createProject(path.join(opt.to, "tsconfig.json"), {
         removeComments: !isDev,
         sourceMap: !isDev,
+        experimentalDecorators: true,
+        emitDecoratorMetadata: true,
     });
     return gulp
         .src(path.join(opt.to, opt.srcname || "src", "**", "*.ts"))

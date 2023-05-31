@@ -100,7 +100,7 @@ export class GateSession implements ISessCtrl {
                 extra: this.params.paramSession.typeorm.extra
                     ? JSON.parse(this.params.paramSession.typeorm.extra)
                     : undefined,
-                synchronize: true,
+                synchronize: false,
                 ...(this.params.paramSession.typeorm.typeOrmExtra
                     ? JSON.parse(this.params.paramSession.typeorm.typeOrmExtra)
                     : {}),
