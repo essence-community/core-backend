@@ -3166,6 +3166,10 @@ begin
       perform pkg.p_set_error(2);
     end if;
 
+    if pot_query.ck_id ~* '[\`\~/\.\\\!#%\?&\^\(\)\[\]\;\:\"\''\+\*]+' then
+      perform pkg.p_set_error(51, 'static:e42dc0232bf04b6d93283bf631671722');
+    end if;
+
     if nullif(gv_error::varchar, '') is not null then
        return;
     end if;
