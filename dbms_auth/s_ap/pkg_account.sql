@@ -645,7 +645,7 @@ begin
   if pv_action = i::varchar then
     select ac.cl_deleted
       into vl_deleted
-    from ${user.table}.t_account ac where vot_account.ck_id is not null and ac.ck_id = vot_account.ck_id;
+    from ${user.table}.t_account ac where ac.ck_id = pot_auth_token.ck_account;
     if vl_deleted = 1::smallint then
       perform pkg.p_set_error(51, 'b26c57fa632e4567895b9c31f6085ee8');
     end if;
