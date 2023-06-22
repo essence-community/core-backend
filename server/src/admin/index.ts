@@ -4,6 +4,9 @@ import AdminEventController from "./controllers/AdminEventController";
 import KubeController from "./controllers/KubeController";
 const logger = Logger.getLogger("Admin");
 
+process.on("unhandledRejection", (reason, promise) => {
+    logger.error('HTTP Unhandled Rejection at: %s\nreason: %s', promise, reason);
+});
 initProcess(AdminEventController.command, "clusterAdmin");
 Promise.all([AdminEventController.init(), KubeController.init()]).then(
     () => logger.info("Init Admin Notification Server"),

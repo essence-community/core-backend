@@ -42,6 +42,9 @@ class EventsNode {
         );
     }
 }
+process.on("unhandledRejection", (reason, promise) => {
+    logger.error('HTTP Unhandled Rejection at: %s\nreason: %s', promise, reason);
+});
 const eventNode = new EventsNode();
 eventNode.start().then(
     () => {

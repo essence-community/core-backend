@@ -53,7 +53,9 @@ class BuilderLocalDbNode {
         }
     }
 }
-
+process.on("unhandledRejection", (reason, promise) => {
+    logger.error('HTTP Unhandled Rejection at: %s\nreason: %s', promise, reason);
+});
 const LocalDbNode = new BuilderLocalDbNode();
 LocalDbNode.start();
 

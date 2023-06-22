@@ -12,11 +12,8 @@ function initNodeHttp(id: string) {
     });
     workers[node.process.pid] = id;
     node.on('uncaughtException', (err, origin) => {
-        logger.error('HTTP id: %s, Uncaught Exception at: %s reason: %s', id, err, origin, err);
+        logger.error('HTTP id: %s, Uncaught Exception at: %s\nreason: %s', id, err, origin, err);
         node.destroy("1")
-    });
-    node.on("unhandledRejection", (reason, promise) => {
-        logger.error('HTTP id: %s, Unhandled Rejection at: %s reason: %s', id, promise, reason);
     });
     node.on("message", (message) => {
         if ((message as ISenderOptions).target === "cluster") {
@@ -30,6 +27,9 @@ function initNodeHttp(id: string) {
         }
     });
 }
+process.on("unhandledRejection", (reason, promise) => {
+    logger.error('HTTP Unhandled Rejection at: %s\nreason: %s', promise, reason);
+});
 
 if (cluster.isMaster) {
     process.on("message", (message) => {
