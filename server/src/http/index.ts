@@ -11,6 +11,12 @@ function initNodeHttp(id: string) {
         UNGATE_HTTP_ID: id,
     });
     workers[node.process.pid] = id;
+    node.on('uncaughtException', (err, origin) => {
+        logger.error('HTTP id: %s, Uncaught Exception at: %s reason: %s', id, err, origin, err);
+    });
+    node.on("unhandledRejection", (reason, promise) => {
+        logger.error('HTTP id: %s, Unhandled Rejection at: %s reason: %s', id, promise, reason);
+    });
     node.on("message", (message) => {
         if ((message as ISenderOptions).target === "cluster") {
             Object.values(cluster.workers).forEach((nodeCluster) => {
