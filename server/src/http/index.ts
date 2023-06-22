@@ -13,6 +13,7 @@ function initNodeHttp(id: string) {
     workers[node.process.pid] = id;
     node.on('uncaughtException', (err, origin) => {
         logger.error('HTTP id: %s, Uncaught Exception at: %s reason: %s', id, err, origin, err);
+        node.destroy("1")
     });
     node.on("unhandledRejection", (reason, promise) => {
         logger.error('HTTP id: %s, Unhandled Rejection at: %s reason: %s', id, promise, reason);
