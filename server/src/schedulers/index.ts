@@ -47,7 +47,12 @@ class SchedulersNode {
     }
 }
 process.on("unhandledRejection", (reason, promise) => {
-    logger.error('HTTP Unhandled Rejection at: %s\nreason: %s', promise, reason);
+    logger.error('Unhandled Rejection at: %s\nreason: %s', promise, reason);
+});
+
+process.on('uncaughtException', (err, origin) => {
+    logger.error('Uncaught Exception at: %s\nreason: %s', err, origin);
+    process.exit(1)
 });
 const schedulersNode = new SchedulersNode();
 schedulersNode.start().then(

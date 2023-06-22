@@ -74,6 +74,15 @@ function killNode(nodes: INode, name: string): Promise<void> {
     });
 }
 
+process.on("unhandledRejection", (reason, promise) => {
+    logger.error('Unhandled Rejection at: %s\nreason: %s', promise, reason);
+});
+
+process.on('uncaughtException', (err, origin) => {
+    logger.error('Uncaught Exception at: %s\nreason: %s', err, origin);
+    process.exit(1)
+});
+
 function initNode(nodes: INode, name: string, paths: string) {
     const node = ChildProcess.fork(paths);
     node.on('uncaughtException', (err, origin) => {

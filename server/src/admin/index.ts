@@ -5,7 +5,12 @@ import KubeController from "./controllers/KubeController";
 const logger = Logger.getLogger("Admin");
 
 process.on("unhandledRejection", (reason, promise) => {
-    logger.error('HTTP Unhandled Rejection at: %s\nreason: %s', promise, reason);
+    logger.error('Unhandled Rejection at: %s\nreason: %s', promise, reason);
+});
+
+process.on('uncaughtException', (err, origin) => {
+    logger.error('Uncaught Exception at: %s\nreason: %s', err, origin);
+    process.exit(1)
 });
 initProcess(AdminEventController.command, "clusterAdmin");
 Promise.all([AdminEventController.init(), KubeController.init()]).then(
