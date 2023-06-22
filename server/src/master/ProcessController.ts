@@ -76,6 +76,13 @@ function killNode(nodes: INode, name: string): Promise<void> {
 
 function initNode(nodes: INode, name: string, paths: string) {
     const node = ChildProcess.fork(paths);
+    node.on('uncaughtException', (err, origin) => {
+        logger.error('Name node: %s, Unhandled Rejection at: %s reason: %s', name, err, origin, err);
+    });
+    node.on("unhandledRejection", (reason, promise) => {
+        logger.error('Name node: %s, Unhandled Rejection at: %s reason: %s', name, promise, reason);
+        node.kill(1);
+    });
     node.on("message", checkMessage(nodes, name, node.pid));
     node.on("close", () => {
         delete nodes[name];
