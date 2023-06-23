@@ -136,7 +136,12 @@ server.start().then(
         });
         log.info("HTTP server started!");
     },
-    (err) => log.error(`HTTP Server fail start\n${err.message}`, err),
+    (err) => {
+        if (err) {
+            log.error(`HTTP Server fail start\n${err.message}`, err);
+        }
+        process.exit(1);
+    },
 );
 
 export default server;
