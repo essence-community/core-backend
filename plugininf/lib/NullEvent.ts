@@ -13,7 +13,7 @@ export default abstract class NullEvent implements IEvents {
     constructor(name: string, params: ICCTParams) {
         this.name = name;
         this.params = params;
-        this.logger = Logger.getLogger(`Event:${name}`);
+        this.logger = Logger.getLogger(`Event.${name}`);
     }
     public abstract init(reload?: boolean): Promise<void>;
     public async destroy(): Promise<void> {

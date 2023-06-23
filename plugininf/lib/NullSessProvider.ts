@@ -72,7 +72,7 @@ export default abstract class NullSessProvider extends NullProvider {
         sessCtrl: ISessCtrl,
     ) {
         super(name, params, sessCtrl);
-        this.log = Logger.getLogger(`SessProvider:${name}`);
+        this.log = Logger.getLogger(`SessProvider.${name}`);
         this.params = initParams(NullSessProvider.getParamsInfo(), this.params);
     }
     public async beforeSession(

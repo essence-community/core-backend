@@ -25,7 +25,7 @@ export class NeDbSessionStore extends Store implements ISessionStore {
         // @ts-ignore
         super(options as any);
         this.logger = Logger.getLogger(
-            `${options.nameContext}:NeDbSessionStore`,
+            `NeDbSessionStore.${options.nameContext}`,
         );
         this.name = options.nameContext;
         this.ttl = options.ttl;

@@ -25,7 +25,7 @@ export class TypeOrmSessionStore extends Store implements ISessionStore {
         super(options as any);
         this.connection = options.connection;
         this.logger = Logger.getLogger(
-            `${options.nameContext}:TypeOrmSessionStore`,
+            `TypeOrmSessionStore.${options.nameContext}`,
         );
         this.name = options.nameContext;
         this.ttl = options.ttl;

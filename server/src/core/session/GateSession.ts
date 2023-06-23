@@ -59,7 +59,7 @@ export class GateSession implements ISessCtrl {
             .tz(Constants.DEFAULT_TIMEZONE_DATE)
             .format("Z");
         this.params = initParams(NullContext.getParamsInfo(), params);
-        this.logger = Logger.getLogger(`GateSession_${name}`);
+        this.logger = Logger.getLogger(`GateSession.${name}`);
         this.updateUserInfo = NotificationController.updateUserInfo.bind(
             NotificationController,
         );

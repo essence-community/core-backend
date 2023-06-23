@@ -498,7 +498,7 @@ export default abstract class NullContext implements IContextPlugin {
     ) {
         this.name = name;
         this.params = initParams(NullContext.getParamsInfo(), params);
-        this.logger = Logger.getLogger(`Context:${name}`);
+        this.logger = Logger.getLogger(`Context.${name}`);
         this.sessCtrl = sessCtrl;
         if (this.params.enableCors) {
             if (this.params.cors) {

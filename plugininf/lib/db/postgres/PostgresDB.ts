@@ -204,7 +204,7 @@ export default class PostgresDB {
         if (typeof this.connectionConfig.setConnectionParam === "object") {
             setConnectionParam = this.connectionConfig.setConnectionParam;
         }
-        this.log = Logger.getLogger(`PostgresDB ${name}`);
+        this.log = Logger.getLogger(`PostgresDB.${name}`);
         if (params.lvl_logger && params.lvl_logger !== "NOTSET") {
             const rootLogger = Logger.getRootLogger();
             this.log.setLevel(params.lvl_logger);

@@ -149,7 +149,7 @@ export default class OracleDB {
                 "Не указанты параметры базы данных при вызове констуктора",
             );
         }
-        this.log = Logger.getLogger(`OracleDB ${name}`);
+        this.log = Logger.getLogger(`OracleDB.${name}`);
         if (params.lvl_logger && params.lvl_logger !== "NOTSET") {
             const rootLogger = Logger.getRootLogger();
             this.log.setLevel(params.lvl_logger);

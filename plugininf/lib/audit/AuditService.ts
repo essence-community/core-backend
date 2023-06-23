@@ -16,7 +16,7 @@ export class AuditService {
     constructor(name: string, params: IAuditServiceParam) {
         this.params = params;
         this.name = name;
-        this.logger = Logger.getLogger(`Audit:${name}`);
+        this.logger = Logger.getLogger(`Audit.${name}`);
         const connectionManager = new ConnectionManager();
         this.connection = connectionManager.create({
                 ...this.params,
