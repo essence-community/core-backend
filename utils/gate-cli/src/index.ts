@@ -3,13 +3,14 @@ import { cliOracle } from "./package/oracle";
 import { cliPostgreSql } from "./package/postgres";
 import * as dotenv from "dotenv";
 import { decryptPWCli, encryptPWCli } from "./package/PWOperation";
+import { changeTomlToYaml } from "./package/changeTomlToYaml";
 
 dotenv.config();
 
 (async function cli() {
     switch (
         await questionReadline(
-            "1 - DBMS PostgreSQL package\n2 - DBMS Oracle package\n3 - Encrypt password\n4 - Decrypt password\n(1):",
+            "1 - DBMS PostgreSQL package\n2 - DBMS Oracle package\n3 - Encrypt password\n4 - Decrypt password\n5 - Move property TOML to YAML\n(1):",
             "1",
         )
     ) {
@@ -21,6 +22,8 @@ dotenv.config();
             return encryptPWCli();
         case "4":
             return decryptPWCli();
+        case "5":
+            return changeTomlToYaml();
         default:
             break;
     }

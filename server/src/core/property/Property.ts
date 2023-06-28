@@ -61,7 +61,8 @@ export function loadProperty<T>(
             let filename = path.join(Constants.NEDB_TEMP_DB, `${name}.yaml`);
             if (!isTemp) {
                 filename = path.join(Constants.PROPERTY_DIR, `${name}.yaml`);
-                if (fs.existsSync(path.join(Constants.PROPERTY_DIR, `${name}.toml`))) {
+                if (fs.existsSync(path.join(Constants.PROPERTY_DIR, `${name}.toml`)) && 
+                    !fs.existsSync(path.join(Constants.PROPERTY_DIR, `${name}.yaml`))) {
                     typeFile = "toml";
                     filename = path.join(Constants.PROPERTY_DIR, `${name}.toml`)
                 }

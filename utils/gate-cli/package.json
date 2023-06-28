@@ -20,7 +20,9 @@
     "license": "MIT",
     "dependencies": {
         "dotenv": "^10.0.0",
-        "typescript": "^3.8.3"
+        "typescript": "^3.8.3",
+        "@iarna/toml": "^2.2.5",
+        "js-yaml": "^4.0.0"
     },
     "devDependencies": {
         "@essence-community/eslint-config-react": "^2.2.0",
