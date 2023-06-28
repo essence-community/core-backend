@@ -166,6 +166,15 @@ class Persistence {
                         return newObject;
                     }),
                 });
+            } else if (this.persMethod === "yaml-property") {
+                toPersist += YAML.dump(this.db.getAllData().map((obj) => {
+                    const newObject = {
+                        ...obj,
+                        ck_id: obj._id || obj.ck_id,
+                    };
+                    delete newObject._id;
+                    return newObject;
+                }));
             } else if (this.persMethod === "yaml") {
                 toPersist += YAML.dump(this.db.getAllData());
             }
@@ -189,7 +198,7 @@ class Persistence {
                             },
                         ],
                     });
-                } else if (this.persMethod === "yaml") {
+                } else if (this.persMethod === "yaml" || this.persMethod === "yaml-property") {
                     toPersist += YAML.dump([
                         {
                             $$indexCreated: {
@@ -276,6 +285,15 @@ class Persistence {
                     return newObject;
                 }),
             });
+        } else if (this.persMethod === "yaml-property") {
+            toPersist += YAML.dump(newDocs.map((obj) => {
+                const newObject = {
+                    ...obj,
+                    ck_id: obj._id || obj.ck_id,
+                };
+                delete newObject._id;
+                return newObject;
+            }));
         } else if (this.persMethod === "yaml") {
             toPersist += YAML.dump(newDocs);
         }
@@ -309,6 +327,11 @@ class Persistence {
                     ...obj,
                     _id: obj.ck_id,
                 }));
+            } else if (this.persMethod === "yaml-property") {
+                data = { data: YAML.load(rawData).map((obj) => ({
+                    ...obj,
+                    _id: obj._id || obj.ck_id,
+                }))};
             } else if (this.persMethod === "yaml") {
                 data = { data: YAML.load(rawData) };
             }

@@ -57,7 +57,7 @@ export function loadProperty<T>(
                     Constants.NEDB_MULTI_HOST,
                 );
             }
-            let typeFile = "yaml";
+            let typeFile = "yaml-property";
             let filename = path.join(Constants.NEDB_TEMP_DB, `${name}.yaml`);
             if (!isTemp) {
                 filename = path.join(Constants.PROPERTY_DIR, `${name}.yaml`);
