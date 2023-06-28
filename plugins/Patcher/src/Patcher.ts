@@ -113,7 +113,7 @@ export class Patcher extends NullPlugin implements IStorage {
             gateContext.actionName === "file" ||
             gateContext.actionName === "getfile"
         ) {
-            if (json.data.ck_id) {
+            if (json.data.ck_id && json.service.cv_action === "download") {
                 return this.getFile(json.data.ck_id).then((file) => ({
                     data: ResultStream([
                         {
