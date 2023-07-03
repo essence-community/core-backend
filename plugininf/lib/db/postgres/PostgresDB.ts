@@ -312,6 +312,10 @@ export default class PostgresDB {
                         this.setAppData.map((sql) => pgconn.query(sql)),
                     );
                 }
+                pgconn.on("error", (err) => this.log.error("Error pg connect %s", err.message, err));
+                if ((pgconn as any).stream) {
+                    (pgconn as any).stream.on("error", (err) => this.log.error("Error pg stream connect %s", err.message, err));
+                }
 
                 return new Connection(this, "postgresql", pgconn);
             });
@@ -329,6 +333,10 @@ export default class PostgresDB {
                 await Promise.all(
                     this.setAppData.map((sql) => client.query(sql)),
                 );
+            }
+            client.on("error", (err) => this.log.error("Error pg connect %s", err.message, err));
+            if ((client as any).stream) {
+                (client as any).stream.on("error", (err) => this.log.error("Error pg stream connect %s", err.message, err));
             }
 
             return new Connection(this, "postgresql", client);
