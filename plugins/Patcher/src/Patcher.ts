@@ -193,7 +193,7 @@ export class Patcher extends NullPlugin implements IStorage {
             zip.writeZip();
             const writeZip = zip.toBuffer();
             json.data.cv_file_name = `Patch_${moment().format(
-                "YYYY-MM-DD_HH:mm:ss",
+                "YYYYMMDD_HHmmss",
             )}.zip`;
             await this.saveFile(
                 json.data.ck_id,

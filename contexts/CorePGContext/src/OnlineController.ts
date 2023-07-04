@@ -321,11 +321,23 @@ export default class OnlineController implements ICoreController {
                             data: ResultStream(data),
                             type: "error",
                         };
+                    } else if (doc.err_text) {
+                      res = {
+                            data: ResultStream([
+                                {
+                                    ck_id: "",
+                                    cv_error: {
+                                      51: [doc.err_text],
+                                    },
+                                },
+                            ]),
+                            type: "success",
+                        };
                     } else {
                         res = {
                             data: ResultStream([
                                 {
-                                    ck_id: null,
+                                    ck_id: "",
                                     cv_error: {
                                         512: [],
                                     },

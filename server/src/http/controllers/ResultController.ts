@@ -413,7 +413,7 @@ class ResultController {
             }
         } else if (err) {
             if (!(err as ErrorException).result) {
-                gateContext.error(`${err.message}`, err);
+                gateContext.error(`responseCheck: ${err.message}`, err);
             }
             result = {
                 data: ResultStream(
@@ -466,16 +466,25 @@ class ResultController {
             ) {
                 case "success":
                 case "false": {
-                    switch (accept.type(["json", "xml"])) {
-                        case "json":
-                            this.responseJson(gateContext, result);
-                            break;
-                        case "xml":
-                            this.responseXml(gateContext, result);
-                            break;
-                        default:
-                            this.responseJson(gateContext, result);
-                            break;
+                    switch (gateContext.actionName) {
+                      case "getfile":
+                      case "file": 
+                          this.responseJson(gateContext, result);
+                          break;
+                      default: {
+                          switch (accept.type(["json", "xml"])) {
+                            case "json":
+                                this.responseJson(gateContext, result);
+                                break;
+                            case "xml":
+                                this.responseXml(gateContext, result);
+                                break;
+                            default:
+                                this.responseJson(gateContext, result);
+                                break;
+                          }
+                      }
+                      break;
                     }
                     break;
                 }
@@ -488,16 +497,25 @@ class ResultController {
                     this.responseFile(gateContext, result);
                     break;
                 case "error": {
-                    switch (accept.type(["json", "xml"])) {
-                        case "json":
-                            this.responseErrorJson(gateContext, result);
-                            break;
-                        case "xml":
-                            this.responseErrorXml(gateContext, result);
-                            break;
-                        default:
-                            this.responseErrorJson(gateContext, result);
-                            break;
+                    switch (gateContext.actionName) {
+                      case "getfile":
+                      case "file":
+                        this.responseErrorJson(gateContext, result);
+                        break;
+                      default: {
+                          switch (accept.type(["json", "xml"])) {
+                            case "json":
+                                this.responseErrorJson(gateContext, result);
+                                break;
+                            case "xml":
+                                this.responseErrorXml(gateContext, result);
+                                break;
+                            default:
+                                this.responseErrorJson(gateContext, result);
+                                break;
+                          }
+                        }
+                        break;
                     }
                     break;
                 }

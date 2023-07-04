@@ -48,7 +48,7 @@ export default class S3Storage extends NullPlugin {
                 type: "string",
             },
             cvSecretKey: {
-                name: "Id key S3 Storage",
+                name: "Secret key S3 Storage",
                 required: true,
                 type: "password",
             },
@@ -89,6 +89,7 @@ export default class S3Storage extends NullPlugin {
         PRequestContext: IPluginRequestContext,
         query: IGateQuery,
     ): Promise<IResult | void> {
+        const json = JSON.parse(query.inParams.json || "{}");
         if (gateContext.actionName === "upload") {
             if (isEmpty(query.inParams.json)) {
                 throw new ErrorException(
@@ -100,7 +101,7 @@ export default class S3Storage extends NullPlugin {
             }
             if (
                 !isObject(gateContext.request.body) ||
-                (gateContext.request.body as IFormData).files
+                !(gateContext.request.body as IFormData).files
             ) {
                 throw new ErrorException(
                     ErrorGate.compileErrorResult(
@@ -110,7 +111,6 @@ export default class S3Storage extends NullPlugin {
                 );
             }
             const rows = [];
-            const json = JSON.parse(query.inParams.json);
             forEach((gateContext.request.body as IFormData).files, (val) => {
                 if (val && val.length) {
                     val.forEach((value) => {
@@ -138,21 +138,18 @@ export default class S3Storage extends NullPlugin {
                     ),
                 );
             }
-            const json = JSON.parse(query.inParams.json);
-            if (json.service.cv_action.toUpperCase() === "D") {
+            if (json.service?.cv_action?.toUpperCase() === "D") {
                 return new Promise((resolve, reject) => {
                     this.clients.deleteObject(
                         {
-                            Bucket: this.params.cvBucket,
-                            Key: isEmpty(
-                                json.data[this.params.cvDirColumn] ||
-                                    this.params.cvDir,
-                            )
-                                ? json.data.cv_file_guid
-                                : `${
+                            Bucket: isEmpty(
+                                      json.data[this.params.cvDirColumn] || this.params.cvDir,
+                                    )
+                                    ? this.params.cvBucket
+                                    : `${this.params.cvBucket}/${
                                       json.data[this.params.cvDirColumn] ||
-                                      this.params.cvDir
-                                  }/${json.data.cv_file_guid}`,
+                                      this.params.cvDir}`,
+                            Key: json.data.cv_file_guid,
                         },
                         (err) => {
                             if (err) {
@@ -163,93 +160,56 @@ export default class S3Storage extends NullPlugin {
                     );
                 });
             }
-        }
-        if (
-            isEmpty(query.inParams.json) &&
+        } else if (
+            !isEmpty(query.inParams.json) &&
             (gateContext.actionName === "file" ||
                 gateContext.actionName === "getfile")
         ) {
-            const json = JSON.parse(query.inParams.json);
             if (!json.data || isEmpty(json.data.cv_file_guid)) {
-                return;
+                throw new ErrorException(ErrorGate.REQUIRED_PARAM);
             }
             return new Promise((resolve, reject) => {
-                this.clients.getObject(
-                    {
-                        Bucket: this.params.cvBucket,
-                        Key: isEmpty(
-                            json.data[this.params.cvDirColumn] ||
-                                this.params.cvDir,
-                        )
-                            ? json.data.cv_file_guid
-                            : `${
-                                  json.data[this.params.cvDirColumn] ||
-                                  this.params.cvDir
-                              }/${json.data.cv_file_guid}`,
-                    },
-                    (err, response) => {
-                        if (err) {
-                            return reject(err);
-                        }
-                        const row: object = {
-                            filedata: response.Body,
-                            filename: json.data.cv_file_guid,
-                            filetype: response.ContentType,
-                        };
-                        resolve({
-                            data: ResultStream([row]),
-                            type: "attachment",
-                        });
-                    },
-                );
-            });
-        }
-        return;
-    }
-    /**
-     * Получаем файл из контенера
-     * @param gateContext
-     * @param PRequestContext
-     * @param result
-     */
-    public async afterQueryExecutePerform(
-        gateContext: IContext,
-        PRequestContext: IPluginRequestContext,
-        result: IResult,
-    ): Promise<IResult | void> {
-        if (
-            gateContext.actionName === "file" ||
-            gateContext.actionName === "getfile"
-        ) {
-            const [row] = await ReadStreamToArray(result.data);
-            if (isEmpty(row)) {
-                return;
-            }
-            return new Promise((resolve, reject) => {
-                this.clients.getObject(
-                    {
-                        Bucket: this.params.cvBucket,
-                        Key: isEmpty(
-                            row[this.params.cvDirColumn] || this.params.cvDir,
-                        )
-                            ? row.cv_file_guid
-                            : `${
-                                  row[this.params.cvDirColumn] ||
-                                  this.params.cvDir
-                              }/${row.cv_file_guid}`,
-                    },
-                    (err, response) => {
-                        if (err) {
-                            return reject(err);
-                        }
-                        row.filedata = response.Body;
-                        row.filetype = response.ContentType;
-                        row.filename = row.cv_file_name;
-                        result.data = ResultStream([row]);
-                        resolve(result);
-                    },
-                );
-            });
+                     this.clients.getObject(
+                       {
+                          Bucket: isEmpty(
+                                    json.data[this.params.cvDirColumn] || this.params.cvDir,
+                                  )
+                                  ? this.params.cvBucket
+                                  : `${this.params.cvBucket}/${
+                                    json.data[this.params.cvDirColumn] ||
+                                    this.params.cvDir}`,
+                          Key: json.data.cv_file_guid,
+                      },
+                      (err, response) => {
+                           if (err) {
+                                this.logger.error(err);
+                                return resolve({
+                                  data: ResultStream([
+                                        {
+                                          ck_id: "",
+                                          cv_error: {
+                                            51: [`${this.name}: ${err.message}`],
+                                          }
+                                        },
+                                  ]),
+                                  type: "success",
+                                });
+                            }
+                            return resolve({
+                              data: ResultStream([
+                                    {
+                                     filedata: response.Body,
+                                     filename: response.Metadata &&
+                                                 decodeURI(response.Metadata.originalfilename),
+                                     filetype: response.ContentType,
+                                     size: response.ContentLength,
+                                    },
+                              ]),
+                              type: "attachment",
+                            });
+                      },
+                    );
+                });
         }
         return;
     }
@@ -271,31 +231,40 @@ export default class S3Storage extends NullPlugin {
             const cvFileUuid = json.data.cv_file_guid || uuidv4();
             this.clients.putObject(
                 {
+                    ...(this.params.clReadPublic ? { ACL: "public-read" } : {}),
                     Body: fs.createReadStream(val.path),
-                    Bucket: this.params.cvBucket,
+                    Bucket: isEmpty(
+                              json.data[this.params.cvDirColumn] || 
+                              (json.master ? json.master[this.params.cvDirColumn] : "") || 
+                              this.params.cvDir,
+                            )
+                            ? this.params.cvBucket
+                            : `${this.params.cvBucket}/${
+                              json.data[this.params.cvDirColumn] ||
+                              (json.master ? json.master[this.params.cvDirColumn] : "") ||  
+                              this.params.cvDir}`,
                     ContentLength: val.size,
                     ContentType: val.headers["content-type"],
-                    Key: isEmpty(
-                        json.data[this.params.cvDirColumn] || this.params.cvDir,
-                    )
-                        ? cvFileUuid
-                        : `${
-                              json.data[this.params.cvDirColumn] ||
-                              this.params.cvDir
-                          }/${cvFileUuid}`,
-                    ...(this.params.clReadPublic
-                        ? {
-                              ACL: "public-read",
-                          }
-                        : {}),
+                    Key: cvFileUuid,
+                    Metadata: {
+                        originalFilename:
+                            val.originalFilename &&
+                            encodeURIComponent(val.originalFilename)
+                    },
                 },
                 (err) => {
                     if (err) {
                         return reject(err);
                     }
-                    json.data.cv_file_guid = cvFileUuid;
-                    json.data.cv_file_mime = val.headers["content-type"];
-                    json.data.cv_file_name = val.originalFilename;
+                    json.data.upload_file = {
+                      key : cvFileUuid,
+                      size : val.size,
+                      mimeType : val.headers["content-type"],
+                      nameFile : val.originalFilename,
+                      pathFile : json.data[this.params.cvDirColumn] ||
+                                 (json.master ? json.master[this.params.cvDirColumn] : "") ||  
+                                 this.params.cvDir,
+                    };
                     query.inParams.json = JSON.stringify(json);
                     if (isEmpty(query.queryStr)) {
                         return resolve([
@@ -318,19 +287,14 @@ export default class S3Storage extends NullPlugin {
                                     if (!isEmpty(result.cv_error)) {
                                         this.clients.deleteObject(
                                             {
-                                                Bucket: this.params.cvBucket,
-                                                Key: isEmpty(
-                                                    json.data[
-                                                        this.params.cvDirColumn
-                                                    ] || this.params.cvDir,
-                                                )
-                                                    ? cvFileUuid
-                                                    : `${
-                                                          json.data[
-                                                              this.params
-                                                                  .cvDirColumn
-                                                          ] || this.params.cvDir
-                                                      }/${cvFileUuid}`,
+                                                Bucket: isEmpty(
+                                                          json.data[this.params.cvDirColumn] || this.params.cvDir,
+                                                        )
+                                                        ? this.params.cvBucket
+                                                        : `${this.params.cvBucket}/${
+                                                          json.data[this.params.cvDirColumn] ||
+                                                          this.params.cvDir}`,
+                                                Key: cvFileUuid,
                                             },
                                             (errDelete) => {
                                                 if (errDelete) {
