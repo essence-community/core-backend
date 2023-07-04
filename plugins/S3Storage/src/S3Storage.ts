@@ -187,9 +187,9 @@ export default class S3Storage extends NullPlugin {
                                   data: ResultStream([
                                         {
                                           ck_id: "",
-                                          cv_error: {
-                                            51: [`${this.name}: ${err.message}`],
-                                          }
+                                          jt_message: {
+                                            error: [[`${this.name}: ${err.message}`]],
+                                          },
                                         },
                                   ]),
                                   type: "success",
