@@ -320,6 +320,10 @@ export default class PostgresDB {
                 return new Connection(this, "postgresql", pgconn);
             });
     }
+    
+    private onLogError(err) {
+        this.log.error("Error pg connect %s", err.message, err);
+    }
 
     /**
      * Получаем конект текущий коннект или выдаем из пула
@@ -334,9 +338,9 @@ export default class PostgresDB {
                     this.setAppData.map((sql) => client.query(sql)),
                 );
             }
-            client.on("error", (err) => this.log.error("Error pg connect %s", err.message, err));
+            client.on("error", this.onLogError);
             if ((client as any).stream) {
-                (client as any).stream.on("error", (err) => this.log.error("Error pg stream connect %s", err.message, err));
+                (client as any).stream.on("error", this.onLogError);
             }
 
             return new Connection(this, "postgresql", client);
@@ -359,6 +363,10 @@ export default class PostgresDB {
      */
     public onClose(conn?: pg.Client | pg.PoolClient): Promise<void> {
         if (conn) {
+            conn.removeListener("error", this.onLogError);
+            if ((conn as any).stream) {
+                (conn as any).stream.removeListener("error", this.onLogError);
+            }
             return (conn as pg.PoolClient).release
                 ? new Promise<void>((resolve) => {
                       (conn as pg.PoolClient).release();
@@ -376,6 +384,10 @@ export default class PostgresDB {
      */
     public onRelease(conn?: pg.Client | pg.PoolClient): Promise<void> {
         if (conn) {
+            conn.removeListener("error", this.onLogError);
+            if ((conn as any).stream) {
+                (conn as any).stream.removeListener("error", this.onLogError);
+            }
             return (conn as pg.PoolClient).release
                 ? new Promise((resolve) => {
                       (conn as pg.PoolClient).release();
