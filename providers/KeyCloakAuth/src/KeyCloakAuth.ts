@@ -399,7 +399,7 @@ export default class KeyCloakAuth extends NullSessProvider {
             context.request.session.id,
             URL.format(redirectUrl),
         );
-        throw new ErrorException(ErrorGate.REDIRECT_MESSAGE(encodeURI(loginUrl)));
+        throw new ErrorException(ErrorGate.REDIRECT_MESSAGE(loginUrl));
     }
     public async checkQuery(
         context: IContext,
