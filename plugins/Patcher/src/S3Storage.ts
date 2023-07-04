@@ -40,6 +40,7 @@ export class S3Storage implements IStorage {
             const config = {
                 credentials,
                 endpoint,
+                s3ForcePathStyle: true,
             };
             this.clients = new AWS.S3(new AWS.Config(config));
         }
@@ -122,7 +123,7 @@ export class S3Storage implements IStorage {
         return new Promise((resolve, reject) => {
             this.clients.getObject(
                 {
-                    Bucket: this.params.cvBucket,
+                    Bucket: this.params.cvS3Bucket,
                     Key: key,
                 },
                 (err, response) => {
@@ -141,7 +142,7 @@ export class S3Storage implements IStorage {
                             },
                             originalFilename:
                                 response.Metadata &&
-                                decodeURI(response.Metadata.originalFilename),
+                                decodeURI(response.Metadata.originalfilename),
                             path: filePath,
                             size: response.ContentLength,
                         });
