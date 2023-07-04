@@ -326,8 +326,8 @@ export default class OnlineController implements ICoreController {
                             data: ResultStream([
                                 {
                                     ck_id: "",
-                                    cv_error: {
-                                      51: [doc.err_text],
+                                    jt_message: {
+                                      error: [[doc.err_text]],
                                     },
                                 },
                             ]),
