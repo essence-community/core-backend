@@ -666,12 +666,12 @@ export default class OfflineController implements ICoreController {
                             type: "error",
                         };
                     } else if (doc.err_text) {
-                      res = {
+                        res = {
                             data: ResultStream([
                                 {
                                     ck_id: "",
-                                    cv_error: {
-                                      51: [doc.err_text],
+                                    jt_message: {
+                                      error: [[doc.err_text]],
                                     },
                                 },
                             ]),
