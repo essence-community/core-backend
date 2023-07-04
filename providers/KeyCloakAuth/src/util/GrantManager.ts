@@ -6,7 +6,7 @@ import * as qs from "qs";
 import * as Grant from "keycloak-connect/middleware/auth-utils/grant";
 import * as Token from "keycloak-connect/middleware/auth-utils/token";
 import { Rotation } from "./Rotation";
-import { IGrantManagerConfig, IToken } from "./TokenAuth.types";
+import { IGrantManagerConfig, IToken } from "../KeyCloakAuth.types";
 import Logger from "@ungate/plugininf/lib/Logger";
 import { isEmpty } from "@ungate/plugininf/lib/util/Util";
 

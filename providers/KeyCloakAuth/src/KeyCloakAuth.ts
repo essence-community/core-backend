@@ -21,6 +21,7 @@ import { uniq } from "lodash";
 import * as fs from "fs";
 import { Constant } from "@ungate/plugininf/lib/Constants";
 import * as Token from "keycloak-connect/middleware/auth-utils/token";
+import { GrantManager } from "./util/GrantManager";
 
 const FLAG_REDIRECT = "jl_keycloak_auth_callback";
 const USE_REDIRECT = "jl_keycloak_use_redirect";
@@ -179,6 +180,7 @@ export default class KeyCloakAuth extends NullSessProvider {
             },
             this.params.keyCloakConfig,
         );
+        (this.keyCloak as any).grantManager = new GrantManager({ ...this.params.keyCloakConfig,  ...(this.keyCloak as any).config}, this.log);
         this.keyCloak.storeGrant = function(grant, request, response) {
             if (this.stores.length < 2 || this.stores[0].get(request)) {
                 return;

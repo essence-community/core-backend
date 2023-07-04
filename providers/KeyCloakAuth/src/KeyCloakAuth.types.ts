@@ -39,3 +39,31 @@ export interface IKeyCloakAuthParam {
     query: Record<string, any>;
     path: string;
 }
+
+export interface IToken extends KeyCloak.Token {
+    token: string;
+}
+
+export interface IRotationConfig {
+    certsUrl: string;
+    realmUrl: string;
+    minTimeBetweenJwksRequests: number;
+}
+
+export interface IGrantManagerConfig extends IRotationConfig {
+    userInfoUrl: string;
+    tokenVerifyUrl: string;
+    tokenUrl: string;
+    clientId: string;
+    secret: string;
+    publicKey: string;
+    public: string;
+    bearerOnly: string;
+    verifyTokenAudience: boolean;
+    isIgnoreCheckSignature?: boolean;
+}
+
+export interface IRotationConfig {
+    certsUrl: string;
+    minTimeBetweenJwksRequests: number;
+}

@@ -1,7 +1,7 @@
 import * as URL from "url";
 import * as jwkToPem from "jwk-to-pem";
 import axios from "axios";
-import { IRotationConfig } from "./TokenAuth.types";
+import { IRotationConfig } from "../KeyCloakAuth.types";
 export class Rotation {
     public realmUrl: string;
     public certsUrl: string;
@@ -32,7 +32,7 @@ export class Rotation {
                 responseType: "json",
             })
             .then((response) => {
-                this.logger.debug("retrieveJWKs status: %s, header: %j, response %s", response.status, response.headers, response.data);
+                this.logger.debug("retrieveJWKs status: %s, header: %j, response %j", response.status, response.headers, response.data);
                 if (response.status < 200 || response.status >= 300) {
                     throw new Error("Error fetching JWK Keys");
                 }
