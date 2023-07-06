@@ -424,7 +424,8 @@ export default class CoreIntegration extends NullProvider {
             });
         } else if (url) {
             return new Promise((resolve, reject) => {
-                const urlDB = URL.parse(url);
+                const urlDB = URL.parse(url, true);
+                urlDB.query.session = gateContext.session?.session;
                 const length = isEmpty(param.body)
                     ? 0
                     : Buffer.byteLength(param.body);
@@ -433,10 +434,13 @@ export default class CoreIntegration extends NullProvider {
                     : "POST";
                 const headers = Object.assign(
                     method === "GET"
-                        ? {}
+                        ? {
+                            "cookie": gateContext.request.headers.cookie,
+                          }
                         : {
-                              "Content-Length": length,
-                              "Content-Type": "application/json",
+                            "cookie": gateContext.request.headers.cookie,
+                            "Content-Length": length,
+                            "Content-Type": "application/json",
                           },
                     isEmpty(param.headers) ? {} : param.headers,
                 );
