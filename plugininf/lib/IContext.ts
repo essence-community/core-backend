@@ -2,7 +2,7 @@
  * Created by artemov_i on 04.12.2018.
  */
 import * as http from "http";
-import { Session } from "express-session";
+import { Session } from "express-session-fork";
 import Connection from "./db/Connection";
 import IContextPlugin from "./IContextPlugin";
 import IProvider from "./IProvider";

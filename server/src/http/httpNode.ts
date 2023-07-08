@@ -13,7 +13,7 @@ import * as http from "http";
 import * as helmet from "helmet";
 import { noop } from "lodash";
 import * as Router from "router";
-import * as expressSession from "express-session";
+import * as expressSession from "express-session-fork";
 import Constants from "../core/Constants";
 import PluginManager from "../core/pluginmanager/PluginManager";
 import IContextConfig from "../core/property/IContextConfig";
@@ -37,7 +37,7 @@ class HttpServer {
     /**
      * Инициализация машрутов
      */
-    public async initRoute() {
+    public async initRoute () {
         this.route = Router();
         this.route.use(compression());
         const contextDb = await Property.getContext();
@@ -83,7 +83,7 @@ class HttpServer {
     /**
      * Запуск сервера
      */
-    public async start(): Promise<any> {
+    public async start (): Promise<any> {
         await PluginManager.initGate();
         await this.initRoute();
         await MainController.init();

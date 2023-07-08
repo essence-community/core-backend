@@ -1,4 +1,4 @@
-import { SessionData } from "express-session";
+import { SessionData } from "express-session-fork";
 import { ISessionData } from "@ungate/plugininf/lib/ISession";
 
 export interface IStoreTypes {

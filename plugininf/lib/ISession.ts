@@ -1,4 +1,4 @@
-import { SessionData } from "express-session";
+import { SessionData } from "express-session-fork";
 
 /**
  * Created by artemov_i on 04.12.2018.

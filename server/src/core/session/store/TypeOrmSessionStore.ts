@@ -1,4 +1,4 @@
-import { SessionOptions, Store } from "express-session";
+import { SessionOptions, Store } from "express-session-fork";
 import { IStoreTypes, IGateSession } from "./Store.types";
 import Logger from "@ungate/plugininf/lib/Logger";
 import { ISessionData } from "@ungate/plugininf/lib/ISession";
@@ -16,7 +16,7 @@ export class TypeOrmSessionStore extends Store implements ISessionStore {
     connection: Connection;
     private logger: IRufusLogger;
 
-    constructor(
+    constructor (
         options: Partial<
             IPTypeOrmSessionStore & SessionOptions & IStoreTypes
         > = {},
@@ -32,13 +32,13 @@ export class TypeOrmSessionStore extends Store implements ISessionStore {
         this.emit("disconnect");
     }
 
-    async init() {
+    async init () {
         await this.connection.connect();
         this.emit("connect");
         return;
     }
 
-    get(id, cb: any = (err) => (err ? this.logger.error(err) : null)) {
+    get (id, cb: any = (err) => (err ? this.logger.error(err) : null)) {
         this.logger.trace("GET %s", id);
         const now = new Date();
         this.connection
@@ -66,7 +66,7 @@ export class TypeOrmSessionStore extends Store implements ISessionStore {
             })
             .catch((err) => cb(err));
     }
-    set(
+    set (
         id,
         data: IGateSession,
         cb: any = (err) => (err ? this.logger.error(err) : null),
@@ -86,7 +86,7 @@ export class TypeOrmSessionStore extends Store implements ISessionStore {
                 (err) => cb(err),
             );
     }
-    destroy(id, cb: any = (err) => (err ? this.logger.error(err) : null)) {
+    destroy (id, cb: any = (err) => (err ? this.logger.error(err) : null)) {
         this.logger.trace("DESTROY %s", id);
         this.connection
             .getRepository(SessionModel)
@@ -100,7 +100,7 @@ export class TypeOrmSessionStore extends Store implements ISessionStore {
             );
     }
 
-    touch(
+    touch (
         id,
         sess: IGateSession,
         cb: any = (err) => (err ? this.logger.error(err) : null),
@@ -134,7 +134,7 @@ export class TypeOrmSessionStore extends Store implements ISessionStore {
             );
     }
 
-    all(cb: any = (err) => (err ? this.logger.error(err) : null)) {
+    all (cb: any = (err) => (err ? this.logger.error(err) : null)) {
         this.logger.trace("ALL");
         this.connection
             .getRepository(SessionModel)
@@ -160,7 +160,7 @@ export class TypeOrmSessionStore extends Store implements ISessionStore {
             );
     }
 
-    allSession(
+    allSession (
         sessionId?: string | string[],
         isExpired?: boolean,
     ): Promise<{ [sid: string]: ISessionData } | null> {
@@ -203,7 +203,7 @@ export class TypeOrmSessionStore extends Store implements ISessionStore {
         );
     }
 
-    length(cb: any = (err) => (err ? this.logger.error(err) : null)) {
+    length (cb: any = (err) => (err ? this.logger.error(err) : null)) {
         this.logger.trace("LENGTH");
         this.connection
             .getRepository(SessionModel)
@@ -223,7 +223,7 @@ export class TypeOrmSessionStore extends Store implements ISessionStore {
             );
     }
 
-    clear(cb: any = (err) => (err ? this.logger.error(err) : null)) {
+    clear (cb: any = (err) => (err ? this.logger.error(err) : null)) {
         this.logger.trace("CLEAR");
         this.connection
             .getRepository(SessionModel)

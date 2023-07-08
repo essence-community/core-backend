@@ -1,4 +1,4 @@
-import { Store } from "express-session";
+import { Store } from "express-session-fork";
 import ILocalDB from "./db/local/ILocalDB";
 import IContext from "./IContext";
 import IObjectParam from "./IObjectParam";
