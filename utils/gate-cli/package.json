@@ -1,6 +1,6 @@
 {
     "name": "@essence-community/create-gate-cli",
-    "version": "1.0.7",
+    "version": "1.0.8",
     "description": "Utils development",
     "engines": {
         "yarn": ">=1.13.0",
@@ -15,7 +15,7 @@
         "start": "yarn ts-node src/index.ts",
         "postinstall": "yarn build",
         "build": "tsc --project tsconfig.json",
-        "build:publish": "cpy bin publish/bin && tsc --project tsconfig.publish.json"
+        "build:publish": "rimraf publish/lib publish/bin && cpy 'bin/*' publish/bin/. && tsc --project tsconfig.publish.json"
     },
     "license": "MIT",
     "dependencies": {
@@ -26,6 +26,7 @@
     },
     "devDependencies": {
         "cpy-cli": "^4.0.0",
+        "rimraf": "^3.0.2",
         "@essence-community/eslint-config-react": "^2.2.0",
         "ts-node": "^10.2.1"
     }
