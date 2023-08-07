@@ -10,5 +10,4 @@ CREATE TYPE public.ot_save_poa as
  ct_change timestamptz
 );
 
-CREATE UNIQUE INDEX cin_u_query_1 ON s_mt.t_query (UPPER(ck_id));
 CREATE UNIQUE INDEX cin_u_page_object_2 ON s_mt.t_page_object (UPPER(ck_id));
