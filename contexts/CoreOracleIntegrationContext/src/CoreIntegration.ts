@@ -14,7 +14,7 @@ const createTempTable = (global as any as IGlobalObject).createTempTable;
 
 const querySql = "select q.* from t_interface q";
 const queryFindSql =
-    "select q.* from t_interface q where lower(q.ck_id) = lower(:ck_query)";
+    "select q.* from t_interface q where upper(q.ck_id) = upper(:ck_query)";
 
 export default class CoreOracleIntegration extends NullContext {
     public static getParamsInfo(): IParamsInfo {
@@ -171,7 +171,7 @@ export default class CoreOracleIntegration extends NullContext {
                             queryStr:
                                 "select i.*\n" +
                                 "  from s_it.t_interface i\n" +
-                                " start with lower(i.ck_id) = lower(:ck_query)\n" +
+                                " start with upper(i.ck_id) = upper(:ck_query)\n" +
                                 "connect by i.ck_id = prior i.ck_parent\n" +
                                 " order by level desc",
                         },
@@ -233,7 +233,7 @@ export default class CoreOracleIntegration extends NullContext {
                         ? row.cc_request
                         : "select i.*\n" +
                           "  from s_it.t_interface i\n" +
-                          " start with lower(i.ck_id) = lower(:ck_query)\n" +
+                          " start with upper(i.ck_id) = upper(:ck_query)\n" +
                           "connect by i.ck_id = prior i.ck_parent\n" +
                           " order by level desc",
             },

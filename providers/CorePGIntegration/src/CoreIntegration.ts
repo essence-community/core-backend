@@ -136,7 +136,7 @@ export default class CoreIntegration extends NullProvider {
                         "from\n" +
                         "    s_it.t_interface i\n" +
                         "where\n" +
-                        "    lower(i.ck_id) = lower(:ck_query)\n" +
+                        "    upper(i.ck_id) = upper(:ck_query)\n" +
                         "union all\n" +
                         "select\n" +
                         "    i.ck_id,\n" +

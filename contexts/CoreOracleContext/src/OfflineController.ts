@@ -114,7 +114,7 @@ export default class OfflineController implements ICoreController {
         "   order by po.ck_page, po.cn_order";
     private queryFindSql =
         "select q.ck_id, q.ck_provider, q.cc_query, q.cr_type, q.cr_access, q.cn_action\n" +
-        "from t_query q where lower(q.ck_id) = lower(:ck_query)";
+        "from t_query q where upper(q.ck_id) = upper(:ck_query)";
     private modifyFindSql =
         "select po.ck_id, o.cv_modify, o.ck_provider\n" +
         "  from t_page_object po\n" +
@@ -122,7 +122,7 @@ export default class OfflineController implements ICoreController {
         "    on po.ck_page = p.ck_id\n" +
         "  join t_object o\n" +
         "    on po.ck_object = o.ck_id\n" +
-        " where o.cv_modify is not null and lower(po.ck_id) = lower(:page_object)";
+        " where o.cv_modify is not null and upper(po.ck_id) = upper(:page_object)";
     constructor(name: string, dataSource: OracleDB, params: ICoreParams) {
         this.dataSource = dataSource;
         this.params = params;
