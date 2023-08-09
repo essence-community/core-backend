@@ -14,7 +14,7 @@ const createTempTable = (global as any as IGlobalObject).createTempTable;
 
 const querySql = "select q.* from t_interface q";
 const queryFindSql =
-    "select q.* from t_interface q where lower(q.ck_id) = lower(:ck_query)";
+    "select q.* from t_interface q where upper(q.ck_id) = upper(:ck_query)";
 
 export default class CoreIntegration extends NullContext {
     public static getParamsInfo(): IParamsInfo {

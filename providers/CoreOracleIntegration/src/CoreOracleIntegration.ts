@@ -117,7 +117,7 @@ export default class CoreOracleIntegration extends NullProvider {
                 .executeStmt(
                     "select i.*\n" +
                         "  from s_it.t_interface i\n" +
-                        " start with lower(i.ck_id) = lower(:ck_query)\n" +
+                        " start with upper(i.ck_id) = upper(:ck_query)\n" +
                         "connect by i.ck_id = prior i.ck_parent\n" +
                         " order by level desc",
                     {

@@ -128,7 +128,7 @@ export default class OnlineController implements ICoreController {
         "  where po.ck_id = :ck_page_object and ((pa.cr_type is not null and pa.cr_type = 'view') or pa.cr_type is null)\n";
     private queryFindSql =
         "select q.ck_id, q.ck_provider, q.cc_query, q.cr_type, q.cr_access, q.cn_action\n" +
-        "   from t_query q where lower(q.ck_id) = lower(:ck_query)";
+        "   from t_query q where upper(q.ck_id) = upper(:ck_query)";
     private modifyFindSql =
         "select po.ck_id, o.cv_modify, o.ck_provider\n" +
         "  from t_page_object po\n" +
@@ -136,7 +136,7 @@ export default class OnlineController implements ICoreController {
         "    on po.ck_page = p.ck_id\n" +
         "  join t_object o\n" +
         "    on po.ck_object = o.ck_id\n" +
-        " where o.cv_modify is not null and lower(po.ck_id) = lower(:page_object)";
+        " where o.cv_modify is not null and upper(po.ck_id) = upper(:page_object)";
     private isSave = false;
     public logger: IRufusLogger;
 
