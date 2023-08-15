@@ -101,7 +101,7 @@ export default class ExtractorFileToJson extends NullPlugin {
 
     public async beforeQueryExecutePerform(
         gateContext: IContext,
-        PRequestContext: IPluginRequestContext,
+        _PRequestContext: IPluginRequestContext,
         query: IGateQuery,
     ): Promise<IResult | void> {
         if (gateContext.actionName === "upload") {
@@ -126,23 +126,24 @@ export default class ExtractorFileToJson extends NullPlugin {
             }
             const rows = [];
             const json = JSON.parse(query.inParams.json) as IJson;
-            forEach((gateContext.request.body as IFormData).files, (val) => {
+            forEach((gateContext.request.body as IFormData).files, (val, name) => {
                 if (val && val.length) {
                     val.forEach((value) => {
                         rows.push(
-                            this.extract(gateContext, json, value, query),
+                            this.extract(name, json, value),
                         );
                     });
                 }
             });
             return Promise.all(rows).then(
-                async (values) =>
-                    ({
-                        data: ResultStream(
-                            values.reduce((obj, arr) => [...obj, ...arr], []),
-                        ),
+                async () => {
+                    query.inParams.json = JSON.stringify(json);
+                    const values = await this.callRows(gateContext, query);
+                    return {
+                        data: ResultStream(values),
                         type: "success",
-                    } as IResult),
+                    } as IResult
+                },
             );
         } else if (gateContext.actionName === "dml") {
             if (isEmpty(query.inParams.json)) {
@@ -159,13 +160,14 @@ export default class ExtractorFileToJson extends NullPlugin {
                 return;
             } else {
                 const file = await this.getFile(json.data.cv_file_guid);
-                const values = await this.extract(
-                    gateContext,
+                await this.extract(
+                    file.fieldName,
                     json,
                     file,
-                    query,
                     false,
                 );
+                query.inParams.json = JSON.stringify(json);
+                const values = await this.callRows(gateContext, query);
                 fs.unlinkSync(file.path);
                 return {
                     data: ResultStream(values),
@@ -183,10 +185,9 @@ export default class ExtractorFileToJson extends NullPlugin {
      * @param query
      */
     public async extract(
-        gateContext: IContext,
+        nameField: string,
         json: IJson,
         file: IFile,
-        query: IGateQuery,
         isSave: boolean = true,
     ) {
         const cvFileUuid = json.data.cv_file_guid || uuidv4();
@@ -201,28 +202,27 @@ export default class ExtractorFileToJson extends NullPlugin {
                 file.size,
             );
         }
-        const newJson = {
-            ...json,
-            data: {
-                ...json.data,
-                cv_file_guid: cvFileUuid,
-                cv_file_mime: file.headers["content-type"],
-                cv_file_name: file.originalFilename,
-            },
-        } as IJson;
+        const nameFieldData = json.data[nameField] || [];
+        json.data[nameField] = nameFieldData;
+        const data = {
+            cv_file_guid: cvFileUuid,
+            cv_file_mime: file.headers["content-type"],
+            cv_file_name: file.originalFilename,
+        };
+        nameFieldData.push(data);
         if (
             file.originalFilename.toLowerCase().endsWith(".csv") ||
             file.headers["content-type"] === "text/csv" ||
             file.headers["content-type"] === "application/csv"
         ) {
-            return this.parseCsv(gateContext, newJson, file, query);
+            return this.parseCsv(json, file, data);
         }
         if (
             file.originalFilename.toLowerCase().endsWith(".xlsx") ||
             file.headers["content-type"] ===
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         ) {
-            return this.parseXlsx(gateContext, newJson, file, query);
+            return this.parseXlsx(json, file, data);
         }
         if (
             file.originalFilename.toLowerCase().endsWith(".dbf") ||
@@ -230,7 +230,7 @@ export default class ExtractorFileToJson extends NullPlugin {
             file.headers["content-type"] === "application/dbf" ||
             file.headers["content-type"] === "application/x-dbf"
         ) {
-            return this.parseDbf(gateContext, newJson, file, query);
+            return this.parseDbf(json, file, data);
         }
         throw new ErrorException(
             -1,
@@ -238,10 +238,9 @@ export default class ExtractorFileToJson extends NullPlugin {
         );
     }
     private parseCsv(
-        gateContext: IContext,
         json: IJson,
         file: IFile,
-        query: IGateQuery,
+        data: Record<string, any>,
     ) {
         return new Promise((resolve, reject) => {
             let result = [];
@@ -276,17 +275,14 @@ export default class ExtractorFileToJson extends NullPlugin {
                 extractCsv.pause();
                 queues.push(
                     this.readSheet(
-                        gateContext,
-                        json,
+                        data,
                         pack,
-                        query,
                         1,
                         (numPack += 1),
                     ).then(
-                        (res) => {
-                            result = [...result, ...res];
+                        () => {
                             extractCsv.resume();
-                            return res;
+                            return;
                         },
                         (err) => {
                             extractCsv.emit("error", err);
@@ -299,10 +295,9 @@ export default class ExtractorFileToJson extends NullPlugin {
         });
     }
     private parseXlsx(
-        gateContext: IContext,
-        json: IJson,
+        _json: IJson,
         file: IFile,
-        query: IGateQuery,
+        data: Record<string, any>,
     ) {
         return new Promise((resolve, reject) => {
             let result = [];
@@ -322,17 +317,14 @@ export default class ExtractorFileToJson extends NullPlugin {
                 extractorXlsx.pause();
                 queues.push(
                     this.readSheet(
-                        gateContext,
-                        json,
+                        data,
                         pack,
-                        query,
                         id,
                         (numPack += 1),
                     ).then(
-                        (res) => {
-                            result = [...result, ...res];
+                        () => {
                             extractorXlsx.resume();
-                            return res;
+                            return;
                         },
                         (err) => {
                             extractorXlsx.emit("error", err);
@@ -346,10 +338,9 @@ export default class ExtractorFileToJson extends NullPlugin {
         });
     }
     private parseDbf(
-        gateContext: IContext,
         json: IJson,
         file: IFile,
-        query: IGateQuery,
+        data: Record<string, any>,
     ) {
         return new Promise((resolve, reject) => {
             let result = [];
@@ -370,17 +361,14 @@ export default class ExtractorFileToJson extends NullPlugin {
                 extractorDbf.pause();
                 queues.push(
                     this.readSheet(
-                        gateContext,
-                        json,
+                        data,
                         pack,
-                        query,
                         1,
                         (numPack += 1),
                     ).then(
-                        (res) => {
-                            result = [...result, ...res];
+                        () => {
                             extractorDbf.resume();
-                            return res;
+                            return;
                         },
                         (err) => {
                             extractorDbf.emit("error", err);
@@ -393,14 +381,14 @@ export default class ExtractorFileToJson extends NullPlugin {
         });
     }
     private saveFile = (
-        path: string,
-        buffer: Buffer | Readable,
-        content: string,
-        metaData?: Record<string, string>,
-        size?: number,
+        _path: string,
+        _buffer: Buffer | Readable,
+        _content: string,
+        _metaData?: Record<string, string>,
+        _size?: number,
     ) => Promise.resolve();
-    private deletePath = (path: string) => Promise.resolve();
-    private getFile = (key: string): Promise<IFile> =>
+    private deletePath = (_path: string) => Promise.resolve();
+    private getFile = (_key: string): Promise<IFile> =>
         Promise.resolve({} as IFile);
 
     /**
@@ -412,11 +400,9 @@ export default class ExtractorFileToJson extends NullPlugin {
      * @param query
      * @param index
      */
-    private readSheet(
-        gateContext: IContext,
-        json: IJson,
+    private async readSheet(
+        data: Record<string, any>,
         pack: any[],
-        query: IGateQuery,
         index: number = 1,
         numPack: number = 0,
     ) {
@@ -428,16 +414,9 @@ export default class ExtractorFileToJson extends NullPlugin {
                 pack,
             );
         }
-        query.inParams.json = JSON.stringify({
-            ...json,
-            data: {
-                ...json.data,
-                sheet_index: index,
-                extract_rows: pack,
-                num_pack: numPack,
-            },
-        });
-        return this.callRows(gateContext, query, index, numPack);
+        data.sheet_index = index;
+        data.extract_rows = pack;
+        data.num_pack = numPack;
     }
     /**
      * Сохраняем
@@ -448,21 +427,11 @@ export default class ExtractorFileToJson extends NullPlugin {
     private callRows(
         gateContext: IContext,
         query: IGateQuery,
-        index: number,
-        numPack: number,
     ) {
         return gateContext.provider
             .processDml(gateContext, query)
             .then((res) => ReadStreamToArray(res.stream))
             .then((arr) => {
-                if (this.logger.isDebugEnabled()) {
-                    this.logger.debug(
-                        "Num sheet: %s, Num pack: %s\nResult: %j",
-                        index,
-                        numPack,
-                        arr,
-                    );
-                }
                 const [row] = arr;
                 if (row && row.result) {
                     try {
