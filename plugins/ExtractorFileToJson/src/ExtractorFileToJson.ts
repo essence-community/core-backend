@@ -414,9 +414,13 @@ export default class ExtractorFileToJson extends NullPlugin {
                 pack,
             );
         }
-        data.sheet_index = index;
-        data.extract_rows = pack;
-        data.num_pack = numPack;
+        const page = data.page || [];
+        page.push({
+            sheet_index: index,
+            extract_rows: pack,
+            num_pack: numPack,
+        });
+        data['page'] = page;
     }
     /**
      * Сохраняем
