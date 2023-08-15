@@ -26,25 +26,36 @@ export default class ExtractorFileToJson extends NullPlugin {
     public static getParamsInfo(): IParamsInfo {
         return {
             cvTypeStorage: {
-                defaultValue: "riak",
-                name: "Тип хранилища: dir|aws|riak",
-                type: "string",
+                defaultValue: "dir",
+                name: "Тип хранилища",
+                type: "combo",
+                valueField: [{ in: "ck_id" }],
+                displayField: "ck_id",
+                records: [{ "ck_id": "dir" }, { "ck_id": "aws" }, { "ck_id": "riak" }],
+                getGlobal: "g_cvTypeStorage"
             },
             cvPath: {
-                name: "Адрес Riak|Dir|Aws",
+                name: "Адрес",
                 type: "string",
+                defaultValue: "/tmp",
             },
             cvS3Bucket: {
                 name: "Наименование корзины s3",
                 type: "string",
+                hidden: true,
+                hiddenRules: "g_cvTypeStorage === 'dir'"
             },
             cvS3KeyId: {
                 name: "Id key S3 Storage",
                 type: "string",
+                hidden: true,
+                hiddenRules: "g_cvTypeStorage === 'dir'"
             },
             cvS3SecretKey: {
                 name: "Secret key S3 Storage",
                 type: "password",
+                hidden: true,
+                hiddenRules: "g_cvTypeStorage === 'dir'"
             },
             cnRowSize: {
                 name: "Колличество строк при вызове",
@@ -55,6 +66,8 @@ export default class ExtractorFileToJson extends NullPlugin {
                 defaultValue: false,
                 name: "Устанавливать права доступа public, добавляемым файлам в riak/aws",
                 type: "boolean",
+                hidden: true,
+                hiddenRules: "g_cvTypeStorage === 'dir'"
             },
             cvCsvDelimiter: {
                 defaultValue: ";",
@@ -102,7 +115,7 @@ export default class ExtractorFileToJson extends NullPlugin {
             }
             if (
                 !isObject(gateContext.request.body) ||
-                (gateContext.request.body as IFormData).files
+                !isObject((gateContext.request.body as IFormData).files)
             ) {
                 throw new ErrorException(
                     ErrorGate.compileErrorResult(
