@@ -338,8 +338,10 @@ export default class PostgresDB {
                     this.setAppData.map((sql) => client.query(sql)),
                 );
             }
+            client.setMaxListeners(20);
             client.on("error", this.onLogError);
             if ((client as any).stream) {
+                (client as any).stream.setMaxListeners(20);
                 (client as any).stream.on("error", this.onLogError);
             }
 
