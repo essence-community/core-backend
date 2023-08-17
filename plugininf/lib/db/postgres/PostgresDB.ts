@@ -312,8 +312,10 @@ export default class PostgresDB {
                         this.setAppData.map((sql) => pgconn.query(sql)),
                     );
                 }
+                pgconn.setMaxListeners(12);
                 pgconn.on("error", (err) => this.log.error("Error pg connect %s", err.message, err));
                 if ((pgconn as any).stream) {
+                    (pgconn as any).stream.setMaxListeners(12);
                     (pgconn as any).stream.on("error", (err) => this.log.error("Error pg stream connect %s", err.message, err));
                 }
 
@@ -338,10 +340,10 @@ export default class PostgresDB {
                     this.setAppData.map((sql) => client.query(sql)),
                 );
             }
-            client.setMaxListeners(20);
+            client.setMaxListeners(12);
             client.on("error", this.onLogError);
             if ((client as any).stream) {
-                (client as any).stream.setMaxListeners(20);
+                (client as any).stream.setMaxListeners(12);
                 (client as any).stream.on("error", this.onLogError);
             }
 
