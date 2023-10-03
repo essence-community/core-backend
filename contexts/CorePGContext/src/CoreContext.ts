@@ -1,3 +1,4 @@
+import * as crypto from "crypto";
 import ILocalDB from "@ungate/plugininf/lib/db/local/ILocalDB";
 import PostgresDB from "@ungate/plugininf/lib/db/postgres";
 import BreakException from "@ungate/plugininf/lib/errors/BreakException";
@@ -23,6 +24,7 @@ import OnlineController from "./OnlineController";
 import { TempTable } from "./TempTable";
 import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
 import { IUserDbData } from "@ungate/plugininf/lib/ISession";
+import { deepParam } from '@ungate/plugininf/lib/util/deepParam';
 const logger = Logger.getLogger("CoreContext");
 const Mask = (global as any as IGlobalObject).maskgate;
 export interface ICoreParams extends IContextParams {
@@ -213,7 +215,7 @@ export default class CoreContext extends NullContext {
         this.dbUsers = this.sessCtrl.getUserDb();
         return this.controller.init(reload);
     }
-    public initContext(gateContext: IContext): Promise<IContextPluginResult> {
+    public async initContext(gateContext: IContext): Promise<IContextPluginResult> {
         if (!gateContext.queryName) {
             // Проверяем присутствие обязательных параметров
             throw new ErrorException(ErrorGate.REQUIRED_PARAM);
@@ -292,7 +294,30 @@ export default class CoreContext extends NullContext {
                 });
             }
             default:
-                return this.controller.findQuery(gateContext, name);
+                const res = await this.controller.findQuery(gateContext, name);
+                if (res.metaData.cache === "all" || res.metaData.cache === "back") {
+                    const param = (res.metaData?.cache_key_param as string[] || []).reduce((res, value) => {
+                        const found = deepParam(value, gateContext.params);
+                        res.push(found);
+                        return res;
+                    }, []) || [];
+                    const shasum = crypto.createHash("sha1");
+                    shasum.update(JSON.stringify(param));
+                    const cache = await this.tempTable.dbQueryCache.findOne({
+                        ck_id: `${name}_${shasum.digest("hex")}`,
+                    }, true);
+                    if (cache) {
+                        return Promise.reject(new BreakException({
+                            data: ResultStream(cache.cct_data),
+                            type: "success",
+                            metaData: {
+                                ...res.metaData,
+                                cached: true as any
+                            },
+                        }));
+                    }
+                }
+                return res;
         }
     }
 

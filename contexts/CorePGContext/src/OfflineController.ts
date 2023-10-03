@@ -299,6 +299,10 @@ export default class OfflineController implements ICoreController {
                             queryData: doc,
                             queryStr: doc.cc_query,
                         },
+                        metaData: {
+                            cache: doc.cr_cache,
+                            cache_key_param: doc.cv_cache_key_param,
+                        },
                     };
                 }
                 return this.controller.findQuery(gateContext, name);
@@ -316,6 +320,7 @@ export default class OfflineController implements ICoreController {
                 Promise.all([
                     self.tempTable.loadPages(),
                     self.tempTable.loadQuery(),
+                    self.tempTable.loadQueryCache(),
                     self.tempTable.loadQueryAction(),
                     self.tempTable.loadModify(),
                     self.tempTable.loadModifyAction(),

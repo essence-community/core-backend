@@ -29,8 +29,14 @@ export interface IQueryData {
     cn_action: number;
     cr_access: string;
     cr_type: string;
+    cr_cache: string;
+    cv_cache_key_param: string[];
 }
 
+export interface IQueryCacheData {
+    ck_id: string;
+    cct_data: Record<string, any>[];
+}
 export interface IPageData {
     ck_id: string;
     cn_action: number;

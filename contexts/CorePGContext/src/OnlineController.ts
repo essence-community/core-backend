@@ -1,8 +1,9 @@
+import * as crypto from "crypto";
 import PostgresDB from "@ungate/plugininf/lib/db/postgres";
 import BreakException from "@ungate/plugininf/lib/errors/BreakException";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
-import IContext from "@ungate/plugininf/lib/IContext";
+import IContext, { IParam } from "@ungate/plugininf/lib/IContext";
 import { IContextPluginResult } from "@ungate/plugininf/lib/IContextPlugin";
 import IResult from "@ungate/plugininf/lib/IResult";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
@@ -20,6 +21,7 @@ import { safePipe } from "@ungate/plugininf/lib/stream/Util";
 import { Transform } from "stream";
 import { TempTable } from "./TempTable";
 import { IPageData } from "./CoreContext.types";
+import { deepParam } from "@ungate/plugininf/lib/util/deepParam";
 
 export default class OnlineController implements ICoreController {
     public params: ICoreParams;
@@ -127,7 +129,7 @@ export default class OnlineController implements ICoreController {
         "   join t_page_action pa on pa.ck_page = p.ck_id\n" +
         "  where po.ck_id = :ck_page_object and ((pa.cr_type is not null and pa.cr_type = 'view') or pa.cr_type is null)\n";
     private queryFindSql =
-        "select q.ck_id, q.ck_provider, q.cc_query, q.cr_type, q.cr_access, q.cn_action\n" +
+        "select q.ck_id, q.ck_provider, q.cc_query, q.cr_type, q.cr_access, q.cn_action, q.cr_cache, q.cv_cache_key_param\n" +
         "   from t_query q where upper(q.ck_id) = upper(:ck_query)";
     private modifyFindSql =
         "select po.ck_id, o.cv_modify, o.ck_provider\n" +
@@ -235,7 +237,7 @@ export default class OnlineController implements ICoreController {
                         resultSet: true,
                     },
                 )
-                .then((res) => {
+                .then(async (res) => {
                     const data = [
                         {
                             ck_id: "core_gate_version",
@@ -243,6 +245,12 @@ export default class OnlineController implements ICoreController {
                             cv_value: gateContext.gateVersion,
                         },
                     ];
+                    const cacheData = await this.tempTable.dbSysSettings.findOne({
+                        ck_id: 'cache_date',
+                    }, true);
+                    if (cacheData) {
+                        data.push(cacheData);
+                    }
                     Object.entries(gateContext.request.headers).forEach(([key, value]) => {
                         const keyUpper = key.toLocaleUpperCase();
                         if (keyUpper.startsWith(this.params.headerPrefixSetting)) {
@@ -359,6 +367,7 @@ export default class OnlineController implements ICoreController {
         } else if (result.type !== "success") {
             return Promise.resolve(result);
         }
+        const data = [];
         if (gateContext.connection) {
             const rTransform = new Transform({
                 readableObjectMode: true,
@@ -429,14 +438,44 @@ export default class OnlineController implements ICoreController {
                                 return Promise.resolve();
                             });
                     } else {
+                        if (gateContext.metaData.cache === "all" || gateContext.metaData.cache === "back") {
+                            data.push(chunk);
+                        }
                         callback(null, chunk);
                     }
                     rTransform._transform = ((childChunk, _encode, cb) => {
+                        if (gateContext.metaData.cache === "all" || gateContext.metaData.cache === "back") {
+                            data.push(childChunk);
+                        }
                         cb(null, childChunk);
                     }).bind(rTransform);
                 },
             });
             result.data = safePipe(result.data, rTransform);
+        } else if (gateContext.metaData.cache === "all" || gateContext.metaData.cache === "back") {
+            result.data = safePipe(result.data, new Transform({
+                readableObjectMode: true,
+                writableObjectMode: true,
+                transform(chunk, encode, callback) {
+                    data.push(chunk);
+                    callback(null, chunk);
+                }
+            }));
+        }
+        if (gateContext.metaData.cache === "all" || gateContext.metaData.cache === "back") {
+            result.data.once('end', () => {
+                const param = (gateContext.metaData?.cache_key_param as string[] || []).reduce((res, value) => {
+                    const found = deepParam(value, gateContext.params);
+                    res.push(found);
+                    return res;
+                }, []) || [];
+                const shasum = crypto.createHash("sha1");
+                shasum.update(JSON.stringify(param));
+                this.tempTable.dbQueryCache.insert({
+                    ck_id: `${gateContext.queryName}_${shasum.digest("hex")}`,
+                    cct_data: data,
+                }).catch((err) => this.logger.error(err));
+            });
         }
         return Promise.resolve(result);
     }
@@ -669,6 +708,8 @@ export default class OnlineController implements ICoreController {
                                     parseInt(row.cn_action, 10),
                                 cr_access: row.cr_access,
                                 cr_type: row.cr_type,
+                                cr_cache: row.cr_cache,
+                                cv_cache_key_param: row.cv_cache_key_param ? JSON.parse(row.cv_cache_key_param) : [],
                             });
                         });
                         res.stream.on("end", async () => {
@@ -750,6 +791,10 @@ export default class OnlineController implements ICoreController {
                                         queryData: doc,
                                         queryStr: doc.cc_query,
                                     },
+                                    metaData: {
+                                        cache: doc.cr_cache,
+                                        cache_key_param: doc.cv_cache_key_param,
+                                    },
                                 });
                             }
                             return reject(
@@ -769,6 +814,7 @@ export default class OnlineController implements ICoreController {
             .initTempDb()
             .then(() =>
                 Promise.all([
+                    self.tempTable.loadQueryCache(),
                     self.tempTable.loadQueryAction(),
                     self.tempTable.loadModifyAction(),
                     self.tempTable.loadMessage(),

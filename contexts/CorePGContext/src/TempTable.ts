@@ -16,6 +16,7 @@ import {
     IMessageData,
     ISysSettingData,
     IObjectData,
+    IQueryCacheData,
 } from "./CoreContext.types";
 const createTempTable = (global as any as IGlobalObject).createTempTable;
 
@@ -23,7 +24,9 @@ const MAX_TIME_WAIT = 5000;
 
 export class TempTable {
     private sysSettings =
-        "select s.ck_id, s.cv_value, s.cv_description from s_mt.t_sys_setting s";
+        "select s.ck_id, s.cv_value, s.cv_description from s_mt.t_sys_setting s\n" +
+        "  union all\n" +
+        "select 'cache_date' as ck_id, TO_CHAR(now(),'YYYY-MM-DD\"T\"HH24:MI') as cv_value, 'Дата кэширования' as cv_description";
     private pageSql =
         "with recursive temp_tree_page as (\n" + 
         "    select\n" + 
@@ -114,7 +117,7 @@ export class TempTable {
         "    i.ck_id = p.ck_icon\n" +
         " where p.cr_type = 2\n";
     private querySql =
-        "select q.ck_id, q.ck_provider, q.cc_query, q.cr_type, q.cr_access, q.cn_action\n" +
+        "select q.ck_id, q.ck_provider, q.cc_query, q.cr_type, q.cr_access, q.cn_action, q.cr_cache, q.cv_cache_key_param\n" +
         "from t_query q";
     private queryActionSql =
         "select distinct\n" +
@@ -150,6 +153,7 @@ export class TempTable {
         " order by m.ck_id asc";
     public dbPage: ILocalDB<IPageData>;
     public dbQuery: ILocalDB<IQueryData>;
+    public dbQueryCache: ILocalDB<IQueryCacheData>;
     public dbQueryAction: ILocalDB<IActionData>;
     public dbModify: ILocalDB<IModifyData>;
     public dbModifyAction: ILocalDB<IActionData>;
@@ -174,6 +178,7 @@ export class TempTable {
                 Promise.all([
                     this.loadPages(),
                     this.loadQuery(),
+                    this.loadQueryCache(),
                     this.loadQueryAction(),
                     this.loadModify(),
                     this.loadModifyAction(),
@@ -396,6 +401,8 @@ export class TempTable {
                                     parseInt(row.cn_action, 10),
                                 cr_access: row.cr_access,
                                 cr_type: row.cr_type,
+                                cr_cache: row.cr_cache,
+                                cv_cache_key_param: row.cv_cache_key_param ? JSON.parse(row.cv_cache_key_param) : [],
                             });
                         });
                         res.stream.on("end", async () => {
@@ -411,6 +418,13 @@ export class TempTable {
                         });
                     }),
             );
+    }
+
+    /**
+     * Кэширование все запросов
+     */
+    public loadQueryCache(): Promise<void> {
+        return this.dbQueryCache.remove({}, { multi: true });
     }
 
     /**
@@ -551,6 +565,7 @@ export class TempTable {
     public async initTempDb() {
         this.dbPage = await createTempTable(`tt_page_${this.name}`);
         this.dbQuery = await createTempTable(`tt_query_${this.name}`);
+        this.dbQueryCache = await createTempTable(`tt_query_cache_${this.name}`);
         this.dbQueryAction = await createTempTable(
             `tt_query_action_${this.name}`,
         );
