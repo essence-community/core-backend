@@ -368,6 +368,7 @@ export default class OnlineController implements ICoreController {
             return Promise.resolve(result);
         }
         const data = [];
+        const isCache = gateContext.metaData.cache === "all" || gateContext.metaData.cache === "back";
         if (gateContext.connection) {
             const rTransform = new Transform({
                 readableObjectMode: true,
@@ -438,13 +439,13 @@ export default class OnlineController implements ICoreController {
                                 return Promise.resolve();
                             });
                     } else {
-                        if (gateContext.metaData.cache === "all" || gateContext.metaData.cache === "back") {
+                        if (isCache) {
                             data.push(chunk);
                         }
                         callback(null, chunk);
                     }
                     rTransform._transform = ((childChunk, _encode, cb) => {
-                        if (gateContext.metaData.cache === "all" || gateContext.metaData.cache === "back") {
+                        if (isCache) {
                             data.push(childChunk);
                         }
                         cb(null, childChunk);
@@ -452,7 +453,7 @@ export default class OnlineController implements ICoreController {
                 },
             });
             result.data = safePipe(result.data, rTransform);
-        } else if (gateContext.metaData.cache === "all" || gateContext.metaData.cache === "back") {
+        } else if (isCache) {
             result.data = safePipe(result.data, new Transform({
                 readableObjectMode: true,
                 writableObjectMode: true,
@@ -462,7 +463,7 @@ export default class OnlineController implements ICoreController {
                 }
             }));
         }
-        if (gateContext.metaData.cache === "all" || gateContext.metaData.cache === "back") {
+        if (isCache) {
             result.data.once('end', () => {
                 const param = (gateContext.metaData?.cache_key_param as string[] || []).reduce((res, value) => {
                     const found = deepParam(value, gateContext.params);
