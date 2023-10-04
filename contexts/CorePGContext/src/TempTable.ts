@@ -164,6 +164,7 @@ export class TempTable {
     public params: ICoreParams;
     public logger: IRufusLogger;
     public name: string;
+    public caches = ["all", "back"];
 
     constructor({ dataSource, params, logger, name }: IPropertyContext) {
         this.dataSource = dataSource;

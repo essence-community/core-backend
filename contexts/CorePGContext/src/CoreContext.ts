@@ -295,7 +295,7 @@ export default class CoreContext extends NullContext {
             }
             default:
                 const res = await this.controller.findQuery(gateContext, name);
-                if (res.metaData.cache === "all" || res.metaData.cache === "back") {
+                if (this.tempTable.caches.includes(res.metaData.cache as string)) {
                     const param = (res.metaData?.cache_key_param as string[] || []).reduce((res, value) => {
                         const found = deepParam(value, gateContext.params);
                         res.push(found);

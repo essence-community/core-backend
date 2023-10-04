@@ -368,7 +368,7 @@ export default class OnlineController implements ICoreController {
             return Promise.resolve(result);
         }
         const data = [];
-        const isCache = gateContext.metaData.cache === "all" || gateContext.metaData.cache === "back";
+        const isCache = this.tempTable.caches.includes(gateContext.metaData.cache as string);
         if (gateContext.connection) {
             const rTransform = new Transform({
                 readableObjectMode: true,
