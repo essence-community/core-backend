@@ -1112,6 +1112,8 @@ begin
   pot_query.cr_access = nullif(trim(vj_data#>>'{cr_access}'), '');
   pot_query.cn_action = nullif(trim(vj_data#>>'{cn_action}'), '')::bigint;
   pot_query.cv_description = coalesce(nullif(trim(vj_data#>>'{cv_description}'), ''), 'Необходимо актуализировать');
+  pot_query.cr_cache = coalesce(nullif(trim(vj_data#>>'{cr_cache}'), ''), 'off');
+  pot_query.cv_cache_key_param = coalesce(nullif(trim(vj_data#>>'{cv_cache_key_param}'), ''), '["json"]');
   pot_query.ck_user = pv_user;
   pot_query.ct_change = CURRENT_TIMESTAMP;
   vv_action = (pc_json#>>'{service,cv_action}');

@@ -3178,8 +3178,8 @@ begin
       insert into s_mt.t_query values (pot_query.*);
     elsif pv_action = u::varchar then
       update s_mt.t_query set
-        (ck_id, cc_query, ck_provider, cr_type, cr_access, cn_action, cv_description, ck_user, ct_change) = 
-        (pot_query.ck_id, pot_query.cc_query, pot_query.ck_provider, pot_query.cr_type, pot_query.cr_access, pot_query.cn_action, pot_query.cv_description, pot_query.ck_user, pot_query.ct_change)
+        (ck_id, cc_query, ck_provider, cr_type, cr_access, cn_action, cv_description, ck_user, ct_change, cr_cache, cv_cache_key_param) = 
+        (pot_query.ck_id, pot_query.cc_query, pot_query.ck_provider, pot_query.cr_type, pot_query.cr_access, pot_query.cn_action, pot_query.cv_description, pot_query.ck_user, pot_query.ct_change, pot_query.cr_cache, pot_query.cv_cache_key_param)
       where ck_id = pk_key;
       if not found then
         perform pkg.p_set_error(504);
