@@ -368,7 +368,7 @@ export default class OnlineController implements ICoreController {
             return Promise.resolve(result);
         }
         const data = [];
-        const isCache = this.tempTable.caches.includes(gateContext.metaData.cache as string);
+        const isCache = this.tempTable.caches.includes(gateContext.metaData.cache as string) && !this.params.disableCache;
         if (gateContext.connection) {
             const rTransform = new Transform({
                 readableObjectMode: true,
@@ -792,7 +792,7 @@ export default class OnlineController implements ICoreController {
                                         queryData: doc,
                                         queryStr: doc.cc_query,
                                     },
-                                    metaData: {
+                                    metaData: this.params.disableCache ? {} : {
                                         cache: doc.cr_cache,
                                         cache_key_param: doc.cv_cache_key_param,
                                     },

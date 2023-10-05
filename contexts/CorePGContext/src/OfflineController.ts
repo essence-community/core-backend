@@ -288,18 +288,18 @@ export default class OfflineController implements ICoreController {
                                 },
                                 ...(doc.cr_type === "report"
                                     ? [
-                                          {
-                                              cv_name: "EXTRACT_META_DATA",
-                                              outType: "DEFAULT",
-                                          },
-                                      ]
+                                        {
+                                            cv_name: "EXTRACT_META_DATA",
+                                            outType: "DEFAULT",
+                                        },
+                                    ]
                                     : []),
                             ],
                             needSession: doc.cr_access !== "free",
                             queryData: doc,
                             queryStr: doc.cc_query,
                         },
-                        metaData: {
+                        metaData: this.params.disableCache ? {} : {
                             cache: doc.cr_cache,
                             cache_key_param: doc.cv_cache_key_param,
                         },
