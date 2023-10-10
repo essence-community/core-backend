@@ -194,8 +194,8 @@ export default class RiakAction {
                 return resolve([
                     {
                         filedata: data.Body,
-                        filename: data.Metadata.filename
-                            ? decodeURI(data.Metadata.filename)
+                        filename: data.Metadata.filename || data.Metadata.originalfilename
+                            ? decodeURI(data.Metadata.filename || data.Metadata.originalfilename)
                             : json.data.ck_id,
                         filetype: data.ContentType,
                     },
