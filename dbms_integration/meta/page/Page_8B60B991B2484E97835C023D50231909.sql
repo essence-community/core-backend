@@ -42,8 +42,6 @@ select pkg_patcher.p_merge_object_attr('F3570E03A6274CCCA9390FC120E72529', 'D647
 select pkg_patcher.p_merge_object_attr('CBD25BD3E2774C8AACD1A9312ADBBF3A', 'D647270354794881BC735F7038016488', '407', 'modalwindow', '-1', '2019-12-19T00:00:00.000+0000');
 select pkg_patcher.p_merge_object_attr('80E9366019564723A93E9F6F09F2C566', '6AA0E89BB9D04ECD8DCCF304C0F1A811', '47', 'ck_id', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-12-24T00:00:00.000+0000');
 select pkg_patcher.p_merge_object_attr('18C602AB333C4FF7B41DF27D34C3FAE0', 'C7E4EB8C25E44C9AA7612AEB929FE8BB', '5169', 'array', '-1', '2019-12-19T00:00:00.000+0000');
-select pkg_patcher.p_merge_object_attr('948EEDF457C54F94BA280608FCA66CE5', 'D647270354794881BC735F7038016488', '852', 'cv_file_name', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-01-16T00:00:00.000+0000');
-select pkg_patcher.p_merge_object_attr('4620CAA0E8724AB2B7C20F701141915E', 'D647270354794881BC735F7038016488', '853', 'DESC', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-01-16T00:00:00.000+0000');
 select pkg_patcher.p_merge_object_attr('C396C90791A34C39B0296FF676337CA4', 'D647270354794881BC735F7038016488', '8D547C621A1D626CE053809BA8C0882B', 'false', '-1', '2019-12-19T00:00:00.000+0000');
 select pkg_patcher.p_merge_object_attr('80ED52E9F58A4FA9BD06CE0656DC33FA', '09C2277143FC46639D1567883971C22C', '992', 'archive', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-01-16T00:00:00.000+0000');
 select pkg_patcher.p_merge_object_attr('48FDFD538AF348618B277684F5123084', '5B3FBD7BBCB14F0CB37B003858EA38CD', '47', 'ck_id', '-1', '2019-12-19T00:00:00.000+0000');
@@ -143,3 +141,7 @@ select t.ck_id, t.ck_d_lang, t.cr_namespace, t.cv_value, t.ck_user, t.ct_change:
  join s_mt.t_d_lang dl
  on t.ck_d_lang = dl.ck_id
 on conflict on constraint cin_u_localization_1 do update set ck_id = excluded.ck_id, ck_d_lang = excluded.ck_d_lang, cr_namespace = excluded.cr_namespace, cv_value = excluded.cv_value, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
+
+--changeset blackhawk-skat:order_by for integration's patching grids
+select pkg_patcher.p_merge_object_attr('948EEDF457C54F94BA280608FCA66CE5', 'D647270354794881BC735F7038016488', '03FFC6D5E3B942F088207B303A682156', '[{"property": "cd_create", "direction": "DESC"}]', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-01-16T00:00:00.000+0000');
+select pkg_patcher.p_merge_object_attr('4620CAA0E8724AB2B7C20F701141915E', '99258F2CDF034FA692E6F5B667B012BE', '03FFC6D5E3B942F088207B303A682156', '[{"property": "ck_id", "direction": "ASC"}]', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-01-16T00:00:00.000+0000');

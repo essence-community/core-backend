@@ -19,4 +19,4 @@ COMMENT ON COLUMN s_it.t_create_patch.cd_create IS 'Дата сборки';
 COMMENT ON COLUMN s_it.t_create_patch.cn_size IS 'Размер сборки';
 
 --changeset blackhawk-skat:optimization_use_index
-create index s_it.cin_u_interface_1 on s_it.t_interface(upper(ck_id));
+create index cin_u_interface_1 on s_it.t_interface(upper(ck_id));
