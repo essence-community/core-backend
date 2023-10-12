@@ -219,7 +219,7 @@ export default class OfflineController implements ICoreController {
                     ]),
                     type: "success",
                     metaData: {
-                        cache: true as any,
+                        cache: "all",
                         cache_key_param: ['json'],
                         cached: true as any
                     },
@@ -230,7 +230,7 @@ export default class OfflineController implements ICoreController {
                 data: ResultStream(doc.children),
                 type: "success",
                 metaData: {
-                    cache: true as any,
+                    cache: "all",
                     cache_key_param: ['json'],
                     cached: true as any
                 }
