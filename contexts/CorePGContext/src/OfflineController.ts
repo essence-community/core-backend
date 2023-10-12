@@ -218,12 +218,22 @@ export default class OfflineController implements ICoreController {
                         },
                     ]),
                     type: "success",
+                    metaData: {
+                        cache: true as any,
+                        cache_key_param: ['json'],
+                        cached: true as any
+                    },
                 });
             }
 
             throw new BreakException({
                 data: ResultStream(doc.children),
                 type: "success",
+                metaData: {
+                    cache: true as any,
+                    cache_key_param: ['json'],
+                    cached: true as any
+                }
             });
         }
         return this.controller.findPages(
