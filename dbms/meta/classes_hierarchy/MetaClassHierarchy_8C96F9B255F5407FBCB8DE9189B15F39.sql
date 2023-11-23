@@ -21,9 +21,13 @@ INSERT INTO s_mt.t_class_hierarchy
     union all
     select 'EAA1EB370989422689188E72C3CFD01B' as ck_id, '8' as ck_class_parent, '8C96F9B255F5407FBCB8DE9189B15F39' as ck_class_child, '30' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2021-11-18T12:15:34.260+0000'::timestamp with time zone as ct_change
     union all
+    select 'A31E107D35CE45BC93F4309FEB31D64E' as ck_id, '8C96F9B255F5407FBCB8DE9189B15F39' as ck_class_parent, '19' as ck_class_child, '29297B17BFFF47CFA43BD466283F11E7' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2023-11-23T12:46:55.955+0000'::timestamp with time zone as ct_change
+    union all
     select '2E4517246F8048B081FE589A8C11D9F0' as ck_id, '8C96F9B255F5407FBCB8DE9189B15F39' as ck_class_parent, '32' as ck_class_child, 'A2568EEB60A442A8B8F4DF90DF547BC7' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2021-12-08T10:31:50.678+0000'::timestamp with time zone as ct_change
     union all
     select '0613F240B81D4E9590D128C1887BCDA0' as ck_id, '8C96F9B255F5407FBCB8DE9189B15F39' as ck_class_parent, '7C133EA0021A44A0864B82F7BC40F183' as ck_class_child, '2D96892FFDCF4D0F9BC2B4A85DCB27DC' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2022-11-08T14:36:16.391+0000'::timestamp with time zone as ct_change
+    union all
+    select '0156B5F6064F4736A1B8B5B64D60BD85' as ck_id, '8C96F9B255F5407FBCB8DE9189B15F39' as ck_class_parent, '8C96F9B255F5407FBCB8DE9189B15F39' as ck_class_child, '29297B17BFFF47CFA43BD466283F11E7' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2023-11-23T12:47:04.387+0000'::timestamp with time zone as ct_change
     union all
     select '96A2FF6D2AE249AE97D505EC0AE4DE1C' as ck_id, '9CC06E8D9D7E4791BA1C6232DAF60CDD' as ck_class_parent, '8C96F9B255F5407FBCB8DE9189B15F39' as ck_class_child, '1CEDCCF877584C01B3BD292C10D65DC9' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2021-11-18T12:15:34.260+0000'::timestamp with time zone as ct_change
     union all

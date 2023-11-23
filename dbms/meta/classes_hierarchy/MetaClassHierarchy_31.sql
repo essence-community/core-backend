@@ -15,6 +15,8 @@ INSERT INTO s_mt.t_class_hierarchy
     union all
     select '234' as ck_id, '17' as ck_class_parent, '31' as ck_class_child, '524' as ck_class_attr, '-11' as ck_user, '2018-02-22T00:00:00.000+0000'::timestamp with time zone as ct_change
     union all
+    select '0950FD715958567BE0632323C40A9D00' as ck_id, '197' as ck_class_parent, '31' as ck_class_child, '0950FD715959567BE0632323C40A9D00' as ck_class_attr, '20786' as ck_user, '2023-04-11T12:12:12.000+0000'::timestamp with time zone as ct_change
+    union all
     select '45D05FFC2F1B4A52BD5076B5A68AC4D6' as ck_id, '1EE230968D8648419A9FEF0AAF7390E7' as ck_class_parent, '31' as ck_class_child, '290CBFB50CFC4362B2F00C5C4D34AAB5' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2023-05-13T13:22:02.239+0000'::timestamp with time zone as ct_change
     union all
     select 'C8BBBF074B364F2DA659D161010FDF2F' as ck_id, '217' as ck_class_parent, '31' as ck_class_child, '829' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2023-05-13T13:22:02.239+0000'::timestamp with time zone as ct_change
@@ -50,15 +52,6 @@ INSERT INTO s_mt.t_class_hierarchy
     select '60CD9E7A7E044C06866D018E4ADE7B00' as ck_id, 'C6C0F987FD584F42A7B7D8B2ECEE63F6' as ck_class_parent, '31' as ck_class_child, '80DD4A0346D64BABA81C613331D14FCF' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2023-05-13T13:22:02.239+0000'::timestamp with time zone as ct_change
     union all
     select '3562C46C520E4D2286E68296CCA1FE64' as ck_id, 'DF451F5CC0A54F8791C4DFAC12DAE42E' as ck_class_parent, '31' as ck_class_child, 'E2D0A96506384965A7B2666E5D2D1970' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2023-05-13T13:22:02.239+0000'::timestamp with time zone as ct_change
- ) as t
- where t.ck_class_parent in (select ck_id from s_mt.t_class) and t.ck_class_child in (select ck_id from s_mt.t_class)
- on conflict on constraint cin_c_class_hierarchy_1 do update set ck_class_parent = excluded.ck_class_parent, ck_class_child = excluded.ck_class_child, ck_class_attr = excluded.ck_class_attr, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
-
---changeset blackhawk-skat:overrides_field_addr
-INSERT INTO s_mt.t_class_hierarchy
-(ck_id, ck_class_parent, ck_class_child, ck_class_attr, ck_user, ct_change)
- select t.ck_id, t.ck_class_parent, t.ck_class_child, t.ck_class_attr, t.ck_user, t.ct_change from (
-    select '0950FD715958567BE0632323C40A9D00' as ck_id, '197' as ck_class_parent, '31' as ck_class_child, '0950FD715959567BE0632323C40A9D00' as ck_class_attr, '20786' as ck_user, '2023-04-11T12:12:12.000+0000'::timestamp with time zone as ct_change
  ) as t
  where t.ck_class_parent in (select ck_id from s_mt.t_class) and t.ck_class_child in (select ck_id from s_mt.t_class)
  on conflict on constraint cin_c_class_hierarchy_1 do update set ck_class_parent = excluded.ck_class_parent, ck_class_child = excluded.ck_class_child, ck_class_attr = excluded.ck_class_attr, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
