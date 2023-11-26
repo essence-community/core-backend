@@ -2,17 +2,13 @@ import NullPlugin from "@ungate/plugininf/lib/NullPlugin";
 import IResult from "@ungate/plugininf/lib/IResult";
 import IContext from "@ungate/plugininf/lib/IContext";
 import { IPluginRequestContext } from "@ungate/plugininf/lib/IPlugin";
-import * as JsReport from "jsreport-core";
-import * as JsReportXlsx from "jsreport-xlsx";
-// @ts-ignore
-import * as JsReportHandlerBars from "jsreport-handlebars";
-import * as fs from "fs";
-import * as path from "path";
+import * as XLSX from "xlsx-js-style";
 import ICCTParams, { IParamsInfo } from "@ungate/plugininf/lib/ICCTParams";
 import { getColumnName } from "./Util";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
 import { ReadStreamToArray } from "@ungate/plugininf/lib/stream/Util";
-import { isEmpty } from "@ungate/plugininf/lib/util/Util";
+import { isEmpty, transformToBoolean } from "@ungate/plugininf/lib/util/Util";
+import * as moment from "moment";
 
 interface IColumn {
     cv_description?: string;
@@ -32,26 +28,23 @@ interface IJsonBc {
     excelname?: string;
     columns: IColumn[];
 }
+
+const DATE_FORMAT = {
+    "1": "yyyy",
+    "2": "MMM yyyy",
+    "3": "dd.MM.yyyy",
+    "4": "dd.MM.yyyy HH:00",
+    "5": "dd.MM.yyyy HH:mm",
+    "6": "dd.MM.yyyy HH:mm:ss",
+};
+
 export default class GridToExcel extends NullPlugin {
     public static getParamsInfo(): IParamsInfo {
         // tslint:disable:object-literal-sort-keys
         return {};
     }
-    private jsReport: JsReport.Reporter;
-    private isPreInit = true;
     constructor(name: string, params: ICCTParams) {
         super(name, params);
-        // @ts-ignore
-        this.jsReport = JsReport({
-            tasks: {
-                allowedModules: "*",
-            },
-        } as any);
-        // @ts-ignore
-        this.jsReport.use(JsReportXlsx());
-        // @ts-ignore
-        this.jsReport.use(JsReportHandlerBars());
-        this.init();
     }
 
     public async afterQueryExecutePerform(
@@ -59,10 +52,6 @@ export default class GridToExcel extends NullPlugin {
         PRequestContext: IPluginRequestContext,
         result: IResult,
     ): Promise<IResult | void> {
-        if (this.isPreInit) {
-            await this.jsReport.init();
-            this.isPreInit = false;
-        }
         if (isEmpty(gateContext.params.jsonbc)) {
             return;
         }
@@ -73,99 +62,147 @@ export default class GridToExcel extends NullPlugin {
         const excelName =
             gateContext.params.excelname || jsonbc.excelname || "export_excel";
         const rows = await ReadStreamToArray(result.data);
-        const configRender = {
-            template: {
-                recipe: "xlsx",
-                engine: "handlebars",
-                helpers: `function inc(value)
-                {
-                    return parseInt(value) + 2;
-                }`,
-                content:
-                    '{{#xlsxAdd "xl/worksheets/sheet1.xml" "worksheet.cols"}}' +
-                    "     <cols>" +
-                    jsonbc.columns.reduce(
-                        (all, col, colIndex) =>
-                            `${all}\n<col customWidth="0" bestFit="1" width="20" max="${
-                                colIndex + 1
-                            }" min="${colIndex + 1}"/>`,
-                        "",
-                    ) +
-                    "     </cols>" +
-                    "{{/xlsxAdd}}" +
-                    '{{#xlsxAdd "xl/worksheets/sheet1.xml" "worksheet.sheetData[0].row"}}' +
-                    '     <row r="1" customHeight="0" bestFit="1">' +
-                    jsonbc.columns.reduce(
-                        (all, col, colIndex) =>
-                            `${all}\n<c r="${getColumnName(
-                                colIndex + 1,
-                            )}1" t="inlineStr"><is><t>${
-                                col.cv_displayed
-                            }</t></is></c>`,
-                        "",
-                    ) +
-                    "     </row>" +
-                    "{{/xlsxAdd}}" +
-                    "{{#each rows}}" +
-                    '  {{#xlsxAdd "xl/worksheets/sheet1.xml" "worksheet.sheetData[0].row"}}' +
-                    `     <row r="{{inc @index}}" customHeight="0" bestFit="1">` +
-                    jsonbc.columns.reduce(
-                        (all, col, colIndex) =>
-                            `${all}\n<c r="${getColumnName(
-                                colIndex + 1,
-                            )}{{inc @index}}" t="inlineStr"><is><t>{{${
-                                col.column
-                            }}}</t></is></c>`,
-                        "",
-                    ) +
-                    "     </row>" +
-                    "  {{/xlsxAdd}}" +
-                    "{{/each}}" +
-                    (jsonbc.cv_displayed
-                        ? '{{#xlsxMerge "xl/workbook.xml" "workbook.sheets[0].sheet[0]"}}' +
-                          `     <sheet name="${jsonbc.cv_displayed}"/>` +
-                          "{{/xlsxMerge}}"
-                        : "") +
-                    '{{#xlsxAdd "xl/worksheets/sheet1.xml" "worksheet.autoFilter"}}' +
-                    `     <autoFilter ref="A1:${getColumnName(
-                        jsonbc.columns.length,
-                    )}1"/>` +
-                    "{{/xlsxAdd}}" +
-                    "{{{xlsxPrint}}}",
-                xlsx: {
-                    templateAsset: {
-                        content: fs
-                            .readFileSync(
-                                path.join(__dirname, "assets", "book.xlsx"),
-                            )
-                            .toString("base64"),
-                        encoding: "base64",
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet([
+            jsonbc.columns.map((col) => ({
+                t: isEmpty(col.cv_displayed) ? "z" : "s",
+                v: col.cv_displayed || "",
+                z: "@",
+                s: {
+                    border: {
+                        top: {
+                            style: "thin",
+                            color: {
+                                rgb: "000000"
+                            }
+                        },
+                        bottom: {
+                            style: "thin",
+                            color: {
+                                rgb: "000000"
+                            }
+                        },
+                        right: {
+                            style: "thin",
+                            color: {
+                                rgb: "000000"
+                            }
+                        },
+                        left: {
+                            style: "thin",
+                            color: {
+                                rgb: "000000"
+                            }
+                        }
                     },
-                },
-            },
-            data: {
-                rows,
-            },
-        } as any;
-
-        return this.jsReport.render(configRender).then(async (res) => {
-            const filedata = await new Promise((resolve, reject) => {
-                const bufs = [];
-                res.stream.on("data", (data) => bufs.push(data));
-                res.stream.on("error", (err) => reject(err));
-                res.stream.on("end", () => {
-                    resolve(Buffer.concat(bufs));
-                });
-            });
-            return {
-                type: "attachment",
-                data: ResultStream({
-                    filename: `${excelName}.xlsx`,
-                    filetype:
-                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    filedata,
-                }),
-            };
+                    numFmt: "@",
+                }
+            })),
+            ...rows.map((row) => jsonbc.columns.map((col) => this.formatValue(col, row[col.column]))),
+        ], {
+            cellStyles: true,
         });
+        ws["!autofilter"] = { ref: `A1:${getColumnName(jsonbc.columns.length)}1` };
+        ws["!cols"] = jsonbc.columns.map(() => ({ width: 30 }));
+        XLSX.utils.book_append_sheet(wb, ws, jsonbc.cv_displayed || "Export");
+        const userData = gateContext.session?.userData;
+        const filedata = XLSX.writeXLSX(wb, {
+            type: "buffer",
+            cellStyles: true,
+            Props: {
+                Title: jsonbc.cv_displayed || "Export xlsx",
+                CreatedDate: new Date(),
+                Author: userData ? `${gateContext.session?.userData.cv_surname || ""} ${gateContext.session?.userData.cv_name || ""} ${gateContext.session?.userData.cv_patronymic || ""}${gateContext.session?.userData.cv_email ? ` (${gateContext.session?.userData.cv_email})` : ""}` : "essence",
+            }
+        });
+
+        return {
+            type: "attachment",
+            data: ResultStream({
+                filename: `${excelName}.xlsx`,
+                filetype:
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                filedata,
+            }),
+        };
+    }
+
+    formatValue = (col: IColumn, value: any) => {
+        const result = {
+            t: "s",
+            v: value,
+            z: "@",
+            s: {
+                border: {
+                    top: {
+                        style: "thin",
+                        color: {
+                            rgb: "000000"
+                        }
+                    },
+                    bottom: {
+                        style: "thin",
+                        color: {
+                            rgb: "000000"
+                        }
+                    },
+                    right: {
+                        style: "thin",
+                        color: {
+                            rgb: "000000"
+                        }
+                    },
+                    left: {
+                        style: "thin",
+                        color: {
+                            rgb: "000000"
+                        }
+                    }
+                },
+                numFmt: "@",
+            } as XLSX.CellStyle
+        } as XLSX.CellObject;
+        if (isEmpty(value)) {
+            result.t = "z";
+            result.v = "";
+            return result;
+        }
+        if (col.datatype === "boolean" || col.datatype === "checkbox") {
+            result.t = "b";
+            result.v = transformToBoolean(result.v);
+        }
+        if (col.datatype === "date") {
+            result.t = typeof result.v === "string" || typeof result.v === "object" ? "d" : "z";
+            result.v = typeof result.v === "string" || typeof result.v === "object" ? moment(result.v as string).toDate() : "";
+            result.z = DATE_FORMAT[col.format] || DATE_FORMAT[3];
+            result.s.numFmt = DATE_FORMAT[3];
+        }
+        if (col.datatype === "integer") {
+            result.t = "n";
+            result.s.numFmt = "0";
+            result.z = "0";
+            if (col.currencysign) {
+                result.s.numFmt += col.currencysign;
+                result.z += col.currencysign;
+            }
+        }
+        if (col.datatype === "numeric") {
+            result.t = "n";
+            result.s.numFmt = "0";
+            result.z = "0";
+            if (col.decimalprecision > 0) {
+                result.s.numFmt = "0.0";
+                result.z = "0.0";
+                for (let i = 1; i < col.decimalprecision; i += 1) {
+                    result.s.numFmt += "#";
+                    result.z += "#";
+                }
+            }
+            if (col.currencysign) {
+                result.s.numFmt += col.currencysign;
+                result.z += col.currencysign;
+            }
+        }
+        return result;
     }
 }

@@ -7,14 +7,7 @@
     "license": "MIT",
     "dependencies": {
         "@ungate/plugininf": "^1.0.0",
-        "handlebars": "^4.7.6",
-        "jsreport-core": "^2.10.1",
-        "jsreport-handlebars": "^2.1.0",
-        "jsreport-xlsx": "^2.5.0"
+        "xlsx-js-style": "^1.2.0"
     },
-    "devDependencies": {
-        "@types/jsreport-core": "^2.0.2",
-        "@types/jsreport-handlebars": "^2.1.0",
-        "@types/jsreport-xlsx": "^1.4.1"
-    }
+    "devDependencies": {}
 }

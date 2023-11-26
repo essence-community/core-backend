@@ -650,3 +650,12 @@ export function debounce (f: TDebounce, t: number): IDebounce {
     };
     return fn;
 }
+
+export function transformToBoolean(value: any): boolean {
+    if (typeof value === "string") {
+        const val = value.toLocaleLowerCase();
+        return val === "true" || val === "1" || val === "yes" || val === "on";
+    }
+
+    return Boolean(value);
+}
