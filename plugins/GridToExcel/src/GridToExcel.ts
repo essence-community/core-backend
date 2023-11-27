@@ -9,6 +9,10 @@ import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
 import { ReadStreamToArray } from "@ungate/plugininf/lib/stream/Util";
 import { isEmpty, transformToBoolean } from "@ungate/plugininf/lib/util/Util";
 import * as moment from "moment";
+import * as path from "path";
+import * as fs from "fs";
+import Constant from "@ungate/plugininf/lib/Constants";
+import { v4 as uuid } from 'uuid';
 
 interface IColumn {
     cv_description?: string;
@@ -106,15 +110,21 @@ export default class GridToExcel extends NullPlugin {
         ws["!cols"] = jsonbc.columns.map(() => ({ width: 30 }));
         XLSX.utils.book_append_sheet(wb, ws, jsonbc.cv_displayed || "Export");
         const userData = gateContext.session?.userData;
-        const filedata = XLSX.writeXLSX(wb, {
-            type: "buffer",
+        const temp = path.resolve(
+            Constant.UPLOAD_DIR,
+            `export_excel_${uuid()}.xlsx`,
+        );
+        XLSX.writeFile(wb, temp, {
             cellStyles: true,
             Props: {
                 Title: jsonbc.cv_displayed || "Export xlsx",
                 CreatedDate: new Date(),
+                Comments: `Create xlsx-js-style version: ${XLSX.version}, style-version: ${(XLSX as any).style_version}`,
                 Author: userData ? `${gateContext.session?.userData.cv_surname || ""} ${gateContext.session?.userData.cv_name || ""} ${gateContext.session?.userData.cv_patronymic || ""}${gateContext.session?.userData.cv_email ? ` (${gateContext.session?.userData.cv_email})` : ""}` : "essence",
             }
         });
+        const filedata = fs.readFileSync(temp);
+        fs.unlinkSync(temp);
 
         return {
             type: "attachment",
@@ -175,7 +185,7 @@ export default class GridToExcel extends NullPlugin {
             result.t = typeof result.v === "string" || typeof result.v === "object" ? "d" : "z";
             result.v = typeof result.v === "string" || typeof result.v === "object" ? moment(result.v as string).toDate() : "";
             result.z = DATE_FORMAT[col.format] || DATE_FORMAT[3];
-            result.s.numFmt = DATE_FORMAT[3];
+            result.s.numFmt = DATE_FORMAT[col.format] || DATE_FORMAT[3];
         }
         if (col.datatype === "integer") {
             result.t = "n";
