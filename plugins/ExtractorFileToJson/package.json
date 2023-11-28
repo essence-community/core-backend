@@ -10,7 +10,7 @@
         "fast-csv": "^4.3.6",
         "lodash": "^4.17.15",
         "mime": "^3.0.0",
-        "xlsx-stream-reader": "^1.1.0"
+        "xlsx-js-style": "^1.2.0"
     },
     "devDependencies": {
         "@types/aws-sdk": "^2.7.0",

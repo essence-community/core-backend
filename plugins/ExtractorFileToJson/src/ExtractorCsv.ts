@@ -2,7 +2,6 @@ import { EventEmitter } from "events";
 import * as Сsv from "fast-csv";
 import * as fs from "fs";
 import { isString } from "lodash";
-import { Readable } from "stream";
 import { getColumnName } from "./Utils";
 
 export interface ICsvOptions {
@@ -36,7 +35,7 @@ export class ExtractorCsv extends EventEmitter {
     private flag: number = 0;
     private bindParseRow: (row: any) => void;
     constructor(
-        path: string | Readable,
+        path: string,
         packRows: number,
         options: ICsvOptions = {
             encoding: "utf-8",

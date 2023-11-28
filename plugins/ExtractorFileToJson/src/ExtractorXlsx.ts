@@ -1,62 +1,61 @@
 import { EventEmitter } from "events";
-import * as fs from "fs";
-import { isString } from "lodash";
 import { Readable } from "stream";
-import * as XlsxStreamReader from "xlsx-stream-reader";
-const TIMEOUT = 1000;
+import * as XLSX from "xlsx-js-style";
+import { getColumnName } from "./Utils";
+const TIMEOUT = 500;
+interface IWSReadable extends Readable {
+    id: string;
+}
+interface IWS {
+    id: string;
+    ws: XLSX.WorkSheet;
+}
 export class ExtractorXlsx extends EventEmitter {
-    private xlsx: XlsxStreamReader;
+    private xlsx: XLSX.WorkBook;
     protected packRows: number;
     private pack: any[] = [];
-    private isEnd: boolean = false;
-    private flag: number = 0;
-    private worksheets: any[] = [];
-    private worksheet: any;
-    private bindParseRow: (row: any) => void;
-    constructor(path: string | Readable, packRows: number) {
+    private worksheets: IWS[] = [];
+    private worksheet: IWSReadable;
+    private bindParseRow = (row) => this.parseRow(this, row);
+    constructor(path: string, packRows: number) {
         super();
         this.packRows = packRows;
-        const fileStream = isString(path)
-            ? fs.createReadStream(path as string)
-            : path;
-        this.xlsx = new XlsxStreamReader();
-        this.xlsx.on("worksheet", (worksheet) => {
-            this.worksheets.push(worksheet);
-            this.worksheets.sort((a, b) => {
-                return a.id - b.id;
-            });
+        
+        this.xlsx = XLSX.readFile(path);
+        this.worksheets = Object.entries(this.xlsx.Sheets).map(([id, ws]) => {
+            return {
+                id,
+                ws,
+            };
         });
-        this.xlsx.on("end", () => {
-            this.isEnd = true;
-        });
-        fileStream.pipe(this.xlsx);
     }
     public on(
         event: "pack" | "end" | "error",
         listener: (...args: any[]) => void,
     ) {
         super.on(event as string, listener);
-        if (event === "pack") {
-            this.bindParseRow = (row) => this.parseRow(this, row);
-            if (
-                this.flag === 0 &&
-                this.worksheet &&
-                !this.worksheet.isRowParse
-            ) {
-                this.worksheet.on("row", this.bindParseRow);
-            }
-            this.flag += 1;
-        } else if ((event as string) !== "row" && (event as string) !== "end") {
-            this.xlsx.on(event, listener);
-        }
         return this;
     }
     public process() {
-        this.worksheet = this.worksheets[0];
+        if (this.worksheets.length === 0) {
+            this.emit("end");
+            return;
+        }
+        const ws = this.worksheets[0].ws;
+        this.worksheet = new Readable({
+            objectMode: true,
+            read(size) { 
+                const data = XLSX.utils.sheet_to_json(ws, { header: 1 });
+                data.forEach((row) => {
+                    this.push(row);
+                });
+                this.push(null);
+            }
+        }) as IWSReadable;
+        this.worksheet.id = this.worksheets[0].id;
         if (this.worksheet) {
-            this.worksheet.on("row", this.bindParseRow);
+            this.worksheet.on("data", this.bindParseRow);
             this.worksheet.on("error", (err) => this.emit("error", err));
-            this.worksheet.isRowParse = true;
             this.worksheet.on("end", () => {
                 this.worksheets = this.worksheets.filter(
                     (w) => this.worksheet.id !== w.id,
@@ -67,9 +66,6 @@ export class ExtractorXlsx extends EventEmitter {
                 }
                 this.process();
             });
-            this.worksheet.process();
-        } else if (this.isEnd && this.worksheets.length === 0) {
-            this.emit("end");
         } else {
             setTimeout(() => this.process(), TIMEOUT);
         }
@@ -79,32 +75,25 @@ export class ExtractorXlsx extends EventEmitter {
         listener: (...args: any[]) => void,
     ) {
         super.removeListener(event, listener);
-        if (event === "pack") {
-            this.flag -= 1;
-            if (this.flag === 0) {
-                this.worksheet.removeListener("row", this.bindParseRow);
-                this.worksheet.isRowParse = false;
-            }
-        }
         return this;
     }
 
     public pause() {
         if (this.worksheet) {
-            this.worksheet.workSheetStream.pause();
+            this.worksheet.pause();
         }
     }
 
     public resume() {
         if (this.worksheet) {
-            this.worksheet.workSheetStream.resume();
+            this.worksheet.resume();
         }
     }
     private parseRow(self, row) {
         try {
             const rowData = {};
-            row.values.forEach((val, index) => {
-                rowData[self.worksheet.getColumnName(index)] = val;
+            row.forEach((val, index) => {
+                rowData[getColumnName(index+1)] = val;
             });
             self.pack.push(rowData);
             if (self.pack.length >= self.packRows) {
