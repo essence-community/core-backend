@@ -36,10 +36,10 @@ interface IJsonBc {
 const DATE_FORMAT = {
     "1": "yyyy",
     "2": "MMM yyyy",
-    "3": "dd.MM.yyyy",
-    "4": "dd.MM.yyyy HH:00",
-    "5": "dd.MM.yyyy HH:mm",
-    "6": "dd.MM.yyyy HH:mm:ss",
+    "3": "dd\\.mm\\.yyyy",
+    "4": "dd\\.mm\\.yyyy HH:00",
+    "5": "dd\\.mm\\.yyyy HH:mm",
+    "6": "dd\\.mm\\.yyyy HH:mm:ss",
 };
 
 export default class GridToExcel extends NullPlugin {
@@ -114,13 +114,14 @@ export default class GridToExcel extends NullPlugin {
             Constant.UPLOAD_DIR,
             `export_excel_${uuid()}.xlsx`,
         );
+        if(!wb.Props) wb.Props = {};
+        wb.Props.CreatedDate = new Date();
+        wb.Props.Author = userData ?`${userData.cv_surname?userData.cv_surname:""}${userData.cv_name?" "+userData.cv_name:""}${userData.cv_patronymic?" "+userData.cv_patronymic:""}${userData.cv_email?" ("+userData.cv_email+")":""}` : "essence";
         XLSX.writeFile(wb, temp, {
             cellStyles: true,
             Props: {
                 Title: jsonbc.cv_displayed || "Export xlsx",
-                CreatedDate: new Date(),
                 Comments: `Create xlsx-js-style version: ${XLSX.version}, style-version: ${(XLSX as any).style_version}`,
-                Author: userData ? `${gateContext.session?.userData.cv_surname || ""} ${gateContext.session?.userData.cv_name || ""} ${gateContext.session?.userData.cv_patronymic || ""}${gateContext.session?.userData.cv_email ? ` (${gateContext.session?.userData.cv_email})` : ""}` : "essence",
             }
         });
         const filedata = fs.readFileSync(temp);
