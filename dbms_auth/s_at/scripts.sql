@@ -95,3 +95,34 @@ COMMENT ON COLUMN ${user.table}.t_account.cl_deleted IS 'Признак удал
 --changeset artemov_i:add_type_json_info dbms:postgresql
 ALTER TABLE ${user.table}.t_d_info DROP CONSTRAINT cin_c_d_info_1;
 ALTER TABLE ${user.table}.t_d_info ADD CONSTRAINT cin_c_d_info_1 CHECK (cr_type in ('json', 'array', 'object', 'text', 'date', 'integer', 'numeric', 'boolean', 'textarea', 'custom'));
+
+--changeset artemov_i:UPDEV-6221  dbms:postgresql
+CREATE TABLE ${user.table}.t_account_action (
+	ck_id uuid NOT NULL DEFAULT public.uuid_generate_v4(),
+    ck_action bigint NOT NULL,
+    ck_user varchar(150) NOT NULL,
+    ct_change timestamp with time zone NOT NULL,
+    ck_account uuid NOT NULL,
+    CONSTRAINT cin_p_account_action PRIMARY KEY (ck_id),
+    CONSTRAINT cin_u_account_action_1 UNIQUE (ck_action, ck_account),
+    CONSTRAINT cin_r_account_action_1 FOREIGN KEY (ck_action)
+        REFERENCES ${user.table}.t_action (ck_id),
+    CONSTRAINT cin_r_account_action_2 FOREIGN KEY (ck_account)
+        REFERENCES ${user.table}.t_account (ck_id)
+);
+COMMENT ON TABLE ${user.table}.t_account_action IS 'Действия пользователя';
+
+COMMENT ON COLUMN ${user.table}.t_account_action.ck_id
+    IS 'ИД';
+
+COMMENT ON COLUMN ${user.table}.t_account_action.ck_action
+    IS 'Код действия';
+
+COMMENT ON COLUMN ${user.table}.t_account_action.ck_user
+    IS 'ИД пользователя аудит';
+
+COMMENT ON COLUMN ${user.table}.t_account_action.ct_change
+    IS 'Время модификации аудит';
+
+COMMENT ON COLUMN ${user.table}.t_account_action.ck_account
+    IS 'Идентификатор пользователя';

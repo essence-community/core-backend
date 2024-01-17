@@ -300,6 +300,56 @@ ALTER FUNCTION pkg_account.p_modify_account_info(character varying, ${user.table
 COMMENT ON FUNCTION pkg_account.p_modify_account_info(character varying, ${user.table}.t_account_info)
     IS 'Добавление/редактирование/удаление доп информации пользователя';
 
+CREATE OR REPLACE FUNCTION pkg_account.p_modify_account_ext(
+	pv_action character varying,
+	INOUT pot_account_ext ${user.table}.t_account_ext)
+    RETURNS ${user.table}.t_account_ext
+    LANGUAGE 'plpgsql'
+    SECURITY DEFINER 
+    SET search_path=public, pkg, pkg_account, ${user.table}
+AS $BODY$
+declare
+  -- переменные пакета
+  i sessvarstr;
+  u sessvarstr;
+  d sessvarstr;
+  gv_error sessvarstr;
+ 
+  vot_account_ext record;
+ 
+begin
+  -- инициализация/получение переменных пакета
+  i = sessvarstr_declare('pkg', 'i', 'I');
+  u = sessvarstr_declare('pkg', 'u', 'U');
+  d = sessvarstr_declare('pkg', 'd', 'D');
+  gv_error = sessvarstr_declare('pkg', 'gv_error', '');
+
+  -- код функции
+  if pv_action = d::varchar then
+    delete from ${user.table}.t_account_ext where ck_id = pot_account_ext.ck_id;
+    return;
+  end if;
+  if pv_action = i::varchar then
+   pot_account_ext.ck_id = public.uuid_generate_v4();
+   insert into ${user.table}.t_account_ext values (pot_account_ext.*);
+   return;
+  end if;
+  update ${user.table}.t_account_ext
+    set (ck_account_int,ck_account_ext,ck_provider,ck_user,ct_change) = 
+    (pot_account_ext.ck_account_int,pot_account_ext.ck_account_ext,pot_account_ext.ck_provider,pot_account_ext.ck_user,pot_account_ext.ct_change)
+  where ck_id = pot_account_ext.ck_id;
+  if not found then
+    perform pkg.p_set_error(504);
+  end if;
+end;
+$BODY$;
+
+ALTER FUNCTION pkg_account.p_modify_account_ext(character varying, ${user.table}.t_account_ext)
+    OWNER TO ${user.update};
+
+COMMENT ON FUNCTION pkg_account.p_modify_account_ext(character varying, ${user.table}.t_account_ext)
+    IS 'Добавление/редактирование/удаление внешнего пользователя';
+
 CREATE OR REPLACE FUNCTION pkg_account.p_modify_account_role(
 	pv_action character varying,
 	INOUT pot_account_role ${user.table}.t_account_role)
@@ -593,6 +643,55 @@ ALTER FUNCTION pkg_account.p_modify_role_action(character varying, ${user.table}
 
 COMMENT ON FUNCTION pkg_account.p_modify_role_action(character varying, ${user.table}.t_role_action)
     IS 'Добавлени/редактирование/удаление связи ролей и экшенов';
+
+CREATE OR REPLACE FUNCTION pkg_account.p_modify_account_action(
+	pv_action character varying,
+	INOUT pot_account_action ${user.table}.t_account_action)
+    RETURNS ${user.table}.t_account_action
+    LANGUAGE 'plpgsql'
+    SECURITY DEFINER 
+    SET search_path=public, pkg, pkg_account, ${user.table}
+AS $BODY$
+declare
+  -- переменные пакета
+  i sessvarstr;
+  u sessvarstr;
+  d sessvarstr;
+  gv_error sessvarstr;
+ 
+  vot_role record;
+begin
+  -- инициализация/получение переменных пакета
+  i = sessvarstr_declare('pkg', 'i', 'I');
+  u = sessvarstr_declare('pkg', 'u', 'U');
+  d = sessvarstr_declare('pkg', 'd', 'D');
+  gv_error = sessvarstr_declare('pkg', 'gv_error', '');
+
+  -- код функции
+  if pv_action = d::varchar then  
+    delete from ${user.table}.t_account_action where ck_role = pot_account_action.ck_account and ck_action = pot_account_action.ck_action;
+    return;
+  end if;
+  if pv_action = i::varchar then
+   pot_account_action.ck_id = public.uuid_generate_v4();
+   insert into ${user.table}.t_account_action values (pot_account_action.*);
+   return;
+  end if;
+  update ${user.table}.t_account_action
+    set (ck_user,ct_change) = 
+    (pot_account_action.ck_user,pot_account_action.ct_change)
+  where ck_role = pot_account_action.ck_account and ck_action = pot_account_action.ck_action;
+  if not found then
+    perform pkg.p_set_error(504);
+  end if;
+end;
+$BODY$;
+
+ALTER FUNCTION pkg_account.p_modify_account_action(character varying, ${user.table}.t_account_action)
+    OWNER TO ${user.update};
+
+COMMENT ON FUNCTION pkg_account.p_modify_account_action(character varying, ${user.table}.t_account_action)
+    IS 'Добавлени/редактирование/удаление связи пользователя и экшенов';
 
 CREATE OR REPLACE FUNCTION pkg_account.p_lock_auth_token(
 	pk_id character varying)

@@ -35,6 +35,7 @@ import { TypeOrmLogger } from "@ungate/plugininf/lib/db/TypeOrmLogger";
 import { UserStore } from "./store/typeorm/UserStore";
 import { CacheStore } from "./store/typeorm/CacheStore";
 import { getSessionMaxAgeMs } from "../util";
+import { sendProcess } from "@ungate/plugininf/lib/util/ProcessSender";
 
 const REPLICA_TIMEOUT = parseInt(
     process.env.KUBERNETES_REPLICA_TIMEOUT || "0",
@@ -424,6 +425,15 @@ export class GateSession implements ISessCtrl {
                 data,
             })
             .then(() => {
+                sendProcess({
+                    command: "addUser",
+                    data: {
+                        idUser,
+                        nameProvider,
+                        data,
+                    },
+                    target: "cluster",
+                });
                 this.updateUserInfo();
                 this.updateHashDebounce();
             });
@@ -540,7 +550,13 @@ export class GateSession implements ISessCtrl {
                     ...values[1],
                     ...values[2],
                 }),
-            );
+            ).then(() => {
+                sendProcess({
+                    command: "updateHashAuth",
+                    data: {},
+                    target: "cluster",
+                });
+            });
         });
     }
     /**
