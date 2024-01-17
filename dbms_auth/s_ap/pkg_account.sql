@@ -669,7 +669,7 @@ begin
 
   -- код функции
   if pv_action = d::varchar then  
-    delete from ${user.table}.t_account_action where ck_role = pot_account_action.ck_account and ck_action = pot_account_action.ck_action;
+    delete from ${user.table}.t_account_action where ck_account = pot_account_action.ck_account and ck_action = pot_account_action.ck_action;
     return;
   end if;
   if pv_action = i::varchar then

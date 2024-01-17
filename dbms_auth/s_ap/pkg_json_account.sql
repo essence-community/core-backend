@@ -810,7 +810,7 @@ begin
   vot_account_action.ck_user = pv_user;
   vot_account_action.ct_change = CURRENT_TIMESTAMP;
  -- лочим действие и роль
-  perform pkg_account.p_lock_account(vot_account_action::varchar);
+  perform pkg_account.p_lock_account(vot_account_action.ck_account::varchar);
   for vot_account_action_r in (
     select
       nullif(trim(r.res->>'ck_action'), '') as ck_action
