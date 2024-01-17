@@ -19,6 +19,7 @@ import Logger from "./Logger";
 export interface IAuthResult {
     idUser: string;
     dataUser?: IObjectParam;
+    sessionData?: Record<string, any>;
 }
 export interface ISessProviderParam extends IParamsProvider {
     onlySession: boolean;

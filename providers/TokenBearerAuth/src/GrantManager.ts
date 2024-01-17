@@ -14,19 +14,25 @@ export class GrantManager {
     public notBefore: number;
     public rotation: Rotation;
     public realmUrl: string;
-    public userInfoUrl: string;
-    public tokenVerifyUrl: string;
-    public tokenUrl: string;
+    public proxyUrl?: string;
+    public userInfoUrl?: string;
+    public tokenVerifyUrl?: string;
+    public tokenUrl?: string;
     public clientId: string;
     public secret: string;
     public publicKey: string;
-    public public: string;
-    public bearerOnly: string;
+    public public: boolean;
+    public bearerOnly: boolean;
     public verifyTokenAudience: boolean;
     public isIgnoreCheckSignature: boolean;
     public logger: any;
+    public scope?: string;
+    public idpHint?: string;
+    public config: IGrantManagerConfig;
+
     constructor(config: IGrantManagerConfig, log: any) {
         this.realmUrl = config.realmUrl;
+        this.proxyUrl = config.proxyUrl;
         this.userInfoUrl = config.userInfoUrl;
         this.tokenVerifyUrl = config.tokenVerifyUrl;
         this.tokenUrl = config.tokenUrl;
@@ -39,9 +45,12 @@ export class GrantManager {
         this.notBefore = 0;
         this.rotation = new Rotation(config, log);
         this.verifyTokenAudience = config.verifyTokenAudience;
+        this.scope = config.scope;
+        this.idpHint = config.idpHint;
+        this.config = config;
         this.logger = log;
     }
-    obtainDirectly(username, password, callback, scopeParam) {
+    obtainDirectly(username, password, callback?: () => void, scopeParam = this.scope) {
         const params = {
             client_id: this.clientId,
             username,
@@ -53,7 +62,7 @@ export class GrantManager {
         const options = postOptions(this);
         return nodeify(fetch(this, handler, options, params), callback);
     }
-    obtainFromCode(request, code, sessionId, sessionHost, callback) {
+    obtainFromCode(request, code, sessionId, sessionHost?: string, callback?: () => void) {
         const params = {
             client_session_state: sessionId,
             client_session_host: sessionHost,
@@ -241,7 +250,7 @@ export class GrantManager {
             this,
             this.tokenVerifyUrl
                 ? this.tokenVerifyUrl
-                : this.realmUrl + "/protocol/openid-connect/token/introspect",
+                : (this.proxyUrl || this.realmUrl) + "/protocol/openid-connect/token/introspect",
         );
         const handler = validationHandler(this, token);
 
@@ -250,7 +259,7 @@ export class GrantManager {
     userInfo(token: IToken | string, callback?) {
         const url = this.userInfoUrl
             ? this.userInfoUrl
-            : this.realmUrl + "/protocol/openid-connect/userinfo";
+            : (this.proxyUrl || this.realmUrl) + "/protocol/openid-connect/userinfo";
         const options = URL.parse(url) as any;
         options.method = "GET";
 
@@ -271,6 +280,8 @@ export class GrantManager {
                 headers: options.headers,
                 method: options.method,
                 responseType: "json",
+                httpAgent: this.config.httpAgent,
+                httpsAgent: this.config.httpsAgent,
             })
             .then((res) => {
                 if (res.data.error) {
@@ -459,6 +470,21 @@ export class GrantManager {
                 });
         });
     }
+
+    loginUrl(uuid, redirectUrl) {
+        let url = this.realmUrl +
+        '/protocol/openid-connect/auth' +
+        '?client_id=' + encodeURIComponent(this.clientId) +
+        '&state=' + encodeURIComponent(uuid) +
+        '&redirect_uri=' + encodeURIComponent(redirectUrl) +
+        '&scope=' + encodeURIComponent(this.scope ? 'openid ' + this.scope : 'openid') +
+        '&response_type=code';
+
+        if (this.idpHint) {
+            url += '&kc_idp_hint=' + encodeURIComponent(this.idpHint);
+        }
+        return url;
+    }
 }
 
 const nodeify = (promise, cb?: any) => {
@@ -492,7 +518,7 @@ const postOptions = (manager: GrantManager, path?: string) => {
     const realPath =
         path || manager.tokenUrl || "/protocol/openid-connect/token";
     const opts = URL.parse(
-        realPath.startsWith("http") ? realPath : manager.realmUrl + realPath,
+        realPath.startsWith("http") ? realPath : (manager.proxyUrl || manager.realmUrl) + realPath,
     ) as any;
     opts.headers = {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -519,6 +545,8 @@ const fetch = (manager: GrantManager, handler, options, params) => {
             method: options.method,
             data,
             responseType: "json",
+            httpAgent: manager.config.httpAgent,
+            httpsAgent: manager.config.httpsAgent,
         } as AxiosRequestConfig;
         manager.logger.debug("Params request %j", paramsRequest)
         axios
@@ -577,3 +605,18 @@ const getRedirectUrl = (request) => {
 
     return redirectUrl;
 };
+
+function loginUrl (uuid, redirectUrl) {
+  var url = this.config.realmUrl +
+  '/protocol/openid-connect/auth' +
+  '?client_id=' + encodeURIComponent(this.config.clientId) +
+  '&state=' + encodeURIComponent(uuid) +
+  '&redirect_uri=' + encodeURIComponent(redirectUrl) +
+  '&scope=' + encodeURIComponent(this.config.scope ? 'openid ' + this.config.scope : 'openid') +
+  '&response_type=code';
+
+  if (this.config && this.config.idpHint) {
+    url += '&kc_idp_hint=' + encodeURIComponent(this.config.idpHint);
+  }
+  return url;
+}

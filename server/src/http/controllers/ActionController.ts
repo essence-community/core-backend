@@ -61,6 +61,7 @@ class ActionController {
                         idUser: resPlugin.idUser,
                         nameProvider: `plugin_${resPlugin.namePlugin}`,
                         userData: resPlugin.dataUser,
+                        sessionData: resPlugin.sessionData,
                     },
                 );
         }
@@ -93,6 +94,7 @@ class ActionController {
                     context: gateContext,
                     idUser: data.idUser,
                     userData: data.dataUser as any,
+                    sessionData: data.sessionData,
                 });
             }
         }
