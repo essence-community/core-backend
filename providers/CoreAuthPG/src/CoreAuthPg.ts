@@ -104,58 +104,58 @@ export default class CoreAuthPg extends NullSessProvider {
             return;
         }
         this.log.debug("syncExternalAuthUserInfo:\nidUser:%s\nameProvider:%s\ndata:%j", idUser, nameProvider, data);
-            await this.dataSource
-                .executeStmt(
-                    "select\n" + 
-                    "    pkg_json_account.f_modify_account(:ck_account_ext::varchar, :ck_account_ext::varchar, jsonb_build_object(\n" + 
-                    "        'data',\n" + 
-                    "        :data::jsonb || jsonb_build_object(\n" + 
-                    "            'ck_id',\n" + 
-                    "            case\n" + 
-                    "                when tae.ck_id is null then public.uuid_generate_v4()::varchar\n" + 
-                    "                else ta.ck_id\n" + 
-                    "            end,\n" + 
-                    "            'cv_hash_password',\n" + 
-                    "            case\n" + 
-                    "                when tae.ck_id is null then public.uuid_generate_v4()::varchar\n" + 
-                    "                else ta.cv_hash_password\n" + 
-                    "            end,\n" + 
-                    "            'ck_account_ext',\n" + 
-                    "            t.ck_account_ext,\n" + 
-                    "            'ck_provider_ext',\n" + 
-                    "            t.ck_provider_ext\n" + 
-                    "        ),\n" + 
-                    "        'service',\n" + 
-                    "        jsonb_build_object(\n" + 
-                    "            'cv_action',\n" + 
-                    "            case\n" + 
-                    "                when tae.ck_id is null then 'I'\n" + 
-                    "                else 'U'\n" + 
-                    "            end\n" + 
-                    "        )\n" + 
-                    "    )) as result\n" + 
-                    "from\n" + 
-                    "    (\n" + 
-                    "        select\n" + 
-                    "            :ck_account_ext::varchar as ck_account_ext,\n" + 
-                    "            :ck_provider_ext::varchar as ck_provider_ext\n" + 
-                    "    ) as t\n" + 
-                    "left join s_at.t_account_ext tae \n" + 
-                    "on\n" + 
-                    "    tae.ck_account_ext = t.ck_account_ext\n" + 
-                    "    and tae.ck_provider = t.ck_provider_ext\n" + 
-                    "left join s_at.t_account ta \n" + 
-                    "on tae.ck_account_int = ta.ck_id\n",
-                    null,
-                    {
-                        data: JSON.stringify(data),
-                        ck_account_ext: idUser,
-                        ck_provider_ext: nameProvider,
-                    },
-                    {},
-                    { autoCommit: true, }
-                )
-                .then(noop, (err) => this.log.error(err));
+        await this.dataSource
+            .executeStmt(
+                "select\n" + 
+                "    pkg_json_account.f_modify_account(:ck_account_ext::varchar, :ck_account_ext::varchar, jsonb_build_object(\n" + 
+                "        'data',\n" + 
+                "        :data::jsonb || jsonb_build_object(\n" + 
+                "            'ck_id',\n" + 
+                "            case\n" + 
+                "                when tae.ck_id is null then public.uuid_generate_v4()::varchar\n" + 
+                "                else ta.ck_id\n" + 
+                "            end,\n" + 
+                "            'cv_hash_password',\n" + 
+                "            case\n" + 
+                "                when tae.ck_id is null then public.uuid_generate_v4()::varchar\n" + 
+                "                else ta.cv_hash_password\n" + 
+                "            end,\n" + 
+                "            'ck_account_ext',\n" + 
+                "            t.ck_account_ext,\n" + 
+                "            'ck_provider_ext',\n" + 
+                "            t.ck_provider_ext\n" + 
+                "        ),\n" + 
+                "        'service',\n" + 
+                "        jsonb_build_object(\n" + 
+                "            'cv_action',\n" + 
+                "            case\n" + 
+                "                when tae.ck_id is null then 'I'\n" + 
+                "                else 'U'\n" + 
+                "            end\n" + 
+                "        )\n" + 
+                "    )) as result\n" + 
+                "from\n" + 
+                "    (\n" + 
+                "        select\n" + 
+                "            :ck_account_ext::varchar as ck_account_ext,\n" + 
+                "            :ck_provider_ext::varchar as ck_provider_ext\n" + 
+                "    ) as t\n" + 
+                "left join s_at.t_account_ext tae \n" + 
+                "on\n" + 
+                "    tae.ck_account_ext = t.ck_account_ext\n" + 
+                "    and tae.ck_provider = t.ck_provider_ext\n" + 
+                "left join s_at.t_account ta \n" + 
+                "on tae.ck_account_int = ta.ck_id\n",
+                null,
+                {
+                    data: JSON.stringify(data),
+                    ck_account_ext: idUser,
+                    ck_provider_ext: nameProvider,
+                },
+                {},
+                { autoCommit: true, }
+            )
+            .then(noop, (err) => this.log.error(err));
     }
     public getConnection(): Promise<Connection> {
         return this.dataSource.getConnection();
@@ -332,7 +332,7 @@ export default class CoreAuthPg extends NullSessProvider {
                                 .executeStmt(
                                     "select distinct t.ck_account, t.ck_action from (\n" +
                                     " select ur.ck_account, dra.ck_action\n" +
-                                        "  from t_account_role ur\n" +
+                                    "  from t_account_role ur\n" +
                                     "  join t_role_action dra on ur.ck_role = dra.ck_role\n" +
                                     " union all\n" +
                                     " select ta.ck_account, ta.ck_action from t_account_action ta \n" +
