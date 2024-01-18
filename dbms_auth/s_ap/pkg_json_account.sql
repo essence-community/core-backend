@@ -350,15 +350,29 @@ begin
   ) as jt;
   -- лочим пользователя
   perform pkg_account.p_lock_account(vot_account.ck_id::varchar);
+  if nullif(trim(pc_json#>>'{data,ck_account_ext}'), '') is not null then
+    if vot_account.cv_name is null then
+      vot_account.cv_name = vot_account.cv_login;
+    end if;
+    if vot_account.cv_surname is null then
+      vot_account.cv_surname = '';
+    end if;
+  end if;
   -- вызовем метод создание пользователя
   vot_account := pkg_account.p_modify_account(vv_action, vot_account, vct_account_info);
-  if nullif(trim(pc_json#>>'{data,ck_account_ext}'), '') is not null and vv_action = i::varchar then
+  if nullif(gv_error::varchar, '') is not null then
+    return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}';
+  end if;
+  if nullif(trim(pc_json#>>'{data,ck_account_ext}'), '') is not null then
     vot_account_ext.ck_user = pv_user;
     vot_account_ext.ct_change = CURRENT_TIMESTAMP;
     vot_account_ext.ck_account_int = vot_account.ck_id;
-    vot_account_ext.ck_account_ext = nullif(trim(pc_json#>>'{data,ck_account_ext}'), '');
+    vot_account_ext.ck_account_ext = nullif(trim(pc_json#>>'{data,ck_account_ext}'), '')::varchar;
     vot_account_ext.ck_provider = nullif(trim(pc_json#>>'{data,ck_provider_ext}'), '');
     perform pkg_account.p_modify_account_ext(vv_action, vot_account_ext);
+  end if;
+  if nullif(gv_error::varchar, '') is not null then
+    return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}';
   end if;
   vot_account_action.ck_account = vot_account.ck_id;
   vot_account_action.ck_user = pv_user;
@@ -376,7 +390,9 @@ begin
 	  vot_account_action.ck_action = vt_action_rec.ck_action;
   	perform pkg_account.p_modify_account_action('I', vot_account_action);
   end loop;
-
+  if nullif(gv_error::varchar, '') is not null then
+    return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}';
+  end if;
   -- логируем данные
   perform pkg_log.p_save(pv_user, pv_session, pc_json, 'pkg_json_account.f_modify_account', vot_account.ck_id::varchar, vv_action);
   return '{"ck_id":"' || coalesce(vot_account.ck_id::varchar, '') || '","cv_error":' || pkg.p_form_response() || '}';

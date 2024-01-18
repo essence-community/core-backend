@@ -326,7 +326,7 @@ begin
 
   -- код функции
   if pv_action = d::varchar then
-    delete from ${user.table}.t_account_ext where ck_id = pot_account_ext.ck_id;
+    -- delete from ${user.table}.t_account_ext where ck_id = pot_account_ext.ck_id;
     return;
   end if;
   if pv_action = i::varchar then
@@ -335,9 +335,9 @@ begin
    return;
   end if;
   update ${user.table}.t_account_ext
-    set (ck_account_int,ck_account_ext,ck_provider,ck_user,ct_change) = 
-    (pot_account_ext.ck_account_int,pot_account_ext.ck_account_ext,pot_account_ext.ck_provider,pot_account_ext.ck_user,pot_account_ext.ct_change)
-  where ck_id = pot_account_ext.ck_id;
+    set (ck_account_int,ck_user,ct_change) = 
+    (pot_account_ext.ck_account_int,pot_account_ext.ck_user,pot_account_ext.ct_change)
+  where ck_account_ext = pot_account_ext.ck_account_ext and ck_provider = pot_account_ext.ck_provider;
   if not found then
     perform pkg.p_set_error(504);
   end if;

@@ -87,10 +87,15 @@ export default class CoreAuthPg extends NullSessProvider {
         }
         if (this.params.addedExternal) {
             initProcess({
-                addUser: (data) => setTimeout(
-                    () => this.syncExternalAuthUserInfo(data.idUser, data.nameProvider, data.data),
-                    process.env.UNGATE_HTTP_ID !== "1" ? parseInt(process.env.UNGATE_HTTP_ID || "2", 10) * 100 : 0
-                )
+                addUser: (data) => {
+                    if (data.nameProvider == this.name) {
+                        return;
+                    }
+                    setTimeout(
+                        () => this.syncExternalAuthUserInfo(data.idUser, data.nameProvider, data.data),
+                        process.env.UNGATE_HTTP_ID != "1" ? (parseInt(process.env.UNGATE_HTTP_ID || "2", 10) * 500) : 0,
+                    );
+                }
             }, "cluster", false);
         }
 
@@ -100,10 +105,7 @@ export default class CoreAuthPg extends NullSessProvider {
         nameProvider: string,
         data: Record<string, any>
     ) {
-        if (nameProvider == this.name) {
-            return;
-        }
-        this.log.debug("syncExternalAuthUserInfo:\nidUser:%s\nameProvider:%s\ndata:%j", idUser, nameProvider, data);
+        this.log.debug("syncExternalAuthUserInfo before:\nidUser:%s\nnameProvider:%s\ndata:%j", idUser, nameProvider, data);
         await this.dataSource
             .executeStmt(
                 "select\n" + 
@@ -113,12 +115,12 @@ export default class CoreAuthPg extends NullSessProvider {
                 "            'ck_id',\n" + 
                 "            case\n" + 
                 "                when tae.ck_id is null then public.uuid_generate_v4()::varchar\n" + 
-                "                else ta.ck_id\n" + 
+                "                else ta.ck_id::varchar\n" + 
                 "            end,\n" + 
                 "            'cv_hash_password',\n" + 
                 "            case\n" + 
                 "                when tae.ck_id is null then public.uuid_generate_v4()::varchar\n" + 
-                "                else ta.cv_hash_password\n" + 
+                "                else ta.cv_hash_password::varchar\n" + 
                 "            end,\n" + 
                 "            'ck_account_ext',\n" + 
                 "            t.ck_account_ext,\n" + 
@@ -146,7 +148,7 @@ export default class CoreAuthPg extends NullSessProvider {
                 "    and tae.ck_provider = t.ck_provider_ext\n" + 
                 "left join s_at.t_account ta \n" + 
                 "on tae.ck_account_int = ta.ck_id\n"+ 
-                "where ta.ck_id is null or (ta.ck_id is not null and (ta.ct_change + interval '1' minute) < now())\n",
+                "where ta.ck_id is null or (ta.ck_id is not null and (ta.ct_change + interval '5' minute) < now())\n",
                 null,
                 {
                     data: JSON.stringify(data),
@@ -156,7 +158,10 @@ export default class CoreAuthPg extends NullSessProvider {
                 {},
                 { autoCommit: true, }
             )
-            .then(noop, (err) => this.log.error(err));
+            .then(async (res) => {
+                const row = await ReadStreamToArray(res.stream);
+                this.log.debug("syncExternalAuthUserInfo after:\nidUser:%s\nnameProvider:%s\nresult:%j", idUser, nameProvider, row);
+            }, (err) => this.log.error(err));
     }
     public getConnection(): Promise<Connection> {
         return this.dataSource.getConnection();
@@ -291,14 +296,16 @@ export default class CoreAuthPg extends NullSessProvider {
         this.log.trace("Cache users...");
         return this.dataSource
             .executeStmt(
-                "select jsonb_build_object('ck_id', u.ck_id,\n" + 
+                "select jsonb_build_object('ck_id', case when tae.ck_id is null then u.ck_id::varchar else tae.ck_account_ext end,\n" + 
                 "                   'cv_login', u.cv_login,\n" + 
                 "                   'cv_name', u.cv_name,\n" + 
                 "                   'cv_surname', u.cv_surname,\n" + 
                 "                   'cv_patronymic', u.cv_patronymic,\n" + 
                 "                   'cv_email', u.cv_email,\n" + 
                 "                   'cv_timezone', u.cv_timezone) || coalesce(info.attr, '{}'::jsonb) as json\n" + 
-                "  from s_at.t_account u\n" + 
+                "  from s_at.t_account u\n" +
+                "  left join s_at.t_account_ext tae\n" +
+                "    on tae.ck_account_int = u.ck_id\n" +
                 "  left join (select a.ck_id,\n" + 
                 "                jsonb_object_agg(a.ck_d_info, pkg_json_account.f_decode_attr(ainf.cv_value, a.cr_type)) as attr\n" + 
                 "          from (select ac.ck_id, inf.ck_id as ck_d_info, inf.cr_type\n" + 
@@ -331,13 +338,15 @@ export default class CoreAuthPg extends NullSessProvider {
                         resUser.stream.on("end", () => {
                             this.dataSource
                                 .executeStmt(
-                                    "select distinct t.ck_account, t.ck_action from (\n" +
+                                    "select distinct case when tae.ck_id is null then t.ck_account::varchar else tae.ck_account_ext end as ck_account, t.ck_action from (\n" +
                                     " select ur.ck_account, dra.ck_action\n" +
                                     "  from t_account_role ur\n" +
                                     "  join t_role_action dra on ur.ck_role = dra.ck_role\n" +
                                     " union all\n" +
                                     " select ta.ck_account, ta.ck_action from t_account_action ta \n" +
-                                    ") as t",
+                                    ") as t" +
+                                    "  left join s_at.t_account_ext tae\n" +
+                                    "    on tae.ck_account_int = t.ck_account\n",
                                     null,
                                     null,
                                     null,

@@ -350,7 +350,7 @@ export class GrantManager {
                 reject(new Error("invalid token (wrong type)"));
             } else if (token.content.iat < this.notBefore) {
                 reject(new Error("invalid token (stale token)"));
-            } else if (this.realmUrl && token.content.iss !== this.realmUrl) {
+            } else if (this.realmUrl && token.content.iss !== this.realmUrl && token.content.iss !== this.proxyUrl) {
                 reject(new Error("invalid token (wrong ISS)"));
             } else {
                 const audienceData = Array.isArray(token.content.aud)
