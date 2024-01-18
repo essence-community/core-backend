@@ -58,9 +58,11 @@ export function initProcess(
         | "eventNode"
         | "localDbNode"
         | "schedulerNode",
+    isLogger = true,
 ) {
     process.on("message", async (message: ISenderOptions) => {
         if (
+            isLogger &&
             logger.isTraceEnabled() &&
             message.target &&
             message.command !== "sendAllServerCallDb"

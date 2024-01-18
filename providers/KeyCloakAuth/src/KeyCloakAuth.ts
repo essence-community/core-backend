@@ -22,6 +22,9 @@ import * as fs from "fs";
 import { Constant } from "@ungate/plugininf/lib/Constants";
 import * as Token from "keycloak-connect/middleware/auth-utils/token";
 import { GrantManager } from "./util/GrantManager";
+import * as crypto from 'crypto';
+import { Agent as HttpsAgent, AgentOptions } from "https";
+import { Agent as HttpAgent } from "http";
 
 const FLAG_REDIRECT = "jl_keycloak_auth_callback";
 const USE_REDIRECT = "jl_keycloak_use_redirect";
@@ -45,10 +48,72 @@ export default class KeyCloakAuth extends NullSessProvider {
                 required: true,
                 defaultValue: "jt_keycloak",
             },
-            keyCloakConfig: {
-                name: "KeyCloakConfig json",
-                type: "long_string",
-                defaultValue: "{}",
+            grantManagerConfig: {
+                name: "manager",
+                type: "form_nested",
+                childs: {
+                    clientId: {
+                        name: "Client ID | Resource",
+                        type: "string",
+                        required: true,
+                    },
+                    realmUrl: {
+                        name: "URL Realm",
+                        type: "string",
+                    },
+                    proxyUrl: {
+                        name: "Proxy URL Realm",
+                        type: "string",
+                    },
+                    userInfoUrl: {
+                        name: "URL User Info",
+                        type: "string",
+                    },
+                    tokenUrl: {
+                        name: "URL Token",
+                        type: "string",
+                    },
+                    tokenVerifyUrl: {
+                        name: "URL Token Verification",
+                        type: "string",
+                    },
+                    secret: {
+                        name: "Secret",
+                        type: "string",
+                    },
+                    publicKey: {
+                        name: "Realm public key",
+                        type: "long_string",
+                    },
+                    public: {
+                        name: "Public client",
+                        type: "boolean",
+                        defaultValue: false,
+                    },
+                    bearerOnly: {
+                        name: "Bearer only",
+                        type: "boolean",
+                        defaultValue: true,
+                    },
+                    verifyTokenAudience: {
+                        name: "Verify Token Audience",
+                        type: "boolean",
+                        defaultValue: true,
+                    },
+                    isIgnoreCheckSignature: {
+                        name: "Ignore check sig",
+                        type: "boolean"
+                    },
+                    scope: {
+                        name: "Scope",
+                        description: "Example: openid profile",
+                        type: "string",
+                    },
+                    idpHint: {
+                        name: "kc_idp_hint login url",
+                        type: "string",
+                    },
+                },
             },
             mapKeyCloakGrant: {
                 type: "form_repeater",
@@ -135,10 +200,19 @@ export default class KeyCloakAuth extends NullSessProvider {
                 name: "Наименование ключа индетификации",
                 type: "string",
             },
+            httpsAgent: {
+                name: "Настройки https agent",
+                type: "long_string",
+            },
+            isSaveToken: {
+                name: "Save token",
+                type: "boolean",
+                defaultValue: false,
+            },
         };
     }
     public params: IKeyCloakAuthParams;
-    private keyCloak: KeyCloak.Keycloak;
+    private grantManager: GrantManager;
     constructor(
         name: string,
         params: ICCTParams,
@@ -146,54 +220,107 @@ export default class KeyCloakAuth extends NullSessProvider {
     ) {
         super(name, params, sessCtrl);
         this.params = initParams(KeyCloakAuth.getParamsInfo(), this.params);
-        if (typeof this.params.keyCloakConfig === "string") {
-            if ((this.params.keyCloakConfig as string).charAt(0) === "{") {
-                this.params.keyCloakConfig = JSON.parse(this.params.keyCloakConfig);
-            }
-        }
-        if (typeof this.params.keyCloakConfig !== "object") {
-            this.params.keyCloakConfig = {} as any;
-        }
         if (
-            this.params.keyCloakConfig["realm-public-key"] &&
-            fs.existsSync(this.params.keyCloakConfig["realm-public-key"])
+            !isEmpty(this.params.grantManagerConfig.publicKey) &&
+            fs.existsSync(this.params.grantManagerConfig.publicKey)
         ) {
-            this.params.keyCloakConfig["realm-public-key"] = fs
-                .readFileSync(this.params.keyCloakConfig["realm-public-key"])
+            this.params.grantManagerConfig.publicKey = fs
+                .readFileSync(this.params.grantManagerConfig.publicKey)
                 .toString();
         }
-        if (this.params.keyCloakConfig["realm-public-key"]) {
-            this.params.keyCloakConfig["realm-public-key"] =
-                this.params.keyCloakConfig["realm-public-key"]
+        if (
+            !isEmpty(this.params.grantManagerConfig.publicKey) &&
+            !isEmpty(this.params.grantManagerConfig.publicKey.trim())
+        ) {
+            this.params.grantManagerConfig.publicKey =
+                this.params.grantManagerConfig.publicKey
                     .replace("-----BEGIN PUBLIC KEY-----\n", "")
                     .replace("-----END PUBLIC KEY-----", "")
                     .trim();
         }
-        Object.entries(this.params.keyCloakConfig).forEach(([key, value]) => {
-            if (isEmpty(value)) {
-                delete this.params.keyCloakConfig[key];
-            }
-        });
-        this.keyCloak = new KeyCloak(
-            {
-                store: this.sessCtrl.getSessionStore(),
+        Object.entries(this.params.grantManagerConfig).forEach(
+            ([key, value]) => {
+                if (isEmpty(value)) {
+                    delete this.params.grantManagerConfig[key];
+                }
             },
-            this.params.keyCloakConfig,
         );
-        (this.keyCloak as any).grantManager = new GrantManager({ ...this.params.keyCloakConfig,  ...(this.keyCloak as any).config}, this.log);
-        this.keyCloak.storeGrant = function(grant, request, response) {
-            if (this.stores.length < 2 || this.stores[0].get(request)) {
-                return;
+
+        if (isEmpty(this.params.grantManagerConfig.isIgnoreCheckSignature) && isEmpty(this.params.grantManagerConfig.realmUrl)) {
+            this.params.grantManagerConfig.isIgnoreCheckSignature = true;
+        }
+
+        if (this.params.httpsAgent) {
+            const httpsAgent: AgentOptions = typeof this.params.httpsAgent =="string" && (
+                this.params.httpsAgent as string
+            ).startsWith("{")
+                ? JSON.parse(this.params.httpsAgent as string)
+                : this.params.httpsAgent;
+            if (
+                typeof httpsAgent.key === "string" &&
+                httpsAgent.key.indexOf("/") > -1 &&
+                fs.existsSync(httpsAgent.key)
+            ) {
+                httpsAgent.key = fs.readFileSync(httpsAgent.key);
             }
-            if (!grant) {
-                return;
+            if (
+                typeof httpsAgent.ca === "string" &&
+                httpsAgent.ca.indexOf("/") > -1 &&
+                fs.existsSync(httpsAgent.ca)
+            ) {
+                httpsAgent.ca = fs.readFileSync(httpsAgent.ca);
+            }
+            if (
+                typeof httpsAgent.cert === "string" &&
+                httpsAgent.cert.indexOf("/") > -1 &&
+                fs.existsSync(httpsAgent.cert)
+            ) {
+                httpsAgent.cert = fs.readFileSync(httpsAgent.cert);
+            }
+            if (
+                typeof httpsAgent.crl === "string" &&
+                httpsAgent.crl.indexOf("/") > -1 &&
+                fs.existsSync(httpsAgent.crl)
+            ) {
+                httpsAgent.crl = fs.readFileSync(httpsAgent.crl);
+            }
+            if (
+                typeof httpsAgent.dhparam === "string" &&
+                httpsAgent.dhparam.indexOf("/") > -1 &&
+                fs.existsSync(httpsAgent.dhparam)
+            ) {
+                httpsAgent.dhparam = fs.readFileSync(httpsAgent.dhparam);
+            }
+            if (
+                typeof httpsAgent.pfx === "string" &&
+                httpsAgent.pfx.indexOf("/") > -1 &&
+                fs.existsSync(httpsAgent.pfx)
+            ) {
+                httpsAgent.pfx = fs.readFileSync(httpsAgent.pfx);
             }
 
-            this.stores[1].wrap(grant);
-            (grant as any).store(request, response);
-            return grant;
-        };
-        this.keyCloak.storeGrant.bind(this.keyCloak);
+            this.params.grantManagerConfig.httpsAgent = new HttpsAgent(httpsAgent);
+        }
+
+        if (this.params.httpAgent) {
+            const httpAgent = typeof this.params.httpAgent == "string" && (this.params.httpAgent as string).startsWith("{")
+                ? JSON.parse(this.params.httpAgent as string)
+                : params.httpAgent;
+
+            this.params.grantManagerConfig.httpAgent = new HttpAgent(httpAgent);
+        }
+        if (this.params.grantManagerConfig.grantManagerConfigExtra && typeof this.params.grantManagerConfig.grantManagerConfigExtra === "string") {
+            this.params.grantManagerConfig = {
+                ...JSON.parse(this.params.grantManagerConfigExtra),
+                ...this.params.grantManagerConfig,
+            };
+            delete this.params.grantManagerConfig.grantManagerConfigExtra;
+        }
+
+        this.grantManager = new GrantManager(
+            this.params.grantManagerConfig,
+            this.log,
+        );
     }
     /**
      * Проверка на случай если авторизация вынесена на внешний прокси nginx
@@ -230,13 +357,17 @@ export default class KeyCloakAuth extends NullSessProvider {
             redirectUrl.query[this.params.flagRedirect] = "1";
             gateContext.request.session.auth_redirect_uri =
                 URL.format(redirectUrl);
-            const grant = await PostAuth(gateContext, this.keyCloak, data);
+            const grant = await PostAuth(gateContext, this.grantManager, data);
             delete gateContext.request.session.auth_redirect_uri;
             if (!grant) {
                 return this.redirectAccess(gateContext);
             }
-            const dataUser = await this.generateUserData(grant);
-
+            const access_token = (grant.access_token as any)?.token;
+            const access_token_hash = crypto
+                        .createHash("md5")
+                        .update(access_token || "")
+                    .digest("hex");
+            const dataUser = await this.generateUserData(grant, this.grantManager);
             await this.sessCtrl.addUser(
                 dataUser.idUser,
                 this.name,
@@ -249,7 +380,8 @@ export default class KeyCloakAuth extends NullSessProvider {
                 userData: dataUser.userData,
                 isAccessErrorNotFound: false,
                 sessionData: {
-                    [`access_token`]: (grant.access_token as any)?.token,
+                    access_token: this.params.isSaveToken ? access_token : undefined,
+                    access_token_hash: access_token_hash,
                 },
             });
             if (sess) {
@@ -265,26 +397,35 @@ export default class KeyCloakAuth extends NullSessProvider {
             (gateContext.request as IRequestExtra).kauth = {};
             await Admin(
                 gateContext,
-                this.keyCloak,
+                this.grantManager,
                 gateContext.params[this.params.adminPathParam],
             );
             throw new BreakException("break");
         } else if (
-            gateContext.request.session[TOKEN_KEY] ||
             gateContext.request.headers.authorization
                 ?.substr(0, 7)
                 .toLowerCase()
                 .indexOf("bearer ") > -1
         ) {
             gateContext.debug("KeyCloak Init grant");
-            (gateContext.request as IRequestExtra).kauth = {};
 
-            return GrantAttacher(gateContext, this.keyCloak)
+            return GrantAttacher(gateContext, this.grantManager)
                 .then(async (grant) => {
                     if (!grant) {
                         throw new Error("Not Auth");
                     }
-                    const dataUser = await this.generateUserData(grant);
+                    const access_token = (grant.access_token as any)?.token;
+                    const access_token_hash = crypto
+                            .createHash("md5")
+                            .update(access_token || "")
+                        .digest("hex");
+                    if (
+                        session &&
+                        session.sessionData.access_token_hash === access_token_hash
+                    ) {
+                        return session;
+                    }
+                    const dataUser = await this.generateUserData(grant, this.grantManager);
                     if (!session) {
                         await this.sessCtrl.addUser(
                             dataUser.idUser,
@@ -298,8 +439,8 @@ export default class KeyCloakAuth extends NullSessProvider {
                             userData: dataUser.userData,
                             isAccessErrorNotFound: false,
                             sessionData: {
-                                [`access_token`]: (grant.access_token as any)
-                                    ?.token,
+                                access_token: this.params.isSaveToken ? access_token : undefined,
+                                access_token_hash: access_token_hash,
                             },
                         });
 
@@ -316,6 +457,12 @@ export default class KeyCloakAuth extends NullSessProvider {
                         ...session.userData,
                         ...dataUser.userData,
                     };
+                    session.sessionData.access_token_hash = access_token_hash;
+                    gateContext.request.session.gsession.sessionData.access_token_hash = access_token_hash;
+                    if (this.params.isSaveToken) {
+                        session.sessionData.access_token = access_token;
+                        gateContext.request.session.gsession.sessionData.access_token = access_token;
+                    }
                     await this.sessCtrl.addUser(
                         dataUser.idUser,
                         this.name,
@@ -348,14 +495,17 @@ export default class KeyCloakAuth extends NullSessProvider {
     }
     private async generateUserData(
         grant: KeyCloak.Grant,
+        grantManager: GrantManager,
     ): Promise<{ userData: IUserData; idUser: string }> {
-        const userInfo = await this.keyCloak.grantManager.userInfo(
-            grant.access_token,
-        );
+        const token: Token = grant.access_token;
+        const userInfo =
+            grantManager.realmUrl && grantManager.userInfoUrl
+                ? await grantManager.userInfo(token)
+                : token.content;
         const idUser =
-            (grant.access_token as Token).content[this.params.idKey] ||
+            token.content[this.params.idKey] ||
             userInfo[this.params.idKey] ||
-            (grant.access_token as Token).content.sub;
+            token.content.sub;
         const dataUser = {
             ca_actions: [],
             ck_id: idUser,
@@ -366,10 +516,10 @@ export default class KeyCloakAuth extends NullSessProvider {
                 dataUser[obj.out] = userInfo[obj.in];
             }
             if (
-                (grant.access_token as any).content &&
-                !isEmpty((grant.access_token as any).content[obj.in])
+                 token.content &&
+                !isEmpty( token.content[obj.in])
             ) {
-                dataUser[obj.out] = (grant.access_token as any).content[obj.in];
+                dataUser[obj.out] =  token.content[obj.in];
             }
         });
         if (typeof dataUser.ca_actions === "string") {
@@ -397,7 +547,7 @@ export default class KeyCloakAuth extends NullSessProvider {
     private async redirectAccess(context: IContext): Promise<any> {
         const redirectUrl = URL.parse(this.params.redirectUrl, true);
         redirectUrl.query[this.params.flagRedirect] = "1";
-        const loginUrl = this.keyCloak.loginUrl(
+        const loginUrl = this.grantManager.loginUrl(
             context.request.session.id,
             URL.format(redirectUrl),
         );
@@ -422,7 +572,40 @@ export default class KeyCloakAuth extends NullSessProvider {
         context: IContext,
         query: IGateQuery,
     ): Promise<IAuthResult> {
-        return this.redirectAccess(context);
+        if (isEmpty(query.inParams.cv_login) || isEmpty(query.inParams.cv_password)) {
+            return this.redirectAccess(context);
+        }
+        return this.grantManager.obtainDirectly(
+                query.inParams.cv_login,
+                query.inParams.cv_password
+            ).then( async (grant: KeyCloak.Grant) => {
+                const dataUser = await this.generateUserData(
+                    grant,
+                    this.grantManager,
+                );
+                const access_token = (grant.access_token as any)?.token;
+                const access_token_hash = crypto
+                            .createHash("md5")
+                            .update(access_token || "")
+                        .digest("hex");
+                await this.sessCtrl.addUser(
+                                dataUser.idUser,
+                                this.name,
+                                dataUser.userData,
+                            );
+                await this.sessCtrl.updateHashAuth();
+                return {
+                    idUser: dataUser.idUser,
+                    dataUser: dataUser.userData,
+                    sessionData: {
+                        access_token: this.params.isSaveToken ? access_token : undefined,
+                        access_token_hash: access_token_hash,
+                    },
+                };
+            }).catch((errFind) => {
+                this.log.error(errFind);
+                return this.redirectAccess(context);
+            });
     }
     /**
      * Инициализация контекста

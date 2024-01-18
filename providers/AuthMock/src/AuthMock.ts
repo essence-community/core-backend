@@ -58,9 +58,9 @@ export default class AuthMock extends NullSessProvider {
             ck_id: 1,
             cv_email: null,
             cv_login: this.params.adminUser,
-            cv_name: "admin",
+            cv_name: this.params.adminUser,
             cv_patronymic: "",
-            cv_surname: "",
+            cv_surname: this.params.adminUser,
         };
         const viewUser = {
             ca_actions: [491, 497, 499, 511, 515, 533, 704, 692, 503],
@@ -68,8 +68,8 @@ export default class AuthMock extends NullSessProvider {
             cv_email: null,
             cv_login: this.params.viewUser,
             cv_name: "view",
-            cv_patronymic: "",
-            cv_surname: "",
+            cv_patronymic: this.params.viewUser,
+            cv_surname: this.params.viewUser,
         };
         await this.sessCtrl.addUser(
             "" + adminUser.ck_id,

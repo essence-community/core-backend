@@ -295,6 +295,7 @@ CREATE OR REPLACE FUNCTION pkg_json_account.f_modify_account(
     SET search_path=public, pkg, pkg_account, ${user.table}
 AS $BODY$
 declare
+  i sessvarstr;
   -- переменные пакета
   gv_error sessvarstr;
   gl_warning sessvari;
@@ -303,8 +304,12 @@ declare
   vot_account ${user.table}.t_account;
   vl_deleted smallint;
   vct_account_info jsonb := '[]'::jsonb;
+  vot_account_ext ${user.table}.t_account_ext;
   vv_action  varchar(1);
+  vt_action_rec record;
+  vot_account_action ${user.table}.t_account_action;
 begin
+  i = sessvarstr_declare('pkg', 'i', 'I');
   -- инициализация/получение переменных пакета
   gv_error = sessvarstr_declare('pkg', 'gv_error', '');
   gl_warning = sessvari_declare('pkg', 'gl_warning', 0);
@@ -345,8 +350,49 @@ begin
   ) as jt;
   -- лочим пользователя
   perform pkg_account.p_lock_account(vot_account.ck_id::varchar);
+  if nullif(trim(pc_json#>>'{data,ck_account_ext}'), '') is not null then
+    if vot_account.cv_name is null then
+      vot_account.cv_name = vot_account.cv_login;
+    end if;
+    if vot_account.cv_surname is null then
+      vot_account.cv_surname = '';
+    end if;
+  end if;
   -- вызовем метод создание пользователя
   vot_account := pkg_account.p_modify_account(vv_action, vot_account, vct_account_info);
+  if nullif(gv_error::varchar, '') is not null then
+    return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}';
+  end if;
+  if nullif(trim(pc_json#>>'{data,ck_account_ext}'), '') is not null then
+    vot_account_ext.ck_user = pv_user;
+    vot_account_ext.ct_change = CURRENT_TIMESTAMP;
+    vot_account_ext.ck_account_int = vot_account.ck_id;
+    vot_account_ext.ck_account_ext = nullif(trim(pc_json#>>'{data,ck_account_ext}'), '')::varchar;
+    vot_account_ext.ck_provider = nullif(trim(pc_json#>>'{data,ck_provider_ext}'), '');
+    perform pkg_account.p_modify_account_ext(vv_action, vot_account_ext);
+  end if;
+  if nullif(gv_error::varchar, '') is not null then
+    return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}';
+  end if;
+  vot_account_action.ck_account = vot_account.ck_id;
+  vot_account_action.ck_user = pv_user;
+  vot_account_action.ct_change = CURRENT_TIMESTAMP;
+
+  for vt_action_rec in (
+    select t.res::bigint as ck_action
+    from jsonb_array_elements_text(pc_json#>'{data,ca_actions}') as t(res)
+    join ${user.table}.t_action ta 
+    on ta.ck_id = t.res::bigint
+    where not EXISTS (
+      select 1 from ${user.table}.t_account_action taa where taa.ck_account = vot_account.ck_id and taa.ck_action = ta.ck_id
+    )
+  ) loop 
+	  vot_account_action.ck_action = vt_action_rec.ck_action;
+  	perform pkg_account.p_modify_account_action('I', vot_account_action);
+  end loop;
+  if nullif(gv_error::varchar, '') is not null then
+    return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}';
+  end if;
   -- логируем данные
   perform pkg_log.p_save(pv_user, pv_session, pc_json, 'pkg_json_account.f_modify_account', vot_account.ck_id::varchar, vv_action);
   return '{"ck_id":"' || coalesce(vot_account.ck_id::varchar, '') || '","cv_error":' || pkg.p_form_response() || '}';
@@ -749,6 +795,57 @@ ALTER FUNCTION pkg_json_account.f_modify_role_action(character varying, characte
 
 COMMENT ON FUNCTION pkg_json_account.f_modify_role_action(character varying, character varying, jsonb)
     IS 'добавление/редактирование/удаление связи ролей и действий';
+
+CREATE OR REPLACE FUNCTION pkg_json_account.f_modify_account_action(
+	pv_user character varying,
+	pv_session character varying,
+	pc_json jsonb)
+    RETURNS text
+    LANGUAGE 'plpgsql'
+    SECURITY DEFINER 
+    SET search_path=public, pkg_account, ${user.table}
+AS $BODY$
+declare
+  -- переменные пакета
+  gv_error sessvarstr;
+
+  -- переменные функции
+  vot_account_action ${user.table}.t_account_action;
+  vot_account_action_r record;
+  vv_action  varchar(1);
+begin
+  -- инициализация/получение переменных пакета
+  gv_error = sessvarstr_declare('pkg', 'gv_error', '');
+
+  -- код функции
+  --обнулим глобальные переменные с перечнем ошибок/предупреждений/информационных сообщений, выставим пользователя
+  perform pkg.p_reset_response();--(pn_user);
+  --JSON -> rowtype
+  vv_action = trim(pc_json#>>'{service,cv_action}');
+  vot_account_action.ck_account = nullif(trim(pc_json#>>'{service,ck_main}'), '')::uuid;
+  vot_account_action.ck_user = pv_user;
+  vot_account_action.ct_change = CURRENT_TIMESTAMP;
+ -- лочим действие и роль
+  perform pkg_account.p_lock_account(vot_account_action.ck_account::varchar);
+  for vot_account_action_r in (
+    select
+      nullif(trim(r.res->>'ck_action'), '') as ck_action
+    from jsonb_array_elements(pc_json->'data') as r(res)
+  ) loop 
+	  vot_account_action.ck_action = vot_account_action_r.ck_action;
+  	perform pkg_account.p_modify_account_action(vv_action, vot_account_action);
+  end loop;
+  -- логируем данные
+  perform pkg_log.p_save(pv_user, pv_session, pc_json, 'pkg_json_account.f_modify_account_action', vot_account_action.ck_action::varchar, vv_action);
+  return '{"ck_id":"' || coalesce(vot_account_action.ck_action::varchar, '') || '","cv_error":' || pkg.p_form_response() || '}';
+end;
+$BODY$;
+
+ALTER FUNCTION pkg_json_account.f_modify_account_action(character varying, character varying, jsonb)
+    OWNER TO ${user.update};
+
+COMMENT ON FUNCTION pkg_json_account.f_modify_account_action(character varying, character varying, jsonb)
+    IS 'добавление/редактирование/удаление связи пользователей и действий';
 
 CREATE OR REPLACE FUNCTION pkg_json_account.f_modify_auth_token(
 	pv_user character varying,

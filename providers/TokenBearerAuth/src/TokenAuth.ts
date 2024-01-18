@@ -20,6 +20,9 @@ import { Constant } from "@ungate/plugininf/lib/Constants";
 import * as Token from "keycloak-connect/middleware/auth-utils/token";
 import * as URL from "url";
 import { GrantManager } from "./GrantManager";
+import { Agent as HttpsAgent, AgentOptions } from "https";
+import { Agent as HttpAgent } from "http";
+import * as crypto from 'crypto';
 
 const FLAG_REDIRECT = "jl_keycloak_auth_callback";
 const USE_REDIRECT = "jl_keycloak_use_redirect";
@@ -48,6 +51,10 @@ export default class TokenAuth extends NullSessProvider {
                         name: "URL Realm",
                         type: "string",
                     },
+                    proxyUrl: {
+                        name: "Proxy URL Realm",
+                        type: "string",
+                    },
                     userInfoUrl: {
                         name: "URL User Info",
                         type: "string",
@@ -71,7 +78,7 @@ export default class TokenAuth extends NullSessProvider {
                     public: {
                         name: "Public client",
                         type: "boolean",
-                        defaultValue: true,
+                        defaultValue: false,
                     },
                     bearerOnly: {
                         name: "Bearer only",
@@ -85,8 +92,16 @@ export default class TokenAuth extends NullSessProvider {
                     },
                     isIgnoreCheckSignature: {
                         name: "Ignore check sig",
-                        type: "boolean",
-                        defaultValue: true,
+                        type: "boolean"
+                    },
+                    scope: {
+                        name: "Scope",
+                        description: "Example: openid profile",
+                        type: "string",
+                    },
+                    idpHint: {
+                        name: "kc_idp_hint login url",
+                        type: "string",
                     },
                 },
             },
@@ -170,6 +185,10 @@ export default class TokenAuth extends NullSessProvider {
                 name: "Наименование ключа индетификации",
                 type: "string",
             },
+            httpsAgent: {
+                name: "Настройки https agent",
+                type: "long_string",
+            },
         };
     }
     public params: ITokenAuthParams;
@@ -207,6 +226,77 @@ export default class TokenAuth extends NullSessProvider {
             },
         );
 
+        if (isEmpty(this.params.grantManagerConfig.isIgnoreCheckSignature) && isEmpty(this.params.grantManagerConfig.realmUrl)) {
+            this.params.grantManagerConfig.isIgnoreCheckSignature = true;
+        }
+
+        if (this.params.httpsAgent) {
+            const httpsAgent: AgentOptions = typeof this.params.httpsAgent =="string" && (
+                this.params.httpsAgent as string
+            ).startsWith("{")
+                ? JSON.parse(this.params.httpsAgent as string)
+                : this.params.httpsAgent;
+            if (
+                typeof httpsAgent.key === "string" &&
+                httpsAgent.key.indexOf("/") > -1 &&
+                fs.existsSync(httpsAgent.key)
+            ) {
+                httpsAgent.key = fs.readFileSync(httpsAgent.key);
+            }
+            if (
+                typeof httpsAgent.ca === "string" &&
+                httpsAgent.ca.indexOf("/") > -1 &&
+                fs.existsSync(httpsAgent.ca)
+            ) {
+                httpsAgent.ca = fs.readFileSync(httpsAgent.ca);
+            }
+            if (
+                typeof httpsAgent.cert === "string" &&
+                httpsAgent.cert.indexOf("/") > -1 &&
+                fs.existsSync(httpsAgent.cert)
+            ) {
+                httpsAgent.cert = fs.readFileSync(httpsAgent.cert);
+            }
+            if (
+                typeof httpsAgent.crl === "string" &&
+                httpsAgent.crl.indexOf("/") > -1 &&
+                fs.existsSync(httpsAgent.crl)
+            ) {
+                httpsAgent.crl = fs.readFileSync(httpsAgent.crl);
+            }
+            if (
+                typeof httpsAgent.dhparam === "string" &&
+                httpsAgent.dhparam.indexOf("/") > -1 &&
+                fs.existsSync(httpsAgent.dhparam)
+            ) {
+                httpsAgent.dhparam = fs.readFileSync(httpsAgent.dhparam);
+            }
+            if (
+                typeof httpsAgent.pfx === "string" &&
+                httpsAgent.pfx.indexOf("/") > -1 &&
+                fs.existsSync(httpsAgent.pfx)
+            ) {
+                httpsAgent.pfx = fs.readFileSync(httpsAgent.pfx);
+            }
+
+            this.params.grantManagerConfig.httpsAgent = new HttpsAgent(httpsAgent);
+        }
+
+        if (this.params.httpAgent) {
+            const httpAgent = typeof this.params.httpAgent == "string" && (this.params.httpAgent as string).startsWith("{")
+                ? JSON.parse(this.params.httpAgent as string)
+                : params.httpAgent;
+
+            this.params.grantManagerConfig.httpAgent = new HttpAgent(httpAgent);
+        }
+        if (this.params.grantManagerConfig.grantManagerConfigExtra && typeof this.params.grantManagerConfig.grantManagerConfigExtra === "string") {
+            this.params.grantManagerConfig = {
+                ...JSON.parse(this.params.grantManagerConfigExtra),
+                ...this.params.grantManagerConfig,
+            };
+            delete this.params.grantManagerConfig.grantManagerConfigExtra;
+        }
+
         this.grantManager = new GrantManager(
             this.params.grantManagerConfig,
             this.log,
@@ -230,8 +320,7 @@ export default class TokenAuth extends NullSessProvider {
             (session && session.nameProvider !== this.name) ||
             (header &&
                 header.substr(0, 7).toLowerCase().indexOf("bearer ") === -1) ||
-            (!header &&
-                !gateContext.request.session[`token_bearer_${this.name}`])
+            (session)
         ) {
             return session;
         }
@@ -241,16 +330,22 @@ export default class TokenAuth extends NullSessProvider {
                 if (!grant) {
                     throw new Error("Not Auth");
                 }
+                const access_token = (grant.access_token as any)?.token;
+                const access_token_hash = crypto
+                        .createHash("md5")
+                        .update(access_token || "")
+                    .digest("hex");
+                
                 if (
                     session &&
-                    session.sessionData.access_token ===
-                        (grant.access_token as any).token
+                    session.sessionData.access_token_hash === access_token_hash
                 ) {
                     return session;
                 }
                 const dataUser = await this.generateUserData(
                     gateContext,
                     grant,
+                    this.grantManager,
                 );
                 if (!session) {
                     await this.sessCtrl.addUser(
@@ -265,7 +360,8 @@ export default class TokenAuth extends NullSessProvider {
                         userData: dataUser.userData,
                         isAccessErrorNotFound: false,
                         sessionData: {
-                            access_token: (grant.access_token as any)?.token,
+                            access_token: this.params.isSaveToken ? access_token : undefined,
+                            access_token_hash: access_token_hash,
                         },
                     });
 
@@ -283,11 +379,12 @@ export default class TokenAuth extends NullSessProvider {
                     ...dataUser.userData,
                 };
 
-                session.sessionData.access_token = (
-                    grant.access_token as any
-                )?.token;
-                gateContext.request.session.gsession.sessionData.access_token =
-                    (grant.access_token as any)?.token;
+                session.sessionData.access_token_hash = access_token_hash;
+                gateContext.request.session.gsession.sessionData.access_token_hash = access_token_hash;
+                if (this.params.isSaveToken) {
+                    session.sessionData.access_token = access_token;
+                    gateContext.request.session.gsession.sessionData.access_token = access_token;
+                }
                 await this.sessCtrl.addUser(
                     dataUser.idUser,
                     this.name,
@@ -314,11 +411,12 @@ export default class TokenAuth extends NullSessProvider {
     private async generateUserData(
         context: IContext,
         grant: KeyCloak.Grant,
+        grantManager: GrantManager,
     ): Promise<{ userData: IUserData; idUser: string }> {
         const token: Token = grant.access_token;
         const userInfo =
-            this.grantManager.realmUrl && this.grantManager.userInfoUrl
-                ? await this.grantManager.userInfo(token)
+            grantManager.realmUrl && grantManager.userInfoUrl
+                ? await grantManager.userInfo(token)
                 : token.content;
         const idUser =
             token.content[this.params.idKey] ||
@@ -395,7 +493,41 @@ export default class TokenAuth extends NullSessProvider {
         context: IContext,
         query: IGateQuery,
     ): Promise<IAuthResult> {
-        return this.redirectAccess(context);
+        if (isEmpty(query.inParams.cv_login) || isEmpty(query.inParams.cv_password)) {
+            return this.redirectAccess(context);
+        }
+        return this.grantManager.obtainDirectly(
+                query.inParams.cv_login,
+                query.inParams.cv_password
+            ).then( async (grant: KeyCloak.Grant) => {
+                const dataUser = await this.generateUserData(
+                    context,
+                    grant,
+                    this.grantManager,
+                );
+                    const access_token = (grant.access_token as any)?.token;
+                    const access_token_hash = crypto
+                            .createHash("md5")
+                            .update(access_token || "")
+                        .digest("hex");
+                    await this.sessCtrl.addUser(
+                                dataUser.idUser,
+                                this.name,
+                                dataUser.userData,
+                            );
+                    await this.sessCtrl.updateHashAuth();
+                return {
+                    idUser: dataUser.idUser,
+                    dataUser: dataUser.userData,
+                    sessionData: {
+                        access_token: this.params.isSaveToken ? access_token : undefined,
+                        access_token_hash: access_token_hash,
+                    },
+                };
+            }).catch((errFind) => {
+                this.log.error(errFind);
+                return this.redirectAccess(context);
+            });
     }
     /**
      * Инициализация контекста

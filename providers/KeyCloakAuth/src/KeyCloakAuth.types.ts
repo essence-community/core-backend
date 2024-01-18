@@ -1,6 +1,8 @@
 import { IRequest } from "@ungate/plugininf/lib/IContext";
 import * as KeyCloak from "keycloak-connect";
 import { ISessProviderParam } from "@ungate/plugininf/lib/NullSessProvider";
+import { Agent as HttpsAgent } from "https";
+import { Agent as HttpAgent } from "http";
 
 export interface IGrantMap {
     grant: string;
@@ -13,12 +15,7 @@ export interface IUserInfoMap {
 }
 
 export interface IKeyCloakAuthParams extends ISessProviderParam {
-    keyCloakConfig: KeyCloak.KeycloakConfig & {
-        secret?: string;
-        "public-client"?: boolean;
-        "min-time-between-jwks-requests"?: number;
-        "realm-public-key"?: string;
-    };
+    grantManagerConfig: IGrantManagerConfig;
     keyCloakParamName: string;
     redirectUrl: string;
     mapKeyCloakGrant: IGrantMap[];
@@ -27,6 +24,9 @@ export interface IKeyCloakAuthParams extends ISessProviderParam {
     flagRedirect: string;
     adminPathParam: string;
     idKey: string;
+    httpAgent?: string;
+    httpsAgent?: string;
+    isSaveToken?: boolean;
 }
 
 export interface IRequestExtra extends IRequest {
@@ -45,25 +45,27 @@ export interface IToken extends KeyCloak.Token {
 }
 
 export interface IRotationConfig {
-    certsUrl: string;
+    certsUrl?: string;
     realmUrl: string;
+    proxyUrl?: string;
     minTimeBetweenJwksRequests: number;
+    httpsAgent?: HttpsAgent;
+    httpAgent?: HttpAgent;
 }
 
 export interface IGrantManagerConfig extends IRotationConfig {
-    userInfoUrl: string;
-    tokenVerifyUrl: string;
-    tokenUrl: string;
+    userInfoUrl?: string;
+    tokenVerifyUrl?: string;
+    tokenUrl?: string;
     clientId: string;
-    secret: string;
-    publicKey: string;
-    public: string;
-    bearerOnly: string;
-    verifyTokenAudience: boolean;
+    secret?: string;
+    publicKey?: string;
+    public?: boolean;
+    bearerOnly?: boolean;
+    verifyTokenAudience?: boolean;
     isIgnoreCheckSignature?: boolean;
+    scope?: string;
+    idpHint?: string;
+    grantManagerConfigExtra?: any;
 }
 
-export interface IRotationConfig {
-    certsUrl: string;
-    minTimeBetweenJwksRequests: number;
-}

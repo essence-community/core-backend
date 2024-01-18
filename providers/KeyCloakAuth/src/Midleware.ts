@@ -3,10 +3,11 @@ import * as Token from "keycloak-connect/middleware/auth-utils/token";
 import * as Signature from "keycloak-connect/middleware/auth-utils/signature";
 import IContext from "@ungate/plugininf/lib/IContext";
 import { IRequestExtra, IKeyCloakAuthParam } from "./KeyCloakAuth.types";
+import { GrantManager } from "./util/GrantManager";
 
 export async function PostAuth(
     gateContext: IContext,
-    keycloak: KeyCloak.Keycloak,
+    grantManager: GrantManager,
     data: IKeyCloakAuthParam,
 ): Promise<KeyCloak.Grant | null> {
     const request = gateContext.request as IRequestExtra;
@@ -20,36 +21,29 @@ export async function PostAuth(
         return null;
     }
 
-    return keycloak
-        .getGrantFromCode(
-            data.query.code,
-            request as any,
-            gateContext.response as any,
-        )
-        .then((grant) => {
-            request.kauth.grant = grant;
-            try {
-                keycloak.authenticated(request as any);
-            } catch (err) {
-                throw err;
-            }
-            return grant;
-        });
+    return grantManager.obtainFromCode(request, data.query.code, request.session.id);
 }
 
 export async function GrantAttacher(
     gateContext: IContext,
-    keycloak: KeyCloak.Keycloak,
-): Promise<KeyCloak.Grant> {
-    return keycloak
-        .getGrant(gateContext.request as any, gateContext.response as any)
-        .then((grant) => {
-            (gateContext.request as any).kauth.grant = grant;
-            return grant;
+    grantManager: GrantManager,
+): Promise<KeyCloak.Grant | null> {
+    const header = gateContext.request.headers.authorization;
+    let accessToken;
+    if (header && header.substr(0, 7).toLowerCase().indexOf("bearer ") === 0) {
+        accessToken = JSON.stringify({
+            access_token: header.substring(7),
         });
+    }
+    if (gateContext.isDebugEnabled()) {
+        gateContext.debug("Access Token Found %s", accessToken);
+    }
+    return accessToken
+        ? grantManager.createGrant(accessToken).then((grant: KeyCloak.Grant) => grant)
+        : null;
 }
 
-async function adminLogout(context: IContext, keycloak: KeyCloak.Keycloak) {
+async function adminLogout(context: IContext, grantManager: GrantManager) {
     context.debug(
         "KeyCloak Admin Logout %s",
         context.params.text || context.params.json || context.params.raw,
@@ -58,14 +52,14 @@ async function adminLogout(context: IContext, keycloak: KeyCloak.Keycloak) {
         context.params.text || context.params.json || context.params.raw,
     );
     try {
-        const signature = new Signature((keycloak as any).config);
+        const signature = new Signature(grantManager.config);
         return signature
             .verify(preToken)
             .then((token) => {
                 if (token.content.action === "LOGOUT") {
                     const sessionIDs = token.content.adapterSessionIds;
                     if (!sessionIDs) {
-                        (keycloak.grantManager as any).notBefore =
+                        grantManager.notBefore =
                             token.content.notBefore;
                         context.response.writeHead(200);
                         context.response.end("ok");
@@ -103,7 +97,7 @@ async function adminLogout(context: IContext, keycloak: KeyCloak.Keycloak) {
     }
 }
 
-async function adminNotBefore(context: IContext, keycloak: KeyCloak.Keycloak) {
+async function adminNotBefore(context: IContext, grantManager: GrantManager) {
     context.debug(
         "KeyCloak Admin Not Before %s",
         context.params.text || context.params.json || context.params.raw,
@@ -112,12 +106,12 @@ async function adminNotBefore(context: IContext, keycloak: KeyCloak.Keycloak) {
         context.params.text || context.params.json || context.params.raw,
     );
     try {
-        const signature = new Signature((keycloak as any).config);
+        const signature = new Signature(grantManager.config);
         return signature
             .verify(preToken)
             .then((token) => {
                 if (token.content.action === "PUSH_NOT_BEFORE") {
-                    (keycloak.grantManager as any).notBefore =
+                    grantManager.notBefore =
                         token.content.notBefore;
                     context.response.writeHead(200);
                     context.response.end("ok");
@@ -135,15 +129,15 @@ async function adminNotBefore(context: IContext, keycloak: KeyCloak.Keycloak) {
 
 export async function Admin(
     context: IContext,
-    keycloak: KeyCloak.Keycloak,
+    grantManager: GrantManager,
     path: string,
 ) {
     context.debug("KeyCloak Admin path %s", path);
     switch (path) {
         case "k_logout":
-            return adminLogout(context, keycloak);
+            return adminLogout(context, grantManager);
         case "k_push_not_before":
-            return adminNotBefore(context, keycloak);
+            return adminNotBefore(context, grantManager);
         default:
             return;
     }

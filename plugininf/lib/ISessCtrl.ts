@@ -44,6 +44,7 @@ export interface ISessCtrl {
         nameProvider: string,
         data: IUserData,
         login?: string,
+        isEvent?: boolean,
     ): Promise<void>;
     /**
      * Получаем данные о пользователе
