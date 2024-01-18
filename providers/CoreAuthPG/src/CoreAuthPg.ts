@@ -302,6 +302,7 @@ export default class CoreAuthPg extends NullSessProvider {
                 "                   'cv_surname', u.cv_surname,\n" + 
                 "                   'cv_patronymic', u.cv_patronymic,\n" + 
                 "                   'cv_email', u.cv_email,\n" + 
+                "                   'ck_provider_ext', tae.ck_provider,\n" + 
                 "                   'cv_timezone', u.cv_timezone) || coalesce(info.attr, '{}'::jsonb) as json\n" + 
                 "  from s_at.t_account u\n" +
                 "  left join s_at.t_account_ext tae\n" +
@@ -346,8 +347,11 @@ export default class CoreAuthPg extends NullSessProvider {
                                     " union all\n" +
                                     " select ta.ck_account, ta.ck_action from t_account_action ta \n" +
                                     ") as t" +
+                                    "  join s_at.t_account ta\n" +
+                                    "    on ta.ck_id = t.ck_account\n" +
                                     "  left join s_at.t_account_ext tae\n" +
-                                    "    on tae.ck_account_int = t.ck_account\n",
+                                    "    on tae.ck_account_int = t.ck_account\n"+ 
+                                    "    where ta.cl_deleted = 0\n",
                                     null,
                                     null,
                                     null,
@@ -405,13 +409,17 @@ export default class CoreAuthPg extends NullSessProvider {
             )
             .then(() =>
                 Promise.all(
-                    Object.values(users).map((user) =>
-                        this.sessCtrl.addUser(
+                    Object.values(users).map((user) => {
+                        const ck_provider_ext = (user as any).ck_provider_ext;
+                        delete (user as any).ck_provider_ext;
+                        return this.sessCtrl.addUser(
                             (user as any).ck_id,
-                            this.name,
+                            ck_provider_ext || this.name,
                             user as any,
-                        ),
-                    ),
+                            undefined,
+                            ck_provider_ext ? false : true,
+                        )
+                    }),
                 ),
             )
             .then(() => this.sessCtrl.updateHashAuth())

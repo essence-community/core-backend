@@ -387,6 +387,7 @@ export class GateSession implements ISessCtrl {
         nameProvider: string,
         data: IUserData,
         login = data?.cv_login,
+        isEvent = true,
     ): Promise<void> {
         if (isEmpty(data.cv_timezone)) {
             data.cv_timezone = this.timezone;
@@ -425,15 +426,17 @@ export class GateSession implements ISessCtrl {
                 data,
             })
             .then(() => {
-                sendProcess({
-                    command: "addUser",
-                    data: {
-                        idUser,
-                        nameProvider,
-                        data,
-                    },
-                    target: "cluster",
-                });
+                if (isEvent) {
+                    sendProcess({
+                        command: "addUser",
+                        data: {
+                            idUser,
+                            nameProvider,
+                            data,
+                        },
+                        target: "cluster",
+                    });
+                }
                 this.updateUserInfo();
                 this.updateHashDebounce();
             });
