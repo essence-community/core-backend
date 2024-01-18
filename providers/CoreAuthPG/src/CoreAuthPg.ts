@@ -107,6 +107,11 @@ export default class CoreAuthPg extends NullSessProvider {
                     "    pkg_json_account.f_modify_account(:ck_account_ext::varchar, :ck_account_ext::varchar, jsonb_build_object(\n" + 
                     "        'data',\n" + 
                     "        :data::jsonb || jsonb_build_object(\n" + 
+                    "            'ck_id',\n" + 
+                    "            case\n" + 
+                    "                when tae.ck_id is null then public.uuid_generate_v4()::varchar\n" + 
+                    "                else ta.ck_id\n" + 
+                    "            end,\n" + 
                     "            'cv_hash_password',\n" + 
                     "            case\n" + 
                     "                when tae.ck_id is null then public.uuid_generate_v4()::varchar\n" + 
