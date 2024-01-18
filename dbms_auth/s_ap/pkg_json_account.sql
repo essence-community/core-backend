@@ -307,7 +307,11 @@ declare
   vot_account_ext ${user.table}.t_account_ext;
   vv_action  varchar(1);
   vt_action_rec record;
+  vt_role_rec record;
+  vt_info_rec record;
   vot_account_action ${user.table}.t_account_action;
+  vot_account_role ${user.table}.t_account_role;
+  vot_account_info ${user.table}.t_account_info;
 begin
   i = sessvarstr_declare('pkg', 'i', 'I');
   -- инициализация/получение переменных пакета
@@ -359,7 +363,7 @@ begin
     end if;
   end if;
   -- вызовем метод создание пользователя
-  vot_account := pkg_account.p_modify_account(vv_action, vot_account, vct_account_info);
+  vot_account := pkg_account.p_modify_account(vv_action, vot_account);
   if nullif(gv_error::varchar, '') is not null then
     return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}';
   end if;
@@ -374,21 +378,88 @@ begin
   if nullif(gv_error::varchar, '') is not null then
     return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}';
   end if;
-  vot_account_action.ck_account = vot_account.ck_id;
-  vot_account_action.ck_user = pv_user;
-  vot_account_action.ct_change = CURRENT_TIMESTAMP;
+  vot_account_role.ck_account = vot_account.ck_id;
+  vot_account_role.ck_user = pv_user;
+  vot_account_role.ct_change = CURRENT_TIMESTAMP;
+  if nullif(nullif(trim(pc_json#>>'{data,ca_role}'), ''), '[]') is not null then
+    for vt_role_rec in (
+      select
+          tr.ck_id as ck_role,
+          'I' cv_action
+      from
+          jsonb_array_elements_text(
+              pc_json#>'{data,ca_role}'
+          ) as t(res)
+      join ${user.table}.t_role tr 
+          on
+          tr.cv_name = t.res
+      left join ${user.table}.t_account_role tar1
+          on
+          tr.ck_id = tar1.ck_role
+          and tar1.ck_account = vot_account.ck_id
+      where tar1.ck_id is null 
+      union all
+          select
+          tr.ck_id as ck_role,
+          'D' as cv_action
+      from
+          ${user.table}.t_account_role tar2
+      join ${user.table}.t_role tr
+          on
+          tar2.ck_role = tr.ck_id
+      left join jsonb_array_elements_text(
+              pc_json#>'{data,ca_role}'
+          ) as t(res)
+          on
+          tr.cv_name = t.res
+      where
+          t.res is null
+          and tar2.ck_account = vot_account.ck_id
+    ) loop 
+      vot_account_role.ck_role = vt_role_rec.ck_role;
+      perform pkg_account.p_modify_account_role(vt_role_rec.cv_action, vot_account_role);
+    end loop;
+  else
+    vot_account_action.ck_account = vot_account.ck_id;
+    vot_account_action.ck_user = pv_user;
+    vot_account_action.ct_change = CURRENT_TIMESTAMP;
 
-  for vt_action_rec in (
-    select t.res::bigint as ck_action
-    from jsonb_array_elements_text(pc_json#>'{data,ca_actions}') as t(res)
-    join ${user.table}.t_action ta 
-    on ta.ck_id = t.res::bigint
-    where not EXISTS (
-      select 1 from ${user.table}.t_account_action taa where taa.ck_account = vot_account.ck_id and taa.ck_action = ta.ck_id
-    )
+    for vt_action_rec in (
+      select t.res::bigint as ck_action
+      from jsonb_array_elements_text(pc_json#>'{data,ca_actions}') as t(res)
+      join ${user.table}.t_action ta 
+      on ta.ck_id = t.res::bigint
+      where not EXISTS (
+        select 1 from ${user.table}.t_account_action taa where taa.ck_account = vot_account.ck_id and taa.ck_action = ta.ck_id
+      )
+    ) loop 
+      vot_account_action.ck_action = vt_action_rec.ck_action;
+      perform pkg_account.p_modify_account_action('I', vot_account_action);
+    end loop;
+  end if;
+  if nullif(gv_error::varchar, '') is not null then
+    return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}';
+  end if;
+  vot_account_info.ck_account = vot_account.ck_id;
+  vot_account_info.ck_user = pv_user;
+  vot_account_info.ct_change = CURRENT_TIMESTAMP;
+
+  for vt_info_rec in (
+    select
+      tai.ck_id,
+    	inf.ck_id as ck_d_info,
+    	jr.value as cv_value,
+      case when tai.ck_id is null then 'I' else 'U' end as cv_action
+    from ${user.table}.t_d_info as inf
+  	join jsonb_each(pc_json->'data') as jr
+  	on inf.ck_id = jr.key
+    left join ${user.table}.t_account_info tai
+    on tai.ck_d_info = inf.ck_id and tai.ck_account = vot_account.ck_id
   ) loop 
-	  vot_account_action.ck_action = vt_action_rec.ck_action;
-  	perform pkg_account.p_modify_account_action('I', vot_account_action);
+    vot_account_info.ck_id = vt_info_rec.ck_id;
+    vot_account_info.ck_d_info = vt_info_rec.ck_d_info;
+    vot_account_info.cv_value = vt_info_rec.cv_value;
+    perform pkg_account.p_modify_account_info(vt_info_rec.cv_action, vot_account_info);
   end loop;
   if nullif(gv_error::varchar, '') is not null then
     return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}';
@@ -396,7 +467,7 @@ begin
   -- логируем данные
   perform pkg_log.p_save(pv_user, pv_session, pc_json, 'pkg_json_account.f_modify_account', vot_account.ck_id::varchar, vv_action);
   return '{"ck_id":"' || coalesce(vot_account.ck_id::varchar, '') || '","cv_error":' || pkg.p_form_response() || '}';
-  end;$BODY$;
+end;$BODY$;
 
 ALTER FUNCTION pkg_json_account.f_modify_account(character varying, character varying, jsonb)
     OWNER TO ${user.update};

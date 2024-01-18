@@ -15,9 +15,10 @@ import { ReadStreamToArray } from "@ungate/plugininf/lib/stream/Util";
 import { initParams, isEmpty, debounce } from "@ungate/plugininf/lib/util/Util";
 import { noop, isObject, pick } from "lodash";
 import ISession from "@ungate/plugininf/lib/ISession";
-import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
+import { ICacheDb, ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
 import { v4 as uuid } from "uuid";
 import { initProcess } from '@ungate/plugininf/lib/util/ProcessSender';
+import ILocalDB from "@ungate/plugininf/lib/db/local/ILocalDB";
 
 const MAX_WAIT_RELOAD = 5000;
 
@@ -51,7 +52,8 @@ export default class CoreAuthPg extends NullSessProvider {
 
     public dataSource: PostgresDB;
     public params: IParamsProvider;
-
+    
+    private dbCache: ILocalDB<ICacheDb>;
     private eventConnect: Connection;
     private reloadTemp = debounce(() => {
         this.initTemp().then(noop, (err) => this.log.error(err));
@@ -109,7 +111,7 @@ export default class CoreAuthPg extends NullSessProvider {
         await this.dataSource
             .executeStmt(
                 "select\n" + 
-                "    pkg_json_account.f_modify_account(:ck_account_ext::varchar, :ck_account_ext::varchar, jsonb_build_object(\n" + 
+                "    pkg_json_account.f_modify_account(t.ck_account_ext, t.ck_account_ext, jsonb_build_object(\n" + 
                 "        'data',\n" + 
                 "        :data::jsonb || jsonb_build_object(\n" + 
                 "            'ck_id',\n" + 
@@ -147,7 +149,7 @@ export default class CoreAuthPg extends NullSessProvider {
                 "    tae.ck_account_ext = t.ck_account_ext\n" + 
                 "    and tae.ck_provider = t.ck_provider_ext\n" + 
                 "left join s_at.t_account ta \n" + 
-                "on tae.ck_account_int = ta.ck_id\n"+ 
+                "on tae.ck_account_int = ta.ck_id \n" + 
                 "where ta.ck_id is null or (ta.ck_id is not null and (ta.ct_change + interval '5' minute) < now())\n",
                 null,
                 {
@@ -209,6 +211,9 @@ export default class CoreAuthPg extends NullSessProvider {
         );
     }
     public async init(reload?: boolean): Promise<void> {
+        if (!this.dbCache) {
+            this.dbCache = this.sessCtrl.getCacheDb();
+        }
         if (this.eventConnect) {
             await this.eventConnect.rollbackAndClose();
             this.eventConnect = null;
@@ -291,9 +296,38 @@ export default class CoreAuthPg extends NullSessProvider {
     /**
      * Обновление информации по пользователям
      */
-    private initTemp() {
+    private async initTemp() {
         const users = {};
         this.log.trace("Cache users...");
+        await this.dataSource
+            .executeStmt(
+                "select\n" +
+                "    tr.cv_name as role,\n" +
+                "    jsonb_agg(tra.ck_action)::text as ca_action\n" +
+                "from\n" +
+                "    s_at.t_role tr\n" +
+                "join s_at.t_role_action tra\n" +
+                "on\n" +
+                "    tr.ck_id = tra.ck_role\n" +
+                "group by\n" +
+                "    tr.cv_name\n",
+                null,
+                null,
+                null,
+                {
+                    resultSet: true,
+                },
+            )
+            .then(async (res) => {
+                const rows = await ReadStreamToArray(res.stream);
+                return this.dbCache.insert({
+                    ck_id: "role_user",
+                    ...(rows.reduce((res, value) => {
+                        res[value.role] = typeof value.ca_action === "string" ? JSON.parse(value.ca_action) : value.ca_action;
+                        return res;
+                    }, {}))
+                });
+            });
         return this.dataSource
             .executeStmt(
                 "select jsonb_build_object('ck_id', case when tae.ck_id is null then u.ck_id::varchar else tae.ck_account_ext end,\n" + 

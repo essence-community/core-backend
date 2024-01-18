@@ -112,8 +112,7 @@ ALTER FUNCTION pkg_account.p_lock_role(character varying)
 
 CREATE OR REPLACE FUNCTION pkg_account.p_modify_account(
 	pv_action character varying,
-	INOUT pot_account ${user.table}.t_account,
-	pct_account_info jsonb DEFAULT NULL::jsonb)
+	INOUT pot_account ${user.table}.t_account)
     RETURNS ${user.table}.t_account
     LANGUAGE 'plpgsql'
     SECURITY DEFINER 
@@ -151,6 +150,7 @@ begin
     if pot_account.cl_deleted = 1::smallint then
       delete from ${user.table}.t_account_info where ck_account = pot_account.ck_id;
       delete from ${user.table}.t_account_role where ck_account = pot_account.ck_id;
+      delete from ${user.table}.t_account_action where ck_account = pot_account.ck_id;
       delete from ${user.table}.t_account where ck_id = pot_account.ck_id;
     else
       update ${user.table}.t_account
@@ -180,25 +180,6 @@ begin
       ) loop
         perform pkg.p_set_error(203);
       end loop;
-    if pct_account_info is not null then
-      for vcur_d_info in (
-      select inf.*
-      from ${user.table}.t_d_info inf
-      join jsonb_to_recordset(pct_account_info) as t(ck_d_info varchar, cv_value varchar)
-      	on inf.ck_id = t.ck_d_info
-      where inf.cl_required = 1 and nullif(trim(t.cv_value), '') is null
-      ) loop
-        perform pkg.p_set_error(200, vcur_d_info.cv_description);
-      end loop;
-    elseif pct_account_info is null then
-      for vcur_d_info in (
-        select inf.*
-        from ${user.table}.t_d_info inf
-        where inf.cl_required = 1
-      ) loop
-        perform pkg.p_set_error(200, vcur_d_info.cv_description);
-      end loop;
-    end if;
  
     if pot_account.cv_hash_password is null then
     	perform pkg.p_set_error(200, 'meta:e59a81c8ac1846679714fad756f39649');
@@ -210,11 +191,6 @@ begin
     pot_account.cv_salt := substring(encode(digest(pot_account.cv_login || pot_account.ct_change::varchar, 'sha256'), 'hex'), 0, 11);
     pot_account.cv_hash_password := pkg_account.f_create_hash(pot_account.cv_salt, pot_account.cv_hash_password);
     insert into ${user.table}.t_account values (pot_account.*);
-    if pct_account_info is not null then
-      insert into ${user.table}.t_account_info(ck_account, ck_d_info, cv_value, ck_user, ct_change)
-      select pot_account.ck_id, t.ck_d_info, t.cv_value, pot_account.ck_user, pot_account.ct_change 
-      from jsonb_to_recordset(pct_account_info) as t(ck_d_info varchar, cv_value varchar);
-    end if;
    return;
   end if;
   if nullif(gv_error::varchar, '') is not null or nullif(gv_warning::varchar, '') is not null then
@@ -233,17 +209,9 @@ begin
      (pot_account.cv_login,pot_account.cv_salt,pot_account.cv_hash_password,pot_account.cv_name,pot_account.cv_surname,pot_account.cv_patronymic,pot_account.cv_email,pot_account.cv_timezone,pot_account.cl_deleted,pot_account.ck_user,pot_account.ct_change)
      where ck_id = pot_account.ck_id;
   end if;
-
-  if pct_account_info is not null then
-      insert into ${user.table}.t_account (ck_account, ck_d_info, cv_value, cl_deleted, ck_user, ct_change)
-      select pot_account.ck_id, t.ck_d_info, t.cv_value, pot_account.ck_user, pot_account.cl_deleted, pot_account.ct_change 
-      from jsonb_to_recordset(pct_account_info) as t(ck_d_info varchar, cv_value varchar)
-      on conflict(ck_account,ck_d_info) 
-      DO UPDATE SET ck_account = EXCLUDED.ck_account, cv_value = EXCLUDED.cv_value, cl_deleted = EXCLUDED.cl_deleted, ck_user = EXCLUDED.ck_user, ct_change = EXCLUDED.ct_change;
-  end if;
 end;$BODY$;
 
-ALTER FUNCTION pkg_account.p_modify_account(character varying, ${user.table}.t_account, jsonb)
+ALTER FUNCTION pkg_account.p_modify_account(character varying, ${user.table}.t_account)
     OWNER TO ${user.update};
 
 CREATE OR REPLACE FUNCTION pkg_account.p_modify_account_info(
