@@ -90,12 +90,11 @@ export default class CoreAuthPg extends NullSessProvider {
         if (this.params.addedExternal) {
             initProcess({
                 addUser: (data) => {
-                    if (data.nameProvider == this.name) {
+                    if (data.nameProvider == this.name || process.env.UNGATE_HTTP_ID != "1") {
                         return;
                     }
                     setTimeout(
-                        () => this.syncExternalAuthUserInfo(data.idUser, data.nameProvider, data.data),
-                        process.env.UNGATE_HTTP_ID != "1" ? (parseInt(process.env.UNGATE_HTTP_ID || "2", 10) * 500) : 0,
+                        () => this.syncExternalAuthUserInfo(data.idUser, data.nameProvider, data.data), 0,
                     );
                 }
             }, "cluster", false);
