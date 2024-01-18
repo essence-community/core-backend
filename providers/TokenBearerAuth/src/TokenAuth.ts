@@ -51,6 +51,10 @@ export default class TokenAuth extends NullSessProvider {
                         name: "URL Realm",
                         type: "string",
                     },
+                    proxyUrl: {
+                        name: "Proxy URL Realm",
+                        type: "string",
+                    },
                     userInfoUrl: {
                         name: "URL User Info",
                         type: "string",
