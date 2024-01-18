@@ -90,6 +90,15 @@ export default class TokenAuth extends NullSessProvider {
                         name: "Ignore check sig",
                         type: "boolean"
                     },
+                    scope: {
+                        name: "Scope",
+                        description: "Example: openid profile",
+                        type: "string",
+                    },
+                    idpHint: {
+                        name: "kc_idp_hint login url",
+                        type: "string",
+                    },
                 },
             },
             mapKeyCloakGrant: {
