@@ -89,7 +89,7 @@ export default class CoreAuthPg extends NullSessProvider {
             initProcess({
                 addUser: (data) => setTimeout(
                     () => this.syncExternalAuthUserInfo(data.idUser, data.nameProvider, data.data),
-                    process.env.UNGATE_HTTP_ID !== "1" ? 100 : 0
+                    process.env.UNGATE_HTTP_ID !== "1" ? parseInt(process.env.UNGATE_HTTP_ID || "2", 10) * 100 : 0
                 )
             }, "cluster", false);
         }
@@ -145,7 +145,8 @@ export default class CoreAuthPg extends NullSessProvider {
                 "    tae.ck_account_ext = t.ck_account_ext\n" + 
                 "    and tae.ck_provider = t.ck_provider_ext\n" + 
                 "left join s_at.t_account ta \n" + 
-                "on tae.ck_account_int = ta.ck_id\n",
+                "on tae.ck_account_int = ta.ck_id\n"+ 
+                "where ta.ck_id is null or (ta.ck_id is not null and (ta.ct_change + interval '1' minute) < now())\n",
                 null,
                 {
                     data: JSON.stringify(data),
