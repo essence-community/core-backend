@@ -8,6 +8,11 @@ export interface IGrantMap {
     action: string;
 }
 
+export interface IGrantRoleMap {
+    grant: string;
+    role: string;
+}
+
 export interface IUserInfoMap {
     in: string;
     out: string;
@@ -16,6 +21,7 @@ export interface IUserInfoMap {
 export interface ITokenAuthParams extends ISessProviderParam {
     grantManagerConfig: IGrantManagerConfig;
     redirectUrl: string;
+    mapKeyCloakGrantRole?: IGrantRoleMap[];
     mapKeyCloakGrant: IGrantMap[];
     mapKeyCloakUserInfo: IUserInfoMap[];
     disableRecursiveAuth: boolean;

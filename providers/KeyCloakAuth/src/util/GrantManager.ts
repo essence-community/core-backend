@@ -547,6 +547,7 @@ const fetch = (manager: GrantManager, handler, options, params) => {
             responseType: "json",
             httpAgent: manager.config.httpAgent,
             httpsAgent: manager.config.httpsAgent,
+            validateStatus: () => true,
         } as AxiosRequestConfig;
         manager.logger.debug("Params request %j", paramsRequest)
         axios

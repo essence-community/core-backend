@@ -9,6 +9,11 @@ export interface IGrantMap {
     action: string;
 }
 
+export interface IGrantRoleMap {
+    grant: string;
+    role: string;
+}
+
 export interface IUserInfoMap {
     in: string;
     out: string;
@@ -18,9 +23,10 @@ export interface IKeyCloakAuthParams extends ISessProviderParam {
     grantManagerConfig: IGrantManagerConfig;
     keyCloakParamName: string;
     redirectUrl: string;
-    mapKeyCloakGrant: IGrantMap[];
-    mapKeyCloakUserInfo: IUserInfoMap[];
-    disableRecursiveAuth: boolean;
+    mapKeyCloakGrantRole?: IGrantRoleMap[];
+    mapKeyCloakGrant?: IGrantMap[];
+    mapKeyCloakUserInfo?: IUserInfoMap[];
+    disableRecursiveAuth?: boolean;
     flagRedirect: string;
     adminPathParam: string;
     idKey: string;

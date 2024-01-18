@@ -9,7 +9,7 @@ import NullSessProvider, {
     IAuthResult,
 } from "@ungate/plugininf/lib/NullSessProvider";
 import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
-import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
+import { ICacheDb, ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
 import * as KeyCloak from "keycloak-connect";
 import { IKeyCloakAuthParams, IRequestExtra } from "./KeyCloakAuth.types";
 import * as QueryString from "qs";
@@ -17,7 +17,7 @@ import * as URL from "url";
 import { Admin, GrantAttacher, PostAuth } from "./Midleware";
 import BreakException from "@ungate/plugininf/lib/errors/BreakException";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
-import { uniq } from "lodash";
+import { uniq, forEach } from 'lodash';
 import * as fs from "fs";
 import { Constant } from "@ungate/plugininf/lib/Constants";
 import * as Token from "keycloak-connect/middleware/auth-utils/token";
@@ -25,6 +25,7 @@ import { GrantManager } from "./util/GrantManager";
 import * as crypto from 'crypto';
 import { Agent as HttpsAgent, AgentOptions } from "https";
 import { Agent as HttpAgent } from "http";
+import ILocalDB from "@ungate/plugininf/lib/db/local/ILocalDB";
 
 const FLAG_REDIRECT = "jl_keycloak_auth_callback";
 const USE_REDIRECT = "jl_keycloak_use_redirect";
@@ -33,6 +34,9 @@ const TOKEN_KEY = "keycloak-token";
 
 export default class KeyCloakAuth extends NullSessProvider {
     public async init(reload?: boolean): Promise<void> {
+        if (!this.dbCache) {
+            this.dbCache = this.sessCtrl.getCacheDb();
+        }
         return;
     }
     public static getParamsInfo(): IParamsInfo {
@@ -115,25 +119,18 @@ export default class KeyCloakAuth extends NullSessProvider {
                     },
                 },
             },
-            mapKeyCloakGrant: {
+            mapKeyCloakGrantRole: {
                 type: "form_repeater",
-                name: "Grant Map",
+                name: "Grant Map Role",
                 childs: {
                     grant: {
                         type: "string",
                         name: "Grant",
                         required: true,
                     },
-                    action: {
-                        type: "combo",
-                        allownew: "new#",
-                        query: "MTGetPageAction",
-                        displayField: "cn_action",
-                        valueField: [{ in: "cn_action" }],
-                        querymode: "remote",
-                        queryparam: "cn_action",
-                        idproperty: "cn_action",
-                        name: "Action",
+                    role: {
+                        type: "string",
+                        name: "Role",
                         required: true,
                     },
                 },
@@ -209,10 +206,35 @@ export default class KeyCloakAuth extends NullSessProvider {
                 type: "boolean",
                 defaultValue: false,
             },
+            mapKeyCloakGrant: {
+                type: "form_repeater",
+                name: "Grant Map Action",
+                childs: {
+                    grant: {
+                        type: "string",
+                        name: "Grant",
+                        required: true,
+                    },
+                    action: {
+                        type: "combo",
+                        allownew: "new#",
+                        query: "MTGetPageAction",
+                        displayField: "cn_action",
+                        valueField: [{ in: "cn_action" }],
+                        querymode: "remote",
+                        queryparam: "cn_action",
+                        idproperty: "cn_action",
+                        name: "Action",
+                        required: true,
+                    },
+                },
+            },
         };
     }
     public params: IKeyCloakAuthParams;
     private grantManager: GrantManager;
+    private dbCache: ILocalDB<ICacheDb>;
+    
     constructor(
         name: string,
         params: ICCTParams,
@@ -508,6 +530,7 @@ export default class KeyCloakAuth extends NullSessProvider {
             token.content.sub;
         const dataUser = {
             ca_actions: [],
+            ca_role: [],
             ck_id: idUser,
         } as IUserData;
 
@@ -525,14 +548,24 @@ export default class KeyCloakAuth extends NullSessProvider {
         if (typeof dataUser.ca_actions === "string") {
             dataUser.ca_actions =
                 (dataUser.ca_actions as string).startsWith("[") &&
-                (dataUser.ca_actions as string).startsWith("]")
+                (dataUser.ca_actions as string).endsWith("]")
                     ? JSON.parse(dataUser.ca_actions)
                     : dataUser.ca_actions;
+        }
+        if (typeof dataUser.ca_role === "string") {
+            dataUser.ca_role =
+                (dataUser.ca_role as string).startsWith("[") &&
+                (dataUser.ca_role as string).endsWith("]")
+                    ? JSON.parse(dataUser.ca_role)
+                    : dataUser.ca_role;
         }
         if (!Array.isArray(dataUser.ca_actions)) {
             dataUser.ca_actions = [];
         }
-        this.params.mapKeyCloakGrant.forEach((obj) => {
+        if (!Array.isArray(dataUser.ca_role)) {
+            dataUser.ca_role = [];
+        }
+        this.params.mapKeyCloakGrant?.forEach((obj) => {
             if (grant.access_token.hasRole(obj.grant)) {
                 dataUser.ca_actions.push(
                     typeof obj.action === "string"
@@ -541,6 +574,30 @@ export default class KeyCloakAuth extends NullSessProvider {
                 );
             }
         });
+        if (this.params.mapKeyCloakGrantRole && this.params.mapKeyCloakGrantRole.length) {
+            const hashObj = await this.dbCache.findOne(
+                {
+                    ck_id: "role_user",
+                },
+                true,
+            ) || {};
+            this.params.mapKeyCloakGrantRole.forEach((obj) => {
+                if (grant.access_token.hasRole(obj.grant)) {
+                    dataUser.ca_role.push(
+                        obj.role,
+                    );
+                    const actions = hashObj[obj.role] as any[];
+                    actions?.forEach((action) => {
+                        dataUser.ca_actions.push(
+                            typeof action === "string"
+                                ? parseInt(action as any, 10)
+                                : action,
+                        );
+                    });
+                }
+            });
+        }
+        dataUser.ca_role = uniq(dataUser.ca_role);
         dataUser.ca_actions = uniq(dataUser.ca_actions);
         return { userData: dataUser, idUser };
     }
