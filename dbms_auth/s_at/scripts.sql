@@ -126,3 +126,9 @@ COMMENT ON COLUMN ${user.table}.t_account_action.ct_change
 
 COMMENT ON COLUMN ${user.table}.t_account_action.ck_account
     IS 'Идентификатор пользователя';
+
+--changeset artemov_i:UPDEV-6221-2  dbms:postgresql
+ALTER TABLE ${user.table}.t_account_ext ADD cl_deleted int2 NOT NULL DEFAULT 0::smallint;
+COMMENT ON COLUMN ${user.table}.t_account_ext.cl_deleted IS 'Логическое удаление';
+ALTER TABLE ${user.table}.t_account_ext ALTER COLUMN ck_account_int SET NOT NULL;
+

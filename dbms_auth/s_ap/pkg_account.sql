@@ -326,7 +326,9 @@ begin
 
   -- код функции
   if pv_action = d::varchar then
-    -- delete from ${user.table}.t_account_ext where ck_id = pot_account_ext.ck_id;
+    update ${user.table}.t_account_ext
+    set cl_deleted = 1::int2
+    where ck_account_ext = pot_account_ext.ck_account_ext and ck_provider = pot_account_ext.ck_provider;
     return;
   end if;
   if pv_action = i::varchar then

@@ -314,7 +314,8 @@ export default class CoreAuthPg extends NullSessProvider {
                 "            on a.ck_d_info = ainf.ck_d_info and a.ck_id = ainf.ck_account\n" + 
                 "          where ainf.cv_value is not null\n" + 
                 "         group by a.ck_id) as info\n" + 
-                "    on u.ck_id = info.ck_id\n",
+                "    on u.ck_id = info.ck_id\n" + 
+                "    where u.cl_deleted = 0\n",
                 null,
                 null,
                 null,
