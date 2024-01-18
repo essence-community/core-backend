@@ -487,7 +487,7 @@ export default class TokenAuth extends NullSessProvider {
             dataUser.ca_role = [];
         }
         this.params.mapKeyCloakGrant.forEach((obj) => {
-            if (token.hasRole(obj.grant)) {
+            if (token.hasRole(obj.grant) || token.hasRealmRole(obj.grant)) {
                 dataUser.ca_actions.push(
                     typeof obj.action === "string"
                         ? parseInt(obj.action.replace("new#", "") as any, 10)
@@ -503,7 +503,7 @@ export default class TokenAuth extends NullSessProvider {
                 true,
             ) || {};
             this.params.mapKeyCloakGrantRole.forEach((obj) => {
-                if (grant.access_token.hasRole(obj.grant)) {
+                if (token.hasRole(obj.grant) || token.hasRealmRole(obj.grant)) {
                     dataUser.ca_role.push(
                         obj.role,
                     );
