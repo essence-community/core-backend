@@ -83,7 +83,7 @@ export default class KeyCloakAuth extends NullSessProvider {
                     },
                     secret: {
                         name: "Secret",
-                        type: "string",
+                        type: "password",
                     },
                     publicKey: {
                         name: "Realm public key",

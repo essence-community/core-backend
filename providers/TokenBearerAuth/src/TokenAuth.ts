@@ -73,7 +73,7 @@ export default class TokenAuth extends NullSessProvider {
                     },
                     secret: {
                         name: "Secret",
-                        type: "string",
+                        type: "password",
                     },
                     publicKey: {
                         name: "Realm public key",
