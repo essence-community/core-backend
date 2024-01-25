@@ -437,7 +437,7 @@ export class GateSession implements ISessCtrl {
                         target: "cluster",
                     });
                 }
-                this.updateUserInfo();
+                this.updateUserInfo(nameProvider, idUser);
                 this.updateHashDebounce();
             });
     }
