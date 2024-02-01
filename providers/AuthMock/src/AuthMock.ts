@@ -44,7 +44,7 @@ export default class AuthMock extends NullSessProvider {
                 idUser: "2",
             };
         }
-        throw new ErrorException(ErrorGate.AUTH_DENIED);
+        throw new ErrorException(ErrorGate.AUTH_UNAUTHORIZED);
     }
     public async init(reload?: boolean): Promise<void> {
         const adminUser = {

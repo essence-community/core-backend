@@ -68,6 +68,10 @@ class ErrorGate {
         return this.compileErrorResult(207, "Specified schema does not exists");
     }
     /** Ошибка: не удалось авторизоваться */
+    public get AUTH_UNAUTHORIZED() {
+        return this.compileErrorResult(401, "Unauthorized");
+    }
+    /** Ошибка: не доступа*/
     public get AUTH_DENIED() {
         return this.compileErrorResult(203, "Access denied");
     }

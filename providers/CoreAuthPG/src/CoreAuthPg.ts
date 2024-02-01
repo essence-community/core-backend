@@ -201,7 +201,7 @@ export default class CoreAuthPg extends NullSessProvider {
         const arr = await ReadStreamToArray(res.stream);
         if (isEmpty(arr) || isEmpty(arr[0].ck_id)) {
             this.log.warn("Invalid login and password");
-            throw new ErrorException(ErrorGate.AUTH_DENIED);
+            throw new ErrorException(ErrorGate.AUTH_UNAUTHORIZED);
         }
         return {
             idUser: arr[0].ck_id,

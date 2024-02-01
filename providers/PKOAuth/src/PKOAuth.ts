@@ -151,7 +151,7 @@ export default class PKOAuth extends NullSessProvider {
                         this.log.error(
                             err ? err.message : "Invalid password or login",
                         );
-                        reject(new ErrorException(ErrorGate.AUTH_DENIED));
+                        reject(new ErrorException(ErrorGate.AUTH_UNAUTHORIZED));
                         return;
                     }
                     this.initSession(resolve, reject, username, gateContext);
@@ -183,7 +183,7 @@ export default class PKOAuth extends NullSessProvider {
                             this.log.error(
                                 err ? err.message : "Invalid password or login",
                             );
-                            reject(new ErrorException(ErrorGate.AUTH_DENIED));
+                            reject(new ErrorException(ErrorGate.AUTH_UNAUTHORIZED));
                             return;
                         }
                         this.initSession(
@@ -353,7 +353,7 @@ export default class PKOAuth extends NullSessProvider {
                     err ? err.message : `Not found user ${username}`,
                     err,
                 );
-                reject(new ErrorException(ErrorGate.AUTH_DENIED));
+                reject(new ErrorException(ErrorGate.AUTH_UNAUTHORIZED));
                 return;
             }
             if (isEmpty(user.userCertificate)) {
@@ -361,7 +361,7 @@ export default class PKOAuth extends NullSessProvider {
                     "User not valid certificate %j, userCertificate not pem",
                     user,
                 );
-                reject(new ErrorException(ErrorGate.AUTH_DENIED));
+                reject(new ErrorException(ErrorGate.AUTH_UNAUTHORIZED));
                 return;
             }
             const x509 = new X509();
@@ -369,7 +369,7 @@ export default class PKOAuth extends NullSessProvider {
                 x509.readCertPEM(user.userCertificate);
             } catch (e) {
                 this.log.error("User not valid certificate %j", user, e);
-                reject(new ErrorException(ErrorGate.AUTH_DENIED));
+                reject(new ErrorException(ErrorGate.AUTH_UNAUTHORIZED));
                 return;
             }
             if (
@@ -389,7 +389,7 @@ export default class PKOAuth extends NullSessProvider {
                         ] as string
                     ).toLocaleUpperCase()}`,
                 );
-                reject(new ErrorException(ErrorGate.AUTH_DENIED));
+                reject(new ErrorException(ErrorGate.AUTH_UNAUTHORIZED));
                 return;
             }
             this.sessCtrl
@@ -453,7 +453,7 @@ export default class PKOAuth extends NullSessProvider {
                 })
                 .catch((errFind) => {
                     this.log.error(errFind.message, errFind);
-                    reject(new ErrorException(ErrorGate.AUTH_DENIED));
+                    reject(new ErrorException(ErrorGate.AUTH_UNAUTHORIZED));
                 });
         });
     }

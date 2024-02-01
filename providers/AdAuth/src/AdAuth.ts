@@ -224,7 +224,7 @@ export default class AdAuth extends NullSessProvider {
                         this.log.error(
                             err ? err.message : "Invalid password or login",
                         );
-                        reject(new ErrorException(ErrorGate.AUTH_DENIED));
+                        reject(new ErrorException(ErrorGate.AUTH_UNAUTHORIZED));
                         return;
                     }
                     this.initSession(
@@ -333,7 +333,7 @@ export default class AdAuth extends NullSessProvider {
                     err ? err.message : `Not found user ${username}`,
                     err,
                 );
-                reject(new ErrorException(ErrorGate.AUTH_DENIED));
+                reject(new ErrorException(ErrorGate.AUTH_UNAUTHORIZED));
                 return;
             }
             this.sessCtrl
@@ -389,7 +389,7 @@ export default class AdAuth extends NullSessProvider {
                 })
                 .catch((errFind) => {
                     this.log.error(errFind.message, errFind);
-                    reject(new ErrorException(ErrorGate.AUTH_DENIED));
+                    reject(new ErrorException(ErrorGate.AUTH_UNAUTHORIZED));
                 });
         });
     }

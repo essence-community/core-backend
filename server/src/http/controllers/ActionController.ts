@@ -81,7 +81,7 @@ class ActionController {
                 }
             }
             if (!data || isEmpty(data.idUser)) {
-                throw new ErrorException(ErrorGate.AUTH_DENIED);
+                throw new ErrorException(ErrorGate.AUTH_UNAUTHORIZED);
             }
             if (
                 await PluginController.applyPluginBeforeSaveSession(
@@ -99,7 +99,7 @@ class ActionController {
             }
         }
         if (!session) {
-            throw new ErrorException(ErrorGate.AUTH_DENIED);
+            throw new ErrorException(ErrorGate.AUTH_UNAUTHORIZED);
         }
         gateContext.debug(`Success authorization: ${JSON.stringify(session)}`);
         return {

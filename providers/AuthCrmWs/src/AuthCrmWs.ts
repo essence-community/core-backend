@@ -107,7 +107,7 @@ export default class AuthCrmWs extends NullSessProvider {
                 }`,
             );
             if (!result || !result.length) {
-                throw new ErrorException(ErrorGate.AUTH_DENIED);
+                throw new ErrorException(ErrorGate.AUTH_UNAUTHORIZED);
             }
             return {
                 idUser: result[0].cn_user,
