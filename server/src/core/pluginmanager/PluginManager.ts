@@ -255,7 +255,7 @@ class PluginManager {
                                     },
                                     (err) => {
                                         logger.error(err);
-                                        return Promise.reject();
+                                        return Promise.reject(err);
                                     },
                                 ),
                             );
@@ -513,7 +513,7 @@ class PluginManager {
                                 },
                                 (err) => {
                                     logger.error(err);
-                                    return Promise.reject();
+                                    return Promise.reject(err);
                                 },
                             ),
                     );
