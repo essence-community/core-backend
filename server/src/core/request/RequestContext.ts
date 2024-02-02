@@ -149,7 +149,7 @@ export default class RequestContext implements IContext {
     public set connection(conn: Connection) {
         if (conn) {
             this._endResponse = this._endResponse || this._response.end;
-            this._response.end = async (...arg) => {
+            this._response.end = (async (...arg) => {
                 try {
                     await conn.commit();
                     await conn.release();
@@ -161,7 +161,7 @@ export default class RequestContext implements IContext {
                     this._response.end = this._endResponse;
                     this._endResponse = undefined;
                 }
-            };
+            }) as any;
         }
         if (this._connection && !conn) {
             this._response.end = this._endResponse;

@@ -4,7 +4,7 @@ import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
 import { IResultProvider } from "@ungate/plugininf/lib/IResult";
 import IParamsInfo from "@ungate/plugininf/lib/ICCTParams";
 import { IParamsProvider } from "@ungate/plugininf/lib/NullProvider";
-import { ClientOpts, createClient } from "redis";
+import { RedisClientOptions, createClient } from "redis";
 import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
 import ICCTParams from "@ungate/plugininf/lib/ICCTParams";
@@ -13,7 +13,7 @@ import { parse } from "@ungate/plugininf/lib/parser/parserAsync";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import { deepParam } from "@ungate/plugininf/lib/util/deepParam";
 
-interface IProviderParam extends ClientOpts, IParamsProvider {}
+interface IProviderParam extends RedisClientOptions, IParamsProvider {}
 
 async function prepareQuery(
     query: IGateQuery,
@@ -44,72 +44,32 @@ export class RedisProvider extends NullProvider {
     public static getParamsInfo(): IParamsInfo {
         /* tslint:disable:object-literal-sort-keys */
         return {
-            host: {
-                name: "Хост",
-                type: "string",
-            },
-            port: {
-                name: "Port",
-                type: "string",
-            },
-            path: {
-                name: "UNIX Socket",
-                type: "string",
-            },
             url: {
                 description:
                     "[redis[s]:]//[[user][:password@]][host][:port][/db-number][?db=db-number[&password=bar[&option=value]]]",
                 name: "Url",
                 type: "string",
             },
+            username: {
+                name: "Наименование бд",
+                type: "string",
+            },
             password: {
                 name: "Пароль",
                 type: "password",
             },
-            db: {
+            database: {
                 name: "Наименование бд",
                 type: "string",
             },
-            string_numbers: {
-                name: "Перевод чисел в строки",
-                type: "boolean",
+            socket: {
+                name: "RedisSocketOptions",
+                type: "long_stream",
             },
-            return_buffers: {
-                name: "Возрат буфера",
-                type: "boolean",
-            },
-            detect_buffers: {
-                name: "Обнаружение буферов",
-                type: "boolean",
-            },
-            socket_keepalive: {
-                name: "Включить keepalived",
-                type: "boolean",
-            },
-            socket_initial_delay: {
-                name: "Время ожидания инициализации сокета в мс",
-                type: "integer",
-            },
-            no_ready_check: {
-                name: "Выключаем проверку соединения",
-                type: "boolean",
-            },
-            enable_offline_queue: {
-                name: "Включаем офлайн очередь",
-                type: "boolean",
-            },
-            retry_max_delay: {
-                name: "Время для повторного вызова",
-                type: "integer",
-            },
-            connect_timeout: {
-                name: "Время ожидания подключения в мс",
-                type: "integer",
-            },
-            prefix: {
-                name: "Префикс ключей",
-                type: "string",
-            },
+            extra: {
+                name: "RedisClientOptions",
+                type: "long_stream",
+            }
         };
         /* tslint:enable:object-literal-sort-keys */
     }
@@ -123,27 +83,21 @@ export class RedisProvider extends NullProvider {
         this.params = initParams(RedisProvider.getParamsInfo(), this.params);
     }
     private getClient() {
+        let socket = undefined;
+        let extra = {};
+        if (typeof this.params.socket === "string" && !isEmpty(this.params.socket)) {
+            socket = JSON.parse(this.params.socket);
+        }
+        if (typeof this.params.extra === "string" && !isEmpty(this.params.extra)) {
+            extra = JSON.parse(this.params.extra);
+        }
         return createClient({
-            host: this.params.host,
-            port: this.params.port,
-            path: this.params.path,
+            ...extra,
+            name: this.name,
             url: this.params.url,
-            string_numbers: this.params.string_numbers,
-            return_buffers: this.params.return_buffers,
-            detect_buffers: this.params.detect_buffers,
-            socket_keepalive: this.params.socket_keepalive,
-            socket_initial_delay: this.params.socket_initial_delay,
-            no_ready_check: this.params.no_ready_check,
-            enable_offline_queue: this.params.enable_offline_queue,
-            retry_max_delay: this.params.retry_max_delay,
-            connect_timeout: this.params.connect_timeout,
-            max_attempts: this.params.max_attempts,
-            retry_unfulfilled_commands: this.params.retry_unfulfilled_commands,
-            auth_pass: this.params.auth_pass,
             password: this.params.password,
-            db: this.params.db,
-            family: this.params.family,
-            prefix: this.params.prefix,
+            username: this.params.username,
+            database: this.params.database,
         });
     }
     public async processSql(
@@ -232,7 +186,6 @@ export class RedisProvider extends NullProvider {
                 });
             });
         });
-        client.end();
         return res;
     }
     public async init(reload?: boolean): Promise<void> {

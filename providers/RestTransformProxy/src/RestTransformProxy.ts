@@ -603,7 +603,7 @@ export default class RestTransformProxy extends NullProvider {
                     response.headers["content-type"] || "application/json";
                 const rheaders = {
                     ...response.headers,
-                };
+                } as any;
                 if (gateContext.isDebugEnabled()) {
                     gateContext.debug(
                         "Response: Status: %s,  proxy headers:\n%j",

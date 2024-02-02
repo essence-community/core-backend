@@ -31,7 +31,7 @@ process.on('uncaughtException', (err, origin) => {
     process.exit(1)
 });
 
-if (cluster.isMaster) {
+if (cluster.isMaster || cluster.isPrimary) {
     process.on("message", (message) => {
         if ((message as ISenderOptions).target === "cluster") {
             Object.values(cluster.workers).forEach((node) => {
@@ -57,5 +57,5 @@ if (cluster.isMaster) {
         initNodeHttp(`${i}`);
     }
 } else {
-    import("./httpNode");
+    import("./httpNode").catch((err) => logger.error(err));
 }

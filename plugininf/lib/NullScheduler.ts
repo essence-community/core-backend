@@ -35,18 +35,18 @@ export default abstract class NullScheduler implements IScheduler {
     public abstract init(reload?: boolean): Promise<void>;
     public enable(): void {
         if (!this.job && !isEmpty(this.cronStr)) {
-            this.job = new cron.CronJob({
-                cronTime: this.cronStr,
-                onTick: () => {
+            this.job = new cron.CronJob(this.cronStr,
+                () => {
                     try {
                         this.execute();
                     } catch (err) {
                         this.log.error(err.message, err);
                     }
                 },
-                start: true,
-                timeZone: "Europe/Moscow",
-            });
+                undefined,
+                true,
+                "Europe/Moscow",
+            );
             this.isEnable = true;
         } else if (this.job) {
             this.job.start();

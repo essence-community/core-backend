@@ -10,7 +10,7 @@ import {
 import * as compression from "compression";
 import * as cors from "cors";
 import * as http from "http";
-import * as helmet from "helmet";
+import helmet from "helmet";
 import { noop } from "lodash";
 import * as Router from "router";
 import * as expressSession from "express-session-fork";

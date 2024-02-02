@@ -360,7 +360,7 @@ export default class RestEssenceProxy extends NullProvider {
                     response.headers["content-type"] || "application/json";
                 const rheaders = {
                     ...response.headers,
-                };
+                } as any;
 
                 response.data.on("error", (err) => {
                     if (err) {
