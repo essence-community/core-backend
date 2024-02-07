@@ -7,6 +7,8 @@ INSERT INTO s_mt.t_class_hierarchy
     union all
     select '233' as ck_id, '137' as ck_class_parent, '58' as ck_class_child, '634' as ck_class_attr, '-11' as ck_user, '2018-02-22T00:00:00.000+0000'::timestamp with time zone as ct_change
     union all
+    select 'FFF0DE6E564346B8954B0EFC9853D170' as ck_id, '157' as ck_class_parent, '58' as ck_class_child, '1EF2CAB0F92D467AB9E3472FBD084EED' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2024-02-07T09:10:32.749+0000'::timestamp with time zone as ct_change
+    union all
     select '117' as ck_id, '18' as ck_class_parent, '58' as ck_class_child, '392' as ck_class_attr, '-11' as ck_user, '2018-02-22T00:00:00.000+0000'::timestamp with time zone as ct_change
     union all
     select '147' as ck_id, '37' as ck_class_parent, '58' as ck_class_child, '519' as ck_class_attr, '-11' as ck_user, '2018-02-22T00:00:00.000+0000'::timestamp with time zone as ct_change
