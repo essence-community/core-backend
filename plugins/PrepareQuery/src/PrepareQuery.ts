@@ -136,7 +136,22 @@ export default class PrepareQuery extends NullPlugin {
                             case "eq":
                                 operator = "=";
                                 break;
+                            case "ne":
+                            case "<>":
+                                operator = "!=";
+                                break;
                             case "like":
+                                if (
+                                    !value ||
+                                    value === "" ||
+                                    typeof value !== "string"
+                                ) {
+                                    return true;
+                                }
+                                nmColumn = `UPPER(${nmColumn})`;
+                                value = `%${value.toUpperCase()}%`;
+                                break;
+                            case "not like":
                                 if (
                                     !value ||
                                     value === "" ||
