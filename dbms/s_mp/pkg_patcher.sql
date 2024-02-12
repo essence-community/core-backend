@@ -706,8 +706,6 @@ CREATE OR REPLACE FUNCTION pkg_patcher.p_remove_only_page(pk_page character vary
 AS $function$
 declare
   -- переменные пакета
-  ot_page record;
-
   ot_page_object record;
 
   rec record;
@@ -860,13 +858,16 @@ begin
 
   delete 
   from 
-    s_mt.t_page
-  where ck_id = pk_page
+    s_mt.t_page p
+  where p.ck_id = pk_page
   and not exists (select 1 
             from jsonb_array_elements_text(coalesce(nullif((select cv_value 
                 from s_mt.t_sys_setting 
                 where ck_id = 'skip_update_action_page'), ''), '[]')::jsonb) as t 
-              where t.value = pk_page);
+              where t.value = p.ck_id)
+  and not exists (select 1 
+                    s_mt.t_page tp
+                  where tp.ck_parent = p.ck_id);
 
   -- Added info history update
   INSERT INTO s_mt.t_page_update_history (ck_id, ct_change)
