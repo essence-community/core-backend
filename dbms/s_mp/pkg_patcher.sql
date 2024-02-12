@@ -866,7 +866,7 @@ begin
                 where ck_id = 'skip_update_action_page'), ''), '[]')::jsonb) as t 
               where t.value = p.ck_id)
   and not exists (select 1 
-                    s_mt.t_page tp
+                  from  s_mt.t_page tp
                   where tp.ck_parent = p.ck_id);
 
   -- Added info history update
