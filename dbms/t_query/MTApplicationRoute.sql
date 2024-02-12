@@ -17,8 +17,19 @@ INSERT INTO s_mt.t_query (ck_id, ck_provider, ck_user, ct_change, cr_type, cr_ac
     p.cv_redirect_url,
     p.cl_multi,
     (
-        jsonb_build_object(''childs'', (coalesce(nullif(tv.cct_config#>>''{children}'', ''''), ''[]''))::jsonb)
-        || (coalesce(nullif(tv.cct_config#>>''{bc}'', ''''), ''{}''))::jsonb
+        (coalesce(nullif(tv.cct_config#>>''{bc}'', ''''), ''{"type": "APPLICATION"}''))::jsonb
+        || jsonb_build_object(''childs'', (coalesce(nullif(tv.cct_config#>>''{children}'', ''''), nullif(tv.cct_config#>>''{bc,childs}'', ''''), ''[]''))::jsonb || coalesce(nullif((
+            select
+                jsonb_agg(t.json ORDER BY t.cn_order) as children
+            from
+                (
+                    select
+                        po.cn_order,
+                        pkg_json.f_get_object(po.ck_id)::jsonb as json
+                    from t_page_object po
+                    where po.ck_parent is null and po.ck_id is not null and po.ck_page = p.ck_id 
+                ) as t
+            )::text, ''[null]''), ''[]'')::jsonb)
         || coalesce((
             select
                 jsonb_object_agg(tpa.ck_attr, tpa.cv_value)

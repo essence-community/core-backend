@@ -1945,7 +1945,7 @@ begin
       perform  pkg.p_set_error(42);  
     end if;
    
-    for vcur_page in (select 1 from s_mt.t_page p where p.ck_id = pot_page_object.ck_page and p.cr_type <> 2) loop
+    for vcur_page in (select 1 from s_mt.t_page p where p.ck_id = pot_page_object.ck_page and p.cr_type not in (2,3)) loop
       perform  pkg.p_set_error(205);
     end loop;
 
@@ -2170,12 +2170,14 @@ begin
           count(pv.cv_name) as cn_cnt_page_variable/*кол-во из них, которые есть в t_page_variable*/
         from (
           /* получим в cv_variable имена глобальных переменных */
-          select ck_page,
+          select tv.ck_page,
                  t.cv_variable
-          from t_variable
-          cross join unnest(pkg_util.f_get_global_from_string(t_variable.cv_value, ck_attr)) as t(cv_variable)
-          where ck_attr in ('activerules', 'disabledrules', 'hiddenrules', 'getglobaltostore', 'getglobal', 'readonlyrules', 'setrecordtoglobal', 'setglobal', 'columnsfilter')
-          and upper(t.cv_variable) not ilike 'G_SYS%' and upper(t.cv_variable) not ilike 'G_SESS%'
+          from t_variable tv
+          join s_mt.t_page p
+          on tv.ck_page = p.ck_id and p.cr_type = 2
+          cross join unnest(pkg_util.f_get_global_from_string(tv.cv_value, ck_attr)) as t(cv_variable)
+          where tv.ck_attr in ('activerules', 'disabledrules', 'hiddenrules', 'getglobaltostore', 'getglobal', 'readonlyrules', 'setrecordtoglobal', 'setglobal', 'columnsfilter')
+          and upper(t.cv_variable) not ilike 'G_SYS_%' and upper(t.cv_variable) not ilike 'G_SESS_%'
         )v
         left join s_mt.t_page_variable pv on pv.ck_page = v.ck_page
          and pv.cv_name = v.cv_variable
