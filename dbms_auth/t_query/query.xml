@@ -32,4 +32,5 @@
 <include file="./t_query/AuthGenerateToken.sql" />
 <include file="./t_query/AuthShowAvailableAccountAction.sql" />
 <include file="./t_query/AuthShowSelectedAccountAction.sql" />
+<include file="./t_query/AuthChangePassword.sql" />
 </databaseChangeLog>

@@ -475,6 +475,72 @@ ALTER FUNCTION pkg_json_account.f_modify_account(character varying, character va
 COMMENT ON FUNCTION pkg_json_account.f_modify_account(character varying, character varying, jsonb)
     IS 'добавление/редактирование/удаление пользователя';
 
+CREATE OR REPLACE FUNCTION pkg_json_account.f_modify_account_password(
+	pv_id character varying,
+  pv_session character varying,
+	pv_password_current character varying DEFAULT NULL::character varying,
+	pv_password_new_1 character varying DEFAULT NULL::character varying,
+  pv_password_new_2 character varying DEFAULT NULL::character varying
+  )
+    RETURNS text
+    LANGUAGE 'plpgsql'
+    SECURITY DEFINER 
+    SET search_path=public, pkg, pkg_account, ${user.table}
+AS $BODY$
+declare
+  -- переменные пакета
+  gv_error sessvarstr;
+
+  -- переменные функции
+  vot_account ${user.table}.t_account;
+  vv_action  varchar(1) := 'U';
+  vt_error jsonb := '[]'::jsonb;
+begin
+  -- инициализация/получение переменных пакета
+  gv_error = sessvarstr_declare('pkg', 'gv_error', '');
+
+  -- код функции
+  --обнулим глобальные переменные с перечнем ошибок/предупреждений/информационных сообщений, выставим пользователя
+  perform pkg.p_reset_response();--(pn_user);
+  --JSON -> rowtype
+  select * 
+    into vot_account
+  from ${user.table}.t_account where ck_id = pv_id::uuid;
+
+  if vot_account.cv_hash_password <> pkg_account.f_create_hash(vot_account.cv_salt, trim(pv_password_current)) then
+    vt_error = vt_error || jsonb_build_array(jsonb_build_array('static:2dbf9fb0700740a5af7c64da2994a71c'));
+  end if;
+
+  if nullif(trim(pv_password_new_1), '') is null or nullif(trim(pv_password_new_2), '') is null then
+    vt_error = vt_error || jsonb_build_array(jsonb_build_array('static:8e9fca16fa114e1996c03c07de47685c'));
+  end if;
+
+  if nullif(trim(pv_password_new_1), '') is null or nullif(trim(pv_password_new_2), '') is null or nullif(trim(pv_password_new_1), '') <> nullif(trim(pv_password_new_2), '') then
+    vt_error = vt_error || jsonb_build_array(jsonb_build_array('static:73858c81700b4263ade2e5eb5c00b329'));
+  end if;
+
+  if jsonb_array_length(vt_error) > 0 then
+    return jsonb_build_object('ck_id', coalesce(vot_account.ck_id::varchar, ''), 'jt_message', jsonb_build_object('error', vt_error))::varchar;
+  end if;
+
+  vot_account.cv_hash_password = nullif(trim(pv_password_new_1), '');
+  vot_account.ck_user = pv_id;
+  vot_account.ct_change = CURRENT_TIMESTAMP;
+  -- лочим пользователя
+  perform pkg_account.p_lock_account(vot_account.ck_id::varchar);
+  -- вызовем метод создание пользователя
+  vot_account := pkg_account.p_modify_account(vv_action, vot_account);
+  -- логируем данные
+  perform pkg_log.p_save(pv_id, pv_session, '{}', 'pkg_json_account.f_modify_account_password', vot_account.ck_id::varchar, vv_action);
+  return '{"ck_id":"' || coalesce(vot_account.ck_id::varchar, '') || '","cv_error":' || pkg.p_form_response() || '}';
+  end;$BODY$;
+
+ALTER FUNCTION pkg_json_account.f_modify_account_password(character varying, character varying, character varying, character varying, character varying)
+    OWNER TO ${user.update};
+
+COMMENT ON FUNCTION pkg_json_account.f_modify_account_password(character varying, character varying, character varying, character varying, character varying)
+    IS 'Смена пароля';
+
 CREATE OR REPLACE FUNCTION pkg_json_account.f_modify_account_info(
 	pv_user character varying,
 	pv_session character varying,
