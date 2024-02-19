@@ -455,6 +455,7 @@ export default class TokenAuth extends NullSessProvider {
             ck_id: idUser,
             type_auth_provider: 'TOKENBEARERAUTH',
             realm: grantManager.realmUrl,
+            client_id: grantManager.clientId,
         } as IUserData;
 
         this.params.mapKeyCloakUserInfo.forEach((obj) => {
