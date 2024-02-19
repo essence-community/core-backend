@@ -81,6 +81,7 @@ select pkg_patcher.p_merge_page_object_attr('0D712FC0036243EDA3E50FFC5D06157C', 
 select pkg_patcher.p_merge_page_object_attr('60F40378FC4C42799362A4127A193F4C', 'B991AE96DF09443CAE9173EDA248E6FB', '151', 'false', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2024-02-19T17:29:00.148+0000', 'disabled');
 select pkg_patcher.p_merge_page_object_attr('FFF59E4D8B7E4D1CB727A2A4D6C53679', 'B991AE96DF09443CAE9173EDA248E6FB', 'D6B49DE4B15B4F29AAD333A2495F0E2C', 'false', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2024-02-19T17:29:06.803+0000', 'readonly');
 select pkg_patcher.p_merge_page_object_attr('AA85ADC4DD044904B87D82A6522EEDEF', 'C13729EF3F8645FDAC5E15DD77DFB9F2', '1288', 'g_sess_type_auth_provider!="KEYCLOAKAUTH"', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2024-02-19T18:37:27.347+0000', 'hiddenrules');
+select pkg_patcher.p_merge_page_object_attr('BE29FA2E36B548BEB49C664A7A88C9E6', 'E2DD3D4DD86A43F4B4246808D68BFF62', '078C783BBF884FF28AD10E49D5B8386B', '!isEmpty(cv_password_new_1) && !isEmpty(cv_password_new_1) && cv_password_new_1 != cv_password_new_2 ? ''static:73858c81700b4263ade2e5eb5c00b329'' : undefined', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2024-02-19T19:08:39.355+0000', 'check');
 INSERT INTO s_mt.t_localization (ck_id, ck_d_lang, cr_namespace, cv_value, ck_user, ct_change)
 select t.ck_id, t.ck_d_lang, t.cr_namespace, t.cv_value, t.ck_user, t.ct_change::timestamp from (
     select '1740026cff1e45a9a13eeb3302428dc0' as ck_id, 'ru_RU' as ck_d_lang, 'meta' as cr_namespace, 'ФИО' as cv_value, '-11' as ck_user, '2019-12-09T18:00:00.000+0000' as ct_change
