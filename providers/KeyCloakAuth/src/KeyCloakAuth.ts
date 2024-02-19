@@ -533,6 +533,7 @@ export default class KeyCloakAuth extends NullSessProvider {
             ca_role: [],
             ck_id: idUser,
             type_auth_provider: 'KEYCLOAKAUTH',
+            realm: grantManager.realmUrl,
         } as IUserData;
 
         this.params.mapKeyCloakUserInfo.forEach((obj) => {
