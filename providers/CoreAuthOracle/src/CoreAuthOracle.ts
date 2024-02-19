@@ -125,6 +125,7 @@ export default class CoreAuthOracle extends NullSessProvider {
                             users[chunk.ck_id] = {
                                 ...chunk,
                                 ca_actions: [],
+                                type_auth_provider: 'COREAUTHORACLE',
                             };
                         });
                         resUser.stream.on("end", () => {

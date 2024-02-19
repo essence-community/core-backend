@@ -314,6 +314,7 @@ export default class AuthCrmWs extends NullSessProvider {
                 ...item,
                 ca_actions: [],
                 ca_department: [],
+                type_auth_provider: 'AUTHCRMWS',
             };
         });
 

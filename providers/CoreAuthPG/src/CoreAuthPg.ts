@@ -390,6 +390,7 @@ export default class CoreAuthPg extends NullSessProvider {
                             users[row.ck_id] = {
                                 ...row,
                                 ca_actions: [],
+                                type_auth_provider: 'COREAUTHPG',
                             };
                         });
                         resUser.stream.on("end", () => {

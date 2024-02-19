@@ -453,6 +453,7 @@ export default class TokenAuth extends NullSessProvider {
             ca_actions: [],
             ca_role: [],
             ck_id: idUser,
+            type_auth_provider: 'TOKENBEARERAUTH',
         } as IUserData;
 
         this.params.mapKeyCloakUserInfo.forEach((obj) => {

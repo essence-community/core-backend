@@ -421,6 +421,7 @@ export default class PKOAuth extends NullSessProvider {
                             ]),
                             ck_id:
                                 (userData.data || {}).ck_id || user.objectSID,
+                            type_auth_provider: 'PKOAUTH',
                         },
                     );
                     if (!(userData.data || {}).ck_id) {

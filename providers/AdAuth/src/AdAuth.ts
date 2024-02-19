@@ -364,6 +364,7 @@ export default class AdAuth extends NullSessProvider {
                             ]),
                             ck_id:
                                 (userData.data || {}).ck_id || user.objectSID,
+                            type_auth_provider: 'ADAUTH',
                         },
                     );
                     if (!(userData.data || {}).ck_id) {
