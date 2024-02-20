@@ -58,7 +58,7 @@ export class GrantManager {
             grant_type: "password",
             scope: scopeParam || "openid",
         };
-        const handler = createHandler(this);
+        const handler = createHandler(this, true);
         const options = postOptions(this);
         return nodeify(fetch(this, handler, options, params), callback);
     }
@@ -492,9 +492,9 @@ const nodeify = (promise, cb?: any) => {
     return promise.then((res) => cb(null, res)).catch((err) => cb(err));
 };
 
-const createHandler = (manager) => (resolve, reject, json) => {
+const createHandler = (manager, isHeader = false) => (resolve, reject, json, header) => {
     try {
-        resolve(manager.createGrant(json));
+        resolve(isHeader ? [manager.createGrant(json), header] : manager.createGrant(json));
     } catch (err) {
         reject(err);
     }
@@ -562,7 +562,7 @@ const fetch = (manager: GrantManager, handler, options, params) => {
                         ),
                     );
                 }
-                handler(resolve, reject, res.data);
+                handler(resolve, reject, res.data, res.headers);
             })
             .catch((err) => {
                 manager.logger.error(err);

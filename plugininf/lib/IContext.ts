@@ -17,7 +17,7 @@ export interface IParam {
 }
 
 export interface IHeader {
-    [key: string]: string | number;
+    [key: string]: string | string[] | number | undefined;
 }
 
 export interface IFile {

@@ -78,10 +78,19 @@ export default class RequestContext implements IContext {
         return this._extraHeaders;
     }
     public set extraHeaders(value: IHeader) {
+        const old = this._extraHeaders
         this._extraHeaders = {
             ...this._extraHeaders,
             ...value,
         };
+        if (value) {
+            Object.entries(value).forEach(([key, value]) => {
+                if (key.toLocaleLowerCase() === 'set-cookie' && old[key]) {
+                    const oldValue = old[key] as string | string[];
+                    this._extraHeaders[key] = [...(Array.isArray(oldValue) ? oldValue : [oldValue]), ...(Array.isArray(value) ? value : [value])] as any;
+                }
+            });
+        }
     }
     public get gateContextPlugin(): IContextPlugin {
         return this._gateContextPlugin;
@@ -149,7 +158,7 @@ export default class RequestContext implements IContext {
     public set connection(conn: Connection) {
         if (conn) {
             this._endResponse = this._endResponse || this._response.end;
-            this._response.end = async (...arg) => {
+            this._response.end = (async (...arg) => {
                 try {
                     await conn.commit();
                     await conn.release();
@@ -161,7 +170,7 @@ export default class RequestContext implements IContext {
                     this._response.end = this._endResponse;
                     this._endResponse = undefined;
                 }
-            };
+            }) as any;
         }
         if (this._connection && !conn) {
             this._response.end = this._endResponse;

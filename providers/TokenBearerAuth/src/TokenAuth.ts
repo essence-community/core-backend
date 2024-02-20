@@ -564,23 +564,30 @@ export default class TokenAuth extends NullSessProvider {
         return this.grantManager.obtainDirectly(
                 query.inParams.cv_login,
                 query.inParams.cv_password
-            ).then( async (grant: KeyCloak.Grant) => {
+            ).then( async ([grant, headers]: [KeyCloak.Grant, Record<string, any>]) => {
                 const dataUser = await this.generateUserData(
                     context,
                     grant,
                     this.grantManager,
                 );
-                    const access_token = (grant.access_token as any)?.token;
-                    const access_token_hash = crypto
-                            .createHash("md5")
-                            .update(access_token || "")
-                        .digest("hex");
-                    await this.sessCtrl.addUser(
-                                dataUser.idUser,
-                                this.name,
-                                dataUser.userData,
-                            );
-                    await this.sessCtrl.updateHashAuth();
+                const access_token = (grant.access_token as any)?.token;
+                const access_token_hash = crypto
+                        .createHash("md5")
+                        .update(access_token || "")
+                    .digest("hex");
+                await this.sessCtrl.addUser(
+                            dataUser.idUser,
+                            this.name,
+                            dataUser.userData,
+                        );
+                await this.sessCtrl.updateHashAuth();
+                if (headers) {
+                    Object.entries(headers).forEach(([key, value]) => {
+                        if (key.toLocaleLowerCase() === 'set-cookie') {
+                            context.extraHeaders = { [key]: value };
+                        }
+                    });
+                }
                 return {
                     idUser: dataUser.idUser,
                     dataUser: dataUser.userData,

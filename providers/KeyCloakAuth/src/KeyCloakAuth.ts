@@ -638,7 +638,7 @@ export default class KeyCloakAuth extends NullSessProvider {
         return this.grantManager.obtainDirectly(
                 query.inParams.cv_login,
                 query.inParams.cv_password
-            ).then( async (grant: KeyCloak.Grant) => {
+            ).then( async ([grant, headers]: [KeyCloak.Grant, Record<string, any>]) => {
                 const dataUser = await this.generateUserData(
                     grant,
                     this.grantManager,
@@ -654,6 +654,13 @@ export default class KeyCloakAuth extends NullSessProvider {
                                 dataUser.userData,
                             );
                 await this.sessCtrl.updateHashAuth();
+                if (headers) {
+                    Object.entries(headers).forEach(([key, value]) => {
+                        if (key.toLocaleLowerCase() === 'set-cookie') {
+                            context.extraHeaders = { [key]: value };
+                        }
+                    });
+                }
                 return {
                     idUser: dataUser.idUser,
                     dataUser: dataUser.userData,
