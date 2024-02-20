@@ -492,9 +492,9 @@ const nodeify = (promise, cb?: any) => {
     return promise.then((res) => cb(null, res)).catch((err) => cb(err));
 };
 
-const createHandler = (manager, isHeader = false) => (resolve, reject, json, header) => {
+const createHandler = (manager, isHeader = false) => async (resolve, reject, json, header) => {
     try {
-        resolve(isHeader ? [manager.createGrant(json), header] : manager.createGrant(json));
+        resolve(isHeader ? [await manager.createGrant(json), header] : await manager.createGrant(json));
     } catch (err) {
         reject(err);
     }
