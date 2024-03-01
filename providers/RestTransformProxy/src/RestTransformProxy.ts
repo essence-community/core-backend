@@ -19,7 +19,7 @@ import { Agent as HttpAgent } from "http";
 import * as JSONStream from "JSONStream";
 import * as axios from "axios";
 import * as url from "url";
-import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
+import { initParams, isEmpty, stripBOM } from "@ungate/plugininf/lib/util/Util";
 import * as fs from "fs";
 import * as path from "path";
 import * as QueryString from "qs";
@@ -76,6 +76,7 @@ export interface IRestEssenceProxyConfig
     excludeHeaderOut?: string[];
     typeResult?: IResult["type"];
     proxyResult?: boolean;
+    responseEncoding?: BufferEncoding;
 }
 
 interface IPairValue {
@@ -668,25 +669,25 @@ export default class RestTransformProxy extends NullProvider {
                         !ctHeader.startsWith("application/json")
                     ) {
                         arr = await new Promise<any[]>((resolveArr) => {
-                            let json = "";
-                            response.data.on("data", (data) => {
-                                json += data;
+                            const responseBuffer = [];
+                            response.data.on("data", (chunk) => {
+                                responseBuffer.push(chunk);
                             });
                             response.data.on("end", () => {
                                 try {
                                     const parseData = ctHeader.startsWith(
                                         "application/json",
                                     )
-                                        ? isEmpty(json)
+                                        ? responseBuffer.length === 0
                                             ? []
-                                            : JSON.parse(json)
+                                            : JSON.parse(stripBOM(Buffer.concat(responseBuffer).toString(config.responseEncoding || "utf8")))
                                         : {
-                                              response_data: json,
+                                              response_data: stripBOM(Buffer.concat(responseBuffer).toString(config.responseEncoding || "utf8")),
                                           };
                                     resolveArr(parseData);
                                 } catch (e) {
                                     this.log.error(
-                                        `Parse json error: \n ${json}`,
+                                        `Parse json error: \n ${Buffer.concat(responseBuffer).toString("utf8")}`,
                                         e,
                                     );
                                     reject(e);

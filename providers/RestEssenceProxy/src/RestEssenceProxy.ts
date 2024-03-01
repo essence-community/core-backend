@@ -13,7 +13,7 @@ import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
 import { safeResponsePipe } from "@ungate/plugininf/lib/stream/Util";
 import * as axios from "axios";
 import * as url from "url";
-import { isEmpty, initParams } from "@ungate/plugininf/lib/util/Util";
+import { isEmpty, initParams, stripBOM } from "@ungate/plugininf/lib/util/Util";
 import * as QueryString from "qs";
 import * as fs from "fs";
 import * as FormData from "form-data";
@@ -380,28 +380,25 @@ export default class RestEssenceProxy extends NullProvider {
                 if (validHeader.find((key) => ctHeader.startsWith(key))) {
                     let arr = [];
                     arr = await new Promise<any[]>((resolveArr) => {
-                        let json = "";
-                        response.data.on("data", (data) => {
-                            json += data;
+                        const responseBuffer = [];
+                        response.data.on("data", (chunk) => {
+                            responseBuffer.push(chunk);
                         });
                         response.data.on("end", () => {
                             try {
-                                let parseData = ctHeader.startsWith(
+                                const parseData = ctHeader.startsWith(
                                     "application/json",
                                 )
-                                    ? isEmpty(json)
+                                    ? responseBuffer.length === 0
                                         ? []
-                                        : JSON.parse(json)
+                                        : JSON.parse(stripBOM(Buffer.concat(responseBuffer).toString("utf8")))
                                     : {
-                                          response_data: json,
-                                      };
-                                if (!Array.isArray(parseData)) {
-                                    parseData = [parseData];
-                                }
+                                            response_data: stripBOM(Buffer.concat(responseBuffer).toString("utf8")),
+                                        };
                                 resolveArr(parseData);
                             } catch (e) {
                                 this.log.error(
-                                    `Parse json error: \n ${json}`,
+                                    `Parse json error: \n ${Buffer.concat(responseBuffer).toString("utf8")}`,
                                     e,
                                 );
                                 reject(e);

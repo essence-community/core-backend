@@ -24,6 +24,13 @@ export function isEmpty (value: any, allowEmptyString: boolean = false) {
     );
 }
 
+export function stripBOM(content) {
+    if (content.charCodeAt(0) === 0xFEFF) {
+      content = content.slice(1);
+    }
+    return content;
+}
+
 export function dateBetween (
     date: moment.Moment,
     startDate: moment.Moment,
