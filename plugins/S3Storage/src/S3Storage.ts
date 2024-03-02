@@ -141,14 +141,18 @@ export default class S3Storage extends NullPlugin {
             }
             if (json.service?.cv_action?.toUpperCase() === "D") {
                 return new Promise((resolve, reject) => {
+                    const Bucket = isEmpty(
+                        json.data[this.params.cvDirColumn] ||
+                        (json.master ? json.master[this.params.cvDirColumn] : "") ||
+                        this.params.cvDir,
+                        )
+                        ? this.params.cvBucket
+                        : `${this.params.cvBucket}/${json.data[this.params.cvDirColumn] ||
+                        (json.master ? json.master[this.params.cvDirColumn] : "") ||
+                        this.params.cvDir}`;
                     this.clients.deleteObject(
                         {
-                            Bucket: isEmpty(
-                                json.data[this.params.cvDirColumn] || this.params.cvDir,
-                            )
-                                ? this.params.cvBucket
-                                : `${this.params.cvBucket}/${json.data[this.params.cvDirColumn] ||
-                                this.params.cvDir}`,
+                            Bucket,
                             Key: json.data.cv_file_guid,
                         },
                         (err) => {
