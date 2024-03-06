@@ -46,7 +46,7 @@ from (
 
     ca.cv_value as cv_value_attr,
 
-    pkg_json.f_decode_attr(o.cv_value, coalesce(adt.ck_parent, a.ck_d_data_type), ca.ck_attr) as cv_value,
+    pkg_json.f_decode_attr(oa.cv_value, coalesce(adt.ck_parent, a.ck_d_data_type), ca.ck_attr) as cv_value,
 
     /* Поля аудита */
 
