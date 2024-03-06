@@ -103,11 +103,13 @@ export default class OnlineController implements ICoreController {
         "    'cct_tree_path', ttp.cct_tree_path,\n" + 
         "    'leaf', 'true'\n" + 
         "    ) || coalesce((select\n" + 
-        "           jsonb_object_agg(pa.ck_attr, pa.cv_value)\n" + 
+        "           jsonb_object_agg(tpa.ck_attr, pkg_json.f_decode_attr(tpa.cv_value, coalesce(da.ck_parent, a2.ck_d_data_type), tpa.ck_attr))\n" + 
         "           from\n" + 
-        "               t_page_attr pa\n" + 
+        "               s_mt.t_page_attr tpa\n" + 
+        "           join s_mt.t_attr a2 on a2.ck_id = tpa.ck_attr \n" +
+        "           join s_mt.t_d_attr_data_type da on da.ck_id = a2.ck_d_data_type \n" +
         "           where\n" + 
-        "               pa.ck_page = p.ck_id)::text, '{}')::jsonb  as route \n" + 
+        "               tpa.ck_page = p.ck_id)::text, '{}')::jsonb  as route \n" +
         "from\n" + 
         "    t_page p\n" + 
         "join temp_tree_page ttp \n" + 

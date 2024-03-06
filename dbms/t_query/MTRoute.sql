@@ -151,12 +151,16 @@ select
     op.root,
     op.cn_action_view,
     op.cn_action_edit,
-    coalesce((select
-          jsonb_object_agg(pa.ck_attr, pa.cv_value)
-      from
-              s_mt.t_page_attr pa
-       where
-             pa.ck_page = op.ck_id)::text, ''{}'')::jsonb  as json 
+    coalesce((
+            select
+                jsonb_object_agg(tpa.ck_attr, pkg_json.f_decode_attr(tpa.cv_value, coalesce(da.ck_parent, a2.ck_d_data_type), tpa.ck_attr))
+            from
+                s_mt.t_page_attr tpa
+            join s_mt.t_attr a2 on a2.ck_id = tpa.ck_attr
+            join s_mt.t_d_attr_data_type da on da.ck_id = a2.ck_d_data_type
+            where
+                tpa.ck_page = op.ck_id
+        ), ''{}'')::jsonb as json 
 from
     t3 op
 order by

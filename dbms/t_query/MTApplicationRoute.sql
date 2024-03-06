@@ -32,9 +32,11 @@ INSERT INTO s_mt.t_query (ck_id, ck_provider, ck_user, ct_change, cr_type, cr_ac
             )::text, ''[null]''), ''[]'')::jsonb)
         || coalesce((
             select
-                jsonb_object_agg(tpa.ck_attr, tpa.cv_value)
+                jsonb_object_agg(tpa.ck_attr, pkg_json.f_decode_attr(tpa.cv_value, coalesce(da.ck_parent, a2.ck_d_data_type), tpa.ck_attr))
             from
                 s_mt.t_page_attr tpa
+            join s_mt.t_attr a2 on a2.ck_id = tpa.ck_attr
+            join s_mt.t_d_attr_data_type da on da.ck_id = a2.ck_d_data_type
             where
                 tpa.ck_page = p.ck_id
         ), ''{}'')::jsonb
