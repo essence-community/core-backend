@@ -42,7 +42,7 @@ begin
       end
       /*Добавление динамических атрибутов из класса и обьекта*/
       || coalesce((select jsonb_object_agg(t.ck_attr,
-                                 pkg_json.f_decode_attr(t.cv_value, coalesce(da.ck_parent, a2.ck_d_data_type), t.ck_attr)) as attr_po
+                                 pkg_json.f_decode_attr(t.cv_value, t.ck_d_data_type, t.ck_attr)) as attr_po
            from
            (select ca2.ck_attr,
                    coalesce(da.ck_parent, a2.ck_d_data_type) as ck_d_data_type,
@@ -155,7 +155,7 @@ begin
       end
       /*Добавление динамических атрибутов из класса и обьекта*/
       || coalesce((select jsonb_object_agg(t.ck_attr,
-                                 pkg_json.f_decode_attr(t.cv_value, coalesce(da.ck_parent, a2.ck_d_data_type), t.ck_attr)) as attr_po
+                                 pkg_json.f_decode_attr(t.cv_value, t.ck_d_data_type, t.ck_attr)) as attr_po
            from
            (select ca2.ck_attr,
                    coalesce(da.ck_parent, a2.ck_d_data_type) as ck_d_data_type,
