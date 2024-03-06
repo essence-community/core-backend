@@ -42,7 +42,7 @@ begin
       end
       /*Добавление динамических атрибутов из класса и обьекта*/
       || coalesce((select jsonb_object_agg(t.ck_attr,
-                                 pkg_json.f_decode_attr(t.cv_value, t.ck_d_data_type)) as attr_po
+                                 pkg_json.f_decode_attr(t.cv_value, coalesce(da.ck_parent, a2.ck_d_data_type), t.ck_attr)) as attr_po
            from
            (select ca2.ck_attr,
                    coalesce(da.ck_parent, a2.ck_d_data_type) as ck_d_data_type,
@@ -76,7 +76,7 @@ $$;
 ALTER FUNCTION pkg_json.f_get_object(pk_start character varying) OWNER TO ${user.update};
 
 
-CREATE FUNCTION pkg_json.f_decode_attr(pv_value varchar, pk_data_type varchar) RETURNS jsonb
+CREATE FUNCTION pkg_json.f_decode_attr(pv_value varchar, pk_data_type varchar, pk_attr varchar) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER PARALLEL SAFE
     SET search_path TO 'pkg_json', 'public'
     AS $$
@@ -117,7 +117,7 @@ begin
 end;
 $$;
 
-ALTER FUNCTION pkg_json.f_decode_attr(pv_value varchar, pk_data_type varchar) OWNER TO ${user.update};
+ALTER FUNCTION pkg_json.f_decode_attr(pv_value varchar, pk_data_type varchar, pk_attr varchar) OWNER TO ${user.update};
 
 CREATE FUNCTION pkg_json.f_merge_jsonb(res jsonb, keyValue varchar, val jsonb) RETURNS jsonb
     LANGUAGE sql SECURITY DEFINER PARALLEL SAFE
@@ -155,7 +155,7 @@ begin
       end
       /*Добавление динамических атрибутов из класса и обьекта*/
       || coalesce((select jsonb_object_agg(t.ck_attr,
-                                 pkg_json.f_decode_attr(t.cv_value, t.ck_d_data_type)) as attr_po
+                                 pkg_json.f_decode_attr(t.cv_value, coalesce(da.ck_parent, a2.ck_d_data_type), t.ck_attr)) as attr_po
            from
            (select ca2.ck_attr,
                    coalesce(da.ck_parent, a2.ck_d_data_type) as ck_d_data_type,

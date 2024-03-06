@@ -18,7 +18,7 @@ select
 
   t.cv_value_attr,
 
-  pkg_json.f_decode_attr(t.cv_value, t.ck_d_data_type) as cv_value,
+  t.cv_value,
 
   /* Поля аудита */
 
@@ -46,7 +46,7 @@ from (
 
     ca.cv_value as cv_value_attr,
 
-    oa.cv_value,
+    pkg_json.f_decode_attr(o.cv_value, coalesce(adt.ck_parent, a.ck_d_data_type), ca.ck_attr) as cv_value,
 
     /* Поля аудита */
 
@@ -61,6 +61,8 @@ from (
   join s_mt.t_class_attr ca on ca.ck_class = c.ck_id
 
   join s_mt.t_attr a on a.ck_id = ca.ck_attr
+
+  join s_mt.t_d_attr_data_type adt on a.ck_d_data_type = adt.ck_id
 
   left join s_mt.t_object_attr oa on oa.ck_class_attr = ca.ck_id 
 

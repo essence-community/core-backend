@@ -4,7 +4,7 @@ INSERT INTO s_mt.t_query (ck_id, cc_query, ck_provider, ck_user, ct_change, cr_t
 select ca.ck_id,
        ca.ck_class,
        ca.ck_attr,
-       pkg_json.f_decode_attr(ca.cv_value, a.ck_d_data_type) as cv_value,
+       pkg_json.f_decode_attr(ca.cv_value, coalesce(adt.ck_parent, a.ck_d_data_type), ca.ck_attr) as cv_value,
        ca.cl_required,
        ca.cl_empty,
        a.cv_description,
