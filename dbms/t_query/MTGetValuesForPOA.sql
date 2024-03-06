@@ -46,7 +46,12 @@ from
             poa.cv_value
         order by
             cv_value
-    ) t
+    ) t 
+union all
+    select jsonb_build_object (
+        ''cv_value'',
+        ''''
+    ) as json
    ', 'meta', '20783', '2019-05-31 11:45:15.860063+03', 'select', 'po_session', NULL, 'Необходимо актуализировать')
 on conflict (ck_id) do update set cc_query = excluded.cc_query, ck_provider = excluded.ck_provider, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cr_type = excluded.cr_type, cr_access = excluded.cr_access, cn_action = excluded.cn_action, cv_description = excluded.cv_description;
 

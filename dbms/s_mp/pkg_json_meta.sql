@@ -429,7 +429,7 @@ begin
   vot_object_attr.ck_id = nullif(trim(pc_json#>>'{data,ck_id}'), '');
   vot_object_attr.ck_object = nullif(trim(pc_json#>>'{service,ck_main}'), '');
   vot_object_attr.ck_class_attr = nullif(trim(pc_json#>>'{data,ck_class_attr}'), '');
-  vot_object_attr.cv_value = pkg_meta.f_decode_attr_variable((pc_json#>>'{data,cv_value}'), vot_object_attr.ck_class_attr, pc_json, pv_user);
+  vot_object_attr.cv_value = pkg_meta.f_decode_attr_variable((pc_json#>>'{data,cv_value}'), vot_object_attr.ck_class_attr, pc_json, null, pv_user);
   vot_object_attr.ck_user = pv_user;
   vot_object_attr.ct_change = CURRENT_TIMESTAMP;
   vv_action = (pc_json#>>'{service,cv_action}');
@@ -690,7 +690,7 @@ begin
   vot_page_object_attr.ck_id = nullif(trim(pc_json#>>'{data,ck_id}'), '');
   vot_page_object_attr.ck_page_object = nullif(trim(pc_json#>>'{service,ck_main}'), '');
   vot_page_object_attr.ck_class_attr = nullif(trim(pc_json#>>'{data,ck_class_attr}'), '');
-  vot_page_object_attr.cv_value = pkg_meta.f_decode_attr_variable((pc_json#>>'{data,cv_value}'), vot_page_object_attr.ck_class_attr, pc_json, pv_user);
+  vot_page_object_attr.cv_value = pkg_meta.f_decode_attr_variable((pc_json#>>'{data,cv_value}'), vot_page_object_attr.ck_class_attr, pc_json, null, pv_user);
   vot_page_object_attr.ck_user = pv_user;
   vot_page_object_attr.ct_change = CURRENT_TIMESTAMP;
   vv_action = (pc_json#>>'{service,cv_action}');
