@@ -1,6 +1,6 @@
 {
     "name": "@ungate/server",
-    "version": "3.0.2",
+    "version": "3.0.3",
     "description": "Шлюз проекта CORE",
     "main": "index.js",
     "author": "Ivan Artemov (honyrik@gmail.com)",
