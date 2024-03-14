@@ -75,7 +75,7 @@ class Constants extends Constant {
     public GATE_NODE_NAME = process.env.GATE_NODE_NAME || os.hostname();
     /** Таймзона для преобразовании даты по умолчанию */
     public DEFAULT_TIMEZONE_DATE =
-        process.env.GATE_DEFAULT_TIMEZONE_DATE || "Etc/GMT-3";
+        process.env.GATE_DEFAULT_TIMEZONE_DATE || "Europe/Moscow";
 }
 const constants = new Constants();
 Date.prototype.toJSON = function() {

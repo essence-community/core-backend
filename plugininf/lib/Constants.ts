@@ -18,7 +18,7 @@ export class Constants {
     /**
      * Формат даты по умолчанию
      */
-    public JSON_DATE_FORMAT = "YYYY-MM-DDTHH:mm:ss";
+    public JSON_DATE_FORMAT = process.env.GATE_JSON_DATE_FORMAT || "YYYY-MM-DDTHH:mm:ss";
 
     /** Рабочая кодировка для json */
     public JSON_ENCODING = "utf-8";
