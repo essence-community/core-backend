@@ -303,7 +303,6 @@ declare
   -- переменные функции
   vot_account ${user.table}.t_account;
   vl_deleted smallint;
-  vct_account_info jsonb := '[]'::jsonb;
   vot_account_ext ${user.table}.t_account_ext;
   vv_action  varchar(1);
   vt_action_rec record;
@@ -340,18 +339,6 @@ begin
   vot_account.ct_change = CURRENT_TIMESTAMP;
   vv_action = trim(pc_json#>>'{service,cv_action}');
   perform gl_warning == (pc_json#>>'{service,cl_warning}')::bigint;
-  select
-    jsonb_agg(jt.*)
-  into
-    vct_account_info
-  from (
-    select 
-    	inf.ck_id as ck_d_info,
-    	jr.value as cv_value
-    from ${user.table}.t_d_info as inf
-  	join jsonb_each(pc_json->'data') as jr
-  	on inf.ck_id = jr.key
-  ) as jt;
   -- лочим пользователя
   perform pkg_account.p_lock_account(vot_account.ck_id::varchar);
   if nullif(trim(pc_json#>>'{data,ck_account_ext}'), '') is not null then
@@ -397,24 +384,7 @@ begin
           on
           tr.ck_id = tar1.ck_role
           and tar1.ck_account = vot_account.ck_id
-      where tar1.ck_id is null 
-      union all
-          select
-          tr.ck_id as ck_role,
-          'D' as cv_action
-      from
-          ${user.table}.t_account_role tar2
-      join ${user.table}.t_role tr
-          on
-          tar2.ck_role = tr.ck_id
-      left join jsonb_array_elements_text(
-              pc_json#>'{data,ca_role}'
-          ) as t(res)
-          on
-          tr.cv_name = t.res
-      where
-          t.res is null
-          and tar2.ck_account = vot_account.ck_id
+      where tar1.ck_id is null
     ) loop 
       vot_account_role.ck_role = vt_role_rec.ck_role;
       perform pkg_account.p_modify_account_role(vt_role_rec.cv_action, vot_account_role);
@@ -451,7 +421,7 @@ begin
     	jr.value as cv_value,
       case when tai.ck_id is null then 'I' else 'U' end as cv_action
     from ${user.table}.t_d_info as inf
-  	join jsonb_each(pc_json->'data') as jr
+  	join jsonb_each_text(pc_json->'data') as jr
   	on inf.ck_id = jr.key
     left join ${user.table}.t_account_info tai
     on tai.ck_d_info = inf.ck_id and tai.ck_account = vot_account.ck_id
