@@ -1,6 +1,8 @@
 --liquibase formatted sql
 --changeset artemov_i:MTQueryExtended.sql dbms:postgresql runOnChange:true splitStatements:false stripComments:false
-INSERT INTO s_mt.t_query (ck_id, cc_query, ck_provider, ck_user, ct_change, cr_type, cr_access, cn_action, cv_description) VALUES ('MTQueryExtended', '/*MTQueryExtended*/
+INSERT INTO s_mt.t_query (ck_id, ck_provider, ck_user, ct_change, cr_type, cr_access, cn_action, cv_description, cc_query)
+ VALUES('MTQueryExtended', 'meta', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2024-04-26T15:01:00.716+0300', 'select', 'po_session', null, 'Список сервисов с расшириным поиском',
+ '/*MTQueryExtended*/
 select
   t.*
 from (
@@ -42,8 +44,16 @@ from (
 			)/*filter.ck_page##*/
 ) t
 where true
-/*##filter.ck_id*/and lower(t.ck_id) like ''%'' || lower(:json::json#>>''{filter,ck_id}'') || ''%''/*filter.ck_id##*/
+/*##filter.ck_id*/
+and (
+    (jsonb_typeof(:json::jsonb#>''{filter,ck_id}'') = ''string'' and t.ck_id ilike ''%'' || lower(:json::json#>>''{filter,ck_id}'') || ''%'') 
+    or 
+    (jsonb_typeof(:json::jsonb#>''{filter,ck_id}'') = ''array'' and 
+        exists (select 1 from jsonb_array_elements_text(:json::jsonb#>''{filter,ck_id}'') as tt where t.ck_id ilike ''%'' || tt.value || ''%'')
+    )
+)
+/*filter.ck_id##*/
 and ( &FILTER )
 order by &SORT, t.ck_id asc
- ', 'meta', '20783', '2019-05-29 12:52:37.25561+03', 'select', 'po_session', NULL, 'Список сервисов с расшириным поиском')
-on conflict (ck_id) do update set cc_query = excluded.cc_query, ck_provider = excluded.ck_provider, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cr_type = excluded.cr_type, cr_access = excluded.cr_access, cn_action = excluded.cn_action, cv_description = excluded.cv_description;
+ '
+) on conflict (ck_id) do update set cc_query = excluded.cc_query, ck_provider = excluded.ck_provider, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cr_type = excluded.cr_type, cr_access = excluded.cr_access, cn_action = excluded.cn_action, cv_description = excluded.cv_description;
