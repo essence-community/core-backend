@@ -415,16 +415,18 @@ export const sqlLocalization =
     " where ck_d_lang in (select value from json_array_elements_text(:cct_lang::json))\n" +
     " order by ck_d_lang asc, ck_id asc\n";
 export const sqlLocalizationMessage =
-    "select\n" +
-    "    ck_id,\n" +
-    "    ck_d_lang,\n" +
-    "    cr_namespace,\n" +
-    "    cv_value,\n" +
-    "    ck_user,\n" +
-    "    ct_change\n" +
-    "from\n" +
-    "    s_mt.t_localization\n" +
-    " where cr_namespace = 'message'\n" +
+    "select\n" + 
+    "    tl.ck_id,\n" + 
+    "    tl.ck_d_lang,\n" + 
+    "    tl.cr_namespace,\n" + 
+    "    tl.cv_value,\n" + 
+    "    tl.ck_user,\n" + 
+    "    tl.ct_change\n" + 
+    "from\n" + 
+    "    s_mt.t_localization tl\n" + 
+    "join s_mt.t_message tm\n" + 
+    "  on tm.cv_text = tl.ck_id\n" + 
+    " where tl.cr_namespace = 'message' and tm.ck_id in (select value::bigint from json_array_elements_text(:cct_message::json))\n" + 
     " order by ck_d_lang asc, ck_id asc\n";
 export const sqlQueryPage =
     "with recursive page_object as (\n" +

@@ -107,7 +107,9 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
         await conn
             .executeStmt(
                 sqlLocalizationMessage,
-                {},
+                {
+                    cct_message: JSON.stringify(json.data.cct_message),
+                },
                 {},
                 {
                     autoCommit: true,
