@@ -142,6 +142,8 @@ INSERT INTO s_mt.t_class_hierarchy
     select 'B8CBEABDDF03452798A20FD6C706BDBA' as ck_id, 'D966BA30FBA3469FB5FEA82127B1ED6D' as ck_class_parent, '137' as ck_class_child, '4E50E23DE3C2473A8B41011A689EEC1F' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-09-20T00:00:00.000+0000'::timestamp with time zone as ct_change
     union all
     select '7E11698D105343A99B01889BBB993A90' as ck_id, 'DF451F5CC0A54F8791C4DFAC12DAE42E' as ck_class_parent, '137' as ck_class_child, 'E2D0A96506384965A7B2666E5D2D1970' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-10-24T00:00:00.000+0000'::timestamp with time zone as ct_change
+    union all
+    select 'F0CB3548C4634030939BFAADA7F5DB46' as ck_id, 'EC0610DA03D748E3B3086F49BEEE94ED' as ck_class_parent, '137' as ck_class_child, 'EEBFE7B1ABBA407EAA22DE1DB8960C9C' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2024-05-15T14:30:22.981+0000'::timestamp with time zone as ct_change
  ) as t
  where t.ck_class_parent in (select ck_id from s_mt.t_class) and t.ck_class_child in (select ck_id from s_mt.t_class)
  on conflict on constraint cin_c_class_hierarchy_1 do update set ck_class_parent = excluded.ck_class_parent, ck_class_child = excluded.ck_class_child, ck_class_attr = excluded.ck_class_attr, ck_user = excluded.ck_user, ct_change = excluded.ct_change;

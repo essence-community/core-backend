@@ -67,6 +67,8 @@ INSERT INTO s_mt.t_class_hierarchy
     union all
     select '97CAD69624004952956D26A6CFC81CDC' as ck_id, '4BA159E82B434939AAD293411854ED95' as ck_class_parent, 'DA77FDDE896F48909B19EBB516326D33' as ck_class_child, '53F747643BEE49B795CA755F3532E598' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2023-05-13T13:22:02.239+0000'::timestamp with time zone as ct_change
     union all
+    select '018FAA2157124C38ABC2BCA5E71C4C0B' as ck_id, '4BA159E82B434939AAD293411854ED95' as ck_class_parent, 'EC0610DA03D748E3B3086F49BEEE94ED' as ck_class_child, '53F747643BEE49B795CA755F3532E598' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2024-05-15T14:40:18.177+0000'::timestamp with time zone as ct_change
+    union all
     select 'A9D1A80CA3114F65B7058A82E5410221' as ck_id, '58' as ck_class_parent, '4BA159E82B434939AAD293411854ED95' as ck_class_child, '382' as ck_class_attr, '4fd05ca9-3a9e-4d66-82df-886dfa082113' as ck_user, '2019-09-20T00:00:00.000+0000'::timestamp with time zone as ct_change
  ) as t
  where t.ck_class_parent in (select ck_id from s_mt.t_class) and t.ck_class_child in (select ck_id from s_mt.t_class)

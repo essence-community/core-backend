@@ -84,5 +84,6 @@
     <include file="MetaClassHierarchy_DAB69DA8C46746AD959E331D4CFAC8AD.sql" relativeToChangelogFile="true"/>
     <include file="MetaClassHierarchy_DB557A6113634FD2BC40D2A58EE1EB3F.sql" relativeToChangelogFile="true"/>
     <include file="MetaClassHierarchy_DF451F5CC0A54F8791C4DFAC12DAE42E.sql" relativeToChangelogFile="true"/>
+    <include file="MetaClassHierarchy_EC0610DA03D748E3B3086F49BEEE94ED.sql" relativeToChangelogFile="true"/>
     <include file="MetaClassHierarchy_FC278B804F4C4DE6A273C8C4D6F4037D.sql" relativeToChangelogFile="true"/>
 </databaseChangeLog>
