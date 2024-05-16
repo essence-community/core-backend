@@ -2176,7 +2176,7 @@ begin
           join s_mt.t_page p
           on tv.ck_page = p.ck_id and p.cr_type = 2
           cross join unnest(pkg_util.f_get_global_from_string(tv.cv_value, ck_attr)) as t(cv_variable)
-          where tv.ck_attr in ('activerules', 'disabledrules', 'hiddenrules', 'getglobaltostore', 'getglobal', 'readonlyrules', 'setrecordtoglobal', 'setglobal', 'columnsfilter')
+          where tv.ck_attr in ('activerules', 'disabledrules', 'hiddenrules', 'getglobal', 'readonlyrules', 'setrecordtoglobal', 'setglobal', 'columnsfilter')
           and upper(t.cv_variable) not ilike 'G_SYS_%' and upper(t.cv_variable) not ilike 'G_SESS_%'
         )v
         left join s_mt.t_page_variable pv on pv.ck_page = v.ck_page
