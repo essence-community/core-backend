@@ -203,6 +203,7 @@ export default class USPOIntegration extends NullPlugin {
                             ? { REPORT_LOCALE: "en_EN" }
                             : {}),
                     },
+                    cleanDate: json.data.cd_cleaning,
                     reportFormat: json.data.ck_d_format,
                     reportId: json.data.ck_report,
                     reportName: json.data.cv_filename,
