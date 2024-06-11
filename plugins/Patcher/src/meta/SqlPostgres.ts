@@ -415,7 +415,7 @@ export const sqlLocalization =
     " where ck_d_lang in (select value from json_array_elements_text(:cct_lang::json))\n" +
     " order by ck_d_lang asc, ck_id asc\n";
 export const sqlLocalizationMessage =
-    "select\n" + 
+    "select distinct\n" + 
     "    tl.ck_id,\n" + 
     "    tl.ck_d_lang,\n" + 
     "    tl.cr_namespace,\n" + 
