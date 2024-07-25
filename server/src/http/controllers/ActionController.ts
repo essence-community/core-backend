@@ -187,7 +187,7 @@ class ActionController {
         gateContext.trace("Process File");
         return new Promise((resolve, reject) => {
             provider
-                .processDml(gateContext, query)
+                .processSql(gateContext, query)
                 .then((data) => {
                     resolve({
                         type: data.type || "attachment",
@@ -196,7 +196,7 @@ class ActionController {
                 })
                 .catch((err) => {
                     gateContext.error(
-                        `${gateContext.queryName}, File.processFile(${query.queryStr}): ${err.message}`,
+                        `${gateContext.queryName}, File.handlerFile(${query.queryStr}): ${err.message}`,
                         err,
                     );
                     return reject(err);
@@ -274,14 +274,14 @@ class ActionController {
         gateContext.trace("Process GetFile");
         return new Promise((resolve, reject) => {
             provider
-                .processDml(gateContext, query)
+                .processSql(gateContext, query)
                 .then((data) => {
                     resolve({ type: data.type || "file", data: data.stream });
                 })
                 .catch((err) => {
                     gateContext.error(
                         `${gateContext.queryName},` +
-                            ` GetFile.processDml(${query.queryStr}): ${err.message}`,
+                            ` GetFile.handlerGetFile(${query.queryStr}): ${err.message}`,
                         err,
                     );
                     return reject(err);
