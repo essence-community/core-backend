@@ -526,16 +526,22 @@ export class GateSession implements ISessCtrl {
                 users.push(item);
             });
             users.sort((a, b) => {
-                const res = a.ck_id.length - b.ck_id.length;
-                return res === 0 ? a.ck_id.localeCompare(b.ck_id) : res;
+                const idA = `${a.ck_id}`;
+                const idB = `${b.ck_id}`;
+                const res = idA.length - idB.length;
+                return res === 0 ? idA.localeCompare(idB) : res;
             });
             userActions.sort((a, b) => {
-                const res = a.ck_user.length - b.ck_user.length;
-                return res === 0 ? a.ck_user.localeCompare(b.ck_user) : res;
+                const idA = `${a.ck_user}`;
+                const idB = `${b.ck_user}`;
+                const res = idA.length - idB.length;
+                return res === 0 ? idA.localeCompare(idB) : res;
             });
             userDepartments.sort((a, b) => {
-                const res = a.ck_user.length - b.ck_user.length;
-                return res === 0 ? a.ck_user.localeCompare(b.ck_user) : res;
+                const idA = `${a.ck_user}`;
+                const idB = `${b.ck_user}`;
+                const res = idA.length - idB.length;
+                return res === 0 ? idA.localeCompare(idB) : res;
             });
             const usersJson = JSON.stringify(users);
             const userActionsJson = JSON.stringify(userActions);
