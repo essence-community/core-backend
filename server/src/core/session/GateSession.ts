@@ -532,14 +532,14 @@ export class GateSession implements ISessCtrl {
                 return res === 0 ? idA.localeCompare(idB) : res;
             });
             userActions.sort((a, b) => {
-                const idA = `${a.ck_user}`;
-                const idB = `${b.ck_user}`;
+                const idA = `${a.ck_user}:${a.cn_action}`;
+                const idB = `${b.ck_user}:${a.cn_action}`;
                 const res = idA.length - idB.length;
                 return res === 0 ? idA.localeCompare(idB) : res;
             });
             userDepartments.sort((a, b) => {
-                const idA = `${a.ck_user}`;
-                const idB = `${b.ck_user}`;
+                const idA = `${a.ck_user}:${a.ck_department}`;
+                const idB = `${b.ck_user}:${a.ck_department}`;
                 const res = idA.length - idB.length;
                 return res === 0 ? idA.localeCompare(idB) : res;
             });
