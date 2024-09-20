@@ -525,6 +525,18 @@ export class GateSession implements ISessCtrl {
                 delete item.ca_department;
                 users.push(item);
             });
+            users.sort((a, b) => {
+                const res = a.ck_id.length - b.ck_id.length;
+                return res === 0 ? a.ck_id.localeCompare(b.ck_id) : res;
+            });
+            userActions.sort((a, b) => {
+                const res = a.ck_user.length - b.ck_user.length;
+                return res === 0 ? a.ck_user.localeCompare(b.ck_user) : res;
+            });
+            userDepartments.sort((a, b) => {
+                const res = a.ck_user.length - b.ck_user.length;
+                return res === 0 ? a.ck_user.localeCompare(b.ck_user) : res;
+            });
             const usersJson = JSON.stringify(users);
             const userActionsJson = JSON.stringify(userActions);
             const userDepartmentsJson = JSON.stringify(userDepartments);
