@@ -26,6 +26,36 @@ export interface IParamsProvider extends ISessProviderParam {
     guestAccount?: string;
     addedExternal?: boolean;
 }
+const QUERY = 
+    "/*Login*/\n" + 
+    "select u.ck_id, jsonb_build_object('ck_id', u.ck_id,\n" + 
+    "                   'cv_login', u.cv_login,\n" + 
+    "                   'cv_name', u.cv_name,\n" + 
+    "                   'cv_surname', u.cv_surname,\n" + 
+    "                   'cv_patronymic', u.cv_patronymic,\n" + 
+    "                   'cv_email', u.cv_email,\n" + 
+    "                   'ca_actions', (\n" + 
+    "                        select jsonb_agg(distinct dra.ck_action) \n" + 
+    "                        from s_at.t_account_role ur\n" + 
+    "                        join s_at.t_role_action dra on ur.ck_role = dra.ck_role\n" + 
+    "                        where ur.ck_account = u.ck_id\n" + 
+    "                   ),\n" + 
+    "                   'cv_timezone', u.cv_timezone) || coalesce(info.attr, '{}'::jsonb) as json\n" + 
+    "  from (\n" + 
+    "        select pkg_json_account.f_get_user(:cv_login::varchar, :cv_password::varchar, :cv_token::varchar, 1::smallint) as ck_id\n" + 
+    "  ) as t\n" + 
+    "  join s_at.t_account u\n" + 
+    "    on u.ck_id = t.ck_id::uuid\n" + 
+    "  left join (select a.ck_id,\n" + 
+    "                jsonb_object_agg(a.ck_d_info, pkg_json_account.f_decode_attr(ainf.cv_value, a.cr_type)) as attr\n" + 
+    "          from (select ac.ck_id, inf.ck_id as ck_d_info, inf.cr_type\n" + 
+    "                  from s_at.t_account ac, s_at.t_d_info inf) a\n" + 
+    "          left join s_at.t_account_info ainf\n" + 
+    "            on a.ck_d_info = ainf.ck_d_info and a.ck_id = ainf.ck_account\n" + 
+    "          where ainf.cv_value is not null\n" + 
+    "         group by a.ck_id) as info\n" + 
+    "    on u.ck_id = info.ck_id\n";;
+
 export default class CoreAuthPg extends NullSessProvider {
     public static getParamsInfo(): IParamsInfo {
         /* tslint:disable:object-literal-sort-keys */
@@ -67,27 +97,6 @@ export default class CoreAuthPg extends NullSessProvider {
         super(name, params, sessCtrl);
         this.params = initParams(CoreAuthPg.getParamsInfo(), this.params);
         this.dataSource = new PostgresDB(`${this.name}_provider`, pick(this.params, ...Object.keys(PostgresDB.getParamsInfo())) as any);
-        if (!isEmpty(this.params.guestAccount)) {
-            this.afterSession = async (
-                context: IContext,
-                sessionId?: string,
-                session?: ISession,
-            ): Promise<ISession> => {
-                if (session) {
-                    return session;
-                }
-                if (context.params.connect_guest === "true") {
-                    const { session: sessGuest }: any =
-                        await this.createSession({
-                            context,
-                            idUser: this.params.guestAccount,
-                            userData: {} as any,
-                        });
-                    return this.sessCtrl.loadSession(sessGuest);
-                }
-                return session;
-            };
-        }
         if (this.params.addedExternal) {
             initProcess({
                 addUser: (data) => {
@@ -103,6 +112,74 @@ export default class CoreAuthPg extends NullSessProvider {
             }, "cluster", false);
         }
 
+    }
+    public async afterSession(
+        context: IContext,
+        sessionId?: string,
+        session?: ISession,
+    ): Promise<ISession> {
+        if (session) {
+            return session;
+        }
+        const header = context.request.headers.authorization || "";
+        if (header.substring(0, 6).toLowerCase().startsWith("basic")) {
+            const basic = Buffer.from(
+                    header.substring(6),
+                    "base64",
+            ).toString("ascii");
+            const split = basic.indexOf(":");
+            return this.getSession(context, {
+                cv_login: basic.substring(0, split),
+                cv_password: basic.substring(split+1),
+            });
+        } else if (header.substring(0, 6).toLowerCase().startsWith("token")) {
+            return this.getSession(context, {
+                cv_token: header.substring(6)
+            });
+        }
+
+        if (!isEmpty(this.params.guestAccount) && context.params.connect_guest === "true") {
+            const { session: sessGuest }: any =
+                await this.createSession({
+                    context,
+                    idUser: this.params.guestAccount,
+                    userData: {} as any,
+                });
+            return this.sessCtrl.loadSession(sessGuest);
+        }
+
+        return session;
+    }
+    private async getSession(context: IContext, param: Record<string, string>) {
+        const res = await this.dataSource.executeStmt(
+            QUERY,
+            null,
+            param,
+            null,
+            {
+                resultSet: true,
+            },
+        );
+        const arr = await ReadStreamToArray(res.stream);
+        if (isEmpty(arr) || isEmpty(arr[0].ck_id)) {
+            this.log.warn("Invalid login and password");
+            throw new ErrorException(ErrorGate.AUTH_UNAUTHORIZED);
+        }
+        let userData = arr[0];
+        if (!isEmpty(userData.json)) {
+            userData = {
+                ...userData,
+                ...(typeof userData.json === "object" ? userData.json : JSON.parse(userData.json)),
+            };
+        }
+
+        const { session: sessGuest }: any =
+                await this.createSession({
+                    context,
+                    idUser: userData.ck_id,
+                    userData,
+                });
+        return this.sessCtrl.loadSession(sessGuest);
     }
     private async syncExternalAuthUserInfo(
         idUser: string,
@@ -203,9 +280,16 @@ export default class CoreAuthPg extends NullSessProvider {
             this.log.warn("Invalid login and password");
             throw new ErrorException(ErrorGate.AUTH_UNAUTHORIZED);
         }
+        let dataUser = arr[0];
+        if (!isEmpty(dataUser.json)) {
+            dataUser = {
+                ...dataUser,
+                ...(typeof dataUser.json === "object" ? dataUser.json : JSON.parse(dataUser.json)),
+            };
+        }
         return {
-            idUser: arr[0].ck_id,
-            dataUser: arr[0],
+            idUser: dataUser.ck_id,
+            dataUser: dataUser,
         };
     }
     public processSql(
@@ -262,7 +346,7 @@ export default class CoreAuthPg extends NullSessProvider {
         const res = await super.initContext(context, query);
         context.connection = await this.getConnection();
         if (!isEmpty(res.modifyMethod) && res.modifyMethod !== "_") {
-            res.queryStr = `select ${res.modifyMethod}(:sess_ck_id, :sess_session, :json) as result`;
+            res.queryStr = QUERY;
             return res;
         } else if (res.modifyMethod === "_") {
             return res;
@@ -271,8 +355,7 @@ export default class CoreAuthPg extends NullSessProvider {
             if (context.actionName !== "auth") {
                 throw new ErrorException(ErrorGate.NOTFOUND_QUERY);
             } else {
-                query.queryStr =
-                    "/*Login*/ select pkg_json_account.f_get_user(:cv_login::varchar, :cv_password::varchar, :cv_token::varchar, 1::smallint) as ck_id";
+                query.queryStr = QUERY
             }
         }
         return res;

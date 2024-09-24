@@ -342,11 +342,11 @@ export default class TokenAuth extends NullSessProvider {
         sessionId: string,
         session: ISession,
     ): Promise<ISession> {
-        const header = gateContext.request.headers.authorization;
+        const header = gateContext.request.headers.authorization || "";
         if (
             (session && session.nameProvider !== this.name) ||
-            (header &&
-                header.substr(0, 7).toLowerCase().indexOf("bearer ") === -1) ||
+            (header.substr(0, 7).toLowerCase().indexOf("bearer ") === -1) ||
+            (header.substr(0, 6).toLowerCase().indexOf("basic ") === -1) ||
             (session)
         ) {
             return session;

@@ -425,9 +425,13 @@ export default class KeyCloakAuth extends NullSessProvider {
             throw new BreakException("break");
         } else if (
             gateContext.request.headers.authorization
-                ?.substr(0, 7)
+                ?.substring(0, 7)
                 .toLowerCase()
-                .indexOf("bearer ") > -1
+                .indexOf("bearer ") > -1 ||
+            gateContext.request.headers.authorization
+                ?.substring(0, 6)
+                .toLowerCase()
+                .indexOf("basic ") > -1
         ) {
             gateContext.debug("KeyCloak Init grant");
 

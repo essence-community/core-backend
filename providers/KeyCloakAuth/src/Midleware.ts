@@ -30,10 +30,20 @@ export async function GrantAttacher(
 ): Promise<KeyCloak.Grant | null> {
     const header = gateContext.request.headers.authorization;
     let accessToken;
-    if (header && header.substr(0, 7).toLowerCase().indexOf("bearer ") === 0) {
+    if (header && header.substring(0, 7).toLowerCase().indexOf("bearer ") === 0) {
         accessToken = JSON.stringify({
             access_token: header.substring(7),
         });
+    } else if (header && header.substring(0, 6).toLowerCase().indexOf("basic ") === 0) {
+        const basic = Buffer.from(
+                    header.substring(6),
+                    "base64",
+            ).toString("ascii");
+        const split = basic.indexOf(":");
+        return grantManager.obtainDirectly(
+            basic.substring(0, split),
+            basic.substring(split+1)
+        ).then(async ([grant, headers]: [KeyCloak.Grant, Record<string, any>]) => grant);
     }
     if (gateContext.isDebugEnabled()) {
         gateContext.debug("Access Token Found %s", accessToken);
