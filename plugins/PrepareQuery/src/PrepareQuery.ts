@@ -30,6 +30,7 @@ export default class PrepareQuery extends NullPlugin {
                 return resolve();
             }
             const self = this;
+            PATTERN_FILTER.lastIndex = -1;
             let matcher = PATTERN_FILTER.exec(query.queryStr);
             let removeBlock = [];
             let vlSort;
@@ -77,6 +78,7 @@ export default class PrepareQuery extends NullPlugin {
                     jlFilter.forEach((item) => {
                         const { datatype, format, property } = item;
                         let { operator, value } = item;
+                        re.lastIndex = -1;
                         if (isEmpty(property) || !re.test(property)) {
                             return true;
                         }
@@ -88,7 +90,7 @@ export default class PrepareQuery extends NullPlugin {
                         let key = `${FILTER_PREFIX}${property.toLowerCase()}`;
                         let param;
                         let ind = 0;
-                        if (isEmpty(value)) {
+                        if (isEmpty(value) && ["null", "is null", "notnull", "not null", "is not null"].indexOf(operator) < 0) {
                             return true;
                         }
 
@@ -116,6 +118,7 @@ export default class PrepareQuery extends NullPlugin {
                                 }
                                 break;
                             case "ge":
+                            case ">=":
                                 operator = ">=";
                                 break;
                             case "lt":
@@ -131,16 +134,20 @@ export default class PrepareQuery extends NullPlugin {
                                 }
                                 break;
                             case "le":
+                            case "<=":
                                 operator = "<=";
                                 break;
                             case "eq":
+                            case "=":
                                 operator = "=";
                                 break;
                             case "ne":
                             case "<>":
-                                operator = "!=";
+                            case "!=":
+                                operator = "<>";
                                 break;
                             case "like":
+                            case "~":
                                 if (
                                     !value ||
                                     value === "" ||
@@ -148,10 +155,13 @@ export default class PrepareQuery extends NullPlugin {
                                 ) {
                                     return true;
                                 }
+                                operator = "like";
                                 nmColumn = `UPPER(${nmColumn})`;
                                 value = `%${value.toUpperCase()}%`;
                                 break;
                             case "not like":
+                            case "notlike":
+                            case "!~":
                                 if (
                                     !value ||
                                     value === "" ||
@@ -159,8 +169,20 @@ export default class PrepareQuery extends NullPlugin {
                                 ) {
                                     return true;
                                 }
+                                operator = "not like";
                                 nmColumn = `UPPER(${nmColumn})`;
                                 value = `%${value.toUpperCase()}%`;
+                                break;
+                            case "null":
+                            case "is null":
+                                operator = "is";
+                                param = "null";
+                                break;
+                            case "notnull":
+                            case "not null":
+                            case "is not null":
+                                operator = "is";
+                                param = "not null";
                                 break;
                             case "in":
                             case "not in": {
@@ -174,10 +196,6 @@ export default class PrepareQuery extends NullPlugin {
                                 param = `(${vlValue.substr(1)})`;
                                 break;
                             }
-                            case "=":
-                            case "<=":
-                            case ">=":
-                                break;
                             default: {
                                 return true;
                             }
@@ -192,7 +210,7 @@ export default class PrepareQuery extends NullPlugin {
                         if (!param) {
                             param = `:${key}`;
                         }
-                        if (datatype === "date" && gateContext.connection) {
+                        if (datatype === "date" && param != "null" && param != "not null" && gateContext.connection) {
                             if (gateContext.connection.name === "oracle") {
                                 nmColumn = this.dateTruncOracle(
                                     nmColumn,
@@ -217,6 +235,7 @@ export default class PrepareQuery extends NullPlugin {
                     vlSort = "";
                     jlSort.forEach((item) => {
                         const { property, direction } = item;
+                        re.lastIndex = -1;
                         if (isEmpty(property) || !re.test(property)) {
                             return true;
                         }
