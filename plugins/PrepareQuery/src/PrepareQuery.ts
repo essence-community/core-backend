@@ -162,6 +162,7 @@ export default class PrepareQuery extends NullPlugin {
                             case "not like":
                             case "notlike":
                             case "!~":
+                            case "nl":
                                 if (
                                     !value ||
                                     value === "" ||
@@ -186,7 +187,7 @@ export default class PrepareQuery extends NullPlugin {
                                 break;
                             case "in":
                             case "not in": {
-                                if (!value || value.length === 0) {
+                                if (!value || !Array.isArray(value) || value.length === 0) {
                                     return true;
                                 }
                                 let vlValue = "";
