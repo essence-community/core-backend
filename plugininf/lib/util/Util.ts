@@ -16,6 +16,8 @@ import IContext from "../IContext";
 import Constant from "../Constants";
 import * as cu from "./cryptoUtil";
 
+const NULL_OPERATOR = ["null", "is null", "notnull", "not null", "is not null"];
+
 export function isEmpty (value: any, allowEmptyString: boolean = false) {
     return (
         value == null ||
@@ -444,7 +446,7 @@ export function filterFilesData (gateContext: IContext): (a: any) => boolean {
     });
     const jlFilter = json.filter.jl_filter as IRecordFilter[];
     if (!isEmpty(jlFilter)) {
-        return (obj: any): boolean =>
+        return (obj: any) =>
             jlFilter.filter((item) => {
                 if (isEmpty(item.property)) {
                     return true;
@@ -452,17 +454,17 @@ export function filterFilesData (gateContext: IContext): (a: any) => boolean {
                 if (isEmpty(item.operator)) {
                     return true;
                 }
-                const { datatype, format = "3", property } = item;
+                const {datatype, format = "3", property} = item;
                 const nmColumn = property;
                 const operator = item.operator.toLowerCase();
                 const value = item.value;
                 const valueRecord = obj[nmColumn];
 
-                if (isNullAndUndefined(valueRecord)) {
+                if (isNullAndUndefined(valueRecord) && NULL_OPERATOR.indexOf(operator) < 0) {
                     return false;
                 }
 
-                if (isNullAndUndefined(value)) {
+                if (isNullAndUndefined(value) && NULL_OPERATOR.indexOf(operator) < 0) {
                     return true;
                 }
 
@@ -470,105 +472,116 @@ export function filterFilesData (gateContext: IContext): (a: any) => boolean {
                     case "gt":
                     case ">":
                         if (
-                            (typeof valueRecord === "string" &&
-                                typeof value === "string" &&
-                                (datatype === "date" ||
-                                    nmColumn.startsWith("cd_") ||
-                                    nmColumn.startsWith("ct_"))) ||
-                            nmColumn.startsWith("fd_") ||
-                            nmColumn.startsWith("ft_")
+                            typeof valueRecord === "string" &&
+                            typeof value === "string" &&
+                            (datatype === "date" ||
+                                nmColumn.startsWith("cd_") ||
+                                nmColumn.startsWith("ct_") ||
+                                nmColumn.startsWith("fd_") ||
+                                nmColumn.startsWith("ft_"))
                         ) {
-                            return moment(valueRecord).isAfter(
-                                value,
-                                formatStr[format],
-                            );
+                            return moment(valueRecord).isAfter(value, formatStr[format]);
                         }
 
-                        return new BigNumber(valueRecord as any).gt(
-                            new BigNumber(value as any),
-                        );
+                        return new BigNumber(valueRecord as any).gt(new BigNumber(value as any));
                     case "ge":
                     case ">=":
                         if (
-                            (typeof valueRecord === "string" &&
-                                typeof value === "string" &&
-                                (datatype === "date" ||
-                                    nmColumn.startsWith("cd_") ||
-                                    nmColumn.startsWith("ct_"))) ||
-                            nmColumn.startsWith("fd_") ||
-                            nmColumn.startsWith("ft_")
+                            typeof valueRecord === "string" &&
+                            typeof value === "string" &&
+                            (datatype === "date" ||
+                                nmColumn.startsWith("cd_") ||
+                                nmColumn.startsWith("ct_") ||
+                                nmColumn.startsWith("fd_") ||
+                                nmColumn.startsWith("ft_"))
                         ) {
-                            return moment(valueRecord).isSameOrAfter(
-                                value,
-                                formatStr[format],
-                            );
+                            return moment(valueRecord).isSameOrAfter(value, formatStr[format]);
                         }
 
-                        return new BigNumber(valueRecord as any).gte(
-                            new BigNumber(value as any),
-                        );
+                        return new BigNumber(valueRecord as any).gte(new BigNumber(value as any));
                     case "lt":
                     case "<":
                         if (
-                            (typeof valueRecord === "string" &&
-                                typeof value === "string" &&
-                                (datatype === "date" ||
-                                    nmColumn.startsWith("cd_") ||
-                                    nmColumn.startsWith("ct_"))) ||
-                            nmColumn.startsWith("fd_") ||
-                            nmColumn.startsWith("ft_")
+                            typeof valueRecord === "string" &&
+                            typeof value === "string" &&
+                            (datatype === "date" ||
+                                nmColumn.startsWith("cd_") ||
+                                nmColumn.startsWith("ct_") ||
+                                nmColumn.startsWith("fd_") ||
+                                nmColumn.startsWith("ft_"))
                         ) {
-                            return moment(valueRecord).isBefore(
-                                value,
-                                formatStr[format],
-                            );
+                            return moment(valueRecord).isBefore(value, formatStr[format]);
                         }
 
-                        return new BigNumber(valueRecord as any).lt(
-                            new BigNumber(value as any),
-                        );
+                        return new BigNumber(valueRecord as any).lt(new BigNumber(value as any));
                     case "le":
                     case "<=":
                         if (
-                            (typeof valueRecord === "string" &&
-                                typeof value === "string" &&
-                                (datatype === "date" ||
-                                    nmColumn.startsWith("cd_") ||
-                                    nmColumn.startsWith("ct_"))) ||
-                            nmColumn.startsWith("fd_") ||
-                            nmColumn.startsWith("ft_")
+                            typeof valueRecord === "string" &&
+                            typeof value === "string" &&
+                            (datatype === "date" ||
+                                nmColumn.startsWith("cd_") ||
+                                nmColumn.startsWith("ct_") ||
+                                nmColumn.startsWith("fd_") ||
+                                nmColumn.startsWith("ft_"))
                         ) {
-                            return moment(valueRecord).isSameOrBefore(
-                                value,
-                                formatStr[format],
-                            );
+                            return moment(valueRecord).isSameOrBefore(value, formatStr[format]);
                         }
 
-                        return new BigNumber(valueRecord as any).lte(
-                            new BigNumber(value as any),
-                        );
+                        return new BigNumber(valueRecord as any).lte(new BigNumber(value as any));
                     case "eq":
                     case "=":
                         if (
-                            (typeof valueRecord === "string" &&
-                                typeof value === "string" &&
-                                (datatype === "date" ||
-                                    nmColumn.startsWith("cd_") ||
-                                    nmColumn.startsWith("ct_"))) ||
-                            nmColumn.startsWith("fd_") ||
-                            nmColumn.startsWith("ft_")
+                            typeof valueRecord === "string" &&
+                            typeof value === "string" &&
+                            (datatype === "date" ||
+                                nmColumn.startsWith("cd_") ||
+                                nmColumn.startsWith("ct_") ||
+                                nmColumn.startsWith("fd_") ||
+                                nmColumn.startsWith("ft_"))
                         ) {
-                            return moment(valueRecord).isSame(
-                                value,
-                                formatStr[format],
-                            );
+                            return moment(valueRecord).isSame(value, formatStr[format]);
                         }
 
                         return `${valueRecord}` === `${value}`;
-                    case "like": {
+                    case "ne":
+                    case "!=":
+                    case "<>":
+                        if (
+                            typeof valueRecord === "string" &&
+                            typeof value === "string" &&
+                            (datatype === "date" ||
+                                nmColumn.startsWith("cd_") ||
+                                nmColumn.startsWith("ct_") ||
+                                nmColumn.startsWith("fd_") ||
+                                nmColumn.startsWith("ft_"))
+                        ) {
+                            return !moment(valueRecord).isSame(value, formatStr[format]);
+                        }
+
+                        return `${valueRecord}` !== `${value}`;
+                    case "like":
+                    case "~": {
                         const reg = new RegExp(value as string, "gi");
 
                         return reg.test(`${valueRecord}`);
+                    }
+                    case "not like":
+                    case "notlike":
+                    case "nl":
+                    case "!~": {
+                        const reg = new RegExp(value as string, "gi");
+
+                        return !reg.test(`${valueRecord}`);
+                    }
+                    case "null":
+                    case "is null": {
+                        return isEmpty(valueRecord);
+                    }
+                    case "notnull":
+                    case "not null":
+                    case "is not null": {
+                        return !isEmpty(valueRecord);
                     }
                     case "in":
                         return (value as any).indexOf(valueRecord) > -1;
