@@ -116,7 +116,11 @@ export function addFilter<T, F>(
                         Object.entries(
                             value.reduce((res, val) => {
                                 if (parentKey) {
-                                    res[parentKey].push(val);
+                                    if (res[parentKey]) {
+                                        res[parentKey].push(val);
+                                    } else {
+                                        res[parentKey] = [val];
+                                    }
                                 } else {
                                     Object.entries(val).forEach(
                                         ([keyVal, valObject]) => {
