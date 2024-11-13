@@ -88,6 +88,9 @@ export default class CoreOracleIntegration extends NullProvider {
                             cur_result: "",
                             result: "",
                         },
+                        {
+                            autoCommit: true,
+                        }
                     )
                     .then(
                         (res) =>
@@ -129,6 +132,9 @@ export default class CoreOracleIntegration extends NullProvider {
                         cur_result: "",
                         result: "",
                     },
+                    {
+                        autoCommit: true,
+                    }
                 )
                 .then(
                     (res) =>

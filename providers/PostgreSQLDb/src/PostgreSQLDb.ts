@@ -80,6 +80,9 @@ export default class PostgreSQLDb extends NullProvider {
                     this.params.preExecuteSql,
                     query.inParams,
                     query.outParams,
+                    {
+                        autoCommit: true,
+                    },
                 );
                 await new Promise((resolve, reject) => {
                     res.stream.on("error", (err) => reject(err));
@@ -94,6 +97,9 @@ export default class PostgreSQLDb extends NullProvider {
                     this.params.preExecuteSql,
                     query.inParams,
                     query.outParams,
+                    {
+                        autoCommit: true,
+                    },
                 );
                 await new Promise((resolve, reject) => {
                     res.stream.on("error", (err) => reject(err));
@@ -113,6 +119,9 @@ export default class PostgreSQLDb extends NullProvider {
                             this.params.postExecuteSql,
                             query.inParams,
                             query.outParams,
+                            {
+                                autoCommit: true,
+                            },
                         )
                         .then(
                             (resPost) =>
@@ -144,6 +153,9 @@ export default class PostgreSQLDb extends NullProvider {
                             this.params.postExecuteSql,
                             query.inParams,
                             query.outParams,
+                            {
+                                autoCommit: true,
+                            },
                         )
                         .then(
                             (resPost) =>

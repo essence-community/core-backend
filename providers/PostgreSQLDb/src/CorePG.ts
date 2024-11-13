@@ -66,6 +66,10 @@ export default class CorePG extends IPostgreSQLController {
                     {
                         query: context.queryName,
                     },
+                    null,
+                    {
+                        autoCommit: true,
+                    }
                 )
                 .then((res) => {
                     return new Promise((resolve, reject) => {
@@ -102,6 +106,11 @@ export default class CorePG extends IPostgreSQLController {
                 "pkg_json_user.f_get_context('hash_user_action') as hash_user_action, " +
                 "pkg_json_user.f_get_context('hash_user_department') as hash_user_department",
             connection,
+            null,
+            null,
+            {
+                autoCommit: true,
+            }
         );
         return new Promise((resolve, reject) => {
             const data = [];

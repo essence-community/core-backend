@@ -86,6 +86,9 @@ export default class OracleDBPlugin extends NullProvider {
                     this.params.preExecuteSql,
                     query.inParams,
                     query.outParams,
+                    {
+                        autoCommit: true,
+                    },
                 );
                 await new Promise<void>((resolve, reject) => {
                     res.stream.on("error", (err) => reject(err));
@@ -100,6 +103,9 @@ export default class OracleDBPlugin extends NullProvider {
                     this.params.preExecuteSql,
                     query.inParams,
                     query.outParams,
+                    {
+                        autoCommit: true,
+                    },
                 );
                 await new Promise<void>((resolve, reject) => {
                     res.stream.on("error", (err) => reject(err));
@@ -119,6 +125,9 @@ export default class OracleDBPlugin extends NullProvider {
                             this.params.postExecuteSql,
                             query.inParams,
                             query.outParams,
+                            {
+                                autoCommit: true,
+                            },
                         )
                         .then(
                             (resPost) =>
@@ -150,6 +159,9 @@ export default class OracleDBPlugin extends NullProvider {
                             this.params.postExecuteSql,
                             query.inParams,
                             query.outParams,
+                            {
+                                autoCommit: true,
+                            },
                         )
                         .then(
                             (resPost) =>

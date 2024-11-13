@@ -218,6 +218,11 @@ export default class OldOracle implements IOracleController {
         return gateContext.connection
             .executeStmt(
                 "SELECT SYS_CONTEXT('USERENV','CURRENT_SCHEMA') as schema FROM DUAL",
+                null,
+                null,
+                {
+                    autoCommit: true,
+                },
             )
             .then(
                 (res) => {

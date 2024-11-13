@@ -102,6 +102,8 @@ export default class CoreOracle implements IOracleController {
             return this.dataSource
                 .executeStmt(wsQuerySQL, connection.getCurrentConnection(), {
                     query: context.queryName,
+                }, null, {
+                    autoCommit: true,
                 })
                 .then((res) => {
                     return new Promise((resolve, reject) => {
@@ -137,6 +139,11 @@ export default class CoreOracle implements IOracleController {
                 "pkg_json_user.f_get_context('hash_user_action') as hash_user_action, " +
                 "pkg_json_user.f_get_context('hash_user_department') as hash_user_department from dual",
             connection,
+            null,
+            null,
+            {
+                autoCommit: true,
+            }
         );
         return new Promise<void>((resolve, reject) => {
             const data = [];

@@ -51,6 +51,10 @@ export default class SimplePG extends IPostgreSQLController {
                     {
                         query: context.queryName,
                     },
+                    null,
+                    {
+                        autoCommit: true,
+                    },
                 )
                 .then((res) => {
                     return new Promise((resolve, reject) => {
