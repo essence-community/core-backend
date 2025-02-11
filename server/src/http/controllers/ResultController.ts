@@ -184,9 +184,13 @@ class ResultController {
             }
             const data = rows[0];
             if (data[Constants.FILE_DATA_COLUMN]) {
+                let fileData = data[Constants.FILE_DATA_COLUMN];
+                if (typeof fileData === "string") {
+                    fileData = Buffer.from(fileData);
+                }
                 if (
-                    data[Constants.FILE_DATA_COLUMN].length > 2147483648 ||
-                    data[Constants.FILE_DATA_COLUMN].length <= 0
+                    fileData.length > 2147483648 ||
+                    fileData.length <= 0
                 ) {
                     return this.responseCheck(
                         gateContext,
@@ -204,12 +208,12 @@ class ResultController {
                 }
                 this.setHeader(gateContext, 200, {
                     "Content-Disposition": contentDisposition,
-                    "Content-Length": data[Constants.FILE_DATA_COLUMN].length,
+                    "Content-Length": fileData.length,
                     "Content-Type":
                         data[Constants.FILE_MIME_COLUMN] ||
                         Constants.FILE_CONTENT_TYPE,
                 });
-                gateContext.response.end(data[Constants.FILE_DATA_COLUMN]);
+                gateContext.response.end(fileData);
                 if (gateContext.isDebugEnabled()) {
                     gateContext.debug(
                         `Ответ: FileName: ${
@@ -260,9 +264,13 @@ class ResultController {
                 data[Constants.FILE_NAME_COLUMN] &&
                 typeof data[Constants.FILE_NAME_COLUMN] === "string"
             ) {
+                let fileData = data[Constants.FILE_DATA_COLUMN];
+                if (typeof fileData === "string") {
+                    fileData = Buffer.from(fileData);
+                }
                 if (
-                    data[Constants.FILE_DATA_COLUMN].length > 2147483648 ||
-                    data[Constants.FILE_DATA_COLUMN].length <= 0
+                    fileData.length > 2147483648 ||
+                    fileData.length <= 0
                 ) {
                     return this.responseCheck(
                         gateContext,
@@ -272,10 +280,10 @@ class ResultController {
                 }
 
                 this.setHeader(gateContext, 200, {
-                    "Content-Length": data[Constants.FILE_DATA_COLUMN].length,
+                    "Content-Length": fileData.length,
                     "Content-Type": data[Constants.FILE_MIME_COLUMN],
                 });
-                gateContext.response.end(data[Constants.FILE_DATA_COLUMN]);
+                gateContext.response.end(fileData);
                 if (gateContext.isDebugEnabled()) {
                     gateContext.debug(
                         `Ответ: FileName: ${

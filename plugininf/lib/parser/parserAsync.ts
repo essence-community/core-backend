@@ -123,6 +123,7 @@ const utils = {
     decodeURIComponent,
     Promise,
     moment,
+    Buffer,
 };
 
 async function parseOperations(

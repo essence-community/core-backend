@@ -102,6 +102,7 @@ const utils = {
     encodeURIComponent,
     decodeURIComponent,
     moment,
+    Buffer,
 };
 
 function parseOperations(
