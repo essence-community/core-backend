@@ -346,7 +346,7 @@ export default class CoreAuthPg extends NullSessProvider {
         const res = await super.initContext(context, query);
         context.connection = await this.getConnection();
         if (!isEmpty(res.modifyMethod) && res.modifyMethod !== "_") {
-            res.queryStr = QUERY;
+            res.queryStr = `select ${res.modifyMethod}(:sess_ck_id, :sess_session, :json) as result`;
             return res;
         } else if (res.modifyMethod === "_") {
             return res;
