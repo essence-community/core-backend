@@ -25,7 +25,8 @@ export function safePipe(
 ): Readable {
     const arrStream = isArray(transforms) ? transforms : [transforms];
     return arrStream.reduce((stream, val) => {
-        stream.on("error", (err) => val.emit("error", err));
+        // @ts-ignore
+        stream.on("error", (err: Error) => val.emit("error", err) as any);
         return stream.pipe(val as any);
     }, input);
 }

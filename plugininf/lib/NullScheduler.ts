@@ -1,4 +1,4 @@
-import * as cron from "cron";
+import {CronJob} from "cron";
 import * as rufus from "rufus";
 import ICCTParams, { IParamsInfo } from "./ICCTParams";
 import IScheduler from "./IScheduler";
@@ -13,7 +13,7 @@ export default abstract class NullScheduler implements IScheduler {
     public cronStr: string;
     public params: ICCTParams;
     public log: rufus.IRufusLogger;
-    private job: cron.CronJob;
+    private job: CronJob;
     public static getParamsInfo(): IParamsInfo {
         return {};
     }
@@ -35,7 +35,7 @@ export default abstract class NullScheduler implements IScheduler {
     public abstract init(reload?: boolean): Promise<void>;
     public enable(): void {
         if (!this.job && !isEmpty(this.cronStr)) {
-            this.job = new cron.CronJob({
+            this.job = CronJob.from({
                 cronTime: this.cronStr,
                 onTick: () => {
                     try {

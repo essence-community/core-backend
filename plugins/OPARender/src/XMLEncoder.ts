@@ -1,57 +1,39 @@
 import { IFile } from "@ungate/plugininf/lib/IContext";
 import { IEncoder } from "./Encoder.types";
-import * as parser from "fast-xml-parser";
+import {XMLParser, X2jOptions, XMLBuilder, XmlBuilderOptions} from "fast-xml-parser";
 import * as he from "he";
 import * as fs from "fs";
 import { IOPARenderParams } from "./OPARender.types";
 
-const Parser = parser.j2xParser;
-
 export class XMLEncoder implements IEncoder {
-    x2joptions: Partial<parser.X2jOptions>;
-    j2xoptions: parser.J2xOptions;
-    jsonToXmlParser: parser.j2xParser;
+    x2joptions: Partial<X2jOptions>;
+    j2xoptions: XmlBuilderOptions;
+    jsonToXmlParser: XMLBuilder;
+    xmlToJsonParser: XMLParser;
     params: IOPARenderParams;
     constructor(params: IOPARenderParams) {
         this.params = params;
         this.x2joptions = {
             attributeNamePrefix: "@_",
-            attrNodeName: "attr", // default is 'false'
             textNodeName: "#text",
             ignoreAttributes: true,
-            ignoreNameSpace: false,
             allowBooleanAttributes: false,
-            parseNodeValue: true,
             parseAttributeValue: false,
             trimValues: true,
-            cdataTagName: "__cdata", // default is 'false'
-            cdataPositionChar: "\\c",
-            parseTrueNumberOnly: false,
-            arrayMode: false, // "strict"
-            attrValueProcessor: (val, attrName) =>
-                he.decode(val, { isAttributeValue: true }), // default is a=>a
             tagValueProcessor: (val, tagName) => he.decode(val), // default is a=>a
             stopNodes: ["parse-me-as-string"],
         };
         this.j2xoptions = {
             attributeNamePrefix: "@_",
-            attrNodeName: "@", // default is false
             textNodeName: "#text",
             ignoreAttributes: true,
-            cdataTagName: "__cdata", // default is false
-            cdataPositionChar: "\\c",
             format: false,
             indentBy: "  ",
-            supressEmptyNode: false,
             tagValueProcessor: (a) =>
                 he.encode(`${a}`, { useNamedReferences: true }), // default is a=>a
-            attrValueProcessor: (a) =>
-                he.encode(`${a}`, {
-                    isAttributeValue: false,
-                    useNamedReferences: true,
-                }), // default is a=>a
         };
-        this.jsonToXmlParser = new Parser(this.j2xoptions);
+        this.jsonToXmlParser = new XMLBuilder(this.j2xoptions);
+        this.xmlToJsonParser = new XMLParser(this.x2joptions);
     }
     encodeStr(input: string | IFile[]): Promise<string | IFile[]> {
         throw new Error("Method not implemented.");
@@ -69,14 +51,14 @@ export class XMLEncoder implements IEncoder {
                     const json = JSON.parse(
                         fs.readFileSync(file.path).toString(),
                     );
-                    fs.writeFileSync(newFile, this.jsonToXmlParser.parse(json));
+                    fs.writeFileSync(newFile, this.jsonToXmlParser.build(json));
                     fs.unlinkSync(file.path);
                     file.path = newFile;
                 }),
             );
             return input as IFile[];
         }
-        return this.jsonToXmlParser.parse(input);
+        return this.jsonToXmlParser.build(input);
     }
     async decode(
         input: string | IFile[],
@@ -88,7 +70,7 @@ export class XMLEncoder implements IEncoder {
                     const xml = fs.readFileSync(file.path).toString();
                     fs.writeFileSync(
                         newFile,
-                        JSON.stringify(parser.parse(xml, this.j2xoptions)),
+                        JSON.stringify(this.xmlToJsonParser.parse(xml, this.j2xoptions)),
                     );
                     fs.unlinkSync(file.path);
                     file.path = newFile;
@@ -96,6 +78,6 @@ export class XMLEncoder implements IEncoder {
             );
             return input as IFile[];
         }
-        return parser.parse(input as string, this.j2xoptions);
+        return this.xmlToJsonParser.parse(input as string, this.j2xoptions);
     }
 }

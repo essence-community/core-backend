@@ -6,9 +6,9 @@
     "license": "MIT",
     "dependencies": {
         "@ungate/plugininf": "^1.0.0",
-        "axios": "^0.24.0",
+        "axios": "^1.8.1",
         "jwk-to-pem": "^2.0.5",
-        "keycloak-connect": "^15.0.2",
+        "keycloak-connect": "^26.1.1",
         "lodash": "^4.17.15"
     },
     "devDependencies": {

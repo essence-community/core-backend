@@ -10,7 +10,7 @@
         "aws-sdk": "^2.665.0"
     },
     "devDependencies": {
-        "@types/adm-zip": "^0.4.32",
+        "@types/adm-zip": "^0.5.7",
         "@types/aws-sdk": "^2.7.0"
     }
 }

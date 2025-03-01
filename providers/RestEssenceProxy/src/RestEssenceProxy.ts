@@ -437,7 +437,7 @@ export default class RestEssenceProxy extends NullProvider {
                         delete rheaders[item];
                     });
                 }
-                gateContext.response.writeHead(response.status, rheaders);
+                gateContext.response.writeHead(response.status, response.statusText, rheaders as any);
                 response.data.on("end", () =>
                     reject(new BreakException("break")),
                 );

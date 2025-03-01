@@ -11,7 +11,7 @@ import * as zip from "adm-zip";
 import * as AWS from "aws-sdk";
 import * as fs from "fs";
 import { forEach, isObject } from "lodash";
-import { getType } from "mime";
+import Mime from "mime";
 import * as Path from "path";
 import { Readable } from "stream";
 interface PluginParams {
@@ -189,7 +189,7 @@ export default class ModuleStorage extends NullPlugin {
                 this.saveFile(
                     `/${config.name}/${config.version}${item}`,
                     fileZip.readFile(item.substr(1)),
-                    getType(item.replace(/^.*\./, "")),
+                    Mime.getType(item.replace(/^.*\./, "")),
                 ),
             );
         });
