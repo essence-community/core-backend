@@ -8,6 +8,7 @@ const glob = require("glob");
 const { Command } = require("commander");
 const program = new Command();
 program.version("0.0.1");
+program.argument('<string>', 'command gulp')
 program.option("--to <path>", "to");
 program.option("--srcname <name>", "srcname");
 program.option("--from <path>", "from");
@@ -169,6 +170,7 @@ gulp.task("plugins", () => {
                                 cwd: path.join(pluginsDir, file, "assets"),
                                 parents: true,
                                 dot: true,
+
                             },
                         );
                     }
@@ -237,6 +239,7 @@ gulp.task("contexts", () => {
                                 cwd: path.join(pluginsDir, file, "assets"),
                                 parents: true,
                                 dot: true,
+
                             },
                         );
                     }
@@ -305,6 +308,7 @@ gulp.task("events", () => {
                                 cwd: path.join(pluginsDir, file, "assets"),
                                 parents: true,
                                 dot: true,
+
                             },
                         );
                     }
@@ -373,6 +377,7 @@ gulp.task("schedulers", () => {
                                 cwd: path.join(pluginsDir, file, "assets"),
                                 parents: true,
                                 dot: true,
+
                             },
                         );
                     }
@@ -441,6 +446,7 @@ gulp.task("providers", () => {
                                 cwd: path.join(pluginsDir, file, "assets"),
                                 parents: true,
                                 dot: true,
+
                             },
                         );
                     }
@@ -475,6 +481,7 @@ gulp.task("server", () => {
                         cwd: path.join(serverDir, "assets"),
                         parents: true,
                         dot: true,
+
                     },
                 );
             }
@@ -551,7 +558,8 @@ gulp.task("libs", () => {
                                 parents: true,
                                 dot: true,
                             },
-                        ).then(resolve, reject);
+                        )
+                            .then(resolve, reject);
                     }),
             );
         }
@@ -566,6 +574,7 @@ gulp.task("winsvc", async () => {
         cwd: path.join(homeDir, "winsvc"),
         parents: true,
         dot: true,
+
     });
 });
 
@@ -577,6 +586,7 @@ gulp.task("cert", async () => {
             cwd: path.join(homeDir, "cert"),
             parents: true,
             dot: true,
+
         },
     );
 });

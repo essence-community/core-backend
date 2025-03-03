@@ -6,7 +6,7 @@
     "license": "MIT",
     "dependencies": {
         "@ungate/plugininf": "^1.0.0",
-        "fast-xml-parser": "^3.18.0",
+        "fast-xml-parser": "^5.0.8",
         "he": "^1.2.0",
         "js-yaml": "^4.0.0"
     }
