@@ -1,6 +1,6 @@
 --liquibase formatted sql
 --changeset artemov_i:MTGetLocale dbms:postgresql runOnChange:true splitStatements:false stripComments:false
-INSERT INTO s_mt.t_query (ck_id, ck_provider, ck_user, ct_change, cr_type, cr_access, cn_action, cr_cache, cv_cache_key_param, cc_query)
+INSERT INTO s_mt.t_query (ck_id, ck_provider, ck_user, ct_change, cr_type, cr_access, cn_action, cv_description, cr_cache, cv_cache_key_param, cc_query)
  VALUES('MTGetLocale', 'meta', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2019-11-05T09:56:04.052+0000', 'select', 'free', null, 'Вытаскиваем все переводы', 'all', '["json.filter.ck_d_lang","json.filter.cv_namespace"]',
  '--MTGetLocale
 select
