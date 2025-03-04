@@ -1,6 +1,6 @@
 --liquibase formatted sql
 --changeset patcher-core:MTApplicationRoute dbms:postgresql runOnChange:true splitStatements:false stripComments:false
-INSERT INTO s_mt.t_query (ck_id, ck_provider, ck_user, ct_change, cr_type, cr_access, cn_action, cv_description, cc_query)
+INSERT INTO s_mt.t_query (ck_id, ck_provider, ck_user, ct_change, cr_type, cr_access, cn_action, cv_description, cc_query, cr_cache, cv_cache_key_param)
  VALUES('MTApplicationRoute', 'meta', '4fd05ca9-3a9e-4d66-82df-886dfa082113', '2020-06-05T14:59:49.000+0000', 'select', 'free', null, 'Список доступных приложений',
  '/*MTApplicationRoute*/
  select
@@ -49,5 +49,5 @@ where
     p.ck_parent is null
     and p.cr_type = 3
 order by p.cn_order asc
-')
- on conflict (ck_id) do update set cc_query = excluded.cc_query, ck_provider = excluded.ck_provider, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cr_type = excluded.cr_type, cr_access = excluded.cr_access, cn_action = excluded.cn_action, cv_description = excluded.cv_description;
+', 'all', '["json"]')
+ on conflict (ck_id) do update set cc_query = excluded.cc_query, ck_provider = excluded.ck_provider, ck_user = excluded.ck_user, ct_change = excluded.ct_change, cr_type = excluded.cr_type, cr_access = excluded.cr_access, cn_action = excluded.cn_action, cv_description = excluded.cv_description, cr_cache = excluded.cr_cache, cv_cache_key_param = excluded.cv_cache_key_param;
