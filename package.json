@@ -69,5 +69,10 @@
         "tslint": "^6.1.2",
         "tslint-config-prettier": "^1.18.0",
         "typescript": "^5.8.2"
+    },
+    "resolutions": {
+        "async": "3.2.6",
+        "es5-ext": "0.10.53",
+        "underscore": "1.13.7"
     }
 }
