@@ -523,7 +523,7 @@ export default class OracleDB {
                         maxSize: 65000,
                         type:
                             this.oracledb[outParam[key]] ||
-                            this.oracledb.DEFAULT,
+                            this.oracledb.STRING,
                     };
                 }
             });
