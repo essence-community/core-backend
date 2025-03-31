@@ -140,7 +140,7 @@ export default class OracleDB {
     public queryTimeout?: number;
     public connectionConfig: IOracleDBConfig;
     public partRows: number;
-    public oracledb: any;
+    public oracledb: typeof oracledb;
     public pool?: oracledb.Pool;
     private log: IRufusLogger;
     constructor(name: string, params: IOracleDBConfig) {
@@ -163,7 +163,7 @@ export default class OracleDB {
             this.connectionConfig.partRows ||
             (OracleDB.getParamsInfo().partRows.defaultValue as number);
         this.oracledb = oracledb;
-        this.oracledb.outFormat = this.oracledb.OBJECT;
+        this.oracledb.outFormat = this.oracledb.OUT_FORMAT_OBJECT;
         this.oracledb.autoCommit = true;
         this.oracledb.fetchAsString = [
             this.oracledb.CLOB,
@@ -172,10 +172,10 @@ export default class OracleDB {
         this.oracledb.fetchAsBuffer = [this.oracledb.BLOB];
         this.oracledb.maxRows =
             this.connectionConfig.maxRows ||
-            OracleDB.getParamsInfo().maxRows.defaultValue;
+            OracleDB.getParamsInfo().maxRows.defaultValue as number;
         this.oracledb.prefetchRows =
             this.connectionConfig.prefetchRows ||
-            OracleDB.getParamsInfo().prefetchRows.defaultValue;
+            OracleDB.getParamsInfo().prefetchRows.defaultValue as number;
         this.oracledb.stmtCacheSize = 200;
         this.oracledb.poolIncrement = 5;
         if (!isEmpty(params.queryTimeout)) {
@@ -244,13 +244,13 @@ export default class OracleDB {
                     poolAlias: this.name,
                     poolMax:
                         this.connectionConfig.poolMax ||
-                        OracleDB.getParamsInfo().poolMax.defaultValue,
+                        OracleDB.getParamsInfo().poolMax.defaultValue as number,
                     poolMin:
                         this.connectionConfig.poolMin ||
-                        OracleDB.getParamsInfo().poolMin.defaultValue,
+                        OracleDB.getParamsInfo().poolMin.defaultValue as number,
                     queueTimeout:
                         this.connectionConfig.queueTimeout ||
-                        OracleDB.getParamsInfo().queueTimeout.defaultValue,
+                        OracleDB.getParamsInfo().queueTimeout.defaultValue as number,
                     user: this.connectionConfig.user,
                 })
                 .then((pool) => {
@@ -331,7 +331,7 @@ export default class OracleDB {
         params?: IOracleDBConfig,
     ): Promise<Connection> {
         if (params.poolAlias) {
-            const pool = await this.getPool(params.poolAlias).catch(() =>
+            const pool: oracledb.Pool = await this.getPool(params.poolAlias).catch(() =>
                 this.oracledb
                     .createPool({
                         poolMax: 10,
@@ -340,14 +340,18 @@ export default class OracleDB {
                         ...params,
                     })
                     .catch((err) => {
-                        if (typeof err !== "undefined") {
-                            this.log.error(
-                                "Ошибка подключения к базе данных",
-                                err,
-                            );
-                            return Promise.reject(new Error(err));
-                        }
-                        return new Promise((resolve, reject) => {
+                        this.log.error(
+                            "Ошибка подключения к базе данных",
+                            err,
+                        );
+                        return Promise.reject(new Error(err));
+                    }),
+            );
+            return pool
+                .getConnection()  
+                .then((oconnect) => new Connection(this, "oracle", oconnect))
+                .catch((err) => {
+                    return new Promise<Connection>((resolve, reject) => {
                             setTimeout(() => {
                                 this.getConnectionNew(params).then(
                                     resolve,
@@ -355,15 +359,11 @@ export default class OracleDB {
                                 );
                             }, 1000);
                         });
-                    }),
-            );
-            return pool
-                .getConnection()
-                .then((oconnect) => new Connection(this, "oracle", oconnect));
+                });
         }
         return this.oracledb
             .getConnection(params)
-            .then((oconnect) => new Connection(this, oconnect))
+            .then((oconnect) => new Connection(this, "oracle", oconnect))
             .catch((err) => {
                 this.log.error("Ошибка подключения к базе данных", err);
                 return Promise.reject(new Error(err));
@@ -400,7 +400,7 @@ export default class OracleDB {
      * @param params
      * @returns {Promise}
      */
-    public openEvents(params?: IOracleDBConfig): oracledb.Connection {
+    public openEvents(params?: IOracleDBConfig): Promise<oracledb.Connection> {
         return this.oracledb
             .getConnection({
                 connectString: this.connectionConfig.connectString,
