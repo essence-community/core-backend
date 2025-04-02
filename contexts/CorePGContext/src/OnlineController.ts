@@ -22,6 +22,7 @@ import { Transform } from "stream";
 import { TempTable } from "./TempTable";
 import { IPageData } from "./CoreContext.types";
 import { deepParam } from "@ungate/plugininf/lib/util/deepParam";
+import { resolve } from "path";
 
 export default class OnlineController implements ICoreController {
     public params: ICoreParams;
@@ -31,94 +32,94 @@ export default class OnlineController implements ICoreController {
     private sysSettings =
         "select s.ck_id, s.cv_value, s.cv_description from s_mt.t_sys_setting s";
     private pageFindSql =
-        "with recursive temp_tree_page as (\n" + 
-        "    select\n" + 
-        "            p.ck_id,\n" + 
-        "            p.ck_parent,\n" + 
-        "            p.cv_url as cv_app_url,\n" + 
-        "            p.cv_name as root,\n" + 
-        "            jsonb_build_array(jsonb_build_object('cv_name', p.cv_name, 'ck_id', p.ck_id)) as cct_tree_path\n" + 
-        "        from\n" + 
-        "            s_mt.t_page p\n" + 
-        "        where p.ck_parent is null and p.cr_type = 3\n" + 
-        "    union all\n" + 
-        "        select\n" + 
-        "            p.ck_id,\n" + 
-        "            p.ck_parent,\n" + 
-        "            op.cv_app_url,\n" + 
-        "            op.root,\n" + 
-        "            op.cct_tree_path || jsonb_build_array(jsonb_build_object('cv_name', p.cv_name, 'ck_id', p.ck_id)) as cct_tree_path\n" + 
-        "        from\n" + 
-        "            temp_tree_page op\n" + 
-        "        join s_mt.t_page p on\n" + 
-        "            op.ck_id = p.ck_parent\n" + 
-        ")\n" + 
-        "select\n" + 
-        "    p.ck_id as ck_page,\n" + 
-        "    coalesce(nullif((\n" + 
-        "        select\n" + 
-        "            jsonb_agg(t.json ORDER BY t.cn_order) as children\n" + 
-        "        from\n" + 
-        "            (\n" + 
-        "                select\n" + 
-        "                    pp.ck_id,\n" + 
-        "                    po.cn_order,\n" + 
-        "                    pkg_json.f_get_object(po.ck_id)::jsonb as json\n" + 
-        "                from\n" + 
-        "                    t_page pp\n" + 
-        "                join t_page_object po on\n" + 
-        "                    pp.ck_id = po.ck_page\n" + 
-        "                where po.ck_parent is null and po.ck_id is not null and pp.ck_id = p.ck_id \n" + 
-        "            ) as t\n" + 
-        "        )::text, '[null]'), '[]') as children,\n" + 
-        "        coalesce((\n" + 
-        "            select\n" + 
-        "                jsonb_object_agg(pv.cv_name, pv.cv_value)\n" + 
-        "            from\n" + 
-        "                t_page_variable pv\n" + 
-        "            where\n" + 
-        "                pv.ck_page = p.ck_id\n" + 
-        "        )::text, '{}') as global_value,\n" + 
-        "    pav.cn_action as cn_action,\n" + 
-        "    p.cv_url,\n" + 
-        "    p.cv_name,\n" + 
-        "    jsonb_build_object(\n" + 
-        "    'ck_id', p.ck_id,\n" + 
-        "    'ck_parent', p.ck_parent,\n" + 
-        "    'cv_name', p.cv_name,\n" + 
-        "    'cn_order', p.cn_order,\n" + 
-        "    'cl_menu', p.cl_menu,\n" + 
-        "    'cl_static', p.cl_static,\n" + 
-        "    'cv_url', p.cv_url,\n" + 
-        "    'ck_icon', p.ck_icon,\n" + 
-        "    'ck_view', p.ck_view,\n" + 
-        "    'cv_redirect_url', p.cv_redirect_url,\n" + 
-        "    'cl_multi', p.cl_multi,\n" + 
-        "    'cn_action_view', pav.cn_action,\n" + 
-        "    'cn_action_edit', pae.cn_action,\n" + 
-        "    'cv_icon_name', i.cv_name,\n" + 
-        "    'cv_icon_font', i.cv_font,\n" + 
-        "    'cv_app_url', ttp.cv_app_url,\n" + 
-        "    'root', ttp.root,\n" + 
-        "    'cct_tree_path', ttp.cct_tree_path,\n" + 
-        "    'leaf', 'true'\n" + 
-        "    ) || coalesce((select\n" + 
-        "           jsonb_object_agg(tpa.ck_attr, pkg_json.f_decode_attr(tpa.cv_value, coalesce(da.ck_parent, a2.ck_d_data_type), tpa.ck_attr))\n" + 
-        "           from\n" + 
-        "               s_mt.t_page_attr tpa\n" + 
+        "with recursive temp_tree_page as (\n" +
+        "    select\n" +
+        "            p.ck_id,\n" +
+        "            p.ck_parent,\n" +
+        "            p.cv_url as cv_app_url,\n" +
+        "            p.cv_name as root,\n" +
+        "            jsonb_build_array(jsonb_build_object('cv_name', p.cv_name, 'ck_id', p.ck_id)) as cct_tree_path\n" +
+        "        from\n" +
+        "            s_mt.t_page p\n" +
+        "        where p.ck_parent is null and p.cr_type = 3\n" +
+        "    union all\n" +
+        "        select\n" +
+        "            p.ck_id,\n" +
+        "            p.ck_parent,\n" +
+        "            op.cv_app_url,\n" +
+        "            op.root,\n" +
+        "            op.cct_tree_path || jsonb_build_array(jsonb_build_object('cv_name', p.cv_name, 'ck_id', p.ck_id)) as cct_tree_path\n" +
+        "        from\n" +
+        "            temp_tree_page op\n" +
+        "        join s_mt.t_page p on\n" +
+        "            op.ck_id = p.ck_parent\n" +
+        ")\n" +
+        "select\n" +
+        "    p.ck_id as ck_page,\n" +
+        "    coalesce(nullif((\n" +
+        "        select\n" +
+        "            jsonb_agg(t.json ORDER BY t.cn_order) as children\n" +
+        "        from\n" +
+        "            (\n" +
+        "                select\n" +
+        "                    pp.ck_id,\n" +
+        "                    po.cn_order,\n" +
+        "                    pkg_json.f_get_object(po.ck_id)::jsonb as json\n" +
+        "                from\n" +
+        "                    t_page pp\n" +
+        "                join t_page_object po on\n" +
+        "                    pp.ck_id = po.ck_page\n" +
+        "                where po.ck_parent is null and po.ck_id is not null and pp.ck_id = p.ck_id \n" +
+        "            ) as t\n" +
+        "        )::text, '[null]'), '[]') as children,\n" +
+        "        coalesce((\n" +
+        "            select\n" +
+        "                jsonb_object_agg(pv.cv_name, pv.cv_value)\n" +
+        "            from\n" +
+        "                t_page_variable pv\n" +
+        "            where\n" +
+        "                pv.ck_page = p.ck_id\n" +
+        "        )::text, '{}') as global_value,\n" +
+        "    pav.cn_action as cn_action,\n" +
+        "    p.cv_url,\n" +
+        "    p.cv_name,\n" +
+        "    jsonb_build_object(\n" +
+        "    'ck_id', p.ck_id,\n" +
+        "    'ck_parent', p.ck_parent,\n" +
+        "    'cv_name', p.cv_name,\n" +
+        "    'cn_order', p.cn_order,\n" +
+        "    'cl_menu', p.cl_menu,\n" +
+        "    'cl_static', p.cl_static,\n" +
+        "    'cv_url', p.cv_url,\n" +
+        "    'ck_icon', p.ck_icon,\n" +
+        "    'ck_view', p.ck_view,\n" +
+        "    'cv_redirect_url', p.cv_redirect_url,\n" +
+        "    'cl_multi', p.cl_multi,\n" +
+        "    'cn_action_view', pav.cn_action,\n" +
+        "    'cn_action_edit', pae.cn_action,\n" +
+        "    'cv_icon_name', i.cv_name,\n" +
+        "    'cv_icon_font', i.cv_font,\n" +
+        "    'cv_app_url', ttp.cv_app_url,\n" +
+        "    'root', ttp.root,\n" +
+        "    'cct_tree_path', ttp.cct_tree_path,\n" +
+        "    'leaf', 'true'\n" +
+        "    ) || coalesce((select\n" +
+        "           jsonb_object_agg(tpa.ck_attr, pkg_json.f_decode_attr(tpa.cv_value, coalesce(da.ck_parent, a2.ck_d_data_type), tpa.ck_attr))\n" +
+        "           from\n" +
+        "               s_mt.t_page_attr tpa\n" +
         "           join s_mt.t_attr a2 on a2.ck_id = tpa.ck_attr \n" +
         "           join s_mt.t_d_attr_data_type da on da.ck_id = a2.ck_d_data_type \n" +
-        "           where\n" + 
+        "           where\n" +
         "               tpa.ck_page = p.ck_id)::text, '{}')::jsonb  as route \n" +
-        "from\n" + 
-        "    t_page p\n" + 
-        "join temp_tree_page ttp \n" + 
-        "    on ttp.ck_id = p.ck_id\n" + 
-        "left join t_page_action pav on\n" + 
-        "    pav.ck_page = p.ck_id and pav.cr_type = 'view'\n" + 
-        "left join t_page_action pae on\n" + 
-        "    pae.ck_page = p.ck_id and pae.cr_type = 'edit'\n" + 
-        "left join t_icon i on\n" + 
+        "from\n" +
+        "    t_page p\n" +
+        "join temp_tree_page ttp \n" +
+        "    on ttp.ck_id = p.ck_id\n" +
+        "left join t_page_action pav on\n" +
+        "    pav.ck_page = p.ck_id and pav.cr_type = 'view'\n" +
+        "left join t_page_action pae on\n" +
+        "    pae.ck_page = p.ck_id and pae.cr_type = 'edit'\n" +
+        "left join t_icon i on\n" +
         "    i.ck_id = p.ck_icon\n" +
         " where p.cr_type = 2 and (\n" +
         "                    p.ck_id = :ck_page\n" +
@@ -209,10 +210,10 @@ export default class OnlineController implements ICoreController {
                             return gateContext.session
                                 ? reject(CoreContext.accessDenied())
                                 : reject(
-                                      new ErrorException(
-                                          ErrorGate.REQUIRED_AUTH,
-                                      ),
-                                  );
+                                    new ErrorException(
+                                        ErrorGate.REQUIRED_AUTH,
+                                    ),
+                                );
                         }
                         return reject(
                             new BreakException({
@@ -332,12 +333,12 @@ export default class OnlineController implements ICoreController {
                             type: "error",
                         };
                     } else if (doc.err_text) {
-                      res = {
+                        res = {
                             data: ResultStream([
                                 {
                                     ck_id: "",
                                     jt_message: {
-                                      error: [[doc.err_text]],
+                                        error: [[doc.err_text]],
                                     },
                                 },
                             ]),
@@ -353,10 +354,10 @@ export default class OnlineController implements ICoreController {
                                     },
                                     ...(this.params.debug
                                         ? {
-                                              cv_stack_trace:
-                                                  doc.err_text ||
-                                                  JSON.stringify(doc),
-                                          }
+                                            cv_stack_trace:
+                                                doc.err_text ||
+                                                JSON.stringify(doc),
+                                        }
                                         : {}),
                                 },
                             ]),
@@ -369,93 +370,93 @@ export default class OnlineController implements ICoreController {
         } else if (result.type !== "success") {
             return Promise.resolve(result);
         }
-        const data = [];
         const isCache = this.tempTable.caches.includes(gateContext.metaData.cache as string) && !this.params.disableCache;
         if (gateContext.connection) {
             const rTransform = new Transform({
                 readableObjectMode: true,
                 writableObjectMode: true,
                 transform(chunk, encode, callback) {
-                    if (
-                        !isEmpty(chunk.cv_error) ||
-                        !isEmpty(chunk.jt_form_message)
-                    ) {
-                        const cvErrors = [
-                            ...(isEmpty(chunk.cv_error)
-                                ? []
-                                : Object.keys(chunk.cv_error)),
-                            ...(isEmpty(chunk.jt_form_message)
-                                ? []
-                                : Object.entries(chunk.jt_form_message).reduce(
-                                      (arr, [, values]) => {
-                                          return [
-                                              ...arr,
-                                              ...Object.keys(values),
-                                          ];
-                                      },
-                                      [],
-                                  )),
-                        ];
+                    new Promise((resolve) => {
                         if (
-                            chunk.jt_form_message &&
-                            cvErrors.includes("error")
+                            !isEmpty(chunk.cv_error) ||
+                            !isEmpty(chunk.jt_form_message)
+                        ) {
+                            const cvErrors = [
+                                ...(isEmpty(chunk.cv_error)
+                                    ? []
+                                    : Object.keys(chunk.cv_error)),
+                                ...(isEmpty(chunk.jt_form_message)
+                                    ? []
+                                    : Object.entries(chunk.jt_form_message).reduce(
+                                        (arr, [, values]) => {
+                                            return [
+                                                ...arr,
+                                                ...Object.keys(values),
+                                            ];
+                                        },
+                                        [],
+                                    )),
+                            ];
+                            if (
+                                chunk.jt_form_message &&
+                                cvErrors.includes("error")
+                            ) {
+                                gateContext.connection
+                                    .rollback()
+                                    .then(() => resolve(chunk))
+                                    .catch((err) => {
+                                        gateContext.warn(err.message, err);
+                                        resolve(chunk);
+                                        return Promise.resolve();
+                                    });
+                                return;
+                            }
+                            self.tempTable
+                                .findMessage(cvErrors, {
+                                    cr_type: "error",
+                                })
+                                .then((errors) => {
+                                    if (errors) {
+                                        gateContext.connection
+                                            .rollback()
+                                            .then(() => resolve(chunk))
+                                            .catch((err) => {
+                                                gateContext.warn(err.message, err);
+                                                resolve(chunk);
+                                                return Promise.resolve();
+                                            });
+                                        return;
+                                    }
+                                    resolve(chunk);
+                                });
+                            return;
+                        } else if (
+                            !isEmpty(chunk.jt_message) &&
+                            !isEmpty(chunk.jt_message.error)
                         ) {
                             gateContext.connection
                                 .rollback()
-                                .then(() => callback(null, chunk))
+                                .then(() => resolve(chunk))
                                 .catch((err) => {
                                     gateContext.warn(err.message, err);
-                                    callback(null, chunk);
+                                    resolve(chunk);
                                     return Promise.resolve();
                                 });
                             return;
                         }
-                        self.tempTable
-                            .findMessage(cvErrors, {
-                                cr_type: "error",
-                            })
-                            .then((errors) => {
-                                if (errors) {
-                                    gateContext.connection
-                                        .rollback()
-                                        .then(() => callback(null, chunk))
-                                        .catch((err) => {
-                                            gateContext.warn(err.message, err);
-                                            callback(null, chunk);
-                                            return Promise.resolve();
-                                        });
-                                    return;
-                                }
-                                callback(null, chunk);
-                            });
-                    } else if (
-                        !isEmpty(chunk.jt_message) &&
-                        !isEmpty(chunk.jt_message.error)
-                    ) {
-                        gateContext.connection
-                            .rollback()
-                            .then(() => callback(null, chunk))
-                            .catch((err) => {
-                                gateContext.warn(err.message, err);
-                                callback(null, chunk);
-                                return Promise.resolve();
-                            });
-                    } else {
-                        if (isCache) {
-                            data.push(chunk);
-                        }
+                        resolve(chunk);
+                    }).then((chunk) => {
+                        rTransform._transform = ((childChunk, _encode, cb) => {
+                            cb(null, childChunk);
+                        }).bind(rTransform);
                         callback(null, chunk);
-                    }
-                    rTransform._transform = ((childChunk, _encode, cb) => {
-                        if (isCache) {
-                            data.push(childChunk);
-                        }
-                        cb(null, childChunk);
-                    }).bind(rTransform);
-                },
+                    });
+                }
             });
             result.data = safePipe(result.data, rTransform);
-        } else if (isCache) {
+        }
+        if (isCache) {
+            const data = [];
             result.data = safePipe(result.data, new Transform({
                 readableObjectMode: true,
                 writableObjectMode: true,
@@ -464,8 +465,6 @@ export default class OnlineController implements ICoreController {
                     callback(null, chunk);
                 }
             }));
-        }
-        if (isCache) {
             result.data.once('end', () => {
                 const param = (gateContext.metaData?.cache_key_param as string[] || []).reduce((res, value) => {
                     const found = deepParam(value, gateContext.params);
@@ -604,8 +603,8 @@ export default class OnlineController implements ICoreController {
                                     global_value: isObject(row.global_value)
                                         ? row.global_value
                                         : JSON.parse(
-                                              row.global_value || "{}",
-                                          ),
+                                            row.global_value || "{}",
+                                        ),
                                 };
                                 if (
                                     children.length === 1 &&
@@ -654,10 +653,10 @@ export default class OnlineController implements ICoreController {
                                 return gateContext.session
                                     ? reject(CoreContext.accessDenied())
                                     : reject(
-                                          new ErrorException(
-                                              ErrorGate.REQUIRED_AUTH,
-                                          ),
-                                      );
+                                        new ErrorException(
+                                            ErrorGate.REQUIRED_AUTH,
+                                        ),
+                                    );
                             }
                             if (version === "3") {
                                 return reject(
@@ -782,12 +781,12 @@ export default class OnlineController implements ICoreController {
                                             },
                                             ...(doc.cr_type === "report"
                                                 ? [
-                                                      {
-                                                          cv_name:
-                                                              "EXTRACT_META_DATA",
-                                                          outType: "DEFAULT",
-                                                      },
-                                                  ]
+                                                    {
+                                                        cv_name:
+                                                            "EXTRACT_META_DATA",
+                                                        outType: "DEFAULT",
+                                                    },
+                                                ]
                                                 : []),
                                         ],
                                         needSession: doc.cr_access !== "free",
