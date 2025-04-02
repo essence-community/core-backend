@@ -140,7 +140,7 @@ export default class PostgresDB {
     }
 
     public name: string;
-    public queryTimeout: number;
+    public queryTimeout?: number;
     public connectionConfig: IPostgresDBConfig;
     public partRows: number;
     public pg: any;
@@ -215,7 +215,7 @@ export default class PostgresDB {
         if (!isEmpty(params.queryTimeout)) {
             this.queryTimeout = params.queryTimeout * 1000;
         } else {
-            this.queryTimeout = null;
+            this.queryTimeout = undefined;
         }
 
         this.partRows =
@@ -286,6 +286,7 @@ export default class PostgresDB {
             max: this.connectionConfig.poolMax || 4,
             min: this.connectionConfig.poolMin || 0,
             log: (...msg) => this.log.trace(...msg),
+            query_timeout: this.queryTimeout,
         });
         /* tslint:enable:object-literal-sort-keys */
         this.pool = pool;
@@ -504,7 +505,6 @@ export default class PostgresDB {
         options: IOptions,
         inConnection?: pg.Client | pg.PoolClient,
     ): Promise<IResultProvider> {
-        let estimateTimerId = null;
         let result;
         const conn: pg.Client | pg.PoolClient = inConnection
             ? inConnection
@@ -523,15 +523,6 @@ export default class PostgresDB {
             );
         }
 
-        if (this.queryTimeout !== null && !options.resultSet) {
-            await conn.query("SELECT pg_backend_pid()").then(async (res) => {
-                const pid = res.rows[0][0];
-                estimateTimerId = setTimeout(() => {
-                    this.pool.query("SELECT pg_cancel_backend($1)", [pid]);
-                }, this.queryTimeout);
-                return;
-            });
-        }
         const query = prepareSql(sql)(params);
         try {
             if (options.resultSet) {
@@ -553,7 +544,7 @@ export default class PostgresDB {
                             return;
                         }
                         result.metaData = this.extractMetaData(
-                            (stream as any).cursor._result.fields,
+                            (stream as QueryStream).cursor._result.fields,
                         );
                         result.stream = new Readable({
                             highWaterMark: this.partRows,
@@ -573,7 +564,7 @@ export default class PostgresDB {
                         }
                         isData = true;
                         result.metaData = this.extractMetaData(
-                            (stream as any).cursor._result.fields,
+                            (stream as QueryStream).cursor._result.fields,
                         );
                         stream.removeListener("readable", reader);
                         resolve();
@@ -585,9 +576,6 @@ export default class PostgresDB {
                     this.DatasetSerializer(),
                 );
                 result.stream.on("end", () => {
-                    if (estimateTimerId !== null) {
-                        clearTimeout(estimateTimerId);
-                    }
                     if (isRelease) {
                         this.onRelease(conn).then(noop, noop);
                     }
@@ -602,9 +590,6 @@ export default class PostgresDB {
                 res = await conn
                     .query("BEGIN")
                     .then(() => conn.query(query.text, query.values));
-            }
-            if (estimateTimerId !== null) {
-                clearTimeout(estimateTimerId);
             }
             if (res.rows) {
                 result = {
@@ -648,9 +633,6 @@ export default class PostgresDB {
             });
             return result;
         } catch (err) {
-            if (estimateTimerId !== null) {
-                clearTimeout(estimateTimerId);
-            }
             if (isRelease && conn) {
                 await this.onRollBack(conn)
                     .then(() => this.onClose(conn))
