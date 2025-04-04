@@ -10,6 +10,7 @@ class Connection extends EventEmitter {
     private DataSource: any;
     private isReleased: boolean = false;
     private isExecute: boolean = false;
+    private isRollBacking: boolean = false;
     constructor(dataSource: any, name: nameType, connection?: any) {
         super();
         this.name = name;
@@ -30,6 +31,7 @@ class Connection extends EventEmitter {
     ): Promise<IResultProvider> {
         let result = null;
         this.isExecute = true;
+        this.isRollBacking = false;
         try {
             result = await this.DataSource.executeStmt(
                 sql,
@@ -72,6 +74,7 @@ class Connection extends EventEmitter {
             this.isExecute = false;
             this.isReleased = true;
             this.emit("finish");
+            this.isRollBacking = false;
         }
         return;
     }
@@ -96,11 +99,15 @@ class Connection extends EventEmitter {
             this.isExecute = false;
             this.isReleased = true;
             this.emit("finish");
+            this.isRollBacking = false;
         }
         return;
     }
     public async commit(): Promise<void> {
         if (this.isReleased) {
+            return;
+        }
+        if (this.isRollBacking) {
             return;
         }
         if (this.isExecute) {
@@ -126,6 +133,7 @@ class Connection extends EventEmitter {
         if (this.isReleased) {
             return;
         }
+        this.isRollBacking = true;
         if (this.isExecute) {
             return new Promise((resolve, reject) => {
                 this.once("finish", () => {

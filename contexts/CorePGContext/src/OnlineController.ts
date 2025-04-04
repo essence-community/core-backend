@@ -376,9 +376,9 @@ export default class OnlineController implements ICoreController {
                 readableObjectMode: true,
                 writableObjectMode: true,
                 transform(chunk, encode, callback) {
-                    new Promise((resolve) => {
+                    new Promise<void>((resolve) => {
                         if (typeof chunk !== "object") {
-                            resolve(chunk);
+                            resolve();
                             return;
                         }
                         if (
@@ -407,12 +407,11 @@ export default class OnlineController implements ICoreController {
                             ) {
                                 gateContext.connection
                                     .rollback()
-                                    .then(() => resolve(chunk))
+                                    .then(noop)
                                     .catch((err) => {
                                         gateContext.warn(err.message, err);
-                                        resolve(chunk);
-                                        return Promise.resolve();
                                     });
+                                resolve();
                                 return;
                             }
                             self.tempTable
@@ -423,15 +422,16 @@ export default class OnlineController implements ICoreController {
                                     if (errors) {
                                         gateContext.connection
                                             .rollback()
-                                            .then(() => resolve(chunk))
+                                            .then(noop)
                                             .catch((err) => {
                                                 gateContext.warn(err.message, err);
-                                                resolve(chunk);
-                                                return Promise.resolve();
                                             });
-                                        return;
                                     }
-                                    resolve(chunk);
+                                    resolve();
+                                })
+                                .catch((err) => {
+                                    gateContext.warn(err.message, err);
+                                    resolve();
                                 });
                             return;
                         } else if (
@@ -440,16 +440,15 @@ export default class OnlineController implements ICoreController {
                         ) {
                             gateContext.connection
                                 .rollback()
-                                .then(() => resolve(chunk))
+                                .then(noop)
                                 .catch((err) => {
                                     gateContext.warn(err.message, err);
-                                    resolve(chunk);
-                                    return Promise.resolve();
                                 });
+                            resolve();
                             return;
                         }
-                        resolve(chunk);
-                    }).then((chunk) => {
+                        resolve();
+                    }).then(() => {
                         rTransform._transform = ((childChunk, _encode, cb) => {
                             cb(null, childChunk);
                         }).bind(rTransform);
