@@ -377,9 +377,13 @@ export default class OnlineController implements ICoreController {
                 writableObjectMode: true,
                 transform(chunk, encode, callback) {
                     new Promise((resolve) => {
+                        if (typeof chunk !== "object") {
+                            resolve(chunk);
+                            return;
+                        }
                         if (
-                            !isEmpty(chunk.cv_error) ||
-                            !isEmpty(chunk.jt_form_message)
+                            (typeof chunk.cv_error === "object") ||
+                            (typeof chunk.jt_form_message === "object") 
                         ) {
                             const cvErrors = [
                                 ...(isEmpty(chunk.cv_error)
@@ -431,7 +435,7 @@ export default class OnlineController implements ICoreController {
                                 });
                             return;
                         } else if (
-                            !isEmpty(chunk.jt_message) &&
+                            typeof chunk.jt_message === "object" &&
                             !isEmpty(chunk.jt_message.error)
                         ) {
                             gateContext.connection
@@ -446,6 +450,12 @@ export default class OnlineController implements ICoreController {
                         }
                         resolve(chunk);
                     }).then((chunk) => {
+                        rTransform._transform = ((childChunk, _encode, cb) => {
+                            cb(null, childChunk);
+                        }).bind(rTransform);
+                        callback(null, chunk);
+                    }, (err) => {
+                        gateContext.warn(err.message, err);
                         rTransform._transform = ((childChunk, _encode, cb) => {
                             cb(null, childChunk);
                         }).bind(rTransform);
