@@ -1,5 +1,5 @@
 --liquibase formatted sql
---changeset patcher-core:MetaClass_1EE230968D8648419A9FEF0AAF7390E7 dbms:postgresql runOnChange:true splitStatements:false stripComments:false
+--changeset patcher-core:MetaClass_1EE230968D8648419A9FEF0AAF7390E7_1753870117218 dbms:postgresql runOnChange:true splitStatements:false stripComments:false
 INSERT INTO s_mt.t_class(ck_id, cv_name, cv_description, cv_manual_documentation, cv_auto_documentation, cl_final, cl_dataset, ck_view, ck_user, ct_change) VALUES ('1EE230968D8648419A9FEF0AAF7390E7', 'Application', 'Контейнер для приложения', 'Компонент для создания приложения
 
 [Button](/redirect/docs/core-classes-button)', '

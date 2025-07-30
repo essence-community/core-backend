@@ -1,5 +1,5 @@
 --liquibase formatted sql
---changeset patcher-core:MetaClass_437 dbms:postgresql runOnChange:true splitStatements:false stripComments:false
+--changeset patcher-core:MetaClass_437_1753870117301 dbms:postgresql runOnChange:true splitStatements:false stripComments:false
 INSERT INTO s_mt.t_class(ck_id, cv_name, cv_description, cv_manual_documentation, cv_auto_documentation, cl_final, cl_dataset, ck_view, ck_user, ct_change) VALUES ('437', 'Column Checkbox', 'Колонка "Флаг" (для мультивыбора)', '### Дополнительное назначение атрибутов
 
 1. disabled - служит для блокировки чекбокса в заголовки и начальному состоянию

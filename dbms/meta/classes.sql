@@ -1,5 +1,5 @@
 --liquibase formatted sql
---changeset patcher-core:classes dbms:postgresql runOnChange:true splitStatements:false stripComments:false
+--changeset patcher-core:classes_1753870116889 dbms:postgresql runOnChange:true splitStatements:false stripComments:false
 INSERT INTO s_mt.t_attr_type(ck_id, cv_name, cv_description, ck_user, ct_change)VALUES('basic', 'Основной', 'обычный атрибут', '-11', '2018-02-23T07:07:44.714+0000') on conflict (ck_id) do update set cv_description = excluded.cv_description, cv_name = excluded.cv_name, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
 INSERT INTO s_mt.t_attr_type(ck_id, cv_name, cv_description, ck_user, ct_change)VALUES('behavior', 'Поведение', 'поведенческий атрибут для зависимости отображения от данных', '-11', '2018-02-23T07:07:44.714+0000') on conflict (ck_id) do update set cv_description = excluded.cv_description, cv_name = excluded.cv_name, ck_user = excluded.ck_user, ct_change = excluded.ct_change;
 INSERT INTO s_mt.t_attr_type(ck_id, cv_name, cv_description, ck_user, ct_change)VALUES('placement', 'Расположение', 'место для размещения дочернего элемента', '-11', '2018-02-23T07:07:44.714+0000') on conflict (ck_id) do update set cv_description = excluded.cv_description, cv_name = excluded.cv_name, ck_user = excluded.ck_user, ct_change = excluded.ct_change;

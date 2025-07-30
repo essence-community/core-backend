@@ -1,5 +1,5 @@
 --liquibase formatted sql
---changeset patcher-core:MetaClassHierarchy_4A7B7B56D5D544A7B81EB8D50EA8C8EC dbms:postgresql runOnChange:true splitStatements:false stripComments:false
+--changeset patcher-core:MetaClassHierarchy_4A7B7B56D5D544A7B81EB8D50EA8C8EC_1753870117589 dbms:postgresql runOnChange:true splitStatements:false stripComments:false
 INSERT INTO s_mt.t_class_hierarchy
 (ck_id, ck_class_parent, ck_class_child, ck_class_attr, ck_user, ct_change)
  select t.ck_id, t.ck_class_parent, t.ck_class_child, t.ck_class_attr, t.ck_user, t.ct_change from (

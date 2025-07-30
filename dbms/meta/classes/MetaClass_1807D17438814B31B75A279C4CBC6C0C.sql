@@ -1,5 +1,5 @@
 --liquibase formatted sql
---changeset patcher-core:MetaClass_1807D17438814B31B75A279C4CBC6C0C dbms:postgresql runOnChange:true splitStatements:false stripComments:false
+--changeset patcher-core:MetaClass_1807D17438814B31B75A279C4CBC6C0C_1753870117066 dbms:postgresql runOnChange:true splitStatements:false stripComments:false
 INSERT INTO s_mt.t_class(ck_id, cv_name, cv_description, cv_manual_documentation, cv_auto_documentation, cl_final, cl_dataset, ck_view, ck_user, ct_change) VALUES ('1807D17438814B31B75A279C4CBC6C0C', 'App Bar Panel', 'Навигационая панель страницы', '## Описание
 
 1. Отрисовка панели вверху
