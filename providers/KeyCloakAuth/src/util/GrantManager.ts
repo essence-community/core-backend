@@ -1,14 +1,14 @@
 import * as http from "http";
 import * as URL from "url";
 import * as crypto from "crypto";
-import axios, { AxiosRequestConfig } from "axios";
+import axios, {AxiosRequestConfig} from "axios";
 import * as qs from "qs";
 import * as Grant from "keycloak-connect/middleware/auth-utils/grant";
 import * as Token from "keycloak-connect/middleware/auth-utils/token";
-import { Rotation } from "./Rotation";
-import { IGrantManagerConfig, IToken } from "../KeyCloakAuth.types";
+import {Rotation} from "./Rotation";
+import {IGrantManagerConfig, IToken} from "../KeyCloakAuth.types";
 import Logger from "@ungate/plugininf/lib/Logger";
-import { isEmpty } from "@ungate/plugininf/lib/util/Util";
+import {hiddenSecret, isEmpty} from "@ungate/plugininf/lib/util/Util";
 
 export class GrantManager {
     public notBefore: number;
@@ -79,11 +79,10 @@ export class GrantManager {
                 handler,
                 options,
                 qs.stringify(params) +
-                    `&redirect_uri=${
-                        request.session && request.session.auth_redirect_uri
-                            ? request.session.auth_redirect_uri
-                            : getRedirectUrl(request)
-                    }`,
+                `&redirect_uri=${request.session && request.session.auth_redirect_uri
+                    ? request.session.auth_redirect_uri
+                    : getRedirectUrl(request)
+                }`,
             ),
             callback,
         );
@@ -423,7 +422,7 @@ export class GrantManager {
                             reject(
                                 new Error(
                                     "failed to load public key to verify token. Reason: " +
-                                        err.message,
+                                    err.message,
                                 ),
                             );
                         });
@@ -446,7 +445,7 @@ export class GrantManager {
                         reject(
                             new Error(
                                 "Grant validation failed. Reason: " +
-                                    err.message,
+                                err.message,
                             ),
                         );
                     });
@@ -473,12 +472,12 @@ export class GrantManager {
 
     loginUrl(uuid, redirectUrl) {
         let url = this.realmUrl +
-        '/protocol/openid-connect/auth' +
-        '?client_id=' + encodeURIComponent(this.clientId) +
-        '&state=' + encodeURIComponent(uuid) +
-        '&redirect_uri=' + encodeURIComponent(redirectUrl) +
-        '&scope=' + encodeURIComponent(this.scope ? 'openid ' + this.scope : 'openid') +
-        '&response_type=code';
+            '/protocol/openid-connect/auth' +
+            '?client_id=' + encodeURIComponent(this.clientId) +
+            '&state=' + encodeURIComponent(uuid) +
+            '&redirect_uri=' + encodeURIComponent(redirectUrl) +
+            '&scope=' + encodeURIComponent(this.scope ? 'openid ' + this.scope : 'openid') +
+            '&response_type=code';
 
         if (this.idpHint) {
             url += '&kc_idp_hint=' + encodeURIComponent(this.idpHint);
@@ -549,7 +548,7 @@ const fetch = (manager: GrantManager, handler, options, params) => {
             httpsAgent: manager.config.httpsAgent,
             validateStatus: () => true,
         } as AxiosRequestConfig;
-        manager.logger.debug("Params request %j", paramsRequest)
+        manager.logger.debug("Params request %j", hiddenSecret(paramsRequest));
         axios
             .request(paramsRequest)
             .then((res) => {
@@ -570,8 +569,8 @@ const fetch = (manager: GrantManager, handler, options, params) => {
                     return reject(
                         new Error(
                             err.response.status +
-                                ":" +
-                                http.STATUS_CODES[err.response.status],
+                            ":" +
+                            http.STATUS_CODES[err.response.status],
                         ),
                     );
                 }
@@ -592,32 +591,32 @@ const getRedirectUrl = (request) => {
 
     const redirectUrl = xForwardedAuth
         ? xForwardedAuth +
-          (request.originalUrl || request.url).split("?")[0] +
-          (hasQuery ? "&" : "?") +
-          "auth_callback=1"
+        (request.originalUrl || request.url).split("?")[0] +
+        (hasQuery ? "&" : "?") +
+        "auth_callback=1"
         : protocol +
-          "://" +
-          host +
-          (port === "" ? "" : ":" + port) +
-          xForwardedPath +
-          (request.originalUrl || request.url).split("?")[0] +
-          "?" +
-          "auth_callback=1";
+        "://" +
+        host +
+        (port === "" ? "" : ":" + port) +
+        xForwardedPath +
+        (request.originalUrl || request.url).split("?")[0] +
+        "?" +
+        "auth_callback=1";
 
     return redirectUrl;
 };
 
-function loginUrl (uuid, redirectUrl) {
-  var url = this.config.realmUrl +
-  '/protocol/openid-connect/auth' +
-  '?client_id=' + encodeURIComponent(this.config.clientId) +
-  '&state=' + encodeURIComponent(uuid) +
-  '&redirect_uri=' + encodeURIComponent(redirectUrl) +
-  '&scope=' + encodeURIComponent(this.config.scope ? 'openid ' + this.config.scope : 'openid') +
-  '&response_type=code';
+function loginUrl(uuid, redirectUrl) {
+    var url = this.config.realmUrl +
+        '/protocol/openid-connect/auth' +
+        '?client_id=' + encodeURIComponent(this.config.clientId) +
+        '&state=' + encodeURIComponent(uuid) +
+        '&redirect_uri=' + encodeURIComponent(redirectUrl) +
+        '&scope=' + encodeURIComponent(this.config.scope ? 'openid ' + this.config.scope : 'openid') +
+        '&response_type=code';
 
-  if (this.config && this.config.idpHint) {
-    url += '&kc_idp_hint=' + encodeURIComponent(this.config.idpHint);
-  }
-  return url;
+    if (this.config && this.config.idpHint) {
+        url += '&kc_idp_hint=' + encodeURIComponent(this.config.idpHint);
+    }
+    return url;
 }

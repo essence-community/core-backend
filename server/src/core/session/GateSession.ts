@@ -7,35 +7,35 @@ import ISession, {
 } from "@ungate/plugininf/lib/ISession";
 import Logger from "@ungate/plugininf/lib/Logger";
 import * as crypto from "crypto";
-import { v4 as uuidv4 } from "uuid";
+import {v4 as uuidv4} from "uuid";
 import Constants from "../Constants";
 import Property from "../property/Property";
-import { IContextParams } from "@ungate/plugininf/lib/IContextPlugin";
-import { NeDbSessionStore } from "./store/NeDbSessionStore";
+import {IContextParams} from "@ungate/plugininf/lib/IContextPlugin";
+import {NeDbSessionStore} from "./store/NeDbSessionStore";
 import IContext from "@ungate/plugininf/lib/IContext";
-import { IRufusLogger } from "rufus";
+import {IRufusLogger} from "rufus";
 import NotificationController from "../../http/controllers/NotificationController";
 import {
     ISessCtrl,
     ICacheDb,
     ICreateSessionParam,
 } from "@ungate/plugininf/lib/ISessCtrl";
-import { ISessionStore } from "@ungate/plugininf/lib/ISessCtrl";
-import { ISessionData } from "@ungate/plugininf/lib/ISession";
-import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
+import {ISessionStore} from "@ungate/plugininf/lib/ISessCtrl";
+import {ISessionData} from "@ungate/plugininf/lib/ISession";
+import {hiddenSecret, initParams, isEmpty} from "@ungate/plugininf/lib/util/Util";
 import NullContext from "@ungate/plugininf/lib/NullContext";
 import RequestContext from "../request/RequestContext";
-import { debounce, dateBetween } from "@ungate/plugininf/lib/util/Util";
-import { noop } from "lodash";
+import {debounce, dateBetween} from "@ungate/plugininf/lib/util/Util";
+import {noop} from "lodash";
 import * as moment from "moment-timezone";
-import { ConnectionManager } from "typeorm";
+import {ConnectionManager} from "typeorm";
 import * as path from "path";
-import { TypeOrmSessionStore } from "./store/TypeOrmSessionStore";
-import { TypeOrmLogger } from "@ungate/plugininf/lib/db/TypeOrmLogger";
-import { UserStore } from "./store/typeorm/UserStore";
-import { CacheStore } from "./store/typeorm/CacheStore";
-import { getSessionMaxAgeMs } from "../util";
-import { sendProcess } from "@ungate/plugininf/lib/util/ProcessSender";
+import {TypeOrmSessionStore} from "./store/TypeOrmSessionStore";
+import {TypeOrmLogger} from "@ungate/plugininf/lib/db/TypeOrmLogger";
+import {UserStore} from "./store/typeorm/UserStore";
+import {CacheStore} from "./store/typeorm/CacheStore";
+import {getSessionMaxAgeMs} from "../util";
+import {sendProcess} from "@ungate/plugininf/lib/util/ProcessSender";
 
 const REPLICA_TIMEOUT = parseInt(
     process.env.KUBERNETES_REPLICA_TIMEOUT || "0",
@@ -51,7 +51,7 @@ export class GateSession implements ISessCtrl {
     private params: IContextParams;
     private timezone: string;
 
-    constructor (
+    constructor(
         private name: string,
         params: IContextParams,
         private secret: string,
@@ -66,11 +66,11 @@ export class GateSession implements ISessCtrl {
         );
     }
 
-    public async init () {
+    public async init() {
         this.logger.debug(
             "Start Init SessCtrl %s params %j",
             this.name,
-            this.params,
+            hiddenSecret(this.params),
         );
         if (this.params.paramSession.typeStore === "nedb") {
             this.store = new NeDbSessionStore({
@@ -131,7 +131,7 @@ export class GateSession implements ISessCtrl {
         this.logger.info("Inited SessCtrl %s", this.name);
     }
 
-    public saveSession (context: IContext): Promise<void> {
+    public saveSession(context: IContext): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             context.request.session.save((errChild) => {
                 if (errChild) {
@@ -142,25 +142,25 @@ export class GateSession implements ISessCtrl {
         });
     }
 
-    public sha1 (buf): string {
+    public sha1(buf): string {
         const shasum = crypto.createHash("sha1");
         shasum.update(buf);
         return shasum.digest("hex");
     }
 
-    public static sha1 (buf): string {
+    public static sha1(buf): string {
         const shasum = crypto.createHash("sha1");
         shasum.update(buf);
         return shasum.digest("hex");
     }
 
-    public sha256 (buf): string {
+    public sha256(buf): string {
         const shasum = crypto.createHash("sha256");
         shasum.update(buf);
         return shasum.digest("hex");
     }
 
-    public static sha256 (buf): string {
+    public static sha256(buf): string {
         const shasum = crypto.createHash("sha256");
         shasum.update(buf);
         return shasum.digest("hex");
@@ -173,7 +173,7 @@ export class GateSession implements ISessCtrl {
      * @param data данные пользователя
      * @param sessionDuration время жизни сессии в минутах
      */
-    public createSession ({
+    public createSession({
         context,
         idUser,
         nameProvider,
@@ -238,7 +238,7 @@ export class GateSession implements ISessCtrl {
         }));
     }
 
-    public async loadSession (
+    public async loadSession(
         context?: IContext,
         sessionId?: string,
         isNotification = false,
@@ -261,7 +261,7 @@ export class GateSession implements ISessCtrl {
             (context.request.session.gsession.sessionData.typeCheckAuth ===
                 "cookie" ||
                 context.request.session.gsession.sessionData.typeCheckAuth ===
-                    "cookieorsession")
+                "cookieorsession")
         ) {
             await this.prolongationSession(context);
             return context.request.session.gsession;
@@ -308,7 +308,7 @@ export class GateSession implements ISessCtrl {
         return null;
     }
 
-    private async prolongationSession (context?: IContext, isSave = true) {
+    private async prolongationSession(context?: IContext, isSave = true) {
         if (
             context &&
             dateBetween(
@@ -332,7 +332,7 @@ export class GateSession implements ISessCtrl {
      * Устаревание сессии
      * @param context {IContext}
      */
-    public logoutSession (context: RequestContext) {
+    public logoutSession(context: RequestContext) {
         return new Promise<void>((resolve, reject) => {
             if (context.request.session.gsession) {
                 context.request.session.cookie.expires = new Date();
@@ -354,10 +354,10 @@ export class GateSession implements ISessCtrl {
      * @param isExpired {boolean} Только истекшии
      * @returns {Promise}
      */
-    public findSessions (
+    public findSessions(
         sessionId: string | string[],
         isExpired: boolean = false,
-    ): Promise<{ [sid: string]: ISessionData }> {
+    ): Promise<{[sid: string]: ISessionData}> {
         const sessions = Array.isArray(sessionId) ? sessionId : [sessionId];
 
         return this.store.allSession(
@@ -382,7 +382,7 @@ export class GateSession implements ISessCtrl {
      * @param nameProvider наименование провайдера
      * @param data Данные пользователя
      */
-    public addUser (
+    public addUser(
         idUser: string,
         nameProvider: string,
         data: IUserData,
@@ -446,7 +446,7 @@ export class GateSession implements ISessCtrl {
      * @param idUser индификатор пользователя
      * @param nameProvider наименование провайдера
      */
-    public async getDataUser (
+    public async getDataUser(
         idUser: string,
         nameProvider: string,
         isAccessErrorNotFound: boolean = false,
@@ -466,15 +466,15 @@ export class GateSession implements ISessCtrl {
         return null;
     }
 
-    public getUserDb (): ILocalDB<IUserDbData> {
+    public getUserDb(): ILocalDB<IUserDbData> {
         return this.dbUsers;
     }
 
-    public getSessionStore (): ISessionStore {
+    public getSessionStore(): ISessionStore {
         return this.store;
     }
 
-    public getCacheDb (): ILocalDB<ICacheDb> {
+    public getCacheDb(): ILocalDB<ICacheDb> {
         return this.dbCache;
     }
 
@@ -482,7 +482,7 @@ export class GateSession implements ISessCtrl {
      * Обновляем hash авторизации
      * @returns {Promise.<*>}
      */
-    public updateHashAuth () {
+    public updateHashAuth() {
         return this.dbUsers.find().then((data) => {
             const users = [];
             const userActions = [];
@@ -552,18 +552,18 @@ export class GateSession implements ISessCtrl {
                 }),
                 userActions.length
                     ? Promise.resolve({
-                          hash_user_action: this.sha1(userActionsJson),
-                      })
+                        hash_user_action: this.sha1(userActionsJson),
+                    })
                     : Promise.resolve({
-                          hash_user_action: null,
-                      }),
+                        hash_user_action: null,
+                    }),
                 userDepartments.length
                     ? Promise.resolve({
-                          hash_user_department: this.sha1(userDepartmentsJson),
-                      })
+                        hash_user_department: this.sha1(userDepartmentsJson),
+                    })
                     : Promise.resolve({
-                          hash_user_department: null,
-                      }),
+                        hash_user_department: null,
+                    }),
             ]).then((values) =>
                 this.dbCache.insert({
                     ck_id: "hash_user",
@@ -584,7 +584,7 @@ export class GateSession implements ISessCtrl {
      * Получение соли
      * @returns hash salt
      */
-    public getHashSalt (): string {
+    public getHashSalt(): string {
         let hashSalt = Constants.HASH_SALT;
         if (!hashSalt) {
             const hashLocalSalt = Constants.APP_START_TIME.toString(16);
@@ -597,14 +597,14 @@ export class GateSession implements ISessCtrl {
         return hashSalt;
     }
 
-    public sign (val: string, secret: string): string {
+    public sign(val: string, secret: string): string {
         return (
             val +
             "." +
             crypto.createHmac("sha256", secret).update(val).digest("hex")
         );
     }
-    public unsign (val: string, secret: string): string | false {
+    public unsign(val: string, secret: string): string | false {
         const str = val.slice(0, val.lastIndexOf("."));
         const valBuffer = Buffer.from(
             val.slice(val.lastIndexOf(".") + 1),

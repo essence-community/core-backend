@@ -3,20 +3,20 @@ import OracleDB from "@ungate/plugininf/lib/db/oracle";
 import BreakException from "@ungate/plugininf/lib/errors/BreakException";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
-import ICCTParams, { IParamsInfo } from "@ungate/plugininf/lib/ICCTParams";
+import ICCTParams, {IParamsInfo} from "@ungate/plugininf/lib/ICCTParams";
 import IContext from "@ungate/plugininf/lib/IContext";
 import IObjectParam from "@ungate/plugininf/lib/IObjectParam";
-import IQuery, { IGateQuery } from "@ungate/plugininf/lib/IQuery";
-import { IResultProvider } from "@ungate/plugininf/lib/IResult";
+import IQuery, {IGateQuery} from "@ungate/plugininf/lib/IQuery";
+import {IResultProvider} from "@ungate/plugininf/lib/IResult";
 import NullProvider from "@ungate/plugininf/lib/NullProvider";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
-import { initParams } from "@ungate/plugininf/lib/util/Util";
-import { isEmpty } from "@ungate/plugininf/lib/util/Util";
-import { isObject, noop, pick } from "lodash";
+import {hiddenSecret, initParams} from "@ungate/plugininf/lib/util/Util";
+import {isEmpty} from "@ungate/plugininf/lib/util/Util";
+import {isObject, noop, pick} from "lodash";
 import * as moment from "moment";
 import * as request from "request";
 import * as URL from "url";
-import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
+import {ISessCtrl} from "@ungate/plugininf/lib/ISessCtrl";
 
 interface IResultSequence {
     res?: IResultProvider;
@@ -119,10 +119,10 @@ export default class CoreOracleIntegration extends NullProvider {
             return conn
                 .executeStmt(
                     "select i.*\n" +
-                        "  from s_it.t_interface i\n" +
-                        " start with upper(i.ck_id) = upper(:ck_query)\n" +
-                        "connect by i.ck_id = prior i.ck_parent\n" +
-                        " order by level desc",
+                    "  from s_it.t_interface i\n" +
+                    " start with upper(i.ck_id) = upper(:ck_query)\n" +
+                    "connect by i.ck_id = prior i.ck_parent\n" +
+                    " order by level desc",
                     {
                         ck_query: context.queryName,
                         ...context.params,
@@ -202,7 +202,7 @@ export default class CoreOracleIntegration extends NullProvider {
                                     queryData.ck_d_interface,
                                 ),
                             },
-                            { ...res.params, ...query.inParams },
+                            {...res.params, ...query.inParams},
                         );
                     }),
                 this.processIntegration(
@@ -219,7 +219,7 @@ export default class CoreOracleIntegration extends NullProvider {
             .then(
                 async (res) => {
                     return res.row
-                        ? { stream: ResultStream([res.row]) }
+                        ? {stream: ResultStream([res.row])}
                         : res.res;
                 },
                 async (err) => {
@@ -265,10 +265,10 @@ export default class CoreOracleIntegration extends NullProvider {
         return isEmpty(value)
             ? ""
             : {
-                  dir: this.dataSource.oracledb.BIND_IN,
-                  type: this.dataSource.oracledb.DATE,
-                  val: moment(value).toDate(),
-              };
+                dir: this.dataSource.oracledb.BIND_IN,
+                type: this.dataSource.oracledb.DATE,
+                val: moment(value).toDate(),
+            };
     }
     /**
      * Переводим файл/buffer в правильный тип для провайдера
@@ -295,11 +295,11 @@ export default class CoreOracleIntegration extends NullProvider {
         if (gateContext.isDebugEnabled()) {
             gateContext.debug(
                 `step db cc_request sql: ${queryData.cc_request}` +
-                    `\ninParam: ${JSON.stringify(
-                        inParams,
-                    )}\noutParam: ${JSON.stringify(
-                        gateContext.query.outParams,
-                    )}`,
+                `\ninParam: ${JSON.stringify(
+                    hiddenSecret(inParams),
+                )}\noutParam: ${JSON.stringify(
+                    gateContext.query.outParams,
+                )}`,
             );
         }
         let executeRes = await gateContext.connection.executeStmt(
@@ -324,12 +324,11 @@ export default class CoreOracleIntegration extends NullProvider {
             });
             if (gateContext.isDebugEnabled()) {
                 gateContext.debug(
-                    `step db cc_response sql: ${
-                        queryData.cc_response
-                    }\ninParam: ${JSON.stringify(responseInParams)}` +
-                        `\noutParam: ${JSON.stringify(
-                            gateContext.query.outParams,
-                        )}`,
+                    `step db cc_response sql: ${queryData.cc_response
+                    }\ninParam: ${JSON.stringify(hiddenSecret(responseInParams))}` +
+                    `\noutParam: ${JSON.stringify(
+                        gateContext.query.outParams,
+                    )}`,
                 );
             }
             executeRes = await gateContext.connection.executeStmt(
@@ -435,12 +434,12 @@ export default class CoreOracleIntegration extends NullProvider {
                     method === "GET"
                         ? {
                             "cookie": gateContext.request.headers.cookie,
-                          }
+                        }
                         : {
                             "cookie": gateContext.request.headers.cookie,
                             "Content-Length": length,
                             "Content-Type": "application/json",
-                          },
+                        },
                     isEmpty(param.headers) ? {} : param.headers,
                 );
                 const params: request.Options = {
@@ -457,7 +456,7 @@ export default class CoreOracleIntegration extends NullProvider {
                 }
                 if (gateContext.isDebugEnabled()) {
                     gateContext.debug(
-                        `step request params: ${JSON.stringify(params)}`,
+                        `step request params: ${JSON.stringify(hiddenSecret(params))}`,
                     );
                 }
                 request(params, (err, res, bodyResponse) => {

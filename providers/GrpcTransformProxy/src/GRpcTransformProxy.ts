@@ -1,21 +1,21 @@
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
-import { IParamsInfo } from "@ungate/plugininf/lib/ICCTParams";
-import IContext, { IFormData } from "@ungate/plugininf/lib/IContext";
-import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
-import { parse as parseSync } from "@ungate/plugininf/lib/parser/parser";
-import { parse } from "@ungate/plugininf/lib/parser/parserAsync";
-import { IResultProvider } from "@ungate/plugininf/lib/IResult";
+import {IParamsInfo} from "@ungate/plugininf/lib/ICCTParams";
+import IContext, {IFormData} from "@ungate/plugininf/lib/IContext";
+import {IGateQuery} from "@ungate/plugininf/lib/IQuery";
+import {parse as parseSync} from "@ungate/plugininf/lib/parser/parser";
+import {parse} from "@ungate/plugininf/lib/parser/parserAsync";
+import {IResultProvider} from "@ungate/plugininf/lib/IResult";
 import NullProvider, {
     IParamsProvider,
 } from "@ungate/plugininf/lib/NullProvider";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
 import * as grpc from "@grpc/grpc-js";
 import * as protoLoader from "@grpc/proto-loader";
-import { isEmpty } from "@ungate/plugininf/lib/util/Util";
-import { deepParam } from "@ungate/plugininf/lib/util/deepParam";
+import {hiddenSecret, isEmpty} from "@ungate/plugininf/lib/util/Util";
+import {deepParam} from "@ungate/plugininf/lib/util/deepParam";
 import * as fs from "fs";
 import * as path from "path";
-import { v4 as uuid } from "uuid";
+import {v4 as uuid} from "uuid";
 import Constant from "@ungate/plugininf/lib/Constants";
 
 export interface IGRpcTransformProxyParam extends IParamsProvider {
@@ -87,10 +87,10 @@ export default class GRpcTransformProxy extends NullProvider {
                 type: "combo",
                 name: "Type credentials",
                 defaultValue: "insecure",
-                valueField: [{ in: "ck_id" }],
+                valueField: [{in: "ck_id"}],
                 displayField: "ck_id",
-                setGlobal: [{ out: "g_type_credential" }],
-                records: [{ ck_id: "insecure" }, { ck_id: "ssl" }],
+                setGlobal: [{out: "g_type_credential"}],
+                records: [{ck_id: "insecure"}, {ck_id: "ssl"}],
             },
             credentialsSsl: {
                 type: "form_nested",
@@ -266,11 +266,11 @@ export default class GRpcTransformProxy extends NullProvider {
         const param = {
             jt_in_param:
                 typeof gateContext.request.body === "object" &&
-                (gateContext.request.body as IFormData).files
+                    (gateContext.request.body as IFormData).files
                     ? {
-                          ...query.inParams,
-                          ...(gateContext.request.body as IFormData).files,
-                      }
+                        ...query.inParams,
+                        ...(gateContext.request.body as IFormData).files,
+                    }
                     : query.inParams,
             jt_request_header: gateContext.request.headers,
             jt_request_method: gateContext.request.method,
@@ -284,7 +284,7 @@ export default class GRpcTransformProxy extends NullProvider {
         });
         if (gateContext.isDebugEnabled()) {
             gateContext.debug(
-                `Request proxy config: ${JSON.stringify(config)}`,
+                `Request proxy config: ${JSON.stringify(hiddenSecret(config))}`,
             );
         }
         if (config.args) {
@@ -337,11 +337,11 @@ export default class GRpcTransformProxy extends NullProvider {
                 call =
                     config.args && !config.streamRequest
                         ? method.apply(
-                              client,
-                              Array.isArray(config.args)
-                                  ? config.args
-                                  : [config.args],
-                          )
+                            client,
+                            Array.isArray(config.args)
+                                ? config.args
+                                : [config.args],
+                        )
                         : method.call(client);
                 call.on("data", (data) => res.push(data));
                 call.on("error", (err) => {

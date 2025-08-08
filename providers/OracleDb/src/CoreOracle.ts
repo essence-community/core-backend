@@ -5,18 +5,19 @@ import BreakException from "@ungate/plugininf/lib/errors/BreakException";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
 import IContext from "@ungate/plugininf/lib/IContext";
-import IQuery, { IGateQuery } from "@ungate/plugininf/lib/IQuery";
-import { IResultProvider } from "@ungate/plugininf/lib/IResult";
-import { IUserData } from "@ungate/plugininf/lib/ISession";
+import IQuery, {IGateQuery} from "@ungate/plugininf/lib/IQuery";
+import {IResultProvider} from "@ungate/plugininf/lib/IResult";
+import {IUserData} from "@ungate/plugininf/lib/ISession";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
-import { isObject } from "lodash";
+import {isObject} from "lodash";
 import IOracleController from "./IOracleController";
-import { IParamOracle } from "./OracleDb.types";
+import {IParamOracle} from "./OracleDb.types";
 import {
     ISessCtrl,
     ICacheDb,
 } from "@ungate/plugininf/lib/ISessCtrl";
-import { IUserDbData } from "@ungate/plugininf/lib/ISession";
+import {IUserDbData} from "@ungate/plugininf/lib/ISession";
+import {hiddenSecret} from "@ungate/plugininf/lib/util/Util";
 const wsQuerySQL =
     "select cc_query from t_query where upper(ck_id) = upper(:query)";
 
@@ -136,8 +137,8 @@ export default class CoreOracle implements IOracleController {
     public async initTempTableSession(gateContext: IContext, connection: any) {
         const res = await this.dataSource.executeStmt(
             "select pkg_json_user.f_get_context('hash_user') as hash_user, " +
-                "pkg_json_user.f_get_context('hash_user_action') as hash_user_action, " +
-                "pkg_json_user.f_get_context('hash_user_department') as hash_user_department from dual",
+            "pkg_json_user.f_get_context('hash_user_action') as hash_user_action, " +
+            "pkg_json_user.f_get_context('hash_user_department') as hash_user_department from dual",
             connection,
             null,
             null,
@@ -167,7 +168,7 @@ export default class CoreOracle implements IOracleController {
             throw new ErrorException(-1, "Нет данных о сессии");
         }
         if (gateContext.isDebugEnabled()) {
-            gateContext.debug(`Hash session ${JSON.stringify(data)}`);
+            gateContext.debug(`Hash session ${JSON.stringify(hiddenSecret(data))}`);
         }
         const users = [];
         const userActions = [];
@@ -198,63 +199,63 @@ export default class CoreOracle implements IOracleController {
         await Promise.all([
             updateUser || updateUserAction || updateUserDepartment
                 ? this.dbUsers.find().then(async (usersRows) => {
-                      let errRow;
-                      const result = usersRows.every((userRow) => {
-                          const item: Partial<IUserData> = userRow.data || {};
-                          if (!isObject(item)) {
-                              gateContext.error(`Bad tt_user data ${userRow}`);
-                              errRow = new ErrorException(
-                                  -1,
-                                  "Bad tt_users data",
-                              );
-                              return false;
-                          }
-                          if (!Array.isArray(item.ca_actions)) {
-                              if (
-                                  typeof item.ca_actions === "string" &&
-                                  (item.ca_actions as any).startsWith("[")
-                              ) {
-                                  item.ca_actions = JSON.parse(item.ca_actions);
-                              } else {
-                                  item.ca_actions = [];
-                              }
-                          }
-                          (item.ca_actions || []).forEach((action) => {
-                              userActions.push({
-                                  ck_user: item.ck_id,
-                                  cn_action: action,
-                              });
-                          });
-                          if (!Array.isArray(item.ca_department)) {
-                              if (
-                                  typeof item.ca_department === "string" &&
-                                  (item.ca_department as any).startsWith("[")
-                              ) {
-                                  item.ca_department = JSON.parse(
-                                      item.ca_department,
-                                  );
-                              } else {
-                                  item.ca_department = [];
-                              }
-                          }
-                          (item.ca_department || []).forEach((dep) => {
-                              userDepartments.push({
-                                  ck_department: dep,
-                                  ck_user: item.ck_id,
-                              });
-                          });
-                          delete item.ca_actions;
-                          delete item.ca_department;
-                          delete item.ck_dept;
-                          delete item.cv_timezone;
-                          users.push(item);
-                          return true;
-                      });
-                      if (!result) {
-                          throw errRow;
-                      }
-                      return;
-                  })
+                    let errRow;
+                    const result = usersRows.every((userRow) => {
+                        const item: Partial<IUserData> = userRow.data || {};
+                        if (!isObject(item)) {
+                            gateContext.error(`Bad tt_user data ${userRow}`);
+                            errRow = new ErrorException(
+                                -1,
+                                "Bad tt_users data",
+                            );
+                            return false;
+                        }
+                        if (!Array.isArray(item.ca_actions)) {
+                            if (
+                                typeof item.ca_actions === "string" &&
+                                (item.ca_actions as any).startsWith("[")
+                            ) {
+                                item.ca_actions = JSON.parse(item.ca_actions);
+                            } else {
+                                item.ca_actions = [];
+                            }
+                        }
+                        (item.ca_actions || []).forEach((action) => {
+                            userActions.push({
+                                ck_user: item.ck_id,
+                                cn_action: action,
+                            });
+                        });
+                        if (!Array.isArray(item.ca_department)) {
+                            if (
+                                typeof item.ca_department === "string" &&
+                                (item.ca_department as any).startsWith("[")
+                            ) {
+                                item.ca_department = JSON.parse(
+                                    item.ca_department,
+                                );
+                            } else {
+                                item.ca_department = [];
+                            }
+                        }
+                        (item.ca_department || []).forEach((dep) => {
+                            userDepartments.push({
+                                ck_department: dep,
+                                ck_user: item.ck_id,
+                            });
+                        });
+                        delete item.ca_actions;
+                        delete item.ca_department;
+                        delete item.ck_dept;
+                        delete item.cv_timezone;
+                        users.push(item);
+                        return true;
+                    });
+                    if (!result) {
+                        throw errRow;
+                    }
+                    return;
+                })
                 : Promise.resolve(),
         ]);
         const actions = [];
@@ -339,8 +340,8 @@ export default class CoreOracle implements IOracleController {
         return this.dataSource
             .executeStmt(
                 "begin\n" +
-                    `:result := pkg_json_user.${nameFunction}(pc_json => :json, pv_hash => :hash);\n` +
-                    "end;",
+                `:result := pkg_json_user.${nameFunction}(pc_json => :json, pv_hash => :hash);\n` +
+                "end;",
                 connection,
                 {
                     hash,
@@ -364,8 +365,7 @@ export default class CoreOracle implements IOracleController {
                                 const result = JSON.parse(rows[0].result);
                                 if (result.cv_error) {
                                     gateContext.error(
-                                        `Provider ${
-                                            this.name
+                                        `Provider ${this.name
                                         } Error ${nameFunction}, ${JSON.stringify(
                                             result.cv_error,
                                         )}`,

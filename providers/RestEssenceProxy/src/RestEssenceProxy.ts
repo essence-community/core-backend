@@ -1,25 +1,25 @@
 import BreakException from "@ungate/plugininf/lib/errors/BreakException";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
-import { IParamsInfo } from "@ungate/plugininf/lib/ICCTParams";
-import IContext, { IFormData } from "@ungate/plugininf/lib/IContext";
-import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
-import { IResultProvider } from "@ungate/plugininf/lib/IResult";
+import {IParamsInfo} from "@ungate/plugininf/lib/ICCTParams";
+import IContext, {IFormData} from "@ungate/plugininf/lib/IContext";
+import {IGateQuery} from "@ungate/plugininf/lib/IQuery";
+import {IResultProvider} from "@ungate/plugininf/lib/IResult";
 import NullProvider, {
     IParamsProvider,
 } from "@ungate/plugininf/lib/NullProvider";
-import { Agent as HttpsAgent, AgentOptions } from "https";
-import { Agent as HttpAgent } from "http";
+import {Agent as HttpsAgent, AgentOptions} from "https";
+import {Agent as HttpAgent} from "http";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
-import { safeResponsePipe } from "@ungate/plugininf/lib/stream/Util";
+import {safeResponsePipe} from "@ungate/plugininf/lib/stream/Util";
 import * as axios from "axios";
 import * as url from "url";
-import { isEmpty, initParams, stripBOM } from "@ungate/plugininf/lib/util/Util";
+import {isEmpty, initParams, stripBOM, hiddenSecret} from "@ungate/plugininf/lib/util/Util";
 import * as QueryString from "qs";
 import * as fs from "fs";
 import * as FormData from "form-data";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
 import ICCTParams from "@ungate/plugininf/lib/ICCTParams";
-import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
+import {ISessCtrl} from "@ungate/plugininf/lib/ISessCtrl";
 
 const validHeader = ["application/json", "application/xml", "text/"];
 const defaultHeader = ["content-type", "cookie"];
@@ -117,9 +117,8 @@ export default class RestEssenceProxy extends NullProvider {
             ...gateContext.params,
         };
         const urlGate = url.parse(
-            `${this.params.defaultGateUrl}/${
-                query.queryStr || query.modifyMethod
-            }`
+            `${this.params.defaultGateUrl}/${query.queryStr || query.modifyMethod
+                }`
                 .replace("//", "/")
                 .replace(":/", "://"),
             true,
@@ -192,7 +191,7 @@ export default class RestEssenceProxy extends NullProvider {
                         (gateContext.request.body as IFormData).fields[
                             key
                         ].forEach((item) => {
-                            if (typeof item === "undefined" || item === null){
+                            if (typeof item === "undefined" || item === null) {
                                 return;
                             }
                             formData.append(key, Buffer.from(Array.isArray(item) || typeof item === "object" ? JSON.stringify(item) : `${item}`), {
@@ -222,13 +221,13 @@ export default class RestEssenceProxy extends NullProvider {
             params.proxy = this.params.proxy.startsWith("{")
                 ? proxy
                 : {
-                      host: proxy.host,
-                      port: parseInt(proxy.port, 10),
-                      auth: proxy.auth
-                          ? { username: proxyauth[0], password: proxyauth[1] }
-                          : undefined,
-                      protocol: proxy.protocol,
-                  };
+                    host: proxy.host,
+                    port: parseInt(proxy.port, 10),
+                    auth: proxy.auth
+                        ? {username: proxyauth[0], password: proxyauth[1]}
+                        : undefined,
+                    protocol: proxy.protocol,
+                };
         }
         if (this.params.httpsAgent) {
             params.httpsAgent = JSON.parse(this.params.httpsAgent);
@@ -288,7 +287,7 @@ export default class RestEssenceProxy extends NullProvider {
         if (this.params.httpAgent) {
             params.httpAgent = JSON.parse(this.params.httpAgent);
         }
-        
+
         if (params.httpAgent) {
             const httpAgent = typeof params.httpAgent === "string" && (params.httpAgent as string).startsWith("{")
                 ? JSON.parse(params.httpAgent as string)
@@ -296,14 +295,14 @@ export default class RestEssenceProxy extends NullProvider {
 
             params.httpAgent = new HttpAgent(httpAgent);
         }
-        
+
         if (params.method === "GET") {
             delete params.data;
         }
-        
+
         if (this.log.isDebugEnabled()) {
             this.log.debug(
-                `Request: proxy params: ${JSON.stringify(params).substr(
+                `Request: proxy params: ${JSON.stringify(hiddenSecret(params)).substr(
                     0,
                     4000,
                 )}`,
@@ -393,8 +392,8 @@ export default class RestEssenceProxy extends NullProvider {
                                         ? []
                                         : JSON.parse(stripBOM(Buffer.concat(responseBuffer).toString("utf8")))
                                     : {
-                                            response_data: stripBOM(Buffer.concat(responseBuffer).toString("utf8")),
-                                        };
+                                        response_data: stripBOM(Buffer.concat(responseBuffer).toString("utf8")),
+                                    };
                                 resolveArr(parseData);
                             } catch (e) {
                                 this.log.error(

@@ -1,24 +1,24 @@
 import IOptions from "@ungate/plugininf/lib/db/IOptions";
 import PostgresDB from "@ungate/plugininf/lib/db/postgres/index";
-import { IPostgresDBConfig } from "@ungate/plugininf/lib/db/postgres/PostgresDB";
+import {IPostgresDBConfig} from "@ungate/plugininf/lib/db/postgres/PostgresDB";
 import BreakException from "@ungate/plugininf/lib/errors/BreakException";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
-import ICCTParams, { IParamsInfo } from "@ungate/plugininf/lib/ICCTParams";
+import ICCTParams, {IParamsInfo} from "@ungate/plugininf/lib/ICCTParams";
 import IContext from "@ungate/plugininf/lib/IContext";
 import IObjectParam from "@ungate/plugininf/lib/IObjectParam";
-import IQuery, { IGateQuery } from "@ungate/plugininf/lib/IQuery";
-import { IResultProvider } from "@ungate/plugininf/lib/IResult";
+import IQuery, {IGateQuery} from "@ungate/plugininf/lib/IQuery";
+import {IResultProvider} from "@ungate/plugininf/lib/IResult";
 import NullProvider, {
     IParamsProvider,
 } from "@ungate/plugininf/lib/NullProvider";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
-import { initParams } from "@ungate/plugininf/lib/util/Util";
-import { isEmpty } from "@ungate/plugininf/lib/util/Util";
-import { isObject, noop, pick } from "lodash";
+import {hiddenSecret, initParams} from "@ungate/plugininf/lib/util/Util";
+import {isEmpty} from "@ungate/plugininf/lib/util/Util";
+import {isObject, noop, pick} from "lodash";
 import * as request from "request";
 import * as URL from "url";
-import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
+import {ISessCtrl} from "@ungate/plugininf/lib/ISessCtrl";
 
 interface IResultSequence {
     res?: IResultProvider;
@@ -121,54 +121,54 @@ export default class CoreIntegration extends NullProvider {
             return conn
                 .executeStmt(
                     "with recursive ot_interface as (\n" +
-                        "select\n" +
-                        "    i.ck_id,\n" +
-                        "    i.ck_d_interface,\n" +
-                        "    i.ck_d_provider,\n" +
-                        "    i.cc_request,\n" +
-                        "    i.cc_response,\n" +
-                        "    i.cn_action,\n" +
-                        "    i.cv_url_request,\n" +
-                        "    i.cv_url_response,\n" +
-                        "    i.cv_description,\n" +
-                        "    1 as lvl,\n" +
-                        "    i.ck_parent\n" +
-                        "from\n" +
-                        "    s_it.t_interface i\n" +
-                        "where\n" +
-                        "    upper(i.ck_id) = upper(:ck_query)\n" +
-                        "union all\n" +
-                        "select\n" +
-                        "    i.ck_id,\n" +
-                        "    i.ck_d_interface,\n" +
-                        "    i.ck_d_provider,\n" +
-                        "    i.cc_request,\n" +
-                        "    i.cc_response,\n" +
-                        "    i.cn_action,\n" +
-                        "    i.cv_url_request,\n" +
-                        "    i.cv_url_response,\n" +
-                        "    i.cv_description,\n" +
-                        "    oi.lvl + 1 as lvl,\n" +
-                        "    i.ck_parent\n" +
-                        "from\n" +
-                        "    s_it.t_interface i\n" +
-                        "join ot_interface oi on\n" +
-                        "    oi.ck_id = i.ck_parent )\n" +
-                        "select\n" +
-                        "    ck_id,\n" +
-                        "    ck_d_interface,\n" +
-                        "    ck_d_provider,\n" +
-                        "    cc_request,\n" +
-                        "    cc_response,\n" +
-                        "    cn_action,\n" +
-                        "    cv_url_request,\n" +
-                        "    cv_url_response,\n" +
-                        "    cv_description,\n" +
-                        "    ck_parent\n" +
-                        "from\n" +
-                        "    ot_interface\n" +
-                        "order by\n" +
-                        "    lvl desc\n",
+                    "select\n" +
+                    "    i.ck_id,\n" +
+                    "    i.ck_d_interface,\n" +
+                    "    i.ck_d_provider,\n" +
+                    "    i.cc_request,\n" +
+                    "    i.cc_response,\n" +
+                    "    i.cn_action,\n" +
+                    "    i.cv_url_request,\n" +
+                    "    i.cv_url_response,\n" +
+                    "    i.cv_description,\n" +
+                    "    1 as lvl,\n" +
+                    "    i.ck_parent\n" +
+                    "from\n" +
+                    "    s_it.t_interface i\n" +
+                    "where\n" +
+                    "    upper(i.ck_id) = upper(:ck_query)\n" +
+                    "union all\n" +
+                    "select\n" +
+                    "    i.ck_id,\n" +
+                    "    i.ck_d_interface,\n" +
+                    "    i.ck_d_provider,\n" +
+                    "    i.cc_request,\n" +
+                    "    i.cc_response,\n" +
+                    "    i.cn_action,\n" +
+                    "    i.cv_url_request,\n" +
+                    "    i.cv_url_response,\n" +
+                    "    i.cv_description,\n" +
+                    "    oi.lvl + 1 as lvl,\n" +
+                    "    i.ck_parent\n" +
+                    "from\n" +
+                    "    s_it.t_interface i\n" +
+                    "join ot_interface oi on\n" +
+                    "    oi.ck_id = i.ck_parent )\n" +
+                    "select\n" +
+                    "    ck_id,\n" +
+                    "    ck_d_interface,\n" +
+                    "    ck_d_provider,\n" +
+                    "    cc_request,\n" +
+                    "    cc_response,\n" +
+                    "    cn_action,\n" +
+                    "    cv_url_request,\n" +
+                    "    cv_url_response,\n" +
+                    "    cv_description,\n" +
+                    "    ck_parent\n" +
+                    "from\n" +
+                    "    ot_interface\n" +
+                    "order by\n" +
+                    "    lvl desc\n",
                     {
                         ck_query: context.queryName,
                     },
@@ -243,7 +243,7 @@ export default class CoreIntegration extends NullProvider {
                                     queryData.ck_d_interface,
                                 ),
                             },
-                            { ...res.params, ...query.inParams },
+                            {...res.params, ...query.inParams},
                         );
                     }),
                 this.processIntegration(
@@ -260,7 +260,7 @@ export default class CoreIntegration extends NullProvider {
             .then(
                 async (res) => {
                     return res.row
-                        ? { stream: ResultStream([res.row]) }
+                        ? {stream: ResultStream([res.row])}
                         : res.res;
                 },
                 async (err) => {
@@ -296,11 +296,11 @@ export default class CoreIntegration extends NullProvider {
         if (gateContext.isDebugEnabled()) {
             gateContext.debug(
                 `step db cc_request sql: ${queryData.cc_request}` +
-                    `\ninParam: ${JSON.stringify(
-                        inParams,
-                    )}\noutParam: ${JSON.stringify(
-                        gateContext.query.outParams,
-                    )}`,
+                `\ninParam: ${JSON.stringify(
+                    hiddenSecret(inParams),
+                )}\noutParam: ${JSON.stringify(
+                    gateContext.query.outParams,
+                )}`,
             );
         }
         let executeRes = await gateContext.connection.executeStmt(
@@ -325,12 +325,11 @@ export default class CoreIntegration extends NullProvider {
             });
             if (gateContext.isDebugEnabled()) {
                 gateContext.debug(
-                    `step db cc_response sql: ${
-                        queryData.cc_response
-                    }\ninParam: ${JSON.stringify(responseInParams)}` +
-                        `\noutParam: ${JSON.stringify(
-                            gateContext.query.outParams,
-                        )}`,
+                    `step db cc_response sql: ${queryData.cc_response
+                    }\ninParam: ${JSON.stringify(hiddenSecret(responseInParams))}` +
+                    `\noutParam: ${JSON.stringify(
+                        gateContext.query.outParams,
+                    )}`,
                 );
             }
             executeRes = await gateContext.connection.executeStmt(
@@ -436,12 +435,12 @@ export default class CoreIntegration extends NullProvider {
                     method === "GET"
                         ? {
                             "cookie": gateContext.request.headers.cookie,
-                          }
+                        }
                         : {
                             "cookie": gateContext.request.headers.cookie,
                             "Content-Length": length,
                             "Content-Type": "application/json",
-                          },
+                        },
                     isEmpty(param.headers) ? {} : param.headers,
                 );
                 const params: request.Options = {
@@ -456,7 +455,7 @@ export default class CoreIntegration extends NullProvider {
                 }
                 if (gateContext.isDebugEnabled()) {
                     gateContext.debug(
-                        `step request params: ${JSON.stringify(params)}`,
+                        `step request params: ${JSON.stringify(hiddenSecret(params))}`,
                     );
                 }
                 request(params, (err, res, bodyResponse) => {

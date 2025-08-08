@@ -2,16 +2,16 @@
  * Created by artemov_i on 05.12.2018.
  */
 
-import { forEach, isObject, noop } from "lodash";
+import {forEach, isObject, noop} from "lodash";
 import * as oracledb from "oracledb";
-import { IRufusLogger } from "rufus";
-import { Readable, Transform, TransformCallback } from "stream";
-import { IParamsInfo } from "../../ICCTParams";
+import {IRufusLogger} from "rufus";
+import {Readable, Transform, TransformCallback} from "stream";
+import {IParamsInfo} from "../../ICCTParams";
 import IObjectParam from "../../IObjectParam";
-import { IResultProvider } from "../../IResult";
+import {IResultProvider} from "../../IResult";
 import Logger from "../../Logger";
-import { safePipe } from "../../stream/Util";
-import { initParams, isEmpty } from "../../util/Util";
+import {safePipe} from "../../stream/Util";
+import {hiddenSecret, initParams, isEmpty} from "../../util/Util";
 import Connection from "../Connection";
 import IOptions from "../IOptions";
 const re = /(?!\B'[^']*):(\w+)(?![^']*'\B)/gi;
@@ -120,18 +120,18 @@ export default class OracleDB {
                     {
                         ck_id: "NOTSET",
                     },
-                    { ck_id: "VERBOSE" },
-                    { ck_id: "DEBUG" },
-                    { ck_id: "INFO" },
-                    { ck_id: "WARNING" },
-                    { ck_id: "ERROR" },
-                    { ck_id: "CRITICAL" },
-                    { ck_id: "WARN" },
-                    { ck_id: "TRACE" },
-                    { ck_id: "FATAL" },
+                    {ck_id: "VERBOSE"},
+                    {ck_id: "DEBUG"},
+                    {ck_id: "INFO"},
+                    {ck_id: "WARNING"},
+                    {ck_id: "ERROR"},
+                    {ck_id: "CRITICAL"},
+                    {ck_id: "WARN"},
+                    {ck_id: "TRACE"},
+                    {ck_id: "FATAL"},
                 ],
                 type: "combo",
-                valueField: [{ in: "ck_id" }],
+                valueField: [{in: "ck_id"}],
             },
         };
     }
@@ -290,11 +290,11 @@ export default class OracleDB {
                     if (this.pool && this.log.isDebugEnabled()) {
                         this.log.debug(
                             `GetConnection Provider pool: ${this.pool.poolAlias},` +
-                                ` Connections open: ${this.pool.connectionsOpen}`,
+                            ` Connections open: ${this.pool.connectionsOpen}`,
                         );
                         this.log.debug(
                             `GetConnection Provider pool: ${this.pool.poolAlias},` +
-                                ` Connections in use: ${this.pool.connectionsInUse}`,
+                            ` Connections in use: ${this.pool.connectionsInUse}`,
                         );
                     }
                     const oconnect = await pool.getConnection();
@@ -310,11 +310,11 @@ export default class OracleDB {
         if (this.pool && this.log.isDebugEnabled()) {
             this.log.debug(
                 `GetConnection Provider pool: ${this.pool.poolAlias},` +
-                    ` Connections open: ${this.pool.connectionsOpen}`,
+                ` Connections open: ${this.pool.connectionsOpen}`,
             );
             this.log.debug(
                 `GetConnection Provider pool: ${this.pool.poolAlias},` +
-                    ` Connections in use: ${this.pool.connectionsInUse}`,
+                ` Connections in use: ${this.pool.connectionsInUse}`,
             );
         }
         return this.pool
@@ -348,17 +348,17 @@ export default class OracleDB {
                     }),
             );
             return pool
-                .getConnection()  
+                .getConnection()
                 .then((oconnect) => new Connection(this, "oracle", oconnect))
                 .catch((err) => {
                     return new Promise<Connection>((resolve, reject) => {
-                            setTimeout(() => {
-                                this.getConnectionNew(params).then(
-                                    resolve,
-                                    reject,
-                                );
-                            }, 1000);
-                        });
+                        setTimeout(() => {
+                            this.getConnectionNew(params).then(
+                                resolve,
+                                reject,
+                            );
+                        }, 1000);
+                    });
                 });
         }
         return this.oracledb
@@ -573,14 +573,11 @@ export default class OracleDB {
         const conn = inConnection
             ? inConnection
             : await this.getConnection().then(async (oconnect) =>
-                  oconnect.getCurrentConnection(),
-              );
+                oconnect.getCurrentConnection(),
+            );
         const isRelease = isEmpty(inConnection) || options.isRelease;
         if (this.pool && (this.log.isDebugEnabled() || this.log.isTraceEnabled())) {
-            const logParam = { ...params };
-            delete logParam.cv_password;
-            delete logParam.cv_hash_password;
-            delete logParam.pwd;
+            const logParam = hiddenSecret({...params});
             this.log.trace(
                 `execute sql:\n${sql}\nparams:\n${JSON.stringify(logParam)}`,
             );
@@ -764,22 +761,22 @@ export default class OracleDB {
                     value:
                         metaData[i].dbType === oracledb.DB_TYPE_NUMBER
                             ? (value) => {
-                                  let result = value;
-                                  if (value) {
-                                      if (
-                                          value.indexOf(",") > -1 ||
-                                          value.indexOf(".") > -1
-                                      ) {
-                                          result = value.replace(/,/g, ".");
-                                          if (result.indexOf(".") === 0) {
-                                              result = `0${result}`;
-                                          }
-                                      } else {
-                                          result = parseInt(value, 10);
-                                      }
-                                  }
-                                  return result;
-                              }
+                                let result = value;
+                                if (value) {
+                                    if (
+                                        value.indexOf(",") > -1 ||
+                                        value.indexOf(".") > -1
+                                    ) {
+                                        result = value.replace(/,/g, ".");
+                                        if (result.indexOf(".") === 0) {
+                                            result = `0${result}`;
+                                        }
+                                    } else {
+                                        result = parseInt(value, 10);
+                                    }
+                                }
+                                return result;
+                            }
                             : (value) => value,
                 };
             }

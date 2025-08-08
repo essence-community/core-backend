@@ -1,19 +1,19 @@
 import BreakException from "@ungate/plugininf/lib/errors/BreakException";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
-import { IParamsInfo } from "@ungate/plugininf/lib/ICCTParams";
-import IContext, { IFormData } from "@ungate/plugininf/lib/IContext";
-import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
-import { IResultProvider } from "@ungate/plugininf/lib/IResult";
+import {IParamsInfo} from "@ungate/plugininf/lib/ICCTParams";
+import IContext, {IFormData} from "@ungate/plugininf/lib/IContext";
+import {IGateQuery} from "@ungate/plugininf/lib/IQuery";
+import {IResultProvider} from "@ungate/plugininf/lib/IResult";
 import NullProvider from "@ungate/plugininf/lib/NullProvider";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
 import {
     ReadStreamToArray,
     safeResponsePipe,
 } from "@ungate/plugininf/lib/stream/Util";
-import { isEmpty } from "@ungate/plugininf/lib/util/Util";
+import {hiddenSecret, isEmpty} from "@ungate/plugininf/lib/util/Util";
 import * as fs from "fs";
 import * as JSONStream from "JSONStream";
-import { isArray, isBoolean } from "lodash";
+import {isArray, isBoolean} from "lodash";
 import * as QueryString from "qs";
 import * as request from "request";
 import * as url from "url";
@@ -151,7 +151,7 @@ export default class ProxyTransparent extends NullProvider {
         }
         if (gateContext.isDebugEnabled()) {
             gateContext.debug(
-                `proxy request params: ${JSON.stringify(params).substr(
+                `proxy request params: ${JSON.stringify(hiddenSecret(params)).substr(
                     0,
                     4000,
                 )}`,

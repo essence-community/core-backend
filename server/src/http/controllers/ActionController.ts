@@ -1,17 +1,17 @@
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
-import IContext, { IFormData } from "@ungate/plugininf/lib/IContext";
+import IContext, {IFormData} from "@ungate/plugininf/lib/IContext";
 import IProvider from "@ungate/plugininf/lib/IProvider";
-import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
+import {IGateQuery} from "@ungate/plugininf/lib/IQuery";
 import IResult from "@ungate/plugininf/lib/IResult";
 import NullSessProvider from "@ungate/plugininf/lib/NullSessProvider";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
-import { ReadStreamToArray } from "@ungate/plugininf/lib/stream/Util";
-import { isEmpty } from "@ungate/plugininf/lib/util/Util";
+import {ReadStreamToArray} from "@ungate/plugininf/lib/stream/Util";
+import {hiddenSecret, isEmpty} from "@ungate/plugininf/lib/util/Util";
 import * as fs from "fs";
-import { forEach, noop } from "lodash";
+import {forEach, noop} from "lodash";
 import Constants from "../../core/Constants";
-import PluginController, { IPlugins } from "./PluginController";
+import PluginController, {IPlugins} from "./PluginController";
 
 interface IActionOptions {
     gateContext: IContext;
@@ -101,7 +101,7 @@ class ActionController {
         if (!session) {
             throw new ErrorException(ErrorGate.AUTH_UNAUTHORIZED);
         }
-        gateContext.debug(`Success authorization: ${JSON.stringify(session)}`);
+        gateContext.debug(`Success authorization: ${JSON.stringify(hiddenSecret(session))}`);
         return {
             data: ResultStream([session]),
             type: "success",
@@ -126,8 +126,8 @@ class ActionController {
                         gateContext.metaData = isEmpty(data.metaData)
                             ? {}
                             : {
-                                  columnsBc: data.metaData,
-                              };
+                                columnsBc: data.metaData,
+                            };
                     }
                     resolve({
                         type: data.type || "success",
@@ -162,8 +162,8 @@ class ActionController {
                         gateContext.metaData = isEmpty(data.metaData)
                             ? {}
                             : {
-                                  columnsBc: data.metaData,
-                              };
+                                columnsBc: data.metaData,
+                            };
                     }
                     resolve({
                         type: data.type || "success",
@@ -248,19 +248,19 @@ class ActionController {
         return Promise.all(result)
             .then(
                 async (arr) =>
-                    ({
-                        data: ResultStream(
-                            arr && arr.length
-                                ? arr.reduce((ar, val) => [...ar, ...val], [])
-                                : [],
-                        ),
-                        type: "success",
-                    } as IResult),
+                ({
+                    data: ResultStream(
+                        arr && arr.length
+                            ? arr.reduce((ar, val) => [...ar, ...val], [])
+                            : [],
+                    ),
+                    type: "success",
+                } as IResult),
             )
             .catch((err) => {
                 gateContext.error(
                     `${gateContext.queryName},` +
-                        ` Upload.processDml(${query.queryStr}): ${err.message}`,
+                    ` Upload.processDml(${query.queryStr}): ${err.message}`,
                     err,
                 );
                 throw err;
@@ -276,12 +276,12 @@ class ActionController {
             provider
                 .processSql(gateContext, query)
                 .then((data) => {
-                    resolve({ type: data.type || "file", data: data.stream });
+                    resolve({type: data.type || "file", data: data.stream});
                 })
                 .catch((err) => {
                     gateContext.error(
                         `${gateContext.queryName},` +
-                            ` GetFile.handlerGetFile(${query.queryStr}): ${err.message}`,
+                        ` GetFile.handlerGetFile(${query.queryStr}): ${err.message}`,
                         err,
                     );
                     return reject(err);

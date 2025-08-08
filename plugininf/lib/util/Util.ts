@@ -4,21 +4,21 @@
 
 import BigNumberBase from "bignumber.js";
 import * as fs from "fs";
-import { forEach, isArray, isString, toNumber, toString } from "lodash";
+import {forEach, isArray, isString, toNumber, toString} from "lodash";
 import * as moment from "moment";
 import * as path from "path";
 import * as crypto from "crypto";
 import ErrorException from "../errors/ErrorException";
 import ErrorGate from "../errors/ErrorGate";
-import { IParamInfo, IParamsInfo } from "../ICCTParams";
+import {IParamInfo, IParamsInfo} from "../ICCTParams";
 import ICCTParams from "../ICCTParams";
 import IContext from "../IContext";
-import Constant from "../Constants";
+import Constant, {Constants} from "../Constants";
 import * as cu from "./cryptoUtil";
 
 const NULL_OPERATOR = ["null", "is null", "notnull", "not null", "is not null"];
 
-export function isEmpty (value: any, allowEmptyString: boolean = false) {
+export function isEmpty(value: any, allowEmptyString: boolean = false) {
     return (
         value == null ||
         (allowEmptyString ? false : value === "") ||
@@ -28,12 +28,12 @@ export function isEmpty (value: any, allowEmptyString: boolean = false) {
 
 export function stripBOM(content) {
     if (content.charCodeAt(0) === 0xFEFF) {
-      content = content.slice(1);
+        content = content.slice(1);
     }
     return content;
 }
 
-export function dateBetween (
+export function dateBetween(
     date: moment.Moment,
     startDate: moment.Moment,
     endDate: moment.Moment,
@@ -41,7 +41,7 @@ export function dateBetween (
     return date.isBetween(startDate, endDate, undefined, "[]");
 }
 
-function decryptAes (
+function decryptAes(
     type: crypto.CipherCCMTypes | crypto.CipherGCMTypes,
     data: string,
 ): string {
@@ -53,7 +53,7 @@ function decryptAes (
     return cu.decrypt(type, data, key);
 }
 
-function decryptUseKey (data: string): string {
+function decryptUseKey(data: string): string {
     return crypto
         .privateDecrypt(
             {
@@ -65,7 +65,7 @@ function decryptUseKey (data: string): string {
         .toString();
 }
 
-export function encryptAes (
+export function encryptAes(
     type: crypto.CipherCCMTypes | crypto.CipherGCMTypes,
     data: string,
 ): string {
@@ -83,7 +83,7 @@ export function encryptAes (
     return cu.encrypt(type, data, key);
 }
 
-export function encryptUseKey (data: string): string {
+export function encryptUseKey(data: string): string {
     if (!Constant.PW_RSA_SECRET) {
         throw new Error(
             "Not found private key, need init environment ESSENCE_PW_RSA",
@@ -105,7 +105,7 @@ export function encryptUseKey (data: string): string {
  * @param type
  * @returns
  */
-export function encryptPassword (
+export function encryptPassword(
     data: string,
     type = Constant.DEFAULT_ALG,
 ): string {
@@ -153,7 +153,7 @@ export function encryptPassword (
     }
 }
 
-export function decryptPassword (value: string) {
+export function decryptPassword(value: string) {
     if (
         typeof value !== "string" ||
         isEmpty(value) ||
@@ -182,7 +182,7 @@ export function decryptPassword (value: string) {
     }
 }
 
-function parseParam (conf: IParamInfo, value: any) {
+function parseParam(conf: IParamInfo, value: any) {
     switch (conf.type) {
         case "string":
         case "long_string":
@@ -280,13 +280,13 @@ function parseParam (conf: IParamInfo, value: any) {
  * @param param Параметры
  * @returns params Объект с параметрами
  */
-export function initParams (
+export function initParams(
     conf: IParamsInfo,
     param: ICCTParams = {},
     isExcludeRequire: boolean = false,
 ): any {
     const notFound = [];
-    const result = { ...param };
+    const result = {...param};
     forEach(conf, (value, key) => {
         if (!isEmpty(param[key])) {
             result[key] = parseParam(value, param[key]);
@@ -349,7 +349,7 @@ export interface IRecordFilter {
     property: string;
     value: any;
 }
-export function sortFilesData (
+export function sortFilesData(
     gateContext: IContext,
 ): (a: any, b: any) => number {
     if (isEmpty(gateContext.params.json)) {
@@ -372,7 +372,7 @@ export function sortFilesData (
                 if (isEmpty(item.property) || isEmpty(item.direction)) {
                     return val;
                 }
-                const { datatype, format = "3", property } = item;
+                const {datatype, format = "3", property} = item;
                 const nmColumn = property || "";
                 const direction = item.direction?.toUpperCase() || "ASC";
                 const val1 = obj1[nmColumn];
@@ -414,11 +414,11 @@ export function sortFilesData (
                 if (datatype === "integer" || datatype === "numeric") {
                     return direction === "ASC"
                         ? new BigNumber(val1 as any)
-                              .minus(new BigNumber(val2 as any))
-                              .toNumber()
+                            .minus(new BigNumber(val2 as any))
+                            .toNumber()
                         : new BigNumber(val2 as any)
-                              .minus(new BigNumber(val1 as any))
-                              .toNumber();
+                            .minus(new BigNumber(val1 as any))
+                            .toNumber();
                 }
                 if (typeof val1 === "string" && typeof val2 === "string") {
                     return (
@@ -434,7 +434,7 @@ export function sortFilesData (
     return (obj1: any, obj2: any): number => +(obj1 > obj2);
 }
 
-export function filterFilesData (gateContext: IContext): (a: any) => boolean {
+export function filterFilesData(gateContext: IContext): (a: any) => boolean {
     if (isEmpty(gateContext.params.json)) {
         return () => true;
     }
@@ -625,7 +625,7 @@ type TDebounce = (...arg) => void;
  * @param f {Function} Функция которая должна вызваться
  * @param t {number} Время в милиссекундах
  */
-export function throttle (f: TDebounce, t: number) {
+export function throttle(f: TDebounce, t: number) {
     let lastCall;
     return (...args) => {
         const previousCall = lastCall;
@@ -650,7 +650,7 @@ export interface IDebounce extends TDebounce {
  * @param f {Function} Функция которая должна вызваться
  * @param t {number} Время в милиссекундах
  */
-export function debounce (f: TDebounce, t: number): IDebounce {
+export function debounce(f: TDebounce, t: number): IDebounce {
     let lastCallTimer = null;
     let lastCall = null;
     const fn = (...args) => {
@@ -678,4 +678,20 @@ export function transformToBoolean(value: any): boolean {
     }
 
     return Boolean(value);
+}
+
+export function hiddenSecret<T>(param: T): T {
+    if (typeof param === "object" && Object.prototype.toString.call(param) === "[object Object]") {
+        return Object.keys(param).reduce((acc, key) => {
+            if (Constant.PASSWORD_PARAM_PREFIX.includes(key)) {
+                acc[key] = "***";
+            } else {
+                acc[key] = hiddenSecret(param[key]);
+            }
+            return acc;
+        }, {} as T);
+    } else if (isArray(param)) {
+        return param.map(hiddenSecret) as T;
+    }
+    return param;
 }
