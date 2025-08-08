@@ -47,7 +47,7 @@ export class Constants {
     /** Изменение Content-disposition для ответа на запрос файла */
     public RESPONSE_CONTENT_DISPOSITION = "answerContentDisposition";
     /** Префикс параметра с паролем */
-    public PASSWORD_PARAM_PREFIX = ["pwd", "cv_password", "cv_hash_password", "password", "pass", "passwd", "secret", "cv_password_hash", "cv_hash"];
+    public PASSWORD_PARAM_PREFIX = ["pwd", "cv_password", "cv_hash_password", "password", "pass", "passwd", "secret", "cv_password_hash", "cv_hash", "cv_token"];
     /** Имя или список через разделитель (запятая) имен плагинов для предварительной обработки */
     public PLUGIN_PARAM = "plugin";
     /** Наименование провайдера */
