@@ -1,27 +1,27 @@
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
-import ICCTParams, { IParamsInfo } from "@ungate/plugininf/lib/ICCTParams";
+import ICCTParams, {IParamsInfo} from "@ungate/plugininf/lib/ICCTParams";
 import IContext from "@ungate/plugininf/lib/IContext";
 import IQuery from "@ungate/plugininf/lib/IQuery";
-import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
-import ISession, { IUserData } from "@ungate/plugininf/lib/ISession";
+import {IGateQuery} from "@ungate/plugininf/lib/IQuery";
+import ISession, {IUserData} from "@ungate/plugininf/lib/ISession";
 import NullSessProvider, {
     IAuthResult,
 } from "@ungate/plugininf/lib/NullSessProvider";
-import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
-import { ICacheDb, ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
+import {initParams, isEmpty} from "@ungate/plugininf/lib/util/Util";
+import {ICacheDb, ISessCtrl} from "@ungate/plugininf/lib/ISessCtrl";
 import * as KeyCloak from "keycloak-connect";
-import { ITokenAuthParams } from "./TokenAuth.types";
-import { GrantAttacher } from "./Midleware";
+import {ITokenAuthParams} from "./TokenAuth.types";
+import {GrantAttacher} from "./Midleware";
 import BreakException from "@ungate/plugininf/lib/errors/BreakException";
-import { uniq } from "lodash";
+import {uniq} from "lodash";
 import * as fs from "fs";
-import { Constant } from "@ungate/plugininf/lib/Constants";
+import {Constant} from "@ungate/plugininf/lib/Constants";
 import * as Token from "keycloak-connect/middleware/auth-utils/token";
 import * as URL from "url";
-import { GrantManager } from "./GrantManager";
-import { Agent as HttpsAgent, AgentOptions } from "https";
-import { Agent as HttpAgent } from "http";
+import {GrantManager} from "./GrantManager";
+import {Agent as HttpsAgent, AgentOptions} from "https";
+import {Agent as HttpAgent} from "http";
 import * as crypto from 'crypto';
 import ILocalDB from "@ungate/plugininf/lib/db/local/ILocalDB";
 
@@ -205,7 +205,7 @@ export default class TokenAuth extends NullSessProvider {
                         allownew: "new#",
                         query: "MTGetPageAction",
                         displayField: "cn_action",
-                        valueField: [{ in: "cn_action" }],
+                        valueField: [{in: "cn_action"}],
                         querymode: "remote",
                         queryparam: "cn_action",
                         idproperty: "cn_action",
@@ -258,7 +258,7 @@ export default class TokenAuth extends NullSessProvider {
         }
 
         if (this.params.httpsAgent) {
-            const httpsAgent: AgentOptions = typeof this.params.httpsAgent =="string" && (
+            const httpsAgent: AgentOptions = typeof this.params.httpsAgent == "string" && (
                 this.params.httpsAgent as string
             ).startsWith("{")
                 ? JSON.parse(this.params.httpsAgent as string)
@@ -359,10 +359,10 @@ export default class TokenAuth extends NullSessProvider {
                 }
                 const access_token = (grant.access_token as any)?.token;
                 const access_token_hash = crypto
-                        .createHash("md5")
-                        .update(access_token || "")
+                    .createHash("md5")
+                    .update(access_token || "")
                     .digest("hex");
-                
+
                 if (
                     session &&
                     session.sessionData.access_token_hash === access_token_hash
@@ -439,7 +439,7 @@ export default class TokenAuth extends NullSessProvider {
         context: IContext,
         grant: KeyCloak.Grant,
         grantManager: GrantManager,
-    ): Promise<{ userData: IUserData; idUser: string }> {
+    ): Promise<{userData: IUserData; idUser: string}> {
         const token: Token = grant.access_token;
         const userInfo =
             grantManager.realmUrl && grantManager.userInfoUrl
@@ -472,14 +472,14 @@ export default class TokenAuth extends NullSessProvider {
         if (typeof dataUser.ca_actions === "string") {
             dataUser.ca_actions =
                 (dataUser.ca_actions as string).startsWith("[") &&
-                (dataUser.ca_actions as string).endsWith("]")
+                    (dataUser.ca_actions as string).endsWith("]")
                     ? JSON.parse(dataUser.ca_actions)
                     : dataUser.ca_actions;
         }
         if (typeof dataUser.ca_role === "string") {
             dataUser.ca_role =
                 (dataUser.ca_role as string).startsWith("[") &&
-                (dataUser.ca_role as string).endsWith("]")
+                    (dataUser.ca_role as string).endsWith("]")
                     ? JSON.parse(dataUser.ca_role)
                     : dataUser.ca_role;
         }
@@ -523,7 +523,7 @@ export default class TokenAuth extends NullSessProvider {
         }
         dataUser.ca_role = uniq(dataUser.ca_role);
         dataUser.ca_role = uniq(dataUser.ca_role);
-        return { userData: dataUser, idUser };
+        return {userData: dataUser, idUser};
     }
     private async redirectAccess(context: IContext): Promise<any> {
         const redirectUrl = URL.parse(this.params.redirectUrl, true);
@@ -562,44 +562,44 @@ export default class TokenAuth extends NullSessProvider {
             return this.redirectAccess(context);
         }
         return this.grantManager.obtainDirectly(
-                query.inParams.cv_login,
-                query.inParams.cv_password
-            ).then( async ([grant, headers]: [KeyCloak.Grant, Record<string, any>]) => {
-                const dataUser = await this.generateUserData(
-                    context,
-                    grant,
-                    this.grantManager,
-                );
-                const access_token = (grant.access_token as any)?.token;
-                const access_token_hash = crypto
-                        .createHash("md5")
-                        .update(access_token || "")
-                    .digest("hex");
-                await this.sessCtrl.addUser(
-                            dataUser.idUser,
-                            this.name,
-                            dataUser.userData,
-                        );
-                await this.sessCtrl.updateHashAuth();
-                if (headers) {
-                    Object.entries(headers).forEach(([key, value]) => {
-                        if (key.toLocaleLowerCase() === 'set-cookie') {
-                            context.extraHeaders = { [key]: value };
-                        }
-                    });
-                }
-                return {
-                    idUser: dataUser.idUser,
-                    dataUser: dataUser.userData,
-                    sessionData: {
-                        access_token: this.params.isSaveToken ? access_token : undefined,
-                        access_token_hash: access_token_hash,
-                    },
-                };
-            }).catch((errFind) => {
-                this.log.error(errFind);
-                return this.redirectAccess(context);
-            });
+            query.inParams.cv_login,
+            query.inParams.cv_password
+        ).then(async ([grant, headers]: [KeyCloak.Grant, Record<string, any>]) => {
+            const dataUser = await this.generateUserData(
+                context,
+                grant,
+                this.grantManager,
+            );
+            const access_token = (grant.access_token as any)?.token;
+            const access_token_hash = crypto
+                .createHash("md5")
+                .update(access_token || "")
+                .digest("hex");
+            await this.sessCtrl.addUser(
+                dataUser.idUser,
+                this.name,
+                dataUser.userData,
+            );
+            await this.sessCtrl.updateHashAuth();
+            if (headers) {
+                Object.entries(headers).forEach(([key, value]) => {
+                    if (key.toLocaleLowerCase() === 'set-cookie') {
+                        context.extraHeaders = {[key]: value};
+                    }
+                });
+            }
+            return {
+                idUser: dataUser.idUser,
+                dataUser: dataUser.userData,
+                sessionData: {
+                    access_token: this.params.isSaveToken ? access_token : undefined,
+                    access_token_hash: access_token_hash,
+                },
+            };
+        }).catch((errFind) => {
+            this.log.error(errFind);
+            return this.redirectAccess(context);
+        });
     }
     /**
      * Инициализация контекста
