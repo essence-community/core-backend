@@ -95,6 +95,17 @@ export default abstract class NullSessProvider extends NullProvider {
         super(name, params, sessCtrl);
         this.log = Logger.getLogger(`SessProvider.${name}`);
         this.params = initParams(NullSessProvider.getParamsInfo(), this.params);
+        if (
+            typeof this.params === "object" &&
+            this.params.lvl_logger &&
+            this.params.lvl_logger !== "NOTSET"
+        ) {
+            const rootLogger = Logger.getRootLogger();
+            this.log.setLevel(this.params.lvl_logger);
+            for (const handler of rootLogger._handlers) {
+                this.log.addHandler(handler);
+            }
+        }
     }
     public async beforeSession(
         context: IContext,
