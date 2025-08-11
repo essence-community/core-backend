@@ -1,19 +1,19 @@
-import { isString } from "lodash";
+import {isString} from "lodash";
 import * as moment from "moment";
 import ErrorException from "./errors/ErrorException";
 import ErrorGate from "./errors/ErrorGate";
-import { IParamsInfo } from "./ICCTParams";
+import {IParamsInfo} from "./ICCTParams";
 import ICCTParams from "./ICCTParams";
 import IContext from "./IContext";
 import IObjectParam from "./IObjectParam";
-import IQuery, { IGateQuery } from "./IQuery";
-import { IResultProvider } from "./IResult";
+import IQuery, {IGateQuery} from "./IQuery";
+import {IResultProvider} from "./IResult";
 import ISession from "./ISession";
 import NullProvider from "./NullProvider";
-import { IParamsProvider } from "./NullProvider";
-import { isEmpty } from "./util/Util";
-import { ISessCtrl, ICreateSessionParam } from "./ISessCtrl";
-import { initParams } from "@ungate/plugininf/lib/util/Util";
+import {IParamsProvider} from "./NullProvider";
+import {isEmpty} from "./util/Util";
+import {ISessCtrl, ICreateSessionParam} from "./ISessCtrl";
+import {initParams} from "@ungate/plugininf/lib/util/Util";
 import Logger from "./Logger";
 
 export interface IAuthResult {
@@ -26,10 +26,10 @@ export interface ISessProviderParam extends IParamsProvider {
     sessionDuration: number;
     idKey: string;
     typeCheckAuth:
-        | "cookie"
-        | "session"
-        | "cookieandsession"
-        | "cookieorsession";
+    | "cookie"
+    | "session"
+    | "cookieandsession"
+    | "cookieorsession";
 }
 export default abstract class NullSessProvider extends NullProvider {
     public static getParamsInfo(): IParamsInfo {
@@ -53,14 +53,34 @@ export default abstract class NullSessProvider extends NullProvider {
                 name: "Auth check",
                 type: "combo",
                 displayField: "ck_id",
-                valueField: [{ in: "ck_id" }],
+                valueField: [{in: "ck_id"}],
                 records: [
-                    { ck_id: "cookie" },
-                    { ck_id: "session" },
-                    { ck_id: "cookieandsession" },
-                    { ck_id: "cookieorsession" },
+                    {ck_id: "cookie"},
+                    {ck_id: "session"},
+                    {ck_id: "cookieandsession"},
+                    {ck_id: "cookieorsession"},
                 ],
                 defaultValue: "session",
+            },
+            lvl_logger: {
+                displayField: "ck_id",
+                name: "Level logger",
+                records: [
+                    {
+                        ck_id: "NOTSET",
+                    },
+                    {ck_id: "VERBOSE"},
+                    {ck_id: "DEBUG"},
+                    {ck_id: "INFO"},
+                    {ck_id: "WARNING"},
+                    {ck_id: "ERROR"},
+                    {ck_id: "CRITICAL"},
+                    {ck_id: "WARN"},
+                    {ck_id: "TRACE"},
+                    {ck_id: "FATAL"},
+                ],
+                type: "combo",
+                valueField: [{in: "ck_id"}],
             },
         };
     }
@@ -154,7 +174,7 @@ export default abstract class NullSessProvider extends NullProvider {
             context,
             idUser,
             nameProvider: this.name,
-            userData: { ...dataUser, ...userData },
+            userData: {...dataUser, ...userData},
             sessionDuration,
             sessionData: {
                 ...sessionData,
@@ -162,7 +182,7 @@ export default abstract class NullSessProvider extends NullProvider {
                 typeCheckAuth: this.params.typeCheckAuth || "session",
             },
         });
-        return this.params.onlySession ? { session: session.session } : session;
+        return this.params.onlySession ? {session: session.session} : session;
     }
     public async destroy(): Promise<void> {
         return;
