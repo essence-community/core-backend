@@ -57,6 +57,7 @@ export class GrantManager {
             password,
             grant_type: "password",
             scope: scopeParam || "openid",
+            client_secret: this.secret,
         };
         const handler = createHandler(this, true);
         const options = postOptions(this);
@@ -69,6 +70,7 @@ export class GrantManager {
             code,
             grant_type: "authorization_code",
             client_id: this.clientId,
+            client_secret: this.secret,
         };
         const handler = createHandler(this);
         const options = postOptions(this);
