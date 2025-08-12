@@ -1,18 +1,18 @@
 /* tslint:disable:object-literal-sort-keys */
-import { isString, noop } from "lodash";
-import { IRufusLogger } from "rufus";
+import {isString, noop} from "lodash";
+import {IRufusLogger} from "rufus";
 import ErrorGate from "./errors/ErrorGate";
-import { ISessCtrl } from "./ISessCtrl";
-import ICCTParams, { IParamsInfo } from "./ICCTParams";
+import {ISessCtrl} from "./ISessCtrl";
+import ICCTParams, {IParamsInfo} from "./ICCTParams";
 import IContext from "./IContext";
-import IContextPlugin, { IContextPluginResult } from "./IContextPlugin";
-import { IContextParams } from "./IContextPlugin";
-import { IGateQuery } from "./IQuery";
+import IContextPlugin, {IContextPluginResult} from "./IContextPlugin";
+import {IContextParams} from "./IContextPlugin";
+import {IGateQuery} from "./IQuery";
 import IResult from "./IResult";
 import Logger from "./Logger";
 import ResultStream from "./stream/ResultStream";
-import { initParams } from "./util/Util";
-import { AuditService } from "./audit/AuditService";
+import {initParams} from "./util/Util";
+import {AuditService} from "./audit/AuditService";
 
 const findRegEx = new RegExp("^/(?<reg>[\x5cs\x5cS]*)/(?<key>[gimy]*)$");
 const logger = Logger.getLogger("NullContext");
@@ -28,7 +28,7 @@ export default abstract class NullContext implements IContextPlugin {
             enableCors: {
                 defaultValue: true,
                 name: "Включаем защиту Cors",
-                setGlobal: [{ out: "g_context_cors" }],
+                setGlobal: [{out: "g_context_cors"}],
                 type: "boolean",
             },
             cors: {
@@ -105,7 +105,7 @@ export default abstract class NullContext implements IContextPlugin {
                 defaultValue: true,
                 name: "Включаем защиту helmet",
                 description: "Helmet: https://www.npmjs.com/package/helmet",
-                setGlobal: [{ out: "g_context_helmet" }],
+                setGlobal: [{out: "g_context_helmet"}],
                 type: "boolean",
             },
             helmet: {
@@ -117,7 +117,7 @@ export default abstract class NullContext implements IContextPlugin {
                 required: true,
                 defaultValue: "{}",
                 checkvalue: (value) => {
-                    if (typeof value === "string") {
+                    if (typeof value === "string" && value.length > 0) {
                         try {
                             return JSON.parse(value);
                         } catch (e) {
@@ -176,8 +176,8 @@ export default abstract class NullContext implements IContextPlugin {
                             "Control the result of unsetting req.session (through delete, setting to null, etc.).",
                         type: "combo",
                         displayField: "ck_id",
-                        valueField: [{ in: "ck_id" }],
-                        records: [{ ck_id: "keep" }, { ck_id: "destroy" }],
+                        valueField: [{in: "ck_id"}],
+                        records: [{ck_id: "keep"}, {ck_id: "destroy"}],
                         defaultValue: "keep",
                     },
                     typeStore: {
@@ -185,9 +185,9 @@ export default abstract class NullContext implements IContextPlugin {
                         description: "NeDB|TypeOrm",
                         type: "combo",
                         displayField: "ck_id",
-                        setGlobal: [{ out: "g_session_type_store" }],
-                        valueField: [{ in: "ck_id" }],
-                        records: [{ ck_id: "nedb" }, { ck_id: "typeorm" }],
+                        setGlobal: [{out: "g_session_type_store"}],
+                        valueField: [{in: "ck_id"}],
+                        records: [{ck_id: "nedb"}, {ck_id: "typeorm"}],
                         defaultValue: "nedb",
                     },
                     typeorm: {
@@ -200,17 +200,17 @@ export default abstract class NullContext implements IContextPlugin {
                                 name: "Session store typeorm type",
                                 type: "combo",
                                 displayField: "ck_id",
-                                valueField: [{ in: "ck_id" }],
+                                valueField: [{in: "ck_id"}],
                                 records: [
-                                    { ck_id: "postgres" },
-                                    { ck_id: "mongodb" },
-                                    { ck_id: "cockroachdb" },
-                                    { ck_id: "mysql" },
-                                    { ck_id: "mariadb" },
-                                    { ck_id: "sqlite" },
-                                    { ck_id: "capacitor" },
-                                    { ck_id: "cordova" },
-                                    { ck_id: "mssql" },
+                                    {ck_id: "postgres"},
+                                    {ck_id: "mongodb"},
+                                    {ck_id: "cockroachdb"},
+                                    {ck_id: "mysql"},
+                                    {ck_id: "mariadb"},
+                                    {ck_id: "sqlite"},
+                                    {ck_id: "capacitor"},
+                                    {ck_id: "cordova"},
+                                    {ck_id: "mssql"},
                                 ],
                                 defaultValue: "postgres",
                             },
@@ -299,11 +299,11 @@ export default abstract class NullContext implements IContextPlugin {
                                     "Specifies the boolean value for the Secure Set-Cookie attribute. When truthy, the Secure attribute is set, otherwise it is not. By default, the Secure attribute is not set.",
                                 type: "combo",
                                 displayField: "ck_id",
-                                valueField: [{ in: "value" }],
+                                valueField: [{in: "value"}],
                                 records: [
-                                    { ck_id: "true", value: true },
-                                    { ck_id: "false", value: false },
-                                    { ck_id: "auto", value: "auto" },
+                                    {ck_id: "true", value: true},
+                                    {ck_id: "false", value: false},
+                                    {ck_id: "auto", value: "auto"},
                                 ],
                                 defaultValue: false,
                                 checkvalue: (value) => {
@@ -324,13 +324,13 @@ export default abstract class NullContext implements IContextPlugin {
                                     "https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis-03#section-4.1.2.7",
                                 type: "combo",
                                 displayField: "ck_id",
-                                valueField: [{ in: "value" }],
+                                valueField: [{in: "value"}],
                                 records: [
-                                    { ck_id: "true", value: true },
-                                    { ck_id: "false", value: false },
-                                    { ck_id: "lax", value: "lax" },
-                                    { ck_id: "none", value: "none" },
-                                    { ck_id: "strict", value: "strict" },
+                                    {ck_id: "true", value: true},
+                                    {ck_id: "false", value: false},
+                                    {ck_id: "lax", value: "lax"},
+                                    {ck_id: "none", value: "none"},
+                                    {ck_id: "strict", value: "strict"},
                                 ],
                                 checkvalue: (value) => {
                                     if (typeof value === "string") {
@@ -382,9 +382,9 @@ export default abstract class NullContext implements IContextPlugin {
                 description: "TypeOrm",
                 type: "combo",
                 displayField: "ck_id",
-                setGlobal: [{ out: "g_session_audit_type_store" }],
-                valueField: [{ in: "ck_id" }],
-                records: [{ ck_id: "typeorm" }],
+                setGlobal: [{out: "g_session_audit_type_store"}],
+                valueField: [{in: "ck_id"}],
+                records: [{ck_id: "typeorm"}],
             },
             auditTypeorm: {
                 name: "session type store",
@@ -396,17 +396,17 @@ export default abstract class NullContext implements IContextPlugin {
                         name: "Audit typeorm type",
                         type: "combo",
                         displayField: "ck_id",
-                        valueField: [{ in: "ck_id" }],
+                        valueField: [{in: "ck_id"}],
                         records: [
-                            { ck_id: "postgres" },
-                            { ck_id: "mongodb" },
-                            { ck_id: "cockroachdb" },
-                            { ck_id: "mysql" },
-                            { ck_id: "mariadb" },
-                            { ck_id: "sqlite" },
-                            { ck_id: "capacitor" },
-                            { ck_id: "cordova" },
-                            { ck_id: "mssql" },
+                            {ck_id: "postgres"},
+                            {ck_id: "mongodb"},
+                            {ck_id: "cockroachdb"},
+                            {ck_id: "mysql"},
+                            {ck_id: "mariadb"},
+                            {ck_id: "sqlite"},
+                            {ck_id: "capacitor"},
+                            {ck_id: "cordova"},
+                            {ck_id: "mssql"},
                         ],
                         defaultValue: "postgres",
                     },
@@ -459,18 +459,18 @@ export default abstract class NullContext implements IContextPlugin {
                     {
                         ck_id: "NOTSET",
                     },
-                    { ck_id: "VERBOSE" },
-                    { ck_id: "DEBUG" },
-                    { ck_id: "INFO" },
-                    { ck_id: "WARNING" },
-                    { ck_id: "ERROR" },
-                    { ck_id: "CRITICAL" },
-                    { ck_id: "WARN" },
-                    { ck_id: "TRACE" },
-                    { ck_id: "FATAL" },
+                    {ck_id: "VERBOSE"},
+                    {ck_id: "DEBUG"},
+                    {ck_id: "INFO"},
+                    {ck_id: "WARNING"},
+                    {ck_id: "ERROR"},
+                    {ck_id: "CRITICAL"},
+                    {ck_id: "WARN"},
+                    {ck_id: "TRACE"},
+                    {ck_id: "FATAL"},
                 ],
                 type: "combo",
-                valueField: [{ in: "ck_id" }],
+                valueField: [{in: "ck_id"}],
             },
         };
     }
