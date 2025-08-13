@@ -1,18 +1,19 @@
 import NullPlugin from "@ungate/plugininf/lib/NullPlugin";
 import IResult from "@ungate/plugininf/lib/IResult";
 import IContext from "@ungate/plugininf/lib/IContext";
-import { IPluginRequestContext } from "@ungate/plugininf/lib/IPlugin";
+import {IPluginRequestContext} from "@ungate/plugininf/lib/IPlugin";
 import * as XLSX from "xlsx-js-style";
-import ICCTParams, { IParamsInfo } from "@ungate/plugininf/lib/ICCTParams";
-import { getColumnName } from "./Util";
+import ICCTParams, {IParamsInfo} from "@ungate/plugininf/lib/ICCTParams";
+import {getColumnName} from "./Util";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
-import { ReadStreamToArray } from "@ungate/plugininf/lib/stream/Util";
-import { isEmpty, transformToBoolean } from "@ungate/plugininf/lib/util/Util";
+import {ReadStreamToArray} from "@ungate/plugininf/lib/stream/Util";
+import {isEmpty, transformToBoolean} from "@ungate/plugininf/lib/util/Util";
+import {deepParam} from "@ungate/plugininf/lib/util/deepParam";
 import * as moment from "moment";
 import * as path from "path";
 import * as fs from "fs";
 import Constant from "@ungate/plugininf/lib/Constants";
-import { v4 as uuid } from 'uuid';
+import {v4 as uuid} from 'uuid';
 
 interface IColumn {
     cv_description?: string;
@@ -102,21 +103,21 @@ export default class GridToExcel extends NullPlugin {
                     numFmt: "@",
                 }
             })),
-            ...rows.map((row) => jsonbc.columns.map((col) => this.formatValue(col, row[col.column]))),
+            ...rows.map((row) => jsonbc.columns.map((col) => this.formatValue(col, deepParam(col.column, row)))),
         ], {
             cellStyles: true,
         });
-        ws["!autofilter"] = { ref: `A1:${getColumnName(jsonbc.columns.length)}1` };
-        ws["!cols"] = jsonbc.columns.map(() => ({ width: 30 }));
+        ws["!autofilter"] = {ref: `A1:${getColumnName(jsonbc.columns.length)}1`};
+        ws["!cols"] = jsonbc.columns.map(() => ({width: 30}));
         XLSX.utils.book_append_sheet(wb, ws, jsonbc.cv_displayed || "Export");
         const userData = gateContext.session?.userData;
         const temp = path.resolve(
             Constant.UPLOAD_DIR,
             `export_excel_${uuid()}.xlsx`,
         );
-        if(!wb.Props) wb.Props = {};
+        if (!wb.Props) wb.Props = {};
         wb.Props.CreatedDate = new Date();
-        wb.Props.Author = userData ?`${userData.cv_surname?userData.cv_surname:""}${userData.cv_name?" "+userData.cv_name:""}${userData.cv_patronymic?" "+userData.cv_patronymic:""}${userData.cv_email?" ("+userData.cv_email+")":""}` : "essence";
+        wb.Props.Author = userData ? `${userData.cv_surname ? userData.cv_surname : ""}${userData.cv_name ? " " + userData.cv_name : ""}${userData.cv_patronymic ? " " + userData.cv_patronymic : ""}${userData.cv_email ? " (" + userData.cv_email + ")" : ""}` : "essence";
         XLSX.writeFile(wb, temp, {
             cellStyles: true,
             Props: {
