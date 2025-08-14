@@ -435,8 +435,8 @@ begin
     return '{"ck_id":"","cv_error":' || pkg.p_form_response() || '}';
   end if;
   -- логируем данные
-  pc_json = jsonb_insert(pc_json, '{data,cv_hash_password}', to_jsonb('*'));
-  pc_json = jsonb_insert(pc_json, '{data,cv_salt}', to_jsonb('*'));
+  pc_json = jsonb_set(pc_json, '{data,cv_hash_password}', to_jsonb('*'::text), true);
+  pc_json = jsonb_set(pc_json, '{data,cv_salt}', to_jsonb('*'::text), true);
   perform pkg_log.p_save(pv_user, pv_session, pc_json, 'pkg_json_account.f_modify_account', vot_account.ck_id::varchar, vv_action);
   return '{"ck_id":"' || coalesce(vot_account.ck_id::varchar, '') || '","cv_error":' || pkg.p_form_response() || '}';
 end;$BODY$;
