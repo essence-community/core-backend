@@ -1,17 +1,16 @@
-import ICCTParams, { IParamsInfo } from "@ungate/plugininf/lib/ICCTParams";
-import IContext, { IFile, IFormData } from "@ungate/plugininf/lib/IContext";
-import { IPluginRequestContext } from "@ungate/plugininf/lib/IPlugin";
-import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
+import ICCTParams, {IParamsInfo} from "@ungate/plugininf/lib/ICCTParams";
+import IContext, {IFile, IFormData} from "@ungate/plugininf/lib/IContext";
+import {IPluginRequestContext} from "@ungate/plugininf/lib/IPlugin";
+import {IGateQuery} from "@ungate/plugininf/lib/IQuery";
 import IResult from "@ungate/plugininf/lib/IResult";
 import NullPlugin from "@ungate/plugininf/lib/NullPlugin";
-import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
-import { deepParam } from "@ungate/plugininf/lib/util/deepParam";
-import { IOPARenderParams, IOPAEval } from "./OPARender.types";
-import { LocalOPARender } from "./LocalOPARender";
-import { HTTPOPARender } from "./HTTPOPARender";
+import {initParams, isEmpty} from "@ungate/plugininf/lib/util/Util";
+import {deepParam} from "@ungate/plugininf/lib/util/deepParam";
+import {IOPARenderParams, IOPAEval} from "./OPARender.types";
+import {LocalOPARender} from "./LocalOPARender";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
-import { ReadStreamToArray } from "@ungate/plugininf/lib/stream/Util";
-import { isString } from "lodash";
+import {ReadStreamToArray} from "@ungate/plugininf/lib/stream/Util";
+import {isString} from "lodash";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
 
@@ -23,11 +22,11 @@ export default class OPARender extends NullPlugin {
                 type: "combo",
                 required: true,
                 name: "Тип запуска",
-                setGlobal: [{ out: "g_opa_fk_type" }],
-                valueField: [{ in: "fkId" }],
+                setGlobal: [{out: "g_opa_fk_type"}],
+                valueField: [{in: "fkId"}],
                 displayField: "fvId",
                 records: [
-                    { fkId: "local", fvId: "Локально EVAL" },
+                    {fkId: "local", fvId: "Локально EVAL"},
                     // { fkId: "local_http", fvId: "Локально HTTP" },
                     // { fkId: "remote", fvId: "HTTP Pool" },
                 ],
@@ -146,10 +145,7 @@ export default class OPARender extends NullPlugin {
         super(name, params);
         this.params = initParams(OPARender.getParamsInfo(), params, true);
         this.logger.debug("params", this.params);
-        this.controller =
-            this.params.fkType === "local"
-                ? new LocalOPARender(this.params, this.logger)
-                : new HTTPOPARender(this.params, this.logger);
+        this.controller = new LocalOPARender(this.params, this.logger);
         if (this.params.flBefore) {
             this.beforeQueryExecutePerform = async (
                 gateContext: IContext,
@@ -159,17 +155,17 @@ export default class OPARender extends NullPlugin {
                 const inParam = {
                     jt_inparam:
                         typeof gateContext.request.body === "object" &&
-                        (gateContext.request.body as IFormData).files
+                            (gateContext.request.body as IFormData).files
                             ? {
-                                  ...query.inParams,
-                                  ...(gateContext.request.body as IFormData)
-                                      .files,
-                              }
+                                ...query.inParams,
+                                ...(gateContext.request.body as IFormData)
+                                    .files,
+                            }
                             : query.inParams,
                     jt_query:
                         isString(query.queryStr) &&
-                        (query.queryStr.trim().startsWith("{") ||
-                            query.queryStr.trim().startsWith("["))
+                            (query.queryStr.trim().startsWith("{") ||
+                                query.queryStr.trim().startsWith("["))
                             ? JSON.parse(query.queryStr)
                             : query.queryStr,
                 };
@@ -194,17 +190,17 @@ export default class OPARender extends NullPlugin {
                     jt_result: resStream,
                     jt_inparam:
                         typeof gateContext.request.body === "object" &&
-                        (gateContext.request.body as IFormData).files
+                            (gateContext.request.body as IFormData).files
                             ? {
-                                  ...gateContext.query.inParams,
-                                  ...(gateContext.request.body as IFormData)
-                                      .files,
-                              }
+                                ...gateContext.query.inParams,
+                                ...(gateContext.request.body as IFormData)
+                                    .files,
+                            }
                             : gateContext.query.inParams,
                     jt_query:
                         isString(gateContext.query.queryStr) &&
-                        (gateContext.query.queryStr.trim().startsWith("{") ||
-                            gateContext.query.queryStr.trim().startsWith("["))
+                            (gateContext.query.queryStr.trim().startsWith("{") ||
+                                gateContext.query.queryStr.trim().startsWith("["))
                             ? JSON.parse(gateContext.query.queryStr)
                             : gateContext.query.queryStr,
                 };

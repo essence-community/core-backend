@@ -34,27 +34,6 @@ export function getDir(dir: string) {
 
     return path.resolve(dir);
 }
-export const deleteFolderRecursive = (pathDir: string) => {
-    if (fs.existsSync(pathDir)) {
-        if (fs.lstatSync(pathDir).isDirectory()) {
-            fs.readdirSync(pathDir).forEach((file) => {
-                const curPath = path.join(pathDir, file);
-
-                if (fs.lstatSync(curPath).isDirectory()) {
-                    // recursive
-                    deleteFolderRecursive(curPath);
-                } else {
-                    // delete file
-                    fs.unlinkSync(curPath);
-                }
-            });
-            fs.rmdirSync(pathDir);
-
-            return;
-        }
-        fs.unlinkSync(pathDir);
-    }
-};
 (rl as any)._writeToOutput = function _writeToOutput(stringToWrite) {
     /* tslint:disable:triple-equals */
     if (!(rl as any).stdoutMuted || (rl as any).questionStr == stringToWrite) {

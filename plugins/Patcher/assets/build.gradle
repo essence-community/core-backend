@@ -32,12 +32,12 @@ System.setProperty("liquibase.allowDuplicatedChangesetIdentifiers", "true")
 
 liquibase {
   activities {
-    meta {
-      changeLogFile 'db.changelog.meta.xml'
-      defaultsFile 'liquibase.meta.properties'
+    schema {
+      changeLogFile 'db.changelog.xml'
+      defaultsFile 'liquibase.properties'
     }
   }
-  runList = 'meta'
+  runList = 'schema'
 }
 
 project.ext.getProperties().each { key, value ->

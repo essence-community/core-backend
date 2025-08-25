@@ -5,7 +5,7 @@
  * Learn more about Gradle by exploring our samples at https://docs.gradle.org/7.1.1/samples
  */
 plugins {
-  id 'org.liquibase.gradle' version '2.1.0'
+  id 'org.liquibase.gradle' version '2.2.2'
 }
 
 repositories {
@@ -19,14 +19,16 @@ configurations {
 }
 
 dependencies {
-  liquibaseRuntime 'org.liquibase:liquibase-core:4.6.1'
-  liquibaseRuntime 'org.liquibase:liquibase-groovy-dsl:3.0.2'
-  liquibaseRuntime 'info.picocli:picocli:4.6.1'
-  liquibaseRuntime 'org.postgresql:postgresql:42.3.1'
+  liquibaseRuntime 'org.liquibase:liquibase-core:4.33.0'
+  liquibaseRuntime 'org.liquibase:liquibase-groovy-dsl:4.0.1'
+  liquibaseRuntime 'info.picocli:picocli:4.7.7'
+  liquibaseRuntime 'org.postgresql:postgresql:42.7.7'
   liquibaseRuntime 'javax.xml.bind:jaxb-api:2.3.1'
-  liquibaseRuntime 'ch.qos.logback:logback-core:1.2.7'
-  liquibaseRuntime 'ch.qos.logback:logback-classic:1.2.7'
+  liquibaseRuntime 'ch.qos.logback:logback-core:1.5.18'
+  liquibaseRuntime 'ch.qos.logback:logback-classic:1.5.18'
 }
+
+System.setProperty("liquibase.allowDuplicatedChangesetIdentifiers", "true")
 
 liquibase {
   activities {
@@ -42,15 +44,18 @@ liquibase {
   runList = 'meta,schema'
 }
 
-project.ext.getProperties().each {
-    if (it.key.startsWith('liquibase')) {
-        var key = it.key.replace('liquibase.','')
-        var value = it.value
-        liquibase.activities.each {
-            it.arguments.put(key, value)
-        }
+project.ext.getProperties().each { key, value ->
+    if (key.startsWith('liquibase.')) {
+      liquibase.activities.each {
+        it.arguments.put(key.replace('liquibase.', ''), value)
+      }
     }
-    if (it.key == 'runList') {
-        liquibase.runList = it.value
+    if (key.startsWith('liquibaseP.')) {
+      liquibase.activities.each {
+        it.parameters.put(key.replace('liquibaseP.', ''), value)
+      }
+    }
+    if (key == 'runList') {
+      liquibase.runList = value
     }
 }
