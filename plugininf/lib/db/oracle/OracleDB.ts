@@ -17,6 +17,7 @@ import IOptions from "../IOptions";
 const re = /(?!\B'[^']*):(\w+)(?![^']*'\B)/gi;
 
 export interface IOracleDBConfig {
+    poolTimeout?: number;
     user: string;
     password: string;
     connectString: string;
@@ -90,6 +91,11 @@ export default class OracleDB {
             poolMin: {
                 defaultValue: 0,
                 name: "Минимальное колличество конектов к БД в пуле",
+                type: "integer",
+            },
+            poolTimeout: {
+                defaultValue: 60,
+                name: "Время ожидания конекта в пуле в секундах",
                 type: "integer",
             },
             prefetchRows: {
@@ -252,6 +258,9 @@ export default class OracleDB {
                         this.connectionConfig.queueTimeout ||
                         OracleDB.getParamsInfo().queueTimeout.defaultValue as number,
                     user: this.connectionConfig.user,
+                    poolTimeout:
+                        this.connectionConfig.poolTimeout ||
+                        OracleDB.getParamsInfo().poolTimeout.defaultValue as number,
                 })
                 .then((pool) => {
                     this.pool = pool;
