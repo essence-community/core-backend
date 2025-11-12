@@ -183,7 +183,7 @@ export default class OracleDB {
             this.connectionConfig.prefetchRows ||
             OracleDB.getParamsInfo().prefetchRows.defaultValue as number;
         this.oracledb.stmtCacheSize = 200;
-        this.oracledb.poolIncrement = 5;
+        this.oracledb.poolIncrement = 1;
         if (!isEmpty(params.queryTimeout)) {
             this.queryTimeout = params.queryTimeout * 1000;
         } else {
