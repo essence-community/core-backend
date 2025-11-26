@@ -2,13 +2,13 @@ import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
 import ICCTParams from "@ungate/plugininf/lib/ICCTParams";
 import IParamsInfo from "@ungate/plugininf/lib/ICCTParams";
-import IContext, { IFile } from "@ungate/plugininf/lib/IContext";
-import { IPluginRequestContext } from "@ungate/plugininf/lib/IPlugin";
-import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
+import IContext, {IFile} from "@ungate/plugininf/lib/IContext";
+import {IPluginRequestContext} from "@ungate/plugininf/lib/IPlugin";
+import {IGateQuery} from "@ungate/plugininf/lib/IQuery";
 import IResult from "@ungate/plugininf/lib/IResult";
 import NullPlugin from "@ungate/plugininf/lib/NullPlugin";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
-import { sendProcess } from "@ungate/plugininf/lib/util/ProcessSender";
+import {sendProcess} from "@ungate/plugininf/lib/util/ProcessSender";
 import {
     deleteFolderRecursive,
     isEmpty,
@@ -18,17 +18,17 @@ import * as crypto from "crypto";
 import * as fs from "fs";
 import * as moment from "moment";
 import * as path from "path";
-import { Readable } from "stream";
-import { v4 as uuid } from "uuid";
-import { patchUser } from "./user/UserPatch";
-import { DirStorage } from "./DirStorage";
-import { patchIntegr } from "./integr/IntegrPatch";
-import { patchMeta } from "./meta/MetaPatch";
-import { IPluginParams, IStorage } from "./Patcher.types";
-import { IJson } from "./Patcher.types";
-import { S3Storage } from "./S3Storage";
-import { Constant } from "@ungate/plugininf/lib/Constants";
-import { patchReport } from "./report/ReportPatch";
+import {Readable} from "stream";
+import {v4 as uuid} from "uuid";
+import {patchUser} from "./user/UserPatch";
+import {DirStorage} from "./DirStorage";
+import {patchIntegr} from "./integr/IntegrPatch";
+import {patchMeta} from "./meta/MetaPatch";
+import {IPluginParams, IStorage} from "./Patcher.types";
+import {IJson} from "./Patcher.types";
+import {S3Storage} from "./S3Storage";
+import {Constant} from "@ungate/plugininf/lib/Constants";
+import {patchReport} from "./report/ReportPatch";
 
 export class Patcher extends NullPlugin implements IStorage {
     public static getParamsInfo(): IParamsInfo {
@@ -130,13 +130,17 @@ export class Patcher extends NullPlugin implements IStorage {
                 Constant.UPLOAD_DIR,
                 `patch_temp_${uuid()}`,
             );
-            fs.mkdirSync(temp, { recursive: true });
+            fs.mkdirSync(temp, {recursive: true});
             const zip = new Zip();
             zip.addLocalFile(path.join(__dirname, "assets", "update"));
             zip.addLocalFile(path.join(__dirname, "assets", "update.bat"));
+            zip.addLocalFile(path.join(__dirname, "assets", "build.gradle"));
+            zip.addLocalFile(path.join(__dirname, "assets", "gradlew"));
+            zip.addLocalFile(path.join(__dirname, "assets", "gradlew.bat"));
+            zip.addLocalFile(path.join(__dirname, "assets", "settings.gradle"));
             zip.addLocalFolder(
-                path.join(__dirname, "assets", "liquibase"),
-                "liquibase",
+                path.join(__dirname, "assets", "gradle"),
+                "gradle",
             );
             const include: string[] = [];
             let nameBd: string = "core";
@@ -169,9 +173,9 @@ export class Patcher extends NullPlugin implements IStorage {
                 "liquibase.properties",
                 Buffer.from(
                     "driver: org.postgresql.Driver\n" +
-                        `url: jdbc:postgresql://127.0.0.1:5432/${nameBd}\n` +
-                        "username: s_su\n" +
-                        "password: s_su\n",
+                    `url: jdbc:postgresql://127.0.0.1:5432/${nameBd}\n` +
+                    "username: s_su\n" +
+                    "password: s_su\n",
                     "utf-8",
                 ),
             );
@@ -179,15 +183,15 @@ export class Patcher extends NullPlugin implements IStorage {
                 "db.changelog.xml",
                 Buffer.from(
                     '<?xml version="1.0" encoding="UTF-8"?>\n' +
-                        "<databaseChangeLog\n" +
-                        '  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"\n' +
-                        '  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n' +
-                        '  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog\n' +
-                        '         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">\n' +
-                        include.reduce((res, str) => {
-                            return `${res}        <include file="./${str}" />\n`;
-                        }, "") +
-                        "</databaseChangeLog>",
+                    "<databaseChangeLog\n" +
+                    '  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"\n' +
+                    '  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n' +
+                    '  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog\n' +
+                    '         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">\n' +
+                    include.reduce((res, str) => {
+                        return `${res}        <include file="./${str}" />\n`;
+                    }, "") +
+                    "</databaseChangeLog>",
                 ),
             );
             zip.writeZip();
