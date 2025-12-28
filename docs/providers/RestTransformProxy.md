@@ -1,7 +1,9 @@
 # Универсальный провайдер вызова внешних сервисов
 
 ## 1. Подключение провайдера
+
 Пример настроек t_providers.toml
+
 ```toml
 [[data]]
 ck_id = "example"
@@ -13,10 +15,13 @@ cv_description = "Пример"
   timeout = 660
   defaultGateUrl = "http://localhost:3000"
 ```
+
 ![Пример](./images/settings-resttransformproxy.png)
 
 ## 2. Сервис
+
 Создаем сервис или метод модификации, с телом
+
 ```json
 {
     method: 'POST',
@@ -27,6 +32,7 @@ cv_description = "Пример"
     resultRowParse: '{ck_id: jt_result_row.id, name: jt_result_row.data.project, jn_total_cnt: jt_result_row.total, data: jt_result_row.data}',
 }
 ```
+
 method - метод вызова
 
 url - путь вызова
@@ -103,6 +109,7 @@ callRequest - функция дополнительного вызова сер�
 }, 'test')[0] },
 }
 ```
+
 ### Доступные переменные
 
 jt_in_param - входные переменные
@@ -114,6 +121,8 @@ jt_request_method - входной метод
 jt_provider_params - переменные настройки провайдера
 
 jt_extra_params - дополнительные настройки задданые в настройках провайдера
+
+jt_query_params - входные заголовки query
 
 #### в методе resultParse и breakResult доступен
 
