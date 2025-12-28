@@ -944,7 +944,8 @@ export default class RestTransformProxy extends NullProvider {
                 }
                 return resolve(result);
             } catch (err) {
-                reject(err);
+                this.log.error(`Ошибка вызова внешнего сервиса ${name} ${config.url}`, err);
+                reject(new ErrorException(101, "Ошибка вызова внешнего сервиса"));
             }
         });
     }
