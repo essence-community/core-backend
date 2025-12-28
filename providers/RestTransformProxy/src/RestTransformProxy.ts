@@ -258,6 +258,7 @@ export default class RestTransformProxy extends NullProvider {
             jt_request_method: gateContext.request.method,
             jt_provider_params: this.params,
             jt_extra_params: this.extraParam,
+            jt_query_params: query.inParams,
         };
         let result = [];
         let type;

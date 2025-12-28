@@ -3,10 +3,11 @@ import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import IContext from "@ungate/plugininf/lib/IContext";
 import IObjectParam from "@ungate/plugininf/lib/IObjectParam";
 import IProvider from "@ungate/plugininf/lib/IProvider";
-import IQuery, { IGateQuery } from "@ungate/plugininf/lib/IQuery";
-import { IInParamArray, IOutParamArray } from "@ungate/plugininf/lib/IQuery";
-import { forEach } from "lodash";
+import IQuery, {IGateQuery} from "@ungate/plugininf/lib/IQuery";
+import {IInParamArray, IOutParamArray} from "@ungate/plugininf/lib/IQuery";
+import {forEach} from "lodash";
 import Constants from "./Constants";
+const FIND_SYMBOL = new RegExp("[\\`\\~/\\.\\\\\\!\\-#%\\?&\\^\\(\\)\\[\\]\\;\\:\"\\'\\+\\*]+", "g");
 
 export default class WSQuery implements IGateQuery {
     public connection: Connection;
@@ -45,7 +46,10 @@ export default class WSQuery implements IGateQuery {
                         : gateContext.session.userData[key];
             });
         }
-        this.queryAllParams = { ...gateContext.params, ...inParam };
+        Object.entries(gateContext.request.headers).forEach(([key, value]) => {
+            inParam[`request_header_${key.toLowerCase().replace(FIND_SYMBOL, "_")}`] = value;
+        });
+        this.queryAllParams = {...gateContext.params, ...inParam};
     }
     public prepareParams(provider: IProvider) {
         const paramsArr = Object.entries(this.queryAllParams);
