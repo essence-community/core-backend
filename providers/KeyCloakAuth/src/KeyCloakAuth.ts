@@ -476,6 +476,7 @@ export default class KeyCloakAuth extends NullSessProvider {
                 return this.redirectAccess(gateContext);
             }
             const access_token = (grant.access_token as any)?.token;
+            const refresh_token = (grant.refresh_token as any)?.token;
             const access_token_hash = crypto
                 .createHash("md5")
                 .update(access_token || "")
@@ -495,6 +496,7 @@ export default class KeyCloakAuth extends NullSessProvider {
                 sessionData: {
                     access_token: this.params.isSaveToken ? access_token : undefined,
                     access_token_hash: access_token_hash,
+                    refresh_token: this.params.isSaveToken ? refresh_token : undefined,
                 },
             });
             if (sess) {
