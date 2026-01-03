@@ -466,7 +466,7 @@ export default class KeyCloakAuth extends NullSessProvider {
                 };
             }
             (gateContext.request as IRequestExtra).kauth = {};
-            const redirectUrl = URL.parse(this.params.redirectUrl, true);
+            const redirectUrl = data.query.redirect_uri ? URL.parse(decodeURIComponent(data.query.redirect_uri), true) : URL.parse(this.params.redirectUrl, true);
             redirectUrl.query[this.params.flagRedirect] = "1";
             gateContext.request.session.auth_redirect_uri =
                 URL.format(redirectUrl);
