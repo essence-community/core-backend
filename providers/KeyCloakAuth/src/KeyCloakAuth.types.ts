@@ -1,8 +1,8 @@
-import { IRequest } from "@ungate/plugininf/lib/IContext";
+import {IRequest} from "@ungate/plugininf/lib/IContext";
 import * as KeyCloak from "keycloak-connect";
-import { ISessProviderParam } from "@ungate/plugininf/lib/NullSessProvider";
-import { Agent as HttpsAgent } from "https";
-import { Agent as HttpAgent } from "http";
+import {ISessProviderParam} from "@ungate/plugininf/lib/NullSessProvider";
+import {Agent as HttpsAgent} from "https";
+import {Agent as HttpAgent} from "http";
 
 export interface IGrantMap {
     grant: string;
@@ -21,6 +21,7 @@ export interface IUserInfoMap {
 
 export interface IKeyCloakAuthParams extends ISessProviderParam {
     grantManagerConfig: IGrantManagerConfig;
+    grantManagerConfigs?: IGrantManagerConfig[];
     keyCloakParamName: string;
     redirectUrl: string;
     mapKeyCloakGrantRole?: IGrantRoleMap[];
@@ -33,6 +34,7 @@ export interface IKeyCloakAuthParams extends ISessProviderParam {
     httpAgent?: string;
     httpsAgent?: string;
     isSaveToken?: boolean;
+    needRefreshToken?: boolean;
 }
 
 export interface IRequestExtra extends IRequest {

@@ -21,6 +21,7 @@ import {uniq, forEach} from 'lodash';
 import * as fs from "fs";
 import {Constant} from "@ungate/plugininf/lib/Constants";
 import * as Token from "keycloak-connect/middleware/auth-utils/token";
+import * as Grant from "keycloak-connect/middleware/auth-utils/grant";
 import {GrantManager} from "./util/GrantManager";
 import * as crypto from 'crypto';
 import {Agent as HttpsAgent, AgentOptions} from "https";
@@ -64,6 +65,7 @@ export default class KeyCloakAuth extends NullSessProvider {
                     realmUrl: {
                         name: "URL Realm",
                         type: "string",
+                        required: true,
                     },
                     proxyUrl: {
                         name: "Proxy URL Realm",
@@ -116,6 +118,83 @@ export default class KeyCloakAuth extends NullSessProvider {
                     idpHint: {
                         name: "kc_idp_hint login url",
                         type: "string",
+                    },
+                },
+            },
+            grantManagerConfigs: {
+                type: "form_repeater",
+                name: "Grant Manager Configs",
+                childs: {
+                    grantManagerConfig: {
+                        name: "Manager",
+                        type: "form_nested",
+                        childs: {
+                            clientId: {
+                                name: "Client ID | Resource",
+                                type: "string",
+                                required: true,
+                            },
+                            realmUrl: {
+                                name: "URL Realm",
+                                type: "string",
+                                required: true,
+                            },
+                            proxyUrl: {
+                                name: "Proxy URL Realm",
+                                type: "string",
+                            },
+                            userInfoUrl: {
+                                name: "URL User Info",
+                                type: "string",
+                            },
+                            tokenUrl: {
+                                name: "URL Token",
+                                type: "string",
+                            },
+                            tokenVerifyUrl: {
+                                name: "URL Token Verification",
+                                type: "string",
+                            },
+                            secret: {
+                                name: "Secret",
+                                type: "password",
+                            },
+                            publicKey: {
+                                name: "Realm public key",
+                                type: "long_string",
+                            },
+                            public: {
+                                name: "Public client",
+                                type: "boolean",
+                                defaultValue: false,
+                            },
+                            bearerOnly: {
+                                name: "Bearer only",
+                                type: "boolean",
+                                defaultValue: true,
+                            },
+                            verifyTokenAudience: {
+                                name: "Verify Token Audience",
+                                type: "boolean",
+                                defaultValue: true,
+                            },
+                            isIgnoreCheckSignature: {
+                                name: "Ignore check sig",
+                                type: "boolean"
+                            },
+                            scope: {
+                                name: "Scope",
+                                description: "Example: openid profile",
+                                type: "string",
+                            },
+                            idpHint: {
+                                name: "kc_idp_hint login url",
+                                type: "string",
+                            },
+                        },
+                        defaultValue: {
+                            clientId: "client_id",
+                        },
                     },
                 },
             },
@@ -206,6 +285,11 @@ export default class KeyCloakAuth extends NullSessProvider {
                 type: "boolean",
                 defaultValue: false,
             },
+            needRefreshToken: {
+                name: "Need refresh token",
+                type: "boolean",
+                defaultValue: true,
+            },
             mapKeyCloakGrant: {
                 type: "form_repeater",
                 name: "Grant Map Action",
@@ -234,6 +318,7 @@ export default class KeyCloakAuth extends NullSessProvider {
     public params: IKeyCloakAuthParams;
     private grantManager: GrantManager;
     private dbCache: ILocalDB<ICacheDb>;
+    private grantManagers: Record<string, GrantManager>;
 
     constructor(
         name: string,
@@ -343,6 +428,12 @@ export default class KeyCloakAuth extends NullSessProvider {
             this.params.grantManagerConfig,
             this.log,
         );
+        if (this.params.grantManagerConfigs) {
+            this.grantManagers = this.params.grantManagerConfigs.reduce((acc, config) => {
+                acc[config.realmUrl] = new GrantManager(config, this.log);
+                return acc;
+            }, {});
+        }
     }
     /**
      * Проверка на случай если авторизация вынесена на внешний прокси nginx
@@ -435,66 +526,9 @@ export default class KeyCloakAuth extends NullSessProvider {
         ) {
             gateContext.debug("KeyCloak Init grant");
 
-            return GrantAttacher(gateContext, this.grantManager)
-                .then(async (grant) => {
-                    if (!grant) {
-                        throw new Error("Not Auth");
-                    }
-                    const access_token = (grant.access_token as any)?.token;
-                    const access_token_hash = crypto
-                        .createHash("md5")
-                        .update(access_token || "")
-                        .digest("hex");
-                    if (
-                        session &&
-                        session.sessionData.access_token_hash === access_token_hash
-                    ) {
-                        return session;
-                    }
-                    const dataUser = await this.generateUserData(grant, this.grantManager);
-                    if (!session) {
-                        await this.sessCtrl.addUser(
-                            dataUser.idUser,
-                            this.name,
-                            dataUser.userData,
-                        );
-                        await this.sessCtrl.updateHashAuth();
-                        const sess = await this.createSession({
-                            context: gateContext,
-                            idUser: dataUser.idUser,
-                            userData: dataUser.userData,
-                            isAccessErrorNotFound: false,
-                            sessionData: {
-                                access_token: this.params.isSaveToken ? access_token : undefined,
-                                access_token_hash: access_token_hash,
-                            },
-                        });
-
-                        return this.sessCtrl.loadSession(
-                            gateContext,
-                            sess.session,
-                        );
-                    }
-                    gateContext.request.session.gsession.userData = {
-                        ...gateContext.request.session.gsession.userData,
-                        ...dataUser.userData,
-                    };
-                    session.userData = {
-                        ...session.userData,
-                        ...dataUser.userData,
-                    };
-                    session.sessionData.access_token_hash = access_token_hash;
-                    gateContext.request.session.gsession.sessionData.access_token_hash = access_token_hash;
-                    if (this.params.isSaveToken) {
-                        session.sessionData.access_token = access_token;
-                        gateContext.request.session.gsession.sessionData.access_token = access_token;
-                    }
-                    await this.sessCtrl.addUser(
-                        dataUser.idUser,
-                        this.name,
-                        dataUser.userData,
-                    );
-                    return session;
+            return GrantAttacher(gateContext, this.grantManager, this.grantManagers)
+                .then((grant) => {
+                    return this.updateToken(gateContext, grant, session);
                 })
                 .catch(async (err) => {
                     gateContext.warn("KeyCloak Auth Error", err);
@@ -518,6 +552,93 @@ export default class KeyCloakAuth extends NullSessProvider {
         ) {
             return this.redirectAccess(gateContext);
         }
+        if (session &&
+            session.nameProvider === this.name &&
+            this.params.needRefreshToken &&
+            session.sessionData.access_token &&
+            session.sessionData.refresh_token
+        ) {
+            const access_token = new Token(session.sessionData.access_token);
+            const refresh_token = new Token(session.sessionData.refresh_token);
+            const grant = new Grant({
+                access_token: access_token,
+                refresh_token: refresh_token,
+            });
+            if (access_token.isExpired() && refresh_token.isExpired()) {
+                return this.redirectAccess(gateContext);
+            }
+            if (!access_token.isExpired()) {
+                return session;
+            }
+            const grantManager = this.grantManagers[access_token.content.realm] || this.grantManager;
+            const grantNew = await grantManager.ensureFreshness(grant);
+            return this.updateToken(gateContext, grantNew, session);
+        }
+        return session;
+    }
+    private async updateToken(gateContext: IContext, grant: KeyCloak.Grant, session: ISession): Promise<ISession> {
+        if (!grant) {
+            throw new Error("Not Auth");
+        }
+        const access_token = (grant.access_token as any)?.token;
+        const refresh_token = (grant.refresh_token as any)?.token;
+        const access_token_hash = crypto
+            .createHash("md5")
+            .update(access_token || "")
+            .digest("hex");
+        if (
+            session &&
+            session.sessionData.access_token_hash === access_token_hash
+        ) {
+            return session;
+        }
+        const grantManager = this.grantManagers[access_token.content.realm] || this.grantManager;
+        const dataUser = await this.generateUserData(grant, grantManager);
+        if (!session) {
+            await this.sessCtrl.addUser(
+                dataUser.idUser,
+                this.name,
+                dataUser.userData,
+            );
+            await this.sessCtrl.updateHashAuth();
+            const sess = await this.createSession({
+                context: gateContext,
+                idUser: dataUser.idUser,
+                userData: dataUser.userData,
+                isAccessErrorNotFound: false,
+                sessionData: {
+                    access_token: this.params.isSaveToken ? access_token : undefined,
+                    access_token_hash: access_token_hash,
+                    refresh_token: this.params.isSaveToken ? refresh_token : undefined,
+                },
+            });
+
+            return this.sessCtrl.loadSession(
+                gateContext,
+                sess.session,
+            );
+        }
+        gateContext.request.session.gsession.userData = {
+            ...gateContext.request.session.gsession.userData,
+            ...dataUser.userData,
+        };
+        session.userData = {
+            ...session.userData,
+            ...dataUser.userData,
+        };
+        session.sessionData.access_token_hash = access_token_hash;
+        gateContext.request.session.gsession.sessionData.access_token_hash = access_token_hash;
+        if (this.params.isSaveToken) {
+            session.sessionData.access_token = access_token;
+            gateContext.request.session.gsession.sessionData.access_token = access_token;
+            session.sessionData.refresh_token = refresh_token;
+            gateContext.request.session.gsession.sessionData.refresh_token = refresh_token;
+        }
+        await this.sessCtrl.addUser(
+            dataUser.idUser,
+            this.name,
+            dataUser.userData,
+        );
         return session;
     }
     private async generateUserData(
@@ -649,6 +770,7 @@ export default class KeyCloakAuth extends NullSessProvider {
                 this.grantManager,
             );
             const access_token = (grant.access_token as any)?.token;
+            const refresh_token = (grant.refresh_token as any)?.token;
             const access_token_hash = crypto
                 .createHash("md5")
                 .update(access_token || "")
@@ -671,6 +793,7 @@ export default class KeyCloakAuth extends NullSessProvider {
                 dataUser: dataUser.userData,
                 sessionData: {
                     access_token: this.params.isSaveToken ? access_token : undefined,
+                    refresh_token: this.params.isSaveToken ? refresh_token : undefined,
                     access_token_hash: access_token_hash,
                 },
             };

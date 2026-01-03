@@ -2,8 +2,8 @@ import * as KeyCloak from "keycloak-connect";
 import * as Token from "keycloak-connect/middleware/auth-utils/token";
 import * as Signature from "keycloak-connect/middleware/auth-utils/signature";
 import IContext from "@ungate/plugininf/lib/IContext";
-import { IRequestExtra, IKeyCloakAuthParam } from "./KeyCloakAuth.types";
-import { GrantManager } from "./util/GrantManager";
+import {IRequestExtra, IKeyCloakAuthParam} from "./KeyCloakAuth.types";
+import {GrantManager} from "./util/GrantManager";
 
 export async function PostAuth(
     gateContext: IContext,
@@ -27,6 +27,7 @@ export async function PostAuth(
 export async function GrantAttacher(
     gateContext: IContext,
     grantManager: GrantManager,
+    grantManagers: Record<string, GrantManager>,
 ): Promise<KeyCloak.Grant | null> {
     const header = gateContext.request.headers.authorization;
     let accessToken;
@@ -34,15 +35,19 @@ export async function GrantAttacher(
         accessToken = JSON.stringify({
             access_token: header.substring(7),
         });
+        const token = new Token(accessToken);
+        if (token.content.realm) {
+            grantManager = grantManagers[token.content.realm] || grantManager;
+        }
     } else if (header && header.substring(0, 6).toLowerCase().indexOf("basic ") === 0) {
         const basic = Buffer.from(
-                    header.substring(6),
-                    "base64",
-            ).toString("ascii");
+            header.substring(6),
+            "base64",
+        ).toString("ascii");
         const split = basic.indexOf(":");
         return grantManager.obtainDirectly(
             basic.substring(0, split),
-            basic.substring(split+1)
+            basic.substring(split + 1)
         ).then(async ([grant, headers]: [KeyCloak.Grant, Record<string, any>]) => grant);
     }
     if (gateContext.isDebugEnabled()) {
