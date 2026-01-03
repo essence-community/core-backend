@@ -17,10 +17,11 @@ import {
     // @ts-ignore
 } from "estree";
 import Logger from "../Logger";
-import { isEmpty } from "../util/Util";
+import {isEmpty} from "../util/Util";
 import * as util from "util";
 import * as QS from "qs";
 import * as YAML from "js-yaml";
+import * as UUID from "uuid";
 
 interface IGetValue {
     get: (key: string) => any;
@@ -29,11 +30,11 @@ interface IGetValue {
 export interface IParseReturnType {
     runer<
         T =
-            | Record<string, undefined | string | boolean | number>
-            | undefined
-            | string
-            | boolean
-            | number,
+        | Record<string, undefined | string | boolean | number>
+        | undefined
+        | string
+        | boolean
+        | number,
     >(
         values?: Record<string, any> | IGetValue,
     ): Promise<T>;
@@ -49,44 +50,44 @@ interface IValues {
 const logger = Logger.getLogger("parser");
 
 const operators: any = {
-    "!": async ({ argument }: UnaryExpression, values: IValues) =>
+    "!": async ({argument}: UnaryExpression, values: IValues) =>
         !(await parseOperations(argument, values)),
-    "!=": async ({ left, right }: LogicalExpression, values: IValues) =>
+    "!=": async ({left, right}: LogicalExpression, values: IValues) =>
         // eslint-disable-next-line eqeqeq
         (await parseOperations(left, values)) !=
         (await parseOperations(right, values)),
-    "!==": async ({ left, right }: LogicalExpression, values: IValues) =>
+    "!==": async ({left, right}: LogicalExpression, values: IValues) =>
         (await parseOperations(left, values)) !==
         (await parseOperations(right, values)),
-    "&&": async ({ left, right }: LogicalExpression, values: IValues) =>
+    "&&": async ({left, right}: LogicalExpression, values: IValues) =>
         (await parseOperations(left, values)) &&
         (await parseOperations(right, values)),
-    "+": async ({ left, right }: LogicalExpression, values: IValues) =>
+    "+": async ({left, right}: LogicalExpression, values: IValues) =>
         (await parseOperations(left, values)) +
         (await parseOperations(right, values)),
-    "-": async ({ left, right }: LogicalExpression, values: IValues) =>
+    "-": async ({left, right}: LogicalExpression, values: IValues) =>
         (await parseOperations(left, values)) -
         (await parseOperations(right, values)),
-    "*": async ({ left, right }: LogicalExpression, values: IValues) =>
+    "*": async ({left, right}: LogicalExpression, values: IValues) =>
         (await parseOperations(left, values)) *
         (await parseOperations(right, values)),
-    "/": async ({ left, right }: LogicalExpression, values: IValues) =>
+    "/": async ({left, right}: LogicalExpression, values: IValues) =>
         (await parseOperations(left, values)) /
         (await parseOperations(right, values)),
-    "<": async ({ left, right }: LogicalExpression, values: IValues) =>
+    "<": async ({left, right}: LogicalExpression, values: IValues) =>
         (await parseOperations(left, values)) <
         (await parseOperations(right, values)),
-    "==": async ({ left, right }: LogicalExpression, values: IValues) =>
+    "==": async ({left, right}: LogicalExpression, values: IValues) =>
         // eslint-disable-next-line eqeqeq
         (await parseOperations(left, values)) ==
         (await parseOperations(right, values)),
-    "===": async ({ left, right }: LogicalExpression, values: IValues) =>
+    "===": async ({left, right}: LogicalExpression, values: IValues) =>
         (await parseOperations(left, values)) ===
         (await parseOperations(right, values)),
-    ">": async ({ left, right }: LogicalExpression, values: IValues) =>
+    ">": async ({left, right}: LogicalExpression, values: IValues) =>
         (await parseOperations(left, values)) >
         (await parseOperations(right, values)),
-    in: async ({ left, right }: LogicalExpression, values: IValues) => {
+    in: async ({left, right}: LogicalExpression, values: IValues) => {
         let value = await parseOperations(right, values);
         if (
             typeof value === "string" &&
@@ -105,7 +106,7 @@ const operators: any = {
             ) !== -1
         );
     },
-    "||": async ({ left, right }: LogicalExpression, values: IValues) =>
+    "||": async ({left, right}: LogicalExpression, values: IValues) =>
         (await parseOperations(left, values)) ||
         (await parseOperations(right, values)),
 };
@@ -124,6 +125,8 @@ const utils = {
     Promise,
     moment,
     Buffer,
+    UUID,
+    Math,
 };
 
 async function parseOperations(
@@ -162,9 +165,9 @@ async function parseOperations(
             ) {
                 const value = await (values.get
                     ? // @ts-ignore
-                      values.get(expression.value, true)
+                    values.get(expression.value, true)
                     : // @ts-ignore
-                      values[expression.value]);
+                    values[expression.value]);
 
                 return value === 0 ? value : value || expression.value;
             }
@@ -188,9 +191,9 @@ async function parseOperations(
             }
             const value = await (values.get
                 ? // @ts-ignore
-                  values.get(expression.name, true)
+                values.get(expression.name, true)
                 : // @ts-ignore
-                  values[expression.name]);
+                values[expression.name]);
 
             return value === 0
                 ? value
@@ -253,27 +256,27 @@ async function parseOperations(
                 expression.property,
                 res
                     ? {
-                          get: (key) => {
-                              if (
-                                  Array.isArray(res) ||
-                                  typeof res === "object" ||
-                                  typeof res === "function"
-                              ) {
-                                  const result =
-                                      res[key] ||
-                                      (values.get
-                                          ? values.get(key, true)
-                                          : values[key]);
-                                  if (typeof result === "function") {
-                                      result.parentFn = res;
-                                  }
-                                  return result;
-                              }
-                              return values.get
-                                  ? values.get(key, true)
-                                  : values[key];
-                          },
-                      }
+                        get: (key) => {
+                            if (
+                                Array.isArray(res) ||
+                                typeof res === "object" ||
+                                typeof res === "function"
+                            ) {
+                                const result =
+                                    res[key] ||
+                                    (values.get
+                                        ? values.get(key, true)
+                                        : values[key]);
+                                if (typeof result === "function") {
+                                    result.parentFn = res;
+                                }
+                                return result;
+                            }
+                            return values.get
+                                ? values.get(key, true)
+                                : values[key];
+                        },
+                    }
                     : values,
             );
 
@@ -285,16 +288,16 @@ async function parseOperations(
         case "TemplateLiteral":
             return expression.expressions
                 ? await expression.expressions.reduce(
-                      (accProm, expr, index) =>
-                          accProm.then(
-                              async (acc) =>
-                                  `${acc}${await parseOperations(
-                                      expr,
-                                      values,
-                                  )}${expression.quasis[index + 1].value.raw}`,
-                          ),
-                      Promise.resolve(expression.quasis[0].value.raw),
-                  )
+                    (accProm, expr, index) =>
+                        accProm.then(
+                            async (acc) =>
+                                `${acc}${await parseOperations(
+                                    expr,
+                                    values,
+                                )}${expression.quasis[index + 1].value.raw}`,
+                        ),
+                    Promise.resolve(expression.quasis[0].value.raw),
+                )
                 : "";
         case "CallExpression":
             const fn = await parseOperations(expression.callee, {
@@ -307,14 +310,14 @@ async function parseOperations(
             });
             return typeof fn === "function"
                 ? await fn.apply(
-                      fn.parentFn || fn,
-                      await Promise.all(
-                          expression.arguments.map((arg) =>
-                              // @ts-ignore
-                              parseOperations(arg, values),
-                          ),
-                      ),
-                  )
+                    fn.parentFn || fn,
+                    await Promise.all(
+                        expression.arguments.map((arg) =>
+                            // @ts-ignore
+                            parseOperations(arg, values),
+                        ),
+                    ),
+                )
                 : "";
         case "ArrowFunctionExpression":
             return async (...ags) =>
@@ -364,20 +367,20 @@ async function parseOperations(
                                                 paramGetBlock,
                                             )) || (extVar.id as any).name
                                         ] = extVar.init
-                                            ? await parseOperations(
-                                                  extVar.init,
-                                                  paramGetBlock,
-                                              )
-                                            : undefined;
+                                                ? await parseOperations(
+                                                    extVar.init,
+                                                    paramGetBlock,
+                                                )
+                                                : undefined;
                                     }, Promise.resolve()),
                                 );
                                 break;
                             case "ReturnStatement":
                                 result = ext.argument
                                     ? await parseOperations(
-                                          ext.argument,
-                                          paramsBlock,
-                                      )
+                                        ext.argument,
+                                        paramsBlock,
+                                    )
                                     : "";
                                 break;
                             default:
@@ -425,16 +428,16 @@ export const parse = (src: string, withTokens = false): IParseReturnType => {
         variables:
             withTokens && parsedSrc && parsedSrc.tokens
                 ? parsedSrc.tokens
-                      .filter(
-                          (token: esprima.Token) =>
-                              token.type === "Identifier" &&
-                              token.value !== "result",
-                      )
-                      .map((token: esprima.Token) => token.value)
-                      .filter(
-                          (value: string, idx: number, arr: string[]) =>
-                              arr.indexOf(value) === idx,
-                      )
+                    .filter(
+                        (token: esprima.Token) =>
+                            token.type === "Identifier" &&
+                            token.value !== "result",
+                    )
+                    .map((token: esprima.Token) => token.value)
+                    .filter(
+                        (value: string, idx: number, arr: string[]) =>
+                            arr.indexOf(value) === idx,
+                    )
                 : [],
     };
 };

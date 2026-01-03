@@ -18,10 +18,11 @@ import {
     // @ts-ignore
 } from "estree";
 import Logger from "../Logger";
-import { isEmpty } from "../util/Util";
+import {isEmpty} from "../util/Util";
 import * as util from "util";
 import * as QS from "qs";
 import * as YAML from "js-yaml";
+import * as UUID from "uuid";
 
 interface IGetValue {
     get: (key: string) => any;
@@ -41,33 +42,33 @@ interface IValues {
 const logger = Logger.getLogger("parser");
 
 const operators: any = {
-    "!": ({ argument }: UnaryExpression, values: IValues) =>
+    "!": ({argument}: UnaryExpression, values: IValues) =>
         !parseOperations(argument, values),
-    "!=": ({ left, right }: LogicalExpression, values: IValues) =>
+    "!=": ({left, right}: LogicalExpression, values: IValues) =>
         // eslint-disable-next-line eqeqeq
         parseOperations(left, values) != parseOperations(right, values),
-    "!==": ({ left, right }: LogicalExpression, values: IValues) =>
+    "!==": ({left, right}: LogicalExpression, values: IValues) =>
         parseOperations(left, values) !== parseOperations(right, values),
-    "&&": ({ left, right }: LogicalExpression, values: IValues) =>
+    "&&": ({left, right}: LogicalExpression, values: IValues) =>
         parseOperations(left, values) && parseOperations(right, values),
-    "+": ({ left, right }: LogicalExpression, values: IValues) =>
+    "+": ({left, right}: LogicalExpression, values: IValues) =>
         parseOperations(left, values) + parseOperations(right, values),
-    "-": ({ left, right }: LogicalExpression, values: IValues) =>
+    "-": ({left, right}: LogicalExpression, values: IValues) =>
         parseOperations(left, values) - parseOperations(right, values),
-    "*": ({ left, right }: LogicalExpression, values: IValues) =>
+    "*": ({left, right}: LogicalExpression, values: IValues) =>
         parseOperations(left, values) * parseOperations(right, values),
-    "/": ({ left, right }: LogicalExpression, values: IValues) =>
+    "/": ({left, right}: LogicalExpression, values: IValues) =>
         parseOperations(left, values) / parseOperations(right, values),
-    "<": ({ left, right }: LogicalExpression, values: IValues) =>
+    "<": ({left, right}: LogicalExpression, values: IValues) =>
         parseOperations(left, values) < parseOperations(right, values),
-    "==": ({ left, right }: LogicalExpression, values: IValues) =>
+    "==": ({left, right}: LogicalExpression, values: IValues) =>
         // eslint-disable-next-line eqeqeq
         parseOperations(left, values) == parseOperations(right, values),
-    "===": ({ left, right }: LogicalExpression, values: IValues) =>
+    "===": ({left, right}: LogicalExpression, values: IValues) =>
         parseOperations(left, values) === parseOperations(right, values),
-    ">": ({ left, right }: LogicalExpression, values: IValues) =>
+    ">": ({left, right}: LogicalExpression, values: IValues) =>
         parseOperations(left, values) > parseOperations(right, values),
-    in: ({ left, right }: LogicalExpression, values: IValues) => {
+    in: ({left, right}: LogicalExpression, values: IValues) => {
         let value = parseOperations(right, values);
         if (
             typeof value === "string" &&
@@ -86,7 +87,7 @@ const operators: any = {
             ) !== -1
         );
     },
-    "||": ({ left, right }: LogicalExpression, values: IValues) =>
+    "||": ({left, right}: LogicalExpression, values: IValues) =>
         parseOperations(left, values) || parseOperations(right, values),
 };
 
@@ -103,6 +104,8 @@ const utils = {
     decodeURIComponent,
     moment,
     Buffer,
+    UUID,
+    Math,
 };
 
 function parseOperations(
@@ -139,9 +142,9 @@ function parseOperations(
             ) {
                 const value = values.get
                     ? // @ts-ignore
-                      values.get(expression.value, true)
+                    values.get(expression.value, true)
                     : // @ts-ignore
-                      values[expression.value];
+                    values[expression.value];
 
                 return value === 0 ? value : value || expression.value;
             }
@@ -165,9 +168,9 @@ function parseOperations(
             }
             const value = values.get
                 ? // @ts-ignore
-                  values.get(expression.name, true)
+                values.get(expression.name, true)
                 : // @ts-ignore
-                  values[expression.name];
+                values[expression.name];
 
             return value === 0
                 ? value
@@ -229,27 +232,27 @@ function parseOperations(
                 expression.property,
                 res
                     ? {
-                          get: (key) => {
-                              if (
-                                  Array.isArray(res) ||
-                                  typeof res === "object" ||
-                                  typeof res === "function"
-                              ) {
-                                  const result =
-                                      res[key] ||
-                                      (values.get
-                                          ? values.get(key, true)
-                                          : values[key]);
-                                  if (typeof result === "function") {
-                                      result.parentFn = res;
-                                  }
-                                  return result;
-                              }
-                              return values.get
-                                  ? values.get(key, true)
-                                  : values[key];
-                          },
-                      }
+                        get: (key) => {
+                            if (
+                                Array.isArray(res) ||
+                                typeof res === "object" ||
+                                typeof res === "function"
+                            ) {
+                                const result =
+                                    res[key] ||
+                                    (values.get
+                                        ? values.get(key, true)
+                                        : values[key]);
+                                if (typeof result === "function") {
+                                    result.parentFn = res;
+                                }
+                                return result;
+                            }
+                            return values.get
+                                ? values.get(key, true)
+                                : values[key];
+                        },
+                    }
                     : values,
             );
 
@@ -261,12 +264,11 @@ function parseOperations(
         case "TemplateLiteral":
             return expression.expressions
                 ? expression.expressions.reduce(
-                      (acc, expr, index) =>
-                          `${acc}${parseOperations(expr, values)}${
-                              expression.quasis[index + 1].value.raw
-                          }`,
-                      expression.quasis[0].value.raw,
-                  )
+                    (acc, expr, index) =>
+                        `${acc}${parseOperations(expr, values)}${expression.quasis[index + 1].value.raw
+                        }`,
+                    expression.quasis[0].value.raw,
+                )
                 : "";
         case "CallExpression":
             const fn = parseOperations(expression.callee, {
@@ -279,12 +281,12 @@ function parseOperations(
             });
             return typeof fn === "function"
                 ? fn.apply(
-                      fn.parentFn || fn,
-                      expression.arguments.map((arg) =>
-                          // @ts-ignore
-                          parseOperations(arg, values),
-                      ),
-                  )
+                    fn.parentFn || fn,
+                    expression.arguments.map((arg) =>
+                        // @ts-ignore
+                        parseOperations(arg, values),
+                    ),
+                )
                 : "";
         case "ArrowFunctionExpression":
             return (...ags) =>
@@ -327,10 +329,10 @@ function parseOperations(
                         ext.declarations.forEach((extVar) => {
                             paramsBlock[
                                 parseOperations(extVar.id, paramGetBlock) ||
-                                    (extVar.id as any).name
+                                (extVar.id as any).name
                             ] = extVar.init
-                                ? parseOperations(extVar.init, paramGetBlock)
-                                : undefined;
+                                    ? parseOperations(extVar.init, paramGetBlock)
+                                    : undefined;
                         });
                         break;
                     case "ReturnStatement":
@@ -378,16 +380,16 @@ export const parse = (src: string, withTokens = false): IParseReturnType => {
         variables:
             withTokens && parsedSrc && parsedSrc.tokens
                 ? parsedSrc.tokens
-                      .filter(
-                          (token: esprima.Token) =>
-                              token.type === "Identifier" &&
-                              token.value !== "result",
-                      )
-                      .map((token: esprima.Token) => token.value)
-                      .filter(
-                          (value: string, idx: number, arr: string[]) =>
-                              arr.indexOf(value) === idx,
-                      )
+                    .filter(
+                        (token: esprima.Token) =>
+                            token.type === "Identifier" &&
+                            token.value !== "result",
+                    )
+                    .map((token: esprima.Token) => token.value)
+                    .filter(
+                        (value: string, idx: number, arr: string[]) =>
+                            arr.indexOf(value) === idx,
+                    )
                 : [],
     };
 };
