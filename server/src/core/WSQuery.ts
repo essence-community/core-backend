@@ -35,9 +35,9 @@ export default class WSQuery implements IGateQuery {
                 JSON.stringify(gateContext.session.userData);
             Object.keys(gateContext.session.sessionData).forEach((key) => {
                 inParam[`${Constants.SESSION_PARAM_PREFIX}${key}`] =
-                    typeof gateContext.session.userData[key] === "object"
-                        ? JSON.stringify(gateContext.session.userData[key])
-                        : gateContext.session.userData[key];
+                    typeof gateContext.session.sessionData[key] === "object"
+                        ? JSON.stringify(gateContext.session.sessionData[key])
+                        : gateContext.session.sessionData[key];
             });
             Object.keys(gateContext.session.userData).forEach((key) => {
                 inParam[`${Constants.SESSION_PARAM_PREFIX}${key}`] =
