@@ -27,7 +27,7 @@ export interface IKeyCloakAuthParams extends ISessProviderParam {
     mapKeyCloakGrantRole?: IGrantRoleMap[];
     mapKeyCloakGrant?: IGrantMap[];
     mapKeyCloakUserInfo?: IUserInfoMap[];
-    disableRecursiveAuth?: boolean;
+    isEnableRecursiveAuth?: boolean;
     flagRedirect: string;
     adminPathParam: string;
     idKey: string;

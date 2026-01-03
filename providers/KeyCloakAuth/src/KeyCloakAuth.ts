@@ -256,10 +256,10 @@ export default class KeyCloakAuth extends NullSessProvider {
                     },
                 ],
             },
-            disableRecursiveAuth: {
+            isEnableRecursiveAuth: {
                 type: "boolean",
-                defaultValue: true,
-                name: "Disable recursive auth",
+                defaultValue: false,
+                name: "Enable recursive auth",
             },
             flagRedirect: {
                 type: "string",
@@ -540,16 +540,17 @@ export default class KeyCloakAuth extends NullSessProvider {
                         return session;
                     }
                     if (
-                        !this.params.disableRecursiveAuth &&
+                        this.params.isEnableRecursiveAuth &&
                         gateContext.queryName === Constant.QUERY_GETSESSIONDATA
                     ) {
                         return this.redirectAccess(gateContext);
                     }
                     return null;
                 });
-        } else if (
+        }
+        if (
             !session &&
-            !this.params.disableRecursiveAuth &&
+            this.params.isEnableRecursiveAuth &&
             gateContext.queryName === Constant.QUERY_GETSESSIONDATA
         ) {
             return this.redirectAccess(gateContext);
