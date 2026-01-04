@@ -568,7 +568,13 @@ export default class KeyCloakAuth extends NullSessProvider {
                 refresh_token: refresh_token,
             });
             if (access_token.isExpired() && refresh_token.isExpired()) {
-                return session;
+                session.sessionData.access_token = undefined;
+                gateContext.request.session.gsession.sessionData.access_token = undefined;
+                session.sessionData.refresh_token = undefined;
+                gateContext.request.session.gsession.sessionData.refresh_token = undefined;
+                gateContext.request.session.save();
+                await this.sessCtrl.logoutSession(gateContext);
+                return this.redirectAccess(gateContext);
             }
             if (!access_token.isExpired()) {
                 return session;
