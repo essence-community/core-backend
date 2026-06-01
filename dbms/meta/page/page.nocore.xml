@@ -7,4 +7,6 @@
     <include file="Page_483653E7F5BC481D86375F5A3C803AC2.sql" relativeToChangelogFile="true" />
     <include file="Page_1875398035771.sql" relativeToChangelogFile="true" />
     <include file="Page_E3B71F02EC584D619DCBA77ED1CF8F4E.sql" relativeToChangelogFile="true" />
+    <include file="Page_EFFC1868B5804AABAAF7EE516BD24952.sql" relativeToChangelogFile="true"/>
+    <include file="Page_22D2F53FE7E24680917B85D9A95237BD.sql" relativeToChangelogFile="true"/>
 </databaseChangeLog>
