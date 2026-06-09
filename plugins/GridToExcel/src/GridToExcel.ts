@@ -9,7 +9,7 @@ import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
 import {ReadStreamToArray} from "@ungate/plugininf/lib/stream/Util";
 import {isEmpty, transformToBoolean} from "@ungate/plugininf/lib/util/Util";
 import {deepParam} from "@ungate/plugininf/lib/util/deepParam";
-import * as moment from "moment";
+import * as moment from "moment-timezone";
 import * as path from "path";
 import * as fs from "fs";
 import Constant from "@ungate/plugininf/lib/Constants";
@@ -185,7 +185,11 @@ export default class GridToExcel extends NullPlugin {
         }
         if (col.datatype === "date") {
             result.t = typeof result.v === "string" || typeof result.v === "object" ? "d" : "z";
-            result.v = typeof result.v === "string" || typeof result.v === "object" ? moment(result.v as string).toDate() : "";
+            result.v = typeof result.v === "string" ?
+                moment(result.v as string, Constant.DEFAULT_TIMEZONE_DATE).toDate() :
+                typeof result.v === "object" && result.v instanceof Date ?
+                    result.v :
+                    "";
             result.z = DATE_FORMAT[col.format] || DATE_FORMAT[3];
             result.s.numFmt = DATE_FORMAT[col.format] || DATE_FORMAT[3];
         }

@@ -15,6 +15,9 @@ export class Constants {
     public APP_START_TIME = new Date().getTime();
     /** Наименование ноды */
     public GATE_NODE_NAME = process.env.GATE_NODE_NAME || os.hostname();
+    /** Таймзона для преобразовании даты по умолчанию */
+    public DEFAULT_TIMEZONE_DATE =
+        process.env.GATE_DEFAULT_TIMEZONE_DATE || "Europe/Moscow";
     /**
      * Формат даты по умолчанию
      */

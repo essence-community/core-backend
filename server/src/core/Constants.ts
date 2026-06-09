@@ -1,5 +1,5 @@
 import IGlobalObject from "@ungate/plugininf/lib/IGlobalObject";
-import { Constants as Constant } from "@ungate/plugininf/lib/Constants";
+import {Constants as Constant} from "@ungate/plugininf/lib/Constants";
 import * as moment from "moment-timezone";
 import * as os from "os";
 import * as path from "path";
@@ -52,9 +52,6 @@ class Constants extends Constant {
 
     public PROPERTY_DIR: string =
         process.env.PROPERTY_DIR || path.join(HOME_DIR, "resources", "config");
-
-    /** Время загрузки приложения */
-    public APP_START_TIME = new Date().getTime();
     /** Сертификат кластера */
     public GATE_ADMIN_CLUSTER_CERT =
         process.env.GATE_ADMIN_CLUSTER_CERT ||
@@ -73,12 +70,9 @@ class Constants extends Constant {
         : 43090;
     /** Наименование ноды */
     public GATE_NODE_NAME = process.env.GATE_NODE_NAME || os.hostname();
-    /** Таймзона для преобразовании даты по умолчанию */
-    public DEFAULT_TIMEZONE_DATE =
-        process.env.GATE_DEFAULT_TIMEZONE_DATE || "Europe/Moscow";
 }
 const constants = new Constants();
-Date.prototype.toJSON = function() {
+Date.prototype.toJSON = function () {
     return moment(this)
         .clone()
         .tz(constants.DEFAULT_TIMEZONE_DATE)
