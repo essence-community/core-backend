@@ -67,6 +67,7 @@ export default class GridToExcel extends NullPlugin {
         const excelName =
             gateContext.params.excelname || jsonbc.excelname || "export_excel";
         const rows = await ReadStreamToArray(result.data);
+        const rowsCell = rows.map((row) => jsonbc.columns.map((col) => this.formatValue(col, deepParam(col.column, row))));
         const wb = XLSX.utils.book_new();
         const ws = XLSX.utils.aoa_to_sheet([
             jsonbc.columns.map((col) => ({
@@ -103,7 +104,7 @@ export default class GridToExcel extends NullPlugin {
                     numFmt: "@",
                 }
             })),
-            ...rows.map((row) => jsonbc.columns.map((col) => this.formatValue(col, deepParam(col.column, row)))),
+            ...rowsCell,
         ], {
             cellStyles: true,
         });
@@ -185,14 +186,14 @@ export default class GridToExcel extends NullPlugin {
         }
         if (col.datatype === "date") {
             let date: Date | number | null = typeof result.v === "string" ?
-                moment(result.v as string, Constant.DEFAULT_TIMEZONE_DATE).toDate() :
+                moment(result.v as string).toDate() :
                 typeof result.v === "object" && result.v instanceof Date ?
                     result.v
                     : null;
             if (date && date instanceof Date) {
                 date = 25569.0 + ((date.getTime() - (date.getTimezoneOffset() * 60 * 1000)) / (1000 * 60 * 60 * 24));
             }
-            result.t = date ? "d" : "z";
+            result.t = date ? "n" : "z";
             result.v = date ?
                 date :
                 "";
