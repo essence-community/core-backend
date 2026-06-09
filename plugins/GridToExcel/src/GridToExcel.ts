@@ -184,12 +184,18 @@ export default class GridToExcel extends NullPlugin {
             result.v = transformToBoolean(result.v);
         }
         if (col.datatype === "date") {
-            result.t = typeof result.v === "string" || typeof result.v === "object" ? "d" : "z";
-            result.v = typeof result.v === "string" ?
+            let date: Date | number | null = typeof result.v === "string" ?
                 moment(result.v as string, Constant.DEFAULT_TIMEZONE_DATE).toDate() :
                 typeof result.v === "object" && result.v instanceof Date ?
-                    result.v :
-                    "";
+                    result.v
+                    : null;
+            if (date && date instanceof Date) {
+                date = 25569.0 + ((date.getTime() - (date.getTimezoneOffset() * 60 * 1000)) / (1000 * 60 * 60 * 24));
+            }
+            result.t = date ? "d" : "z";
+            result.v = date ?
+                date :
+                "";
             result.z = DATE_FORMAT[col.format] || DATE_FORMAT[3];
             result.s.numFmt = DATE_FORMAT[col.format] || DATE_FORMAT[3];
         }
