@@ -25,7 +25,9 @@ export function CreateJsonStream(preData: IObjectParam | IObjectParam[]) {
         objectMode: false,
         read(size: number) {
             const newIndex = index + size;
-            data.slice(index, newIndex).forEach((item) => this.push(JSON.stringify(item)));
+            data.slice(index, newIndex).forEach((item) =>
+                this.push(JSON.stringify(item)),
+            );
             if (newIndex > data.length) {
                 this.push(null);
                 this.emit("close");

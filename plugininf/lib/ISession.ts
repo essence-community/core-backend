@@ -12,10 +12,7 @@ export default interface ISession {
     sessionData: {
         [key: string]: any;
         typeCheckAuth?:
-            | "cookie"
-            | "session"
-            | "cookieandsession"
-            | "cookieorsession";
+            "cookie" | "session" | "cookieandsession" | "cookieorsession";
     };
 }
 

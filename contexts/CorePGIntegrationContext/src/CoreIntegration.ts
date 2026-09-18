@@ -30,11 +30,7 @@ export default class CoreIntegration extends NullContext {
     private dbQuery: ILocalDB<Record<string, any>>;
     private dataSource: PostgresDB;
     private caller: any;
-    constructor(
-        name: string,
-        params: ICCTParams,
-        sessCtrl: ISessCtrl,
-    ) {
+    constructor(name: string, params: ICCTParams, sessCtrl: ISessCtrl) {
         super(name, params, sessCtrl);
         this.params = initParams(CoreIntegration.getParamsInfo(), this.params);
         if (this.params.disableCache) {
@@ -42,7 +38,13 @@ export default class CoreIntegration extends NullContext {
         } else {
             this.caller = this.offlineInitContext;
         }
-        this.dataSource = new PostgresDB(`${this.name}_context`, pick(this.params, ...Object.keys(PostgresDB.getParamsInfo())) as any);
+        this.dataSource = new PostgresDB(
+            `${this.name}_context`,
+            pick(
+                this.params,
+                ...Object.keys(PostgresDB.getParamsInfo()),
+            ) as any,
+        );
     }
     /**
      * Инициализация плагина

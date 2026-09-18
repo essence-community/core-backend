@@ -7,13 +7,32 @@ import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
 import IResult from "@ungate/plugininf/lib/IResult";
 import NullPlugin from "@ungate/plugininf/lib/NullPlugin";
 import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
-import * as zip from "adm-zip";
-import * as AWS from "aws-sdk";
+import zip from "adm-zip";
+import {
+    DeleteObjectCommand,
+    HeadObjectCommand,
+    PutObjectCommand,
+    S3Client,
+} from "@aws-sdk/client-s3";
 import * as fs from "fs";
 import { forEach, isObject } from "lodash";
 import Mime from "mime";
+import { Client } from "minio";
 import * as Path from "path";
 import { Readable } from "stream";
+
+function minioFromUrl(url: string, accessKey: string, secretKey: string) {
+    const u = new URL(url.includes("://") ? url : `http://${url}`);
+    return new Client({
+        endPoint: u.hostname,
+        port: u.port ? Number(u.port) : u.protocol === "https:" ? 443 : 80,
+        useSSL: u.protocol === "https:",
+        accessKey,
+        secretKey,
+        region: "us-east-1",
+        pathStyle: true,
+    });
+}
 interface PluginParams {
     cvTypeStorage: "riak" | "aws" | "dir";
     cvPath: string;
@@ -61,7 +80,8 @@ export default class ModuleStorage extends NullPlugin {
             },
         };
     }
-    private clients?: AWS.S3;
+    private s3?: S3Client;
+    private minio?: Client;
     constructor(name: string, params: ICCTParams) {
         super(name, params);
         this.params = initParams(
@@ -73,33 +93,21 @@ export default class ModuleStorage extends NullPlugin {
             this.deletePath = this.deletePathDir.bind(this);
             return;
         }
-        const credentials = new AWS.Credentials({
-            accessKeyId: this.params.cvS3KeyId,
-            secretAccessKey: this.params.cvS3SecretKey,
-        });
         if (this.params.cvTypeStorage === "riak") {
-            const endpoint = new AWS.Endpoint("http://s3.amazonaws.com");
-            const config = {
-                apiVersion: "2006-03-01",
-                credentials,
-                endpoint,
-                httpOptions: {
-                    proxy: this.params.cvPath,
-                },
-                region: "us-east-1",
-                s3DisableBodySigning: true,
-                s3ForcePathStyle: true,
-                signatureVersion: "v2",
-                sslEnabled: false,
-            };
-            this.clients = new AWS.S3(new AWS.Config(config));
+            this.minio = minioFromUrl(
+                this.params.cvPath,
+                this.params.cvS3KeyId,
+                this.params.cvS3SecretKey,
+            );
         } else {
-            const endpoint = new AWS.Endpoint(this.params.cvPath);
-            const config = {
-                credentials,
-                endpoint,
-            };
-            this.clients = new AWS.S3(new AWS.Config(config));
+            this.s3 = new S3Client({
+                region: "us-east-1",
+                credentials: {
+                    accessKeyId: this.params.cvS3KeyId,
+                    secretAccessKey: this.params.cvS3SecretKey,
+                },
+                endpoint: this.params.cvPath,
+            });
         }
     }
 
@@ -217,7 +225,7 @@ export default class ModuleStorage extends NullPlugin {
      * @param query
      * @returns file
      */
-    private saveFile(
+    private async saveFile(
         path: string,
         buffer: any,
         content: string,
@@ -225,24 +233,29 @@ export default class ModuleStorage extends NullPlugin {
             ? undefined
             : Buffer.byteLength(buffer as Buffer),
     ): Promise<void> {
-        return new Promise((resolve, reject) => {
-            this.clients.putObject(
+        if (this.minio) {
+            await this.minio.putObject(
+                this.params.cvS3Bucket as string,
+                path,
+                buffer,
+                size,
                 {
-                    Body: buffer,
-                    Bucket: this.params.cvS3Bucket,
-                    ContentLength: size,
-                    ContentType: content,
-                    ACL: "public-read",
-                    Key: path,
-                },
-                (err) => {
-                    if (err) {
-                        return reject(err);
-                    }
-                    resolve();
+                    "Content-Type": content,
+                    "x-amz-acl": "public-read",
                 },
             );
-        });
+            return;
+        }
+        await this.s3!.send(
+            new PutObjectCommand({
+                Body: buffer,
+                Bucket: this.params.cvS3Bucket,
+                ContentLength: size,
+                ContentType: content,
+                ACL: "public-read",
+                Key: path,
+            }),
+        );
     }
     /**
      * Сохраняем в папку
@@ -284,33 +297,38 @@ export default class ModuleStorage extends NullPlugin {
             });
         });
     }
-    private deletePath(path: string): Promise<void> {
-        return new Promise((resolve, reject) => {
-            this.clients.headObject(
-                {
-                    Bucket: this.params.cvS3Bucket,
-                    Key: path,
-                },
-                (er) => {
-                    if (er) {
-                        this.logger.debug(er);
-                        return resolve();
-                    }
-                    this.clients.deleteObject(
-                        {
-                            Bucket: this.params.cvS3Bucket,
-                            Key: path,
-                        },
-                        (err) => {
-                            if (err) {
-                                return reject(err);
-                            }
-                            return resolve();
-                        },
-                    );
-                },
+    private async deletePath(path: string): Promise<void> {
+        try {
+            if (this.minio) {
+                await this.minio.statObject(
+                    this.params.cvS3Bucket as string,
+                    path,
+                );
+            } else {
+                await this.s3!.send(
+                    new HeadObjectCommand({
+                        Bucket: this.params.cvS3Bucket,
+                        Key: path,
+                    }),
+                );
+            }
+        } catch (er) {
+            this.logger.debug(er);
+            return;
+        }
+        if (this.minio) {
+            await this.minio.removeObject(
+                this.params.cvS3Bucket as string,
+                path,
             );
-        });
+            return;
+        }
+        await this.s3!.send(
+            new DeleteObjectCommand({
+                Bucket: this.params.cvS3Bucket,
+                Key: path,
+            }),
+        );
     }
     private deletePathDir(path: string): Promise<void> {
         return new Promise((resolve, reject) => {

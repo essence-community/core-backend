@@ -2,7 +2,7 @@ import Logger from "@ungate/plugininf/lib/Logger";
 import * as js2xmlparser from "js2xmlparser";
 import { forEach } from "lodash";
 import { isBoolean, isDate, isNumber } from "lodash";
-import moment = require("moment");
+import moment from "moment";
 import * as soap from "soap";
 import ICCTParams, { IParamsInfo } from "../ICCTParams";
 import IObjectParam from "../IObjectParam";

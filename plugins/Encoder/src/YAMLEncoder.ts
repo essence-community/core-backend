@@ -50,6 +50,6 @@ export class YAMLEncoder implements IEncoder {
             );
             return input as IFile[];
         }
-        return YAML.load(input);
+        return YAML.load(input as string);
     }
 }

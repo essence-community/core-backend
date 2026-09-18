@@ -24,7 +24,7 @@ import OnlineController from "./OnlineController";
 import { TempTable } from "./TempTable";
 import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
 import { IUserDbData } from "@ungate/plugininf/lib/ISession";
-import { deepParam } from '@ungate/plugininf/lib/util/deepParam';
+import { deepParam } from "@ungate/plugininf/lib/util/deepParam";
 const logger = Logger.getLogger("CoreContext");
 const Mask = (global as any as IGlobalObject).maskgate;
 export interface ICoreParams extends IContextParams {
@@ -128,6 +128,20 @@ export default class CoreContext extends NullContext {
         });
     }
 
+    public static parseJsonParam(raw: any): any {
+        if (raw == null || raw === "") {
+            return null;
+        }
+        let json = typeof raw === "string" ? JSON.parse(raw || "{}") : raw;
+        if (json && !json.filter && json.json != null) {
+            json =
+                typeof json.json === "string"
+                    ? JSON.parse(json.json)
+                    : json.json;
+        }
+        return json;
+    }
+
     public static decodeType(doc: any): TAction {
         switch (doc.cr_type) {
             case "select":
@@ -155,18 +169,20 @@ export default class CoreContext extends NullContext {
     private dataSource: PostgresDB;
     private dbUsers: ILocalDB<IUserDbData>;
     private tempTable: TempTable;
-    constructor(
-        name: string,
-        params: ICCTParams,
-        sessCtrl: ISessCtrl,
-    ) {
+    constructor(name: string, params: ICCTParams, sessCtrl: ISessCtrl) {
         super(name, params, sessCtrl);
         this.params = {
             ...this.params,
             ...initParams(CoreContext.getParamsInfo(), this.params),
             anonymousAction: 99999,
         };
-        this.dataSource = new PostgresDB(`${this.name}_context`, pick(this.params, ...Object.keys(PostgresDB.getParamsInfo())) as any);
+        this.dataSource = new PostgresDB(
+            `${this.name}_context`,
+            pick(
+                this.params,
+                ...Object.keys(PostgresDB.getParamsInfo()),
+            ) as any,
+        );
         this.params.modifyQueryName = this.params.modifyQueryName.toLowerCase();
         this.params.pageMetaQueryName =
             this.params.pageMetaQueryName.toLowerCase();
@@ -215,7 +231,9 @@ export default class CoreContext extends NullContext {
         this.dbUsers = this.sessCtrl.getUserDb();
         return this.controller.init(reload);
     }
-    public async initContext(gateContext: IContext): Promise<IContextPluginResult> {
+    public async initContext(
+        gateContext: IContext,
+    ): Promise<IContextPluginResult> {
         if (!gateContext.queryName) {
             // Проверяем присутствие обязательных параметров
             throw new ErrorException(ErrorGate.REQUIRED_PARAM);
@@ -225,15 +243,17 @@ export default class CoreContext extends NullContext {
             case this.params.pageMetaQueryNameNew:
             case this.params.pageObjectsQueryName:
             case this.params.pageMetaQueryName:
-                if (!gateContext.params.json) {
+                const json = CoreContext.parseJsonParam(
+                    gateContext.params.json,
+                );
+                if (!json) {
                     return Promise.reject(CoreContext.accessDenied());
                 }
                 const version = this.params.versionApi[name];
-                const json = JSON.parse(gateContext.params.json || "{}");
                 const caActions = [
                     this.params.anonymousAction,
                     ...(gateContext.session?.userData.ca_actions || []),
-                ];
+                ].map((v) => parseInt(v as any, 10));
                 if (version !== "2" && (!json.filter || !json.filter.ck_page)) {
                     return Promise.reject(CoreContext.accessDenied());
                 } else if (
@@ -295,26 +315,36 @@ export default class CoreContext extends NullContext {
             }
             default:
                 const res = await this.controller.findQuery(gateContext, name);
-                if (this.tempTable.caches.includes(res.metaData.cache as string)) {
-                    const param = (res.metaData?.cache_key_param as string[] || []).reduce((res, value) => {
-                        const found = deepParam(value, gateContext.params);
-                        res.push(found);
-                        return res;
-                    }, []) || [];
+                if (
+                    this.tempTable.caches.includes(res.metaData.cache as string)
+                ) {
+                    const param =
+                        (
+                            (res.metaData?.cache_key_param as string[]) || []
+                        ).reduce((res, value) => {
+                            const found = deepParam(value, gateContext.params);
+                            res.push(found);
+                            return res;
+                        }, []) || [];
                     const shasum = crypto.createHash("sha1");
                     shasum.update(JSON.stringify(param));
-                    const cache = await this.tempTable.dbQueryCache.findOne({
-                        ck_id: `${name}_${shasum.digest("hex")}`,
-                    }, true);
+                    const cache = await this.tempTable.dbQueryCache.findOne(
+                        {
+                            ck_id: `${name}_${shasum.digest("hex")}`,
+                        },
+                        true,
+                    );
                     if (cache) {
-                        return Promise.reject(new BreakException({
-                            data: ResultStream(cache.cct_data),
-                            type: "success",
-                            metaData: {
-                                ...res.metaData,
-                                cached: true as any
-                            },
-                        }));
+                        return Promise.reject(
+                            new BreakException({
+                                data: ResultStream(cache.cct_data),
+                                type: "success",
+                                metaData: {
+                                    ...res.metaData,
+                                    cached: true as any,
+                                },
+                            }),
+                        );
                     }
                 }
                 return res;

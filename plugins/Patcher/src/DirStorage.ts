@@ -1,7 +1,7 @@
 import { IFile } from "@ungate/plugininf/lib/IContext";
 import * as fs from "fs";
 import * as path from "path";
-import { IRufusLogger } from "rufus";
+import { IRufusLogger } from "@ungate/plugininf/lib/Logger";
 import { Readable } from "stream";
 import { IPluginParams, IStorage } from "./Patcher.types";
 export class DirStorage implements IStorage {

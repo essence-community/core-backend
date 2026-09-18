@@ -10,7 +10,6 @@ import NullPlugin from "@ungate/plugininf/lib/NullPlugin";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
 import { ReadStreamToArray } from "@ungate/plugininf/lib/stream/Util";
 import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
-import * as AWS from "aws-sdk";
 import * as fs from "fs";
 import { forEach, isObject, isString } from "lodash";
 import { v4 as uuidv4 } from "uuid";
@@ -18,6 +17,7 @@ import { IPluginParams, IStorage } from "./AssetsStorage.types";
 import { deepParam } from "@ungate/plugininf/lib/util/deepParam";
 import { DirStorage } from "./DirStorage";
 import { S3Storage } from "./S3Storage";
+import { Readable } from "stream";
 
 export default class AssetsStorage extends NullPlugin {
     public static getParamsInfo(): IParamsInfo {
@@ -105,7 +105,6 @@ export default class AssetsStorage extends NullPlugin {
             },
         };
     }
-    protected clients: AWS.S3;
     public params: IPluginParams;
     private controler: IStorage;
     constructor(name: string, params: ICCTParams) {
@@ -154,7 +153,14 @@ export default class AssetsStorage extends NullPlugin {
             isObject(gateContext.request.body) &&
             (gateContext.request.body as IFormData).files
         ) {
-            const rows = [];
+            const rows = [] as Promise<{
+                key: string;
+                dir: string | undefined;
+                nameField: string;
+                nameFile: string;
+                mimeType: string;
+                size: number;
+            }>[];
             forEach(
                 (gateContext.request.body as IFormData).files,
                 (val, key) => {
@@ -191,28 +197,32 @@ export default class AssetsStorage extends NullPlugin {
             }
             const keys = new Set();
             res.forEach((val) => {
-                const arr = json.data?.[val.nameField] || query.inParams[val.nameField];
+                const arr =
+                    json.data?.[val.nameField] || query.inParams[val.nameField];
                 keys.add(val.nameField);
                 if (arr && !Array.isArray(arr)) {
                     (json.data || query.inParams)[val.nameField] = [arr, val];
-                } if (arr && Array.isArray(arr)) {
+                }
+                if (arr && Array.isArray(arr)) {
                     arr.push(val);
-                }else {
+                } else {
                     (json.data || query.inParams)[val.nameField] = val;
                 }
             });
             if (Object.keys(json).length) {
                 query.inParams.json = JSON.stringify(json);
             } else {
-                for(let nameField in keys.keys()) {
-                    query.inParams[nameField] = JSON.stringify(query.inParams[nameField]);
+                for (let nameField in keys.keys()) {
+                    query.inParams[nameField] = JSON.stringify(
+                        query.inParams[nameField],
+                    );
                 }
-            }   
+            }
         }
         if (
-            this.params.finalOut && (
-            json.service?.cv_action?.toUpperCase() === "D" ||
-            gateContext.request.method === "DELETE")
+            this.params.finalOut &&
+            (json.service?.cv_action?.toUpperCase() === "D" ||
+                gateContext.request.method === "DELETE")
         ) {
             return new Promise(async (resolve) => {
                 const fileKey = this.params.keyFilePath
@@ -223,7 +233,9 @@ export default class AssetsStorage extends NullPlugin {
                     }, "");
                 if (!isEmpty(fileKey)) {
                     await this.controler.deletePath(
-                        isEmpty(dir) ? fileKey : `${dir}/${fileKey}`,
+                        isEmpty(dir)
+                            ? (fileKey as string)
+                            : `${dir}/${fileKey}`,
                     );
                 }
                 return resolve({
@@ -263,19 +275,19 @@ export default class AssetsStorage extends NullPlugin {
                     : gateContext.query.queryStr,
         } as any;
         const dir =
-        this.params.dirColumn?.split(",").reduce((resDir, param) => {
-            const foundDir = deepParam(param, inParam);
-            return foundDir ? foundDir : resDir;
-        }, "") || this.params.dirDefault;
+            this.params.dirColumn?.split(",").reduce((resDir, param) => {
+                const foundDir = deepParam(param, inParam);
+                return foundDir ? foundDir : resDir;
+            }, "") || this.params.dirDefault;
         if (
             gateContext.actionName === "file" ||
             gateContext.actionName === "getfile"
         ) {
-            const resStream = await ReadStreamToArray(result.data);
+            const resStream = await ReadStreamToArray(result.data as Readable);
             inParam = {
                 ...inParam,
                 jt_result: resStream,
-            }
+            };
             const dir =
                 this.params.dirColumn?.split(",").reduce((resDir, param) => {
                     const foundDir = deepParam(param, inParam);
@@ -291,7 +303,7 @@ export default class AssetsStorage extends NullPlugin {
                 throw new ErrorException(ErrorGate.INVALID_FILE_RESULT);
             }
             const file = await this.controler.getFile(
-                isEmpty(dir) ? fileKey : `${dir}/${fileKey}`,
+                isEmpty(dir) ? (fileKey as string) : `${dir}/${fileKey}`,
             );
             const filedata = fs.readFileSync(file.path);
             gateContext.response.once("finish", () => {
@@ -321,7 +333,9 @@ export default class AssetsStorage extends NullPlugin {
                     }, "");
                 if (!isEmpty(fileKey)) {
                     await this.controler.deletePath(
-                        isEmpty(dir) ? fileKey : `${dir}/${fileKey}`,
+                        isEmpty(dir)
+                            ? (fileKey as string)
+                            : `${dir}/${fileKey}`,
                     );
                 }
                 resolve();

@@ -27,13 +27,13 @@ export function createChangeXml(pathFile: string, include: string[]) {
         fs.writeFile(
             pathFile,
             '<?xml version="1.0" encoding="UTF-8"?>\n' +
-            "<databaseChangeLog\n" +
-            '  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"\n' +
-            '  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n' +
-            '  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog\n' +
-            '         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">\n' +
-            include.join("") +
-            "\n</databaseChangeLog>",
+                "<databaseChangeLog\n" +
+                '  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"\n' +
+                '  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n' +
+                '  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog\n' +
+                '         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">\n' +
+                include.join("") +
+                "\n</databaseChangeLog>",
             (err) => {
                 if (err) {
                     return reject(err);

@@ -4,16 +4,16 @@
 
 import BigNumberBase from "bignumber.js";
 import * as fs from "fs";
-import {forEach, isArray, isString, toNumber, toString} from "lodash";
-import * as moment from "moment";
+import { forEach, isArray, isString, toNumber, toString } from "lodash";
+import moment from "moment";
 import * as path from "path";
 import * as crypto from "crypto";
 import ErrorException from "../errors/ErrorException";
 import ErrorGate from "../errors/ErrorGate";
-import {IParamInfo, IParamsInfo} from "../ICCTParams";
+import { IParamInfo, IParamsInfo } from "../ICCTParams";
 import ICCTParams from "../ICCTParams";
 import IContext from "../IContext";
-import Constant, {Constants} from "../Constants";
+import Constant, { Constants } from "../Constants";
 import * as cu from "./cryptoUtil";
 
 const NULL_OPERATOR = ["null", "is null", "notnull", "not null", "is not null"];
@@ -26,8 +26,8 @@ export function isEmpty(value: any, allowEmptyString: boolean = false) {
     );
 }
 
-export function stripBOM(content) {
-    if (content.charCodeAt(0) === 0xFEFF) {
+export function stripBOM(content: string) {
+    if (content.charCodeAt(0) === 0xfeff) {
         content = content.slice(1);
     }
     return content;
@@ -174,7 +174,9 @@ export function decryptPassword(value: string) {
         case "aes-128-ccm":
         case "aes-192-ccm":
         case "aes-256-ccm":
-            return Constant.isUseEncrypt ? decryptAes(type as any, hash) : value;
+            return Constant.isUseEncrypt
+                ? decryptAes(type as any, hash)
+                : value;
         case "privatekey":
             return Constant.isUseEncrypt ? decryptUseKey(hash) : value;
         default:
@@ -187,16 +189,19 @@ function parseParam(conf: IParamInfo, value: any) {
         case "string":
         case "long_string":
         case "password": {
-            const decryptPass = decryptPassword(toString(value));
+            const decryptPass =
+                typeof value === "string" ? decryptPassword(value) : value;
             return conf.checkvalue ? conf.checkvalue(decryptPass) : decryptPass;
         }
         case "boolean": {
             if (isString(value)) {
                 const decryptPass = decryptPassword(value);
-                const val = decryptPass === "true" || decryptPass === "1" || decryptPass === "yes" || decryptPass === "on"
-                return conf.checkvalue
-                    ? conf.checkvalue(val)
-                    : val;
+                const val =
+                    decryptPass === "true" ||
+                    decryptPass === "1" ||
+                    decryptPass === "yes" ||
+                    decryptPass === "on";
+                return conf.checkvalue ? conf.checkvalue(val) : val;
             }
             return conf.checkvalue ? conf.checkvalue(!!value) : !!value;
         }
@@ -212,7 +217,8 @@ function parseParam(conf: IParamInfo, value: any) {
                 ? conf.checkvalue(toNumber(value))
                 : toNumber(value);
         case "date":
-            const decryptPass = decryptPassword(value);
+            const decryptPass =
+                typeof value === "string" ? decryptPassword(value) : value;
             return conf.checkvalue
                 ? conf.checkvalue(moment(decryptPass).toDate())
                 : moment(decryptPass).toDate();
@@ -220,33 +226,40 @@ function parseParam(conf: IParamInfo, value: any) {
             let objValue = value;
             if (value && typeof value === "string" && value.charAt(0) === "{") {
                 const decryptPass = decryptPassword(value);
-                objValue = JSON.parse(decryptPass);
-            }
-            return Object.entries(conf.childs).reduce((res, [key, obj]) => {
-                if (!isEmpty((objValue || {})[key])) {
-                    res[key] = parseParam(obj, objValue[key]);
-                } else if (
-                    isEmpty((objValue || {})[key]) &&
-                    !isEmpty(
-                        (isEmpty(objValue)
-                            ? conf.defaultValue || {}
-                            : objValue)[key],
-                    )
-                ) {
-                    res[key] = parseParam(
-                        obj,
-                        (isEmpty(objValue)
-                            ? conf.defaultValue || {}
-                            : objValue)[key],
-                    );
-                } else if (
-                    isEmpty((objValue || {})[key]) &&
-                    !isEmpty(obj.defaultValue)
-                ) {
-                    res[key] = obj.defaultValue;
+                if (typeof decryptPass === "string") {
+                    objValue = JSON.parse(decryptPass);
+                } else {
+                    objValue = decryptPass;
                 }
-                return res;
-            }, {});
+            }
+            return Object.entries(conf.childs).reduce(
+                (res, [key, obj]) => {
+                    if (!isEmpty((objValue || {})[key])) {
+                        res[key] = parseParam(obj, objValue[key]);
+                    } else if (
+                        isEmpty((objValue || {})[key]) &&
+                        !isEmpty(
+                            (isEmpty(objValue)
+                                ? conf.defaultValue || {}
+                                : objValue)[key],
+                        )
+                    ) {
+                        res[key] = parseParam(
+                            obj,
+                            (isEmpty(objValue)
+                                ? conf.defaultValue || {}
+                                : objValue)[key],
+                        );
+                    } else if (
+                        isEmpty((objValue || {})[key]) &&
+                        !isEmpty(obj.defaultValue)
+                    ) {
+                        res[key] = obj.defaultValue;
+                    }
+                    return res;
+                },
+                {} as Record<string, any>,
+            );
         case "form_repeater":
             let arr = value;
             if (value && typeof value === "string" && value.charAt(0) === "{") {
@@ -255,18 +268,22 @@ function parseParam(conf: IParamInfo, value: any) {
             if (value && typeof value === "string" && value.charAt(0) === "[") {
                 arr = JSON.parse(value);
             }
-            return (arr || conf.defaultValue || []).map((val) =>
-                Object.entries(conf.childs).reduce((res, [key, obj]) => {
-                    if (!isEmpty(val[key])) {
-                        res[key] = parseParam(obj, val[key]);
-                    } else if (
-                        isEmpty(val[key]) &&
-                        !isEmpty(obj.defaultValue)
-                    ) {
-                        res[key] = obj.defaultValue;
-                    }
-                    return res;
-                }, {}),
+            return (arr || conf.defaultValue || []).map(
+                (val: Record<string, any>) =>
+                    Object.entries(conf.childs).reduce(
+                        (res, [key, obj]) => {
+                            if (!isEmpty(val[key])) {
+                                res[key] = parseParam(obj, val[key]);
+                            } else if (
+                                isEmpty(val[key]) &&
+                                !isEmpty(obj.defaultValue)
+                            ) {
+                                res[key] = obj.defaultValue;
+                            }
+                            return res;
+                        },
+                        {} as Record<string, any>,
+                    ),
             );
         default: {
             const decryptPass = decryptPassword(value);
@@ -285,8 +302,8 @@ export function initParams(
     param: ICCTParams = {},
     isExcludeRequire: boolean = false,
 ): any {
-    const notFound = [];
-    const result = {...param};
+    const notFound = [] as string[];
+    const result = { ...param };
     forEach(conf, (value, key) => {
         if (!isEmpty(param[key])) {
             result[key] = parseParam(value, param[key]);
@@ -372,7 +389,7 @@ export function sortFilesData(
                 if (isEmpty(item.property) || isEmpty(item.direction)) {
                     return val;
                 }
-                const {datatype, format = "3", property} = item;
+                const { datatype, format = "3", property } = item;
                 const nmColumn = property || "";
                 const direction = item.direction?.toUpperCase() || "ASC";
                 const val1 = obj1[nmColumn];
@@ -414,19 +431,17 @@ export function sortFilesData(
                 if (datatype === "integer" || datatype === "numeric") {
                     return direction === "ASC"
                         ? new BigNumber(val1 as any)
-                            .minus(new BigNumber(val2 as any))
-                            .toNumber()
+                              .minus(new BigNumber(val2 as any))
+                              .toNumber()
                         : new BigNumber(val2 as any)
-                            .minus(new BigNumber(val1 as any))
-                            .toNumber();
+                              .minus(new BigNumber(val1 as any))
+                              .toNumber();
                 }
                 if (typeof val1 === "string" && typeof val2 === "string") {
                     return (
                         (direction === "ASC" ? val1 : val2) || ""
                     ).localeCompare((direction === "ASC" ? val2 : val1) || "");
                 }
-                // @ts-ignore
-                // tslint:disable-line no-unused-expression
                 return +(direction === "ASC" ? val1 > val2 : val2 > val1);
             }, 0);
     }
@@ -454,17 +469,23 @@ export function filterFilesData(gateContext: IContext): (a: any) => boolean {
                 if (isEmpty(item.operator)) {
                     return true;
                 }
-                const {datatype, format = "3", property} = item;
+                const { datatype, format = "3", property } = item;
                 const nmColumn = property;
                 const operator = item.operator.toLowerCase();
                 const value = item.value;
                 const valueRecord = obj[nmColumn];
 
-                if (isNullAndUndefined(valueRecord) && NULL_OPERATOR.indexOf(operator) < 0) {
+                if (
+                    isNullAndUndefined(valueRecord) &&
+                    NULL_OPERATOR.indexOf(operator) < 0
+                ) {
                     return false;
                 }
 
-                if (isNullAndUndefined(value) && NULL_OPERATOR.indexOf(operator) < 0) {
+                if (
+                    isNullAndUndefined(value) &&
+                    NULL_OPERATOR.indexOf(operator) < 0
+                ) {
                     return true;
                 }
 
@@ -480,10 +501,15 @@ export function filterFilesData(gateContext: IContext): (a: any) => boolean {
                                 nmColumn.startsWith("fd_") ||
                                 nmColumn.startsWith("ft_"))
                         ) {
-                            return moment(valueRecord).isAfter(value, formatStr[format]);
+                            return moment(valueRecord).isAfter(
+                                value,
+                                formatStr[format],
+                            );
                         }
 
-                        return new BigNumber(valueRecord as any).gt(new BigNumber(value as any));
+                        return new BigNumber(valueRecord as any).gt(
+                            new BigNumber(value as any),
+                        );
                     case "ge":
                     case ">=":
                         if (
@@ -495,10 +521,15 @@ export function filterFilesData(gateContext: IContext): (a: any) => boolean {
                                 nmColumn.startsWith("fd_") ||
                                 nmColumn.startsWith("ft_"))
                         ) {
-                            return moment(valueRecord).isSameOrAfter(value, formatStr[format]);
+                            return moment(valueRecord).isSameOrAfter(
+                                value,
+                                formatStr[format],
+                            );
                         }
 
-                        return new BigNumber(valueRecord as any).gte(new BigNumber(value as any));
+                        return new BigNumber(valueRecord as any).gte(
+                            new BigNumber(value as any),
+                        );
                     case "lt":
                     case "<":
                         if (
@@ -510,10 +541,15 @@ export function filterFilesData(gateContext: IContext): (a: any) => boolean {
                                 nmColumn.startsWith("fd_") ||
                                 nmColumn.startsWith("ft_"))
                         ) {
-                            return moment(valueRecord).isBefore(value, formatStr[format]);
+                            return moment(valueRecord).isBefore(
+                                value,
+                                formatStr[format],
+                            );
                         }
 
-                        return new BigNumber(valueRecord as any).lt(new BigNumber(value as any));
+                        return new BigNumber(valueRecord as any).lt(
+                            new BigNumber(value as any),
+                        );
                     case "le":
                     case "<=":
                         if (
@@ -525,10 +561,15 @@ export function filterFilesData(gateContext: IContext): (a: any) => boolean {
                                 nmColumn.startsWith("fd_") ||
                                 nmColumn.startsWith("ft_"))
                         ) {
-                            return moment(valueRecord).isSameOrBefore(value, formatStr[format]);
+                            return moment(valueRecord).isSameOrBefore(
+                                value,
+                                formatStr[format],
+                            );
                         }
 
-                        return new BigNumber(valueRecord as any).lte(new BigNumber(value as any));
+                        return new BigNumber(valueRecord as any).lte(
+                            new BigNumber(value as any),
+                        );
                     case "eq":
                     case "=":
                         if (
@@ -540,7 +581,10 @@ export function filterFilesData(gateContext: IContext): (a: any) => boolean {
                                 nmColumn.startsWith("fd_") ||
                                 nmColumn.startsWith("ft_"))
                         ) {
-                            return moment(valueRecord).isSame(value, formatStr[format]);
+                            return moment(valueRecord).isSame(
+                                value,
+                                formatStr[format],
+                            );
                         }
 
                         return `${valueRecord}` === `${value}`;
@@ -556,7 +600,10 @@ export function filterFilesData(gateContext: IContext): (a: any) => boolean {
                                 nmColumn.startsWith("fd_") ||
                                 nmColumn.startsWith("ft_"))
                         ) {
-                            return !moment(valueRecord).isSame(value, formatStr[format]);
+                            return !moment(valueRecord).isSame(
+                                value,
+                                formatStr[format],
+                            );
                         }
 
                         return `${valueRecord}` !== `${value}`;
@@ -616,7 +663,7 @@ export const deleteFolderRecursive = (pathDir: string) => {
     }
 };
 
-type TDebounce = (...arg) => void;
+type TDebounce = (...args: any[]) => void;
 
 /**
  * Функция вызывается не более одного раза в указанный период времени
@@ -626,8 +673,8 @@ type TDebounce = (...arg) => void;
  * @param t {number} Время в милиссекундах
  */
 export function throttle(f: TDebounce, t: number) {
-    let lastCall;
-    return (...args) => {
+    let lastCall: number | undefined;
+    return (...args: any[]) => {
         const previousCall = lastCall;
         lastCall = Date.now();
         if (
@@ -651,22 +698,22 @@ export interface IDebounce extends TDebounce {
  * @param t {number} Время в милиссекундах
  */
 export function debounce(f: TDebounce, t: number): IDebounce {
-    let lastCallTimer = null;
-    let lastCall = null;
-    const fn = (...args) => {
+    let lastCallTimer: NodeJS.Timeout | null = null;
+    let lastCall: number | undefined;
+    const fn = (...args: any[]) => {
         const previousCall = lastCall;
         lastCall = Date.now();
         if (previousCall && lastCall - previousCall <= t) {
-            clearTimeout(lastCallTimer);
+            clearTimeout(lastCallTimer as NodeJS.Timeout);
         }
         lastCallTimer = setTimeout(() => {
             lastCallTimer = null;
-            lastCall = null;
+            lastCall = undefined;
             f(...args);
         }, t);
     };
     fn.cancel = () => {
-        clearTimeout(lastCallTimer);
+        clearTimeout(lastCallTimer as NodeJS.Timeout);
     };
     return fn;
 }
@@ -681,15 +728,21 @@ export function transformToBoolean(value: any): boolean {
 }
 
 export function hiddenSecret<T>(param: T): T {
-    if (typeof param === "object" && Object.prototype.toString.call(param) === "[object Object]") {
-        return Object.keys(param).reduce((acc, key) => {
-            if (Constant.PASSWORD_PARAM_PREFIX.includes(key)) {
-                acc[key] = "***";
-            } else {
-                acc[key] = hiddenSecret(param[key]);
-            }
-            return acc;
-        }, {} as T);
+    if (
+        typeof param === "object" &&
+        Object.prototype.toString.call(param) === "[object Object]"
+    ) {
+        return Object.entries(param || {}).reduce(
+            (acc: Record<string, any>, [key, value]: [string, any]) => {
+                if (Constant.PASSWORD_PARAM_PREFIX.includes(key)) {
+                    acc[key] = "***";
+                } else {
+                    acc[key] = hiddenSecret(value);
+                }
+                return acc;
+            },
+            {} as Record<string, any>,
+        ) as T;
     } else if (isArray(param)) {
         return param.map(hiddenSecret) as T;
     }

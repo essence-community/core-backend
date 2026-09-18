@@ -81,26 +81,29 @@ export function addFilter<T, F>(
                 return new Brackets((qb) => {
                     qb.where(
                         Object.entries(
-                            value.reduce((res, val) => {
-                                if (parentKey) {
-                                    if (res[parentKey]) {
-                                        res[parentKey].push(val);
+                            value.reduce(
+                                (res, val) => {
+                                    if (parentKey) {
+                                        if (res[parentKey]) {
+                                            res[parentKey].push(val);
+                                        } else {
+                                            res[parentKey] = [val];
+                                        }
                                     } else {
-                                        res[parentKey] = [val];
+                                        Object.entries(val).forEach(
+                                            ([keyVal, valObject]) => {
+                                                if (res[keyVal]) {
+                                                    res[keyVal].push(valObject);
+                                                } else {
+                                                    res[keyVal] = [valObject];
+                                                }
+                                            },
+                                        );
                                     }
-                                } else {
-                                    Object.entries(val).forEach(
-                                        ([keyVal, valObject]) => {
-                                            if (res[keyVal]) {
-                                                res[keyVal].push(valObject);
-                                            } else {
-                                                res[keyVal] = [valObject];
-                                            }
-                                        },
-                                    );
-                                }
-                                return res;
-                            }, {} as Record<string, any[]>),
+                                    return res;
+                                },
+                                {} as Record<string, any[]>,
+                            ),
                         ).reduce(
                             (res, [keyVal, valObject]) => ({
                                 ...res,
@@ -114,26 +117,29 @@ export function addFilter<T, F>(
                 return new Brackets((qb) => {
                     qb.where(
                         Object.entries(
-                            value.reduce((res, val) => {
-                                if (parentKey) {
-                                    if (res[parentKey]) {
-                                        res[parentKey].push(val);
+                            value.reduce(
+                                (res, val) => {
+                                    if (parentKey) {
+                                        if (res[parentKey]) {
+                                            res[parentKey].push(val);
+                                        } else {
+                                            res[parentKey] = [val];
+                                        }
                                     } else {
-                                        res[parentKey] = [val];
+                                        Object.entries(val).forEach(
+                                            ([keyVal, valObject]) => {
+                                                if (res[keyVal]) {
+                                                    res[keyVal].push(valObject);
+                                                } else {
+                                                    res[keyVal] = [valObject];
+                                                }
+                                            },
+                                        );
                                     }
-                                } else {
-                                    Object.entries(val).forEach(
-                                        ([keyVal, valObject]) => {
-                                            if (res[keyVal]) {
-                                                res[keyVal].push(valObject);
-                                            } else {
-                                                res[keyVal] = [valObject];
-                                            }
-                                        },
-                                    );
-                                }
-                                return res;
-                            }, {} as Record<string, any[]>),
+                                    return res;
+                                },
+                                {} as Record<string, any[]>,
+                            ),
                         ).reduce(
                             (res, [keyVal, valObject]) => ({
                                 ...res,

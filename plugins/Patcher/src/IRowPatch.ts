@@ -1,5 +1,5 @@
 import { isEmpty } from "@ungate/plugininf/lib/util/Util";
-import * as moment from "moment";
+import moment from "moment";
 export abstract class IRowPatch {
     public row: Record<string, any>;
     constructor(row: Record<string, any>) {
@@ -26,6 +26,6 @@ export abstract class IRowPatch {
         const val = this.row[key];
         return isEmpty(val) || (val && val.length === 0)
             ? "null"
-            : `DECODE('${(Buffer.from(val)).toString('base64')}', 'BASE64')`;
+            : `DECODE('${Buffer.from(val).toString("base64")}', 'BASE64')`;
     }
 }

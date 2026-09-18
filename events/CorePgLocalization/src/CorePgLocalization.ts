@@ -23,7 +23,13 @@ export default class CorePgLocalization extends NullEvent {
             CorePgLocalization.getParamsInfo(),
             this.params,
         );
-        this.dataSource = new PostgresDB(`${this.name}_events`, pick(this.params, ...Object.keys(PostgresDB.getParamsInfo())) as any);
+        this.dataSource = new PostgresDB(
+            `${this.name}_events`,
+            pick(
+                this.params,
+                ...Object.keys(PostgresDB.getParamsInfo()),
+            ) as any,
+        );
     }
     /**
      * Инициализация

@@ -1,4 +1,4 @@
-import { IRufusLogger } from "rufus";
+import Logger, { IRufusLogger } from "./Logger";
 import BreakException from "./errors/BreakException";
 import ErrorException from "./errors/ErrorException";
 import ICCTParams, { IParamsInfo } from "./ICCTParams";
@@ -7,7 +7,6 @@ import IObjectParam from "./IObjectParam";
 import IPlugin, { IPluginRequestContext } from "./IPlugin";
 import IQuery, { IGateQuery } from "./IQuery";
 import IResult from "./IResult";
-import Logger from "./Logger";
 import { IAuthResult } from "./NullSessProvider";
 
 export default abstract class NullPlugin implements IPlugin {

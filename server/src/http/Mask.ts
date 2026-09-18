@@ -135,7 +135,7 @@ class BMask implements IMask {
                         ) {
                             return result;
                         }
-                        return result === false
+                        return (result as any) === false
                             ? Promise.reject()
                             : Promise.resolve();
                     }),

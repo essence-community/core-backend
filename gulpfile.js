@@ -4,11 +4,10 @@ const fs = require("fs");
 const path = require("path");
 const { spawn, exec } = require("child_process");
 const crypto = require("crypto");
-const glob = require("glob");
 const { Command } = require("commander");
 const program = new Command();
 program.version("0.0.1");
-program.argument('<string>', 'command gulp')
+program.argument("<string>", "command gulp");
 program.option("--to <path>", "to");
 program.option("--srcname <name>", "srcname");
 program.option("--from <path>", "from");
@@ -27,7 +26,7 @@ packageJson.scripts = {
     server: "nodemon",
     installSvc: "node server/installSvcWin.js",
 };
-const cpy = require("cpy");
+const cpy = require("cpy").default;
 const shasum = crypto.createHash("sha1");
 const buf = Buffer.alloc(8);
 crypto.randomFillSync(buf).toString("hex");
@@ -106,6 +105,12 @@ gulp.task("build_path", () => {
         sourceMap: !isDev,
         experimentalDecorators: true,
         emitDecoratorMetadata: true,
+        noImplicitAny: false,
+        noImplicitThis: false,
+        strictNullChecks: false,
+        useUnknownInCatchVariables: false,
+        esModuleInterop: true,
+        ignoreDeprecations: "6.0",
     });
     return gulp
         .src(path.join(opt.to, opt.srcname || "src", "**", "*.ts"))
@@ -170,7 +175,6 @@ gulp.task("plugins", () => {
                                 cwd: path.join(pluginsDir, file, "assets"),
                                 parents: true,
                                 dot: true,
-
                             },
                         );
                     }
@@ -239,7 +243,6 @@ gulp.task("contexts", () => {
                                 cwd: path.join(pluginsDir, file, "assets"),
                                 parents: true,
                                 dot: true,
-
                             },
                         );
                     }
@@ -308,7 +311,6 @@ gulp.task("events", () => {
                                 cwd: path.join(pluginsDir, file, "assets"),
                                 parents: true,
                                 dot: true,
-
                             },
                         );
                     }
@@ -377,7 +379,6 @@ gulp.task("schedulers", () => {
                                 cwd: path.join(pluginsDir, file, "assets"),
                                 parents: true,
                                 dot: true,
-
                             },
                         );
                     }
@@ -446,7 +447,6 @@ gulp.task("providers", () => {
                                 cwd: path.join(pluginsDir, file, "assets"),
                                 parents: true,
                                 dot: true,
-
                             },
                         );
                     }
@@ -481,7 +481,6 @@ gulp.task("server", () => {
                         cwd: path.join(serverDir, "assets"),
                         parents: true,
                         dot: true,
-
                     },
                 );
             }
@@ -498,13 +497,6 @@ gulp.task("plugininf", () => {
         fs.existsSync(path.join(plugininfDir, "tsconfig.json")) &&
         fs.existsSync(path.join(plugininfDir, "package.json"))
     ) {
-        const tsProject = ts.createProject(
-            path.join(plugininfDir, "tsconfig.json"),
-            {
-                removeComments: !isDev,
-                sourceMap: !isDev,
-            },
-        );
         rows.push(async () => {
             await cmdExec("yarn", [
                 "gulp",
@@ -551,15 +543,15 @@ gulp.task("libs", () => {
                             );
                         }
                         cpy(
-                            ["**/*.*", "**/*"],
+                            ["**/*", "!**/node_modules/.bin/**"],
                             path.join(homeDir, "bin", "libs", file),
                             {
                                 cwd: path.join(libsDir, file),
                                 parents: true,
                                 dot: true,
+                                followSymbolicLinks: false,
                             },
-                        )
-                            .then(resolve, reject);
+                        ).then(resolve, reject);
                     }),
             );
         }
@@ -574,7 +566,6 @@ gulp.task("winsvc", async () => {
         cwd: path.join(homeDir, "winsvc"),
         parents: true,
         dot: true,
-
     });
 });
 
@@ -586,7 +577,6 @@ gulp.task("cert", async () => {
             cwd: path.join(homeDir, "cert"),
             parents: true,
             dot: true,
-
         },
     );
 });
@@ -604,27 +594,6 @@ gulp.task("packageJson", async () => {
         path.join(homeDir, "bin", "yarn.lock"),
         fs.readFileSync(path.join(homeDir, "yarn.lock")),
     );
-});
-
-gulp.task("tslint:fix:all", async () => {
-    const files = (
-        await new Promise((resolve, reject) => {
-            glob("**/tsconfig.json", (err, files) => {
-                if (err) {
-                    return reject(err);
-                }
-                return resolve(files);
-            });
-        })
-    ).filter(
-        (file) =>
-            file.indexOf("bin") === -1 && file.indexOf("node_modules") === -1,
-    );
-    return files.slice(1).reduce((promise, file) => {
-        return promise.then(() =>
-            cmdExec("yarn", ["tslint", "--project", file, "--fix"]),
-        );
-    }, cmdExec("yarn", ["tslint", "--project", files[0], "--fix"]));
 });
 
 gulp.task(

@@ -3,15 +3,15 @@ import ILocalDB from "@ungate/plugininf/lib/db/local/ILocalDB";
 import BreakException from "@ungate/plugininf/lib/errors/BreakException";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
-import {ICacheDb} from "@ungate/plugininf/lib/ISessCtrl";
+import { ICacheDb } from "@ungate/plugininf/lib/ISessCtrl";
 import IContext from "@ungate/plugininf/lib/IContext";
 import IQuery from "@ungate/plugininf/lib/IQuery";
-import {IGateQuery} from "@ungate/plugininf/lib/IQuery";
-import {IResultProvider} from "@ungate/plugininf/lib/IResult";
-import {IUserData, IUserDbData} from "@ungate/plugininf/lib/ISession";
+import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
+import { IResultProvider } from "@ungate/plugininf/lib/IResult";
+import { IUserData, IUserDbData } from "@ungate/plugininf/lib/ISession";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
-import {hiddenSecret} from "@ungate/plugininf/lib/util/Util";
-import {isObject} from "lodash";
+import { hiddenSecret } from "@ungate/plugininf/lib/util/Util";
+import { isObject } from "lodash";
 import IPostgreSQLController from "./IPostgreSQLController";
 const wsQuerySQL =
     "select cc_query from t_query where upper(ck_id) = upper(:query)";
@@ -70,7 +70,7 @@ export default class CorePG extends IPostgreSQLController {
                     null,
                     {
                         autoCommit: true,
-                    }
+                    },
                 )
                 .then((res) => {
                     return new Promise((resolve, reject) => {
@@ -104,16 +104,16 @@ export default class CorePG extends IPostgreSQLController {
     private async initTempTableSession(gateContext: IContext, connection: any) {
         const res = await this.dataSource.executeStmt(
             "select pkg_json_user.f_get_context('hash_user') as hash_user, " +
-            "pkg_json_user.f_get_context('hash_user_action') as hash_user_action, " +
-            "pkg_json_user.f_get_context('hash_user_department') as hash_user_department",
+                "pkg_json_user.f_get_context('hash_user_action') as hash_user_action, " +
+                "pkg_json_user.f_get_context('hash_user_department') as hash_user_department",
             connection,
             null,
             null,
             {
                 autoCommit: true,
-            }
+            },
         );
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
             const data = [];
             res.stream.on("error", (err) => reject(err));
             res.stream.on("data", (chunk) => data.push(chunk));
@@ -135,7 +135,9 @@ export default class CorePG extends IPostgreSQLController {
             throw new ErrorException(-1, "Нет данных о сессии");
         }
         if (gateContext.isDebugEnabled()) {
-            gateContext.debug(`Hash session ${JSON.stringify(hiddenSecret(data))}`);
+            gateContext.debug(
+                `Hash session ${JSON.stringify(hiddenSecret(data))}`,
+            );
         }
         const users = [];
         const userActions = [];
@@ -166,63 +168,63 @@ export default class CorePG extends IPostgreSQLController {
         await Promise.all([
             updateUser || updateUserAction || updateUserDepartment
                 ? this.dbUsers.find().then(async (usersRows) => {
-                    let errRow;
-                    const result = usersRows.every((userRow) => {
-                        const item = userRow.data || ({} as IUserData);
-                        if (!isObject(item)) {
-                            gateContext.error(`Bad tt_user data ${userRow}`);
-                            errRow = new ErrorException(
-                                -1,
-                                "Bad tt_users data",
-                            );
-                            return false;
-                        }
-                        if (!Array.isArray(item.ca_actions)) {
-                            if (
-                                typeof item.ca_actions === "string" &&
-                                (item.ca_actions as any).startsWith("[")
-                            ) {
-                                item.ca_actions = JSON.parse(item.ca_actions);
-                            } else {
-                                item.ca_actions = [];
-                            }
-                        }
-                        (item.ca_actions || []).forEach((action) => {
-                            userActions.push({
-                                ck_user: item.ck_id,
-                                cn_action: action,
-                            });
-                        });
-                        if (!Array.isArray(item.ca_department)) {
-                            if (
-                                typeof item.ca_department === "string" &&
-                                (item.ca_department as any).startsWith("[")
-                            ) {
-                                item.ca_department = JSON.parse(
-                                    item.ca_department,
-                                );
-                            } else {
-                                item.ca_department = [];
-                            }
-                        }
-                        (item.ca_department || []).forEach((dep) => {
-                            userDepartments.push({
-                                ck_department: dep,
-                                ck_user: item.ck_id,
-                            });
-                        });
-                        delete item.ca_actions;
-                        delete item.ca_department;
-                        delete item.ck_dept;
-                        delete item.cv_timezone;
-                        users.push(item);
-                        return true;
-                    });
-                    if (!result) {
-                        throw errRow;
-                    }
-                    return;
-                })
+                      let errRow;
+                      const result = usersRows.every((userRow) => {
+                          const item = userRow.data || ({} as IUserData);
+                          if (!isObject(item)) {
+                              gateContext.error(`Bad tt_user data ${userRow}`);
+                              errRow = new ErrorException(
+                                  -1,
+                                  "Bad tt_users data",
+                              );
+                              return false;
+                          }
+                          if (!Array.isArray(item.ca_actions)) {
+                              if (
+                                  typeof item.ca_actions === "string" &&
+                                  (item.ca_actions as any).startsWith("[")
+                              ) {
+                                  item.ca_actions = JSON.parse(item.ca_actions);
+                              } else {
+                                  item.ca_actions = [];
+                              }
+                          }
+                          (item.ca_actions || []).forEach((action) => {
+                              userActions.push({
+                                  ck_user: item.ck_id,
+                                  cn_action: action,
+                              });
+                          });
+                          if (!Array.isArray(item.ca_department)) {
+                              if (
+                                  typeof item.ca_department === "string" &&
+                                  (item.ca_department as any).startsWith("[")
+                              ) {
+                                  item.ca_department = JSON.parse(
+                                      item.ca_department,
+                                  );
+                              } else {
+                                  item.ca_department = [];
+                              }
+                          }
+                          (item.ca_department || []).forEach((dep) => {
+                              userDepartments.push({
+                                  ck_department: dep,
+                                  ck_user: item.ck_id,
+                              });
+                          });
+                          delete item.ca_actions;
+                          delete item.ca_department;
+                          delete item.ck_dept;
+                          delete item.cv_timezone;
+                          users.push(item);
+                          return true;
+                      });
+                      if (!result) {
+                          throw errRow;
+                      }
+                      return;
+                  })
                 : Promise.resolve(),
         ]);
         const actions = [];
@@ -320,7 +322,7 @@ export default class CorePG extends IPostgreSQLController {
             .then((res) => {
                 const rows = [];
                 res.stream.on("data", (chunk) => rows.push(chunk));
-                return new Promise((resolve, reject) => {
+                return new Promise<void>((resolve, reject) => {
                     res.stream.on("error", (err) => reject(err));
                     res.stream.on("end", () => {
                         if (rows && rows.length) {
@@ -330,7 +332,8 @@ export default class CorePG extends IPostgreSQLController {
                                     : JSON.parse(rows[0].result);
                                 if (result.cv_error) {
                                     gateContext.error(
-                                        `Provider ${this.name
+                                        `Provider ${
+                                            this.name
                                         } Error ${nameFunction}, ${JSON.stringify(
                                             result.cv_error,
                                         )}`,

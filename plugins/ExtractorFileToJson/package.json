@@ -6,14 +6,14 @@
     "license": "MIT",
     "dependencies": {
         "@ungate/plugininf": "^1.0.0",
-        "aws-sdk": "^2.665.0",
+        "@aws-sdk/client-s3": "^3.1135.0",
+        "minio": "^8.0.7",
         "fast-csv": "^5.0.2",
         "lodash": "^4.17.15",
         "mime": "^4.0.6",
         "xlsx-js-style": "^1.2.0"
     },
     "devDependencies": {
-        "@types/aws-sdk": "^2.7.0",
         "@types/lodash": "^4.14.120",
         "@types/mime": "^4.0.0"
     }

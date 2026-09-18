@@ -42,11 +42,7 @@ export default class KubeProbe extends NullContext {
 
     public params: IKubeProbeParams;
 
-    constructor(
-        namePlugin: string,
-        params: ICCTParams,
-        sessCtrl: ISessCtrl,
-    ) {
+    constructor(namePlugin: string, params: ICCTParams, sessCtrl: ISessCtrl) {
         super(namePlugin, params, sessCtrl);
         this.params = {
             ...this.params,

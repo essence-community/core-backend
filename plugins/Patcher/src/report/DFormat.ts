@@ -2,10 +2,10 @@ import { format } from "util";
 import { IRowPatch } from "../IRowPatch";
 
 const formatSqlPostgres =
-"INSERT INTO s_ut.t_d_format\n" + 
-"(ck_id, cv_name, cv_extension, cv_name_lib, cv_recipe, cct_parameter, cv_content_type, ck_user, ct_change)\n" + 
-"VALUES(%s, %s, %s, %s, %s, (%s)::jsonb, %s, %s, %s)\n" + 
-"on conflict (ck_id) do NOTHING;\n";
+    "INSERT INTO s_ut.t_d_format\n" +
+    "(ck_id, cv_name, cv_extension, cv_name_lib, cv_recipe, cct_parameter, cv_content_type, ck_user, ct_change)\n" +
+    "VALUES(%s, %s, %s, %s, %s, (%s)::jsonb, %s, %s, %s)\n" +
+    "on conflict (ck_id) do NOTHING;\n";
 
 export class DFormat extends IRowPatch {
     public toRow(): string {

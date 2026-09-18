@@ -8,11 +8,11 @@ import { sendProcess } from "@ungate/plugininf/lib/util/ProcessSender";
 import { initParams } from "@ungate/plugininf/lib/util/Util";
 import { delay, noop, pick } from "lodash";
 import { ReadStreamToArray } from "@ungate/plugininf/lib/stream/Util";
-import * as moment from 'moment';
+import moment from "moment";
 const logger = Logger.getLogger("CorePgNotification");
 
 export default class CheckEssenceUpdate extends NullEvent {
-    public static getParamsInfo (): IParamsInfo {
+    public static getParamsInfo(): IParamsInfo {
         return {
             enableListen: {
                 name: "Включаем постояный слушатель",
@@ -31,14 +31,17 @@ export default class CheckEssenceUpdate extends NullEvent {
     private eventConnect: Connection;
     private startDate = moment().toISOString();
     private timer?: NodeJS.Timeout;
-    constructor (name: string, params: ICCTParams) {
+    constructor(name: string, params: ICCTParams) {
         super(name, params);
         this.params = initParams(
             CheckEssenceUpdate.getParamsInfo(),
             this.params,
         );
         this.dataSource = new PostgresDB(`${this.name}_check_update`, {
-            ...pick(this.params, ...Object.keys(PostgresDB.getParamsInfo())) as any,
+            ...(pick(
+                this.params,
+                ...Object.keys(PostgresDB.getParamsInfo()),
+            ) as any),
             poolMax: this.params.poolMax || 5,
             poolMin: this.params.poolMin || 1,
         } as any);
@@ -46,7 +49,7 @@ export default class CheckEssenceUpdate extends NullEvent {
     /**
      * Инициализация
      */
-    public async init (reload?: boolean): Promise<void> {
+    public async init(reload?: boolean): Promise<void> {
         if (this.eventConnect) {
             const conn = this.eventConnect;
             this.eventConnect = null;
@@ -63,7 +66,7 @@ export default class CheckEssenceUpdate extends NullEvent {
             return this.initEvents();
         }
     }
-    public initStartData () {
+    public initStartData() {
         return this.dataSource
             .executeStmt("select CURRENT_TIMESTAMP as ct_change")
             .then((res) => ReadStreamToArray(res.stream))
@@ -76,7 +79,7 @@ export default class CheckEssenceUpdate extends NullEvent {
     /**
      * Подключение отслеживания
      */
-    public async initEvents () {
+    public async initEvents() {
         logger.info(`Init event ${this.name}`);
         this.eventConnect = await this.dataSource.open();
         this.eventConnect.getCurrentConnection().on("error", async (err) => {
@@ -86,19 +89,15 @@ export default class CheckEssenceUpdate extends NullEvent {
             );
             try {
                 await this.eventConnect.rollbackAndRelease();
-            } catch(e) {
-                logger.debug(
-                    e,
-                );
+            } catch (e) {
+                logger.debug(e);
             }
             try {
                 if (this.dataSource.pool) {
                     await this.dataSource.resetPool();
                 }
-            } catch(e) {
-                logger.debug(
-                    e,
-                );
+            } catch (e) {
+                logger.debug(e);
             }
             this.initEvents();
         });
@@ -119,7 +118,7 @@ export default class CheckEssenceUpdate extends NullEvent {
         return conn.query("LISTEN events");
     }
 
-    private executeTimer () {
+    private executeTimer() {
         this.timer = setTimeout(
             () =>
                 this.execute()
@@ -134,17 +133,17 @@ export default class CheckEssenceUpdate extends NullEvent {
     /**
      * Проверка обновлений
      */
-    private execute () {
+    private execute() {
         return this.dataSource
             .executeStmt(
-                "select\n" + 
-                "    t.*\n" + 
-                "from\n" + 
-                "    s_mt.t_page_update_history t\n" + 
-                "where\n" + 
-                "    date_trunc('second', t.ct_change) > date_trunc('second', :ct_change::timestamptz)\n" + 
-                "order by\n" + 
-                "    t.ct_change asc\n",
+                "select\n" +
+                    "    t.*\n" +
+                    "from\n" +
+                    "    s_mt.t_page_update_history t\n" +
+                    "where\n" +
+                    "    date_trunc('second', t.ct_change) > date_trunc('second', :ct_change::timestamptz)\n" +
+                    "order by\n" +
+                    "    t.ct_change asc\n",
                 undefined,
                 {
                     ct_change: this.startDate,
@@ -173,7 +172,7 @@ export default class CheckEssenceUpdate extends NullEvent {
     /**
      * Перезагрузка оповещение в случае сбоя
      */
-    private reload () {
+    private reload() {
         if (this.timer) {
             clearTimeout(this.timer);
             this.timer = undefined;

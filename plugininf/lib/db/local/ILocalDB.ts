@@ -78,35 +78,32 @@ export type UpdateOperators<Doc> = {
 
     $push: {
         [K in keyof Doc]: Doc[K] extends any[]
-            ?
-                  | DeArray<Doc[K]>
-                  | {
-                        $each: Doc[K];
-                        $slice?: number;
-                    }
+            ? | DeArray<Doc[K]>
+              | {
+                    $each: Doc[K];
+                    $slice?: number;
+                }
             : never;
     } & Record<DeepKey<Doc>, any>;
 
     $addToSet: {
         [K in keyof Doc]: Doc[K] extends any[]
-            ?
-                  | DeArray<Doc[K]>
-                  | {
-                        $each: Doc[K];
-                        $slice?: number;
-                    }
+            ? | DeArray<Doc[K]>
+              | {
+                    $each: Doc[K];
+                    $slice?: number;
+                }
             : never;
     } & Record<DeepKey<Doc>, { $each: any; $slice?: number } | any>;
 
     $pull: {
         [K in keyof Doc]: Doc[K] extends any[]
-            ?
-                  | Partial<DeArray<Doc[K]>>
-                  | FilterQuery<Doc[K]>
-                  | {
-                        $each: Partial<DeArray<Doc[K]>>;
-                        $slice?: number;
-                    }
+            ? | Partial<DeArray<Doc[K]>>
+              | FilterQuery<Doc[K]>
+              | {
+                    $each: Partial<DeArray<Doc[K]>>;
+                    $slice?: number;
+                }
             : never;
     } & Record<
         DeepKey<Doc>,

@@ -28,11 +28,7 @@ export = class AdminGate extends NullProvider {
     }
     private adminAction: AdminAction;
     private adminModify: AdminModify;
-    constructor(
-        name: string,
-        params: ICCTParams,
-        sessCtrl: ISessCtrl,
-    ) {
+    constructor(name: string, params: ICCTParams, sessCtrl: ISessCtrl) {
         super(name, params, sessCtrl);
         this.params = initParams(AdminGate.getParamsInfo(), this.params);
         this.adminAction = new AdminAction(name, this.params);

@@ -1,8 +1,7 @@
-import {CronJob} from "cron";
-import * as rufus from "rufus";
+import { CronJob } from "cron";
 import ICCTParams, { IParamsInfo } from "./ICCTParams";
 import IScheduler from "./IScheduler";
-import Logger from "./Logger";
+import Logger, { IRufusLogger } from "./Logger";
 import { isEmpty } from "./util/Util";
 /**
  * Каркас класса плагина планировщик
@@ -12,7 +11,7 @@ export default abstract class NullScheduler implements IScheduler {
     public name: string;
     public cronStr: string;
     public params: ICCTParams;
-    public log: rufus.IRufusLogger;
+    public log: IRufusLogger;
     private job: CronJob;
     public static getParamsInfo(): IParamsInfo {
         return {};

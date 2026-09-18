@@ -9,7 +9,7 @@ import {
 } from "body-parser";
 import * as Multiparty from "multiparty";
 import * as QueryString from "qs";
-import * as typeis from "type-is";
+import typeis from "type-is";
 import * as zlib from "zlib";
 import Constants from "../core/Constants";
 const logger = Logger.getLogger("BodyParse");
@@ -59,25 +59,114 @@ function contentStream(req) {
     return stream;
 }
 
+function applyJsonBody(req) {
+    const body = req.body;
+    if (
+        body &&
+        typeof body === "object" &&
+        !Array.isArray(body) &&
+        (body.query != null ||
+            body.action != null ||
+            body.session != null ||
+            body.json != null)
+    ) {
+        req.preParams = {
+            ...req.preParams,
+            ...body,
+        };
+        if (
+            req.preParams.json != null &&
+            typeof req.preParams.json !== "string"
+        ) {
+            req.preParams.json = JSON.stringify(req.preParams.json);
+        }
+    } else {
+        req.preParams.json =
+            typeof body === "string" ? body : JSON.stringify(body);
+    }
+    if (typeof req.body !== "string") {
+        req.body = JSON.stringify(req.body);
+    }
+}
+
+function parseMultipart(req, gateContext, next) {
+    req._body = true;
+    const form = new Multiparty.Form({
+        maxFilesSize: gateContext.maxFileSize,
+        uploadDir: Constants.UPLOAD_DIR,
+    });
+    form.parse(contentStream(req), (err, fields, files) => {
+        if (err) {
+            logger.error(err.message, err);
+            const error = new Error("No valid upload");
+            error.stack = err.stack;
+            return next({
+                ...error,
+                gateContext,
+            });
+        }
+        req.preParams = {
+            ...req.preParams,
+            ...Object.entries(fields).reduce(
+                (obj, val) => {
+                    obj[val[0].toLocaleLowerCase()] = val?.[1]?.[0];
+                    return obj;
+                },
+                {} as Record<string, any>,
+            ),
+        };
+        req.body = { fields, files };
+        return next();
+    });
+}
+
 export default function BodyParse(gateContext: IContextPlugin) {
-    const json = Json({
-        limit: gateContext.maxPostSize,
-        type: ["application/json", "text/json"],
-    });
-    const xml = Text({
-        limit: gateContext.maxPostSize,
-        type: ["application/xml", "text/xml", "application/soap+xml"],
-    });
-    const text = Text({
-        limit: gateContext.maxPostSize,
-    });
-    const urlencoded = Urlencoded({
-        extended: true,
-        limit: gateContext.maxPostSize,
-    });
-    const raw = Raw({
-        limit: gateContext.maxPostSize,
-    });
+    const parsers = [
+        {
+            parse: Urlencoded({
+                extended: true,
+                limit: gateContext.maxPostSize,
+            }),
+            apply: (req) => {
+                req.preParams = {
+                    ...req.preParams,
+                    ...req.body,
+                };
+            },
+        },
+        {
+            parse: Json({
+                limit: gateContext.maxPostSize,
+                type: ["application/json", "text/json"],
+            }),
+            apply: applyJsonBody,
+        },
+        {
+            parse: Text({
+                limit: gateContext.maxPostSize,
+                type: ["application/xml", "text/xml", "application/soap+xml"],
+            }),
+            apply: (req) => {
+                req.preParams.xml = req.body;
+            },
+        },
+        {
+            parse: Text({
+                limit: gateContext.maxPostSize,
+            }),
+            apply: (req) => {
+                req.preParams.text = req.body;
+            },
+        },
+        {
+            parse: Raw({
+                limit: gateContext.maxPostSize,
+            }),
+            apply: (req) => {
+                req.preParams.raw = req.body;
+            },
+        },
+    ];
 
     return function bodyParser(req, res, next) {
         req.preParams = {
@@ -85,112 +174,41 @@ export default function BodyParse(gateContext: IContextPlugin) {
             ...QueryString.parse(req._parsedUrl.query),
         };
 
-        if (req._body) {
+        if (req.body) {
             next();
             return;
         }
 
-        req.body = req.body || {};
-
-        // skip requests without bodies
         if (!typeis.hasBody(req)) {
             next();
             return;
         }
 
-        // determine if request should be parsed
         if (shouldParse(req)) {
-            req._body = true;
-            const form = new Multiparty.Form({
-                maxFilesSize: gateContext.maxFileSize,
-                uploadDir: Constants.UPLOAD_DIR,
-            });
-            form.parse(contentStream(req), (err, fields, files) => {
-                if (err) {
-                    logger.error(err.message, err);
-                    const error = new Error("No valid upload");
-                    error.stack = err.stack;
-                    return next({
-                        ...error,
-                        gateContext,
-                    });
-                }
-                req.preParams = {
-                    ...req.preParams,
-                    ...Object.entries(fields).reduce((obj, val) => {
-                        obj[val[0].toLocaleLowerCase()] = val[1][0];
-                        return obj;
-                    }, {}),
-                };
-                req.body = { fields, files };
-                return next();
-            });
+            parseMultipart(req, gateContext, next);
             return;
         }
-        urlencoded(req, res, (err) => {
-            if (err) {
-                err.gateContext = gateContext;
-                next(err);
-                return;
-            }
-            if (req._body) {
-                req.preParams = {
-                    ...req.preParams,
-                    ...req.body,
-                };
+
+        const tryParse = (index: number) => {
+            if (index >= parsers.length) {
                 next();
                 return;
             }
-            json(req, res, (errjson) => {
-                if (errjson) {
-                    errjson.gateContext = gateContext;
-                    next(errjson);
+            const { parse, apply } = parsers[index];
+            parse(req, res, (err) => {
+                if (err) {
+                    err.gateContext = gateContext;
+                    next(err);
                     return;
                 }
-                if (req._body) {
-                    req.body = JSON.stringify(req.body);
-                    req.preParams.json = req.body;
+                if (req.body) {
+                    apply(req);
                     next();
                     return;
                 }
-                xml(req, res, (errXml) => {
-                    if (errXml) {
-                        errXml.gateContext = gateContext;
-                        next(errXml);
-                        return;
-                    }
-                    if (req._body) {
-                        req.preParams.xml = req.body;
-                        next();
-                        return;
-                    }
-                    text(req, res, (errText) => {
-                        if (errText) {
-                            errText.gateContext = gateContext;
-                            next(errText);
-                            return;
-                        }
-                        if (req._body) {
-                            req.preParams.text = req.body;
-                            next();
-                            return;
-                        }
-                        raw(req, res, (errRaw) => {
-                            if (errRaw) {
-                                errRaw.gateContext = gateContext;
-                                next(errRaw);
-                                return;
-                            }
-                            if (req._body) {
-                                req.preParams.raw = req.body;
-                                next();
-                                return;
-                            }
-                            next();
-                        });
-                    });
-                });
+                tryParse(index + 1);
             });
-        });
+        };
+        tryParse(0);
     };
 }

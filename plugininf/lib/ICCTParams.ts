@@ -34,7 +34,7 @@ export interface IBaseParamInfo {
     description?: string;
     hidden?: boolean;
     disabled?: boolean;
-    checkvalue?: (val) => string | number | boolean;
+    checkvalue?: <T>(val: any) => T;
 }
 
 export interface IComboParamInfo extends IBaseParamInfo {

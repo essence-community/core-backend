@@ -8,7 +8,7 @@ type TStream = Transform | NodeJS.ReadWriteStream | Readable;
  */
 export function ReadStreamToArray(stream: Readable): Promise<any[]> {
     return new Promise((resolve, reject) => {
-        const res = [];
+        const res: any[] = [];
         stream.on("error", (err) => reject(err));
         stream.on("data", (chunk) => res.push(chunk));
         stream.on("end", () => resolve(res));
@@ -24,11 +24,10 @@ export function safePipe(
     transforms: TStream | TStream[],
 ): Readable {
     const arrStream = isArray(transforms) ? transforms : [transforms];
-    return arrStream.reduce((stream, val) => {
-        // @ts-ignore
-        stream.on("error", (err: Error) => val.emit("error", err) as any);
+    return arrStream.reduce((stream: Readable, val: TStream) => {
+        stream.on("error", (err: Error) => (val as any).emit("error", err));
         return stream.pipe(val as any);
-    }, input);
+    }, input) as Readable;
 }
 /**
  * Обрываем передачу в случае ошибки в потоках

@@ -1,21 +1,22 @@
 import BreakException from "@ungate/plugininf/lib/errors/BreakException";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
-import {IParamsInfo} from "@ungate/plugininf/lib/ICCTParams";
-import IContext, {IFormData} from "@ungate/plugininf/lib/IContext";
-import {IGateQuery} from "@ungate/plugininf/lib/IQuery";
-import {IResultProvider} from "@ungate/plugininf/lib/IResult";
+import { IParamsInfo } from "@ungate/plugininf/lib/ICCTParams";
+import IContext, { IFormData } from "@ungate/plugininf/lib/IContext";
+import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
+import { IResultProvider } from "@ungate/plugininf/lib/IResult";
 import NullProvider from "@ungate/plugininf/lib/NullProvider";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
 import {
     ReadStreamToArray,
     safeResponsePipe,
 } from "@ungate/plugininf/lib/stream/Util";
-import {hiddenSecret, isEmpty} from "@ungate/plugininf/lib/util/Util";
+import { hiddenSecret, isEmpty } from "@ungate/plugininf/lib/util/Util";
 import * as fs from "fs";
 import * as JSONStream from "JSONStream";
-import {isArray, isBoolean} from "lodash";
+import { isArray, isBoolean } from "lodash";
 import * as QueryString from "qs";
-import * as request from "request";
+import * as axios from "axios";
+import FormData from "form-data";
 import * as url from "url";
 
 const keysJson = ["total", "data", "metaData", "success"];
@@ -84,14 +85,16 @@ export default class ProxyTransparent extends NullProvider {
         urlGate.query = QueryString.parse(
             (gateContext.request as any)._parsedUrl.query,
         );
-        const params: request.Options = {
-            gzip: !!this.params.useGzip,
+        const params: axios.AxiosRequestConfig = {
+            decompress: !!this.params.useGzip,
             headers,
-            method: gateContext.request.method.toUpperCase(),
+            method: gateContext.request.method.toUpperCase() as axios.Method,
             timeout: this.params.timeout
                 ? parseInt(this.params.timeout, 10) * 1000
                 : 660000,
             url: url.format(urlGate),
+            responseType: "stream",
+            validateStatus: () => true,
         };
         if (!isEmpty(gateContext.request.body)) {
             if (
@@ -99,7 +102,7 @@ export default class ProxyTransparent extends NullProvider {
                 (gateContext.request.body as IFormData).files &&
                 contentType.startsWith("multipart/form-data")
             ) {
-                const formData = {};
+                const formData = new FormData();
                 delete headers["content-type"];
                 Object.keys(
                     (gateContext.request.body as IFormData).files,
@@ -108,17 +111,17 @@ export default class ProxyTransparent extends NullProvider {
                         (gateContext.request.body as IFormData).files[key]
                             .length
                     ) {
-                        formData[key] = [];
                         (gateContext.request.body as IFormData).files[
                             key
                         ].forEach((item) => {
-                            formData[key].push({
-                                options: {
+                            formData.append(
+                                key,
+                                fs.readFileSync(item.path, null),
+                                {
                                     contentType: item.headers["content-type"],
                                     filename: item.originalFilename,
                                 },
-                                value: fs.readFileSync(item.path, null),
-                            });
+                            );
                         });
                     }
                 });
@@ -129,36 +132,53 @@ export default class ProxyTransparent extends NullProvider {
                         (gateContext.request.body as IFormData).fields[key]
                             .length
                     ) {
-                        formData[key] = [];
                         (gateContext.request.body as IFormData).fields[
                             key
                         ].forEach((item) => {
-                            formData[key].push(item);
+                            formData.append(key, item);
                         });
                     }
                 });
-                params.formData = formData;
+                params.data = formData;
+                params.headers = {
+                    ...params.headers,
+                    ...formData.getHeaders(),
+                };
             } else if (
                 contentType.startsWith("application/x-www-form-urlencoded")
             ) {
-                params.body = QueryString.stringify(paramsQuery);
+                params.data = QueryString.stringify(paramsQuery);
             } else {
-                params.body = gateContext.request.body as IFormData;
+                params.data = gateContext.request.body as IFormData;
             }
         }
         if (this.params.proxy) {
-            params.proxy = this.params.proxy;
+            const proxy = this.params.proxy.startsWith("{")
+                ? JSON.parse(this.params.proxy)
+                : url.parse(this.params.proxy, true);
+            const proxyauth = proxy.auth ? proxy.auth.split(":") : [];
+            params.proxy = this.params.proxy.startsWith("{")
+                ? proxy
+                : {
+                      host: proxy.host,
+                      port: parseInt(proxy.port, 10),
+                      auth: proxy.auth
+                          ? { username: proxyauth[0], password: proxyauth[1] }
+                          : undefined,
+                      protocol: proxy.protocol,
+                  };
+        }
+        if (params.method === "GET") {
+            delete params.data;
         }
         if (gateContext.isDebugEnabled()) {
             gateContext.debug(
-                `proxy request params: ${JSON.stringify(hiddenSecret(params)).substr(
-                    0,
-                    4000,
-                )}`,
+                `proxy request params: ${JSON.stringify(
+                    hiddenSecret(params),
+                ).substr(0, 4000)}`,
             );
         }
-        return new Promise((resolve, reject) => {
-            const resp = request(params);
+        return new Promise(async (resolve, reject) => {
             const stream = JSONStream.parse("data.*");
             stream.on("header", (data) => {
                 if (isArray(data)) {
@@ -205,64 +225,79 @@ export default class ProxyTransparent extends NullProvider {
                     gateContext.metaData = data.metaData;
                 }
             });
-            resp.on("response", (res) => {
-                const ctHeader =
-                    res.headers["content-type"] || "application/json";
-                const rheaders = {
-                    ...res.headers,
-                };
-                if (gateContext.isDebugEnabled()) {
-                    gateContext.debug(
-                        `Response proxy headers: ${JSON.stringify(
-                            res.headers,
-                        )}`,
+            let res: axios.AxiosResponse;
+            try {
+                res = await axios.default.request(params);
+            } catch (err) {
+                if (err) {
+                    gateContext.error(
+                        `Error query ${gateContext.queryName}`,
+                        err,
+                    );
+                    return reject(
+                        new ErrorException(
+                            -1,
+                            "Ошибка вызова внешнего сервиса",
+                        ),
                     );
                 }
-                if (ctHeader.startsWith("application/json")) {
-                    resp.on("error", (err) => {
-                        if (err) {
-                            gateContext.error(
-                                `Error query ${gateContext.queryName}`,
-                                err,
-                            );
-                            stream.emit(
-                                "error",
-                                new ErrorException(
-                                    -1,
-                                    "Ошибка вызова внешнего сервиса",
-                                ),
-                            );
-                        }
-                        return undefined;
-                    });
-                    resp.pipe(stream);
-                    return ReadStreamToArray(stream as any).then((arr) =>
-                        resolve({
-                            stream: ResultStream(arr),
-                        }),
-                    );
-                }
-                delete rheaders.date;
-                delete rheaders.host;
-                gateContext.response.writeHead(res.statusCode, rheaders);
-                resp.on("end", () => reject(new BreakException("break")));
-                resp.on("error", (err) => {
+                return undefined;
+            }
+            const ctHeader = `${
+                res.headers["content-type"] || "application/json"
+            }`;
+            const rheaders = {
+                ...res.headers,
+            };
+            if (gateContext.isDebugEnabled()) {
+                gateContext.debug(
+                    `Response proxy headers: ${JSON.stringify(res.headers)}`,
+                );
+            }
+            if (ctHeader.startsWith("application/json")) {
+                res.data.on("error", (err) => {
                     if (err) {
                         gateContext.error(
                             `Error query ${gateContext.queryName}`,
                             err,
                         );
-                        return reject(
+                        stream.emit(
+                            "error",
                             new ErrorException(
                                 -1,
                                 "Ошибка вызова внешнего сервиса",
                             ),
                         );
                     }
+                    return undefined;
                 });
-                safeResponsePipe(resp as any, gateContext.response);
-                return undefined;
+                res.data.pipe(stream);
+                return ReadStreamToArray(stream as any).then((arr) =>
+                    resolve({
+                        stream: ResultStream(arr),
+                    }),
+                );
+            }
+            delete rheaders.date;
+            delete rheaders.host;
+            gateContext.response.writeHead(res.status, rheaders as any);
+            res.data.on("end", () => reject(new BreakException("break")));
+            res.data.on("error", (err) => {
+                if (err) {
+                    gateContext.error(
+                        `Error query ${gateContext.queryName}`,
+                        err,
+                    );
+                    return reject(
+                        new ErrorException(
+                            -1,
+                            "Ошибка вызова внешнего сервиса",
+                        ),
+                    );
+                }
             });
+            safeResponsePipe(res.data as any, gateContext.response);
+            return undefined;
         });
     }
 }

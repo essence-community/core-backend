@@ -41,7 +41,7 @@ import {
     sqlSysSetting,
 } from "./SqlPostgres";
 import { SysSetting } from "./SysSetting";
-import { sqlPageAttr } from './SqlPostgres';
+import { sqlPageAttr } from "./SqlPostgres";
 import { PageAttr } from "./PageAttr";
 
 export async function patchMeta(dir: string, json: IJson, conn: Connection) {
@@ -265,9 +265,7 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
                             if (!page[row.ck_page]) {
                                 return;
                             }
-                            page[row.ck_page].write(
-                                new PageAttr(row).toRow(),
-                            );
+                            page[row.ck_page].write(new PageAttr(row).toRow());
                         });
                         res.stream.on("error", (err) => reject(err));
                         res.stream.on("end", () => resolve());
@@ -300,7 +298,7 @@ export async function patchMeta(dir: string, json: IJson, conn: Connection) {
                         res.stream.on("end", () => resolve());
                     }),
             );
-        
+
         await conn
             .executeStmt(
                 sqlPageVariable,

@@ -2,16 +2,15 @@
  * Created by artemov_i on 05.12.2018.
  */
 
-import {forEach, isObject, noop} from "lodash";
+import { forEach, isObject, noop } from "lodash";
 import * as oracledb from "oracledb";
-import {IRufusLogger} from "rufus";
-import {Readable, Transform, TransformCallback} from "stream";
-import {IParamsInfo} from "../../ICCTParams";
+import { Readable, Transform, TransformCallback } from "stream";
+import { IParamsInfo } from "../../ICCTParams";
 import IObjectParam from "../../IObjectParam";
-import {IResultProvider} from "../../IResult";
-import Logger from "../../Logger";
-import {safePipe} from "../../stream/Util";
-import {hiddenSecret, initParams, isEmpty} from "../../util/Util";
+import { IResultProvider } from "../../IResult";
+import Logger, { IRufusLogger } from "../../Logger";
+import { safePipe } from "../../stream/Util";
+import { hiddenSecret, initParams, isEmpty } from "../../util/Util";
 import Connection from "../Connection";
 import IOptions from "../IOptions";
 const re = /(?!\B'[^']*):(\w+)(?![^']*'\B)/gi;
@@ -126,18 +125,18 @@ export default class OracleDB {
                     {
                         ck_id: "NOTSET",
                     },
-                    {ck_id: "VERBOSE"},
-                    {ck_id: "DEBUG"},
-                    {ck_id: "INFO"},
-                    {ck_id: "WARNING"},
-                    {ck_id: "ERROR"},
-                    {ck_id: "CRITICAL"},
-                    {ck_id: "WARN"},
-                    {ck_id: "TRACE"},
-                    {ck_id: "FATAL"},
+                    { ck_id: "VERBOSE" },
+                    { ck_id: "DEBUG" },
+                    { ck_id: "INFO" },
+                    { ck_id: "WARNING" },
+                    { ck_id: "ERROR" },
+                    { ck_id: "CRITICAL" },
+                    { ck_id: "WARN" },
+                    { ck_id: "TRACE" },
+                    { ck_id: "FATAL" },
                 ],
                 type: "combo",
-                valueField: [{in: "ck_id"}],
+                valueField: [{ in: "ck_id" }],
             },
         };
     }
@@ -178,10 +177,10 @@ export default class OracleDB {
         this.oracledb.fetchAsBuffer = [this.oracledb.BLOB];
         this.oracledb.maxRows =
             this.connectionConfig.maxRows ||
-            OracleDB.getParamsInfo().maxRows.defaultValue as number;
+            (OracleDB.getParamsInfo().maxRows.defaultValue as number);
         this.oracledb.prefetchRows =
             this.connectionConfig.prefetchRows ||
-            OracleDB.getParamsInfo().prefetchRows.defaultValue as number;
+            (OracleDB.getParamsInfo().prefetchRows.defaultValue as number);
         this.oracledb.stmtCacheSize = 200;
         this.oracledb.poolIncrement = 1;
         if (!isEmpty(params.queryTimeout)) {
@@ -250,17 +249,21 @@ export default class OracleDB {
                     poolAlias: this.name,
                     poolMax:
                         this.connectionConfig.poolMax ||
-                        OracleDB.getParamsInfo().poolMax.defaultValue as number,
+                        (OracleDB.getParamsInfo().poolMax
+                            .defaultValue as number),
                     poolMin:
                         this.connectionConfig.poolMin ||
-                        OracleDB.getParamsInfo().poolMin.defaultValue as number,
+                        (OracleDB.getParamsInfo().poolMin
+                            .defaultValue as number),
                     queueTimeout:
                         this.connectionConfig.queueTimeout ||
-                        OracleDB.getParamsInfo().queueTimeout.defaultValue as number,
+                        (OracleDB.getParamsInfo().queueTimeout
+                            .defaultValue as number),
                     user: this.connectionConfig.user,
                     poolTimeout:
                         this.connectionConfig.poolTimeout ||
-                        OracleDB.getParamsInfo().poolTimeout.defaultValue as number,
+                        (OracleDB.getParamsInfo().poolTimeout
+                            .defaultValue as number),
                 })
                 .then((pool) => {
                     this.pool = pool;
@@ -299,11 +302,11 @@ export default class OracleDB {
                     if (this.pool && this.log.isDebugEnabled()) {
                         this.log.debug(
                             `GetConnection Provider pool: ${this.pool.poolAlias},` +
-                            ` Connections open: ${this.pool.connectionsOpen}`,
+                                ` Connections open: ${this.pool.connectionsOpen}`,
                         );
                         this.log.debug(
                             `GetConnection Provider pool: ${this.pool.poolAlias},` +
-                            ` Connections in use: ${this.pool.connectionsInUse}`,
+                                ` Connections in use: ${this.pool.connectionsInUse}`,
                         );
                     }
                     const oconnect = await pool.getConnection();
@@ -319,11 +322,11 @@ export default class OracleDB {
         if (this.pool && this.log.isDebugEnabled()) {
             this.log.debug(
                 `GetConnection Provider pool: ${this.pool.poolAlias},` +
-                ` Connections open: ${this.pool.connectionsOpen}`,
+                    ` Connections open: ${this.pool.connectionsOpen}`,
             );
             this.log.debug(
                 `GetConnection Provider pool: ${this.pool.poolAlias},` +
-                ` Connections in use: ${this.pool.connectionsInUse}`,
+                    ` Connections in use: ${this.pool.connectionsInUse}`,
             );
         }
         return this.pool
@@ -340,7 +343,9 @@ export default class OracleDB {
         params?: IOracleDBConfig,
     ): Promise<Connection> {
         if (params.poolAlias) {
-            const pool: oracledb.Pool = await this.getPool(params.poolAlias).catch(() =>
+            const pool: oracledb.Pool = await this.getPool(
+                params.poolAlias,
+            ).catch(() =>
                 this.oracledb
                     .createPool({
                         poolMax: 10,
@@ -349,10 +354,7 @@ export default class OracleDB {
                         ...params,
                     })
                     .catch((err) => {
-                        this.log.error(
-                            "Ошибка подключения к базе данных",
-                            err,
-                        );
+                        this.log.error("Ошибка подключения к базе данных", err);
                         return Promise.reject(new Error(err));
                     }),
             );
@@ -362,10 +364,7 @@ export default class OracleDB {
                 .catch((err) => {
                     return new Promise<Connection>((resolve, reject) => {
                         setTimeout(() => {
-                            this.getConnectionNew(params).then(
-                                resolve,
-                                reject,
-                            );
+                            this.getConnectionNew(params).then(resolve, reject);
                         }, 1000);
                     });
                 });
@@ -582,11 +581,14 @@ export default class OracleDB {
         const conn = inConnection
             ? inConnection
             : await this.getConnection().then(async (oconnect) =>
-                oconnect.getCurrentConnection(),
-            );
+                  oconnect.getCurrentConnection(),
+              );
         const isRelease = isEmpty(inConnection) || options.isRelease;
-        if (this.pool && (this.log.isDebugEnabled() || this.log.isTraceEnabled())) {
-            const logParam = hiddenSecret({...params});
+        if (
+            this.pool &&
+            (this.log.isDebugEnabled() || this.log.isTraceEnabled())
+        ) {
+            const logParam = hiddenSecret({ ...params });
             this.log.trace(
                 `execute sql:\n${sql}\nparams:\n${JSON.stringify(logParam)}`,
             );
@@ -770,22 +772,22 @@ export default class OracleDB {
                     value:
                         metaData[i].dbType === oracledb.DB_TYPE_NUMBER
                             ? (value) => {
-                                let result = value;
-                                if (value) {
-                                    if (
-                                        value.indexOf(",") > -1 ||
-                                        value.indexOf(".") > -1
-                                    ) {
-                                        result = value.replace(/,/g, ".");
-                                        if (result.indexOf(".") === 0) {
-                                            result = `0${result}`;
-                                        }
-                                    } else {
-                                        result = parseInt(value, 10);
-                                    }
-                                }
-                                return result;
-                            }
+                                  let result = value;
+                                  if (value) {
+                                      if (
+                                          value.indexOf(",") > -1 ||
+                                          value.indexOf(".") > -1
+                                      ) {
+                                          result = value.replace(/,/g, ".");
+                                          if (result.indexOf(".") === 0) {
+                                              result = `0${result}`;
+                                          }
+                                      } else {
+                                          result = parseInt(value, 10);
+                                      }
+                                  }
+                                  return result;
+                              }
                             : (value) => value,
                 };
             }

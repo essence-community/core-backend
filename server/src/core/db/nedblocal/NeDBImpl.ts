@@ -17,7 +17,12 @@ export class NeDBImpl<T> extends EventEmitter implements ILocalDB<T> {
     public isTemp: boolean;
     private compactTimeout: number = 5000;
 
-    constructor(dbname: string, db: nedb.INeDb, isTemp: boolean, compactTimeout = 5000) {
+    constructor(
+        dbname: string,
+        db: nedb.INeDb,
+        isTemp: boolean,
+        compactTimeout = 5000,
+    ) {
         super();
         this.dbname = dbname;
         this.db = db;
@@ -78,8 +83,7 @@ export class NeDBImpl<T> extends EventEmitter implements ILocalDB<T> {
                 return;
             }
             if (!isEmpty(object.ck_id)) {
-                // @ts-ignore
-                object._id = object.ck_id;
+                object._id = object.ck_id as any;
             }
             if (!isEmpty(object._id)) {
                 this.update(
@@ -198,7 +202,10 @@ export class NeDBImpl<T> extends EventEmitter implements ILocalDB<T> {
         });
     }
 
-    public compactDatafileDef = debounce(() => this.compactDatafile(), this.compactTimeout);
+    public compactDatafileDef = debounce(
+        () => this.compactDatafile(),
+        this.compactTimeout,
+    );
     public compactDatafile() {
         return new Promise<void>((resolve) => {
             this.db.persistence.compactDatafile();

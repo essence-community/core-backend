@@ -1,4 +1,10 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import {
+    Column,
+    CreateDateColumn,
+    Entity,
+    PrimaryGeneratedColumn,
+    UpdateDateColumn,
+} from "typeorm";
 
 @Entity("t_log")
 export class LogModel {
@@ -39,7 +45,7 @@ export class LogModel {
         nullable: false,
         comment: "Данные сессии",
         transformer: {
-            to: (value) => (value ? JSON.stringify(value) : '{}'),
+            to: (value) => (value ? JSON.stringify(value) : "{}"),
             from: (value) => (value ? JSON.parse(value) : {}),
         },
     })

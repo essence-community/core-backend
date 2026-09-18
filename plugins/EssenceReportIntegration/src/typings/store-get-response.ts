@@ -5,8 +5,7 @@ import { ResultSuccess } from "./result-success";
 export type StoreGetResponse<
     TCode extends 200 = 200,
     TContentType extends "application/json" | "*/*" =
-        | "application/json"
-        | "*/*",
+        "application/json" | "*/*",
 > = TCode extends 200
     ? TContentType extends "application/json"
         ? /**
@@ -14,9 +13,9 @@ export type StoreGetResponse<
            */
           ResultSuccess | ResultFault
         : TContentType extends "*/*"
-        ? /**
-           * Files
-           */
-          string
-        : any
+          ? /**
+             * Files
+             */
+            string
+          : any
     : any;

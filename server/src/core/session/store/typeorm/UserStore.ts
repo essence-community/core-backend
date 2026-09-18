@@ -6,7 +6,7 @@ import ILocalDB, {
     UpdateQuery,
 } from "@ungate/plugininf/lib/db/local/ILocalDB";
 import { IUserDbData } from "@ungate/plugininf/lib/ISession";
-import { Connection } from "typeorm";
+import { DataSource } from "typeorm";
 import { UserModel } from "./entries/UserModel";
 import { addFilter } from "./Utils";
 import { EventEmitter } from "events";
@@ -14,8 +14,8 @@ import { EventEmitter } from "events";
 export class UserStore extends EventEmitter implements ILocalDB<IUserDbData> {
     dbname: string;
     isTemp: boolean = false;
-    connection: Connection;
-    constructor(name: string, conn: Connection) {
+    connection: DataSource;
+    constructor(name: string, conn: DataSource) {
         super();
         this.dbname = name;
         this.connection = conn;

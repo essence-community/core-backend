@@ -671,7 +671,7 @@ export default class OfflineController implements ICoreController {
                                 {
                                     ck_id: "",
                                     jt_message: {
-                                      error: [[doc.err_text]],
+                                        error: [[doc.err_text]],
                                     },
                                 },
                             ]),

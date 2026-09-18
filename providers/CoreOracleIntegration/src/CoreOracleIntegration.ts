@@ -3,20 +3,20 @@ import OracleDB from "@ungate/plugininf/lib/db/oracle";
 import BreakException from "@ungate/plugininf/lib/errors/BreakException";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
-import ICCTParams, {IParamsInfo} from "@ungate/plugininf/lib/ICCTParams";
+import ICCTParams, { IParamsInfo } from "@ungate/plugininf/lib/ICCTParams";
 import IContext from "@ungate/plugininf/lib/IContext";
 import IObjectParam from "@ungate/plugininf/lib/IObjectParam";
-import IQuery, {IGateQuery} from "@ungate/plugininf/lib/IQuery";
-import {IResultProvider} from "@ungate/plugininf/lib/IResult";
+import IQuery, { IGateQuery } from "@ungate/plugininf/lib/IQuery";
+import { IResultProvider } from "@ungate/plugininf/lib/IResult";
 import NullProvider from "@ungate/plugininf/lib/NullProvider";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
-import {hiddenSecret, initParams} from "@ungate/plugininf/lib/util/Util";
-import {isEmpty} from "@ungate/plugininf/lib/util/Util";
-import {isObject, noop, pick} from "lodash";
-import * as moment from "moment";
-import * as request from "request";
+import { hiddenSecret, initParams } from "@ungate/plugininf/lib/util/Util";
+import { isEmpty } from "@ungate/plugininf/lib/util/Util";
+import { isObject, noop, pick } from "lodash";
+import moment from "moment";
+import * as axios from "axios";
 import * as URL from "url";
-import {ISessCtrl} from "@ungate/plugininf/lib/ISessCtrl";
+import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
 
 interface IResultSequence {
     res?: IResultProvider;
@@ -39,17 +39,16 @@ export default class CoreOracleIntegration extends NullProvider {
         };
     }
     public dataSource: OracleDB;
-    constructor(
-        name: string,
-        params: ICCTParams,
-        sessCtrl: ISessCtrl,
-    ) {
+    constructor(name: string, params: ICCTParams, sessCtrl: ISessCtrl) {
         super(name, params, sessCtrl);
         this.params = initParams(
             CoreOracleIntegration.getParamsInfo(),
             this.params,
         );
-        this.dataSource = new OracleDB(`${this.name}_provider`, pick(this.params, ...Object.keys(OracleDB.getParamsInfo())) as any);
+        this.dataSource = new OracleDB(
+            `${this.name}_provider`,
+            pick(this.params, ...Object.keys(OracleDB.getParamsInfo())) as any,
+        );
     }
 
     public async initContext(
@@ -90,7 +89,7 @@ export default class CoreOracleIntegration extends NullProvider {
                         },
                         {
                             autoCommit: true,
-                        }
+                        },
                     )
                     .then(
                         (res) =>
@@ -119,10 +118,10 @@ export default class CoreOracleIntegration extends NullProvider {
             return conn
                 .executeStmt(
                     "select i.*\n" +
-                    "  from s_it.t_interface i\n" +
-                    " start with upper(i.ck_id) = upper(:ck_query)\n" +
-                    "connect by i.ck_id = prior i.ck_parent\n" +
-                    " order by level desc",
+                        "  from s_it.t_interface i\n" +
+                        " start with upper(i.ck_id) = upper(:ck_query)\n" +
+                        "connect by i.ck_id = prior i.ck_parent\n" +
+                        " order by level desc",
                     {
                         ck_query: context.queryName,
                         ...context.params,
@@ -134,7 +133,7 @@ export default class CoreOracleIntegration extends NullProvider {
                     },
                     {
                         autoCommit: true,
-                    }
+                    },
                 )
                 .then(
                     (res) =>
@@ -202,7 +201,7 @@ export default class CoreOracleIntegration extends NullProvider {
                                     queryData.ck_d_interface,
                                 ),
                             },
-                            {...res.params, ...query.inParams},
+                            { ...res.params, ...query.inParams },
                         );
                     }),
                 this.processIntegration(
@@ -219,7 +218,7 @@ export default class CoreOracleIntegration extends NullProvider {
             .then(
                 async (res) => {
                     return res.row
-                        ? {stream: ResultStream([res.row])}
+                        ? { stream: ResultStream([res.row]) }
                         : res.res;
                 },
                 async (err) => {
@@ -265,10 +264,10 @@ export default class CoreOracleIntegration extends NullProvider {
         return isEmpty(value)
             ? ""
             : {
-                dir: this.dataSource.oracledb.BIND_IN,
-                type: this.dataSource.oracledb.DATE,
-                val: moment(value).toDate(),
-            };
+                  dir: this.dataSource.oracledb.BIND_IN,
+                  type: this.dataSource.oracledb.DATE,
+                  val: moment(value).toDate(),
+              };
     }
     /**
      * Переводим файл/buffer в правильный тип для провайдера
@@ -295,11 +294,11 @@ export default class CoreOracleIntegration extends NullProvider {
         if (gateContext.isDebugEnabled()) {
             gateContext.debug(
                 `step db cc_request sql: ${queryData.cc_request}` +
-                `\ninParam: ${JSON.stringify(
-                    hiddenSecret(inParams),
-                )}\noutParam: ${JSON.stringify(
-                    gateContext.query.outParams,
-                )}`,
+                    `\ninParam: ${JSON.stringify(
+                        hiddenSecret(inParams),
+                    )}\noutParam: ${JSON.stringify(
+                        gateContext.query.outParams,
+                    )}`,
             );
         }
         let executeRes = await gateContext.connection.executeStmt(
@@ -324,11 +323,12 @@ export default class CoreOracleIntegration extends NullProvider {
             });
             if (gateContext.isDebugEnabled()) {
                 gateContext.debug(
-                    `step db cc_response sql: ${queryData.cc_response
+                    `step db cc_response sql: ${
+                        queryData.cc_response
                     }\ninParam: ${JSON.stringify(hiddenSecret(responseInParams))}` +
-                    `\noutParam: ${JSON.stringify(
-                        gateContext.query.outParams,
-                    )}`,
+                        `\noutParam: ${JSON.stringify(
+                            gateContext.query.outParams,
+                        )}`,
                 );
             }
             executeRes = await gateContext.connection.executeStmt(
@@ -433,34 +433,78 @@ export default class CoreOracleIntegration extends NullProvider {
                 const headers = Object.assign(
                     method === "GET"
                         ? {
-                            "cookie": gateContext.request.headers.cookie,
-                        }
+                              cookie: gateContext.request.headers.cookie,
+                          }
                         : {
-                            "cookie": gateContext.request.headers.cookie,
-                            "Content-Length": length,
-                            "Content-Type": "application/json",
-                        },
+                              cookie: gateContext.request.headers.cookie,
+                              "Content-Length": length,
+                              "Content-Type": "application/json",
+                          },
                     isEmpty(param.headers) ? {} : param.headers,
                 );
-                const params: request.Options = {
-                    body: param.body,
+                const params: axios.AxiosRequestConfig = {
+                    data: param.body,
                     headers,
                     method,
                     timeout: this.params.timeout
                         ? parseInt(this.params.timeout, 10)
                         : 660000,
                     url: URL.format(urlDB),
+                    responseType: "text",
+                    validateStatus: () => true,
                 };
                 if (this.params.proxy) {
-                    params.proxy = this.params.proxy;
+                    const proxy = this.params.proxy.startsWith("{")
+                        ? JSON.parse(this.params.proxy)
+                        : URL.parse(this.params.proxy, true);
+                    const proxyauth = proxy.auth ? proxy.auth.split(":") : [];
+                    params.proxy = this.params.proxy.startsWith("{")
+                        ? proxy
+                        : {
+                              host: proxy.host,
+                              port: parseInt(proxy.port, 10),
+                              auth: proxy.auth
+                                  ? {
+                                        username: proxyauth[0],
+                                        password: proxyauth[1],
+                                    }
+                                  : undefined,
+                              protocol: proxy.protocol,
+                          };
+                }
+                if (method === "GET") {
+                    delete params.data;
                 }
                 if (gateContext.isDebugEnabled()) {
                     gateContext.debug(
                         `step request params: ${JSON.stringify(hiddenSecret(params))}`,
                     );
                 }
-                request(params, (err, res, bodyResponse) => {
-                    if (err) {
+                axios.default
+                    .request(params)
+                    .then((res) => {
+                        const bodyResponse = res.data;
+                        if (gateContext.isDebugEnabled()) {
+                            gateContext.debug(
+                                `step response body: ${bodyResponse}\nheaders: ${JSON.stringify(
+                                    res.headers,
+                                )}`,
+                            );
+                        }
+                        if (bodyResponse) {
+                            return resolve({
+                                params: {
+                                    ...result.params,
+                                    ...param,
+                                    headers_response: res.headers,
+                                    json_response: isObject(bodyResponse)
+                                        ? JSON.stringify(bodyResponse)
+                                        : bodyResponse,
+                                },
+                            });
+                        }
+                    })
+                    .catch((err) => {
                         gateContext.error(
                             `Error query ${gateContext.queryName} request ${this.name} params ${param}`,
                             err,
@@ -471,27 +515,7 @@ export default class CoreOracleIntegration extends NullProvider {
                                 "Ошибка вызова внешнего сервиса",
                             ),
                         );
-                    }
-                    if (gateContext.isDebugEnabled()) {
-                        gateContext.debug(
-                            `step response body: ${bodyResponse}\nheaders: ${JSON.stringify(
-                                res.headers,
-                            )}`,
-                        );
-                    }
-                    if (bodyResponse) {
-                        return resolve({
-                            params: {
-                                ...result.params,
-                                ...param,
-                                headers_response: res.headers,
-                                json_response: isObject(bodyResponse)
-                                    ? JSON.stringify(bodyResponse)
-                                    : bodyResponse,
-                            },
-                        });
-                    }
-                });
+                    });
             });
         }
         return {

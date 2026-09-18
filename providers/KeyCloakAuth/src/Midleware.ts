@@ -2,8 +2,8 @@ import * as KeyCloak from "keycloak-connect";
 import * as Token from "keycloak-connect/middleware/auth-utils/token";
 import * as Signature from "keycloak-connect/middleware/auth-utils/signature";
 import IContext from "@ungate/plugininf/lib/IContext";
-import {IRequestExtra, IKeyCloakAuthParam} from "./KeyCloakAuth.types";
-import {GrantManager} from "./util/GrantManager";
+import { IRequestExtra, IKeyCloakAuthParam } from "./KeyCloakAuth.types";
+import { GrantManager } from "./util/GrantManager";
 
 export async function PostAuth(
     gateContext: IContext,
@@ -21,7 +21,11 @@ export async function PostAuth(
         return null;
     }
 
-    return grantManager.obtainFromCode(request, data.query.code, request.session.id);
+    return grantManager.obtainFromCode(
+        request,
+        data.query.code,
+        request.session.id,
+    );
 }
 
 export async function GrantAttacher(
@@ -31,7 +35,10 @@ export async function GrantAttacher(
 ): Promise<KeyCloak.Grant | null> {
     const header = gateContext.request.headers.authorization;
     let accessToken;
-    if (header && header.substring(0, 7).toLowerCase().indexOf("bearer ") === 0) {
+    if (
+        header &&
+        header.substring(0, 7).toLowerCase().indexOf("bearer ") === 0
+    ) {
         accessToken = JSON.stringify({
             access_token: header.substring(7),
         });
@@ -39,22 +46,33 @@ export async function GrantAttacher(
         if (token.content.realm) {
             grantManager = grantManagers[token.content.realm] || grantManager;
         }
-    } else if (header && header.substring(0, 6).toLowerCase().indexOf("basic ") === 0) {
-        const basic = Buffer.from(
-            header.substring(6),
-            "base64",
-        ).toString("ascii");
+    } else if (
+        header &&
+        header.substring(0, 6).toLowerCase().indexOf("basic ") === 0
+    ) {
+        const basic = Buffer.from(header.substring(6), "base64").toString(
+            "ascii",
+        );
         const split = basic.indexOf(":");
-        return grantManager.obtainDirectly(
-            basic.substring(0, split),
-            basic.substring(split + 1)
-        ).then(async ([grant, headers]: [KeyCloak.Grant, Record<string, any>]) => grant);
+        return grantManager
+            .obtainDirectly(
+                basic.substring(0, split),
+                basic.substring(split + 1),
+            )
+            .then(
+                async ([grant, headers]: [
+                    KeyCloak.Grant,
+                    Record<string, any>,
+                ]) => grant,
+            );
     }
     if (gateContext.isDebugEnabled()) {
         gateContext.debug("Access Token Found %s", accessToken);
     }
     return accessToken
-        ? grantManager.createGrant(accessToken).then((grant: KeyCloak.Grant) => grant)
+        ? grantManager
+              .createGrant(accessToken)
+              .then((grant) => grant as KeyCloak.Grant)
         : null;
 }
 
@@ -74,8 +92,7 @@ async function adminLogout(context: IContext, grantManager: GrantManager) {
                 if (token.content.action === "LOGOUT") {
                     const sessionIDs = token.content.adapterSessionIds;
                     if (!sessionIDs) {
-                        grantManager.notBefore =
-                            token.content.notBefore;
+                        grantManager.notBefore = token.content.notBefore;
                         context.response.writeHead(200);
                         context.response.end("ok");
                         return;
@@ -126,8 +143,7 @@ async function adminNotBefore(context: IContext, grantManager: GrantManager) {
             .verify(preToken)
             .then((token) => {
                 if (token.content.action === "PUSH_NOT_BEFORE") {
-                    grantManager.notBefore =
-                        token.content.notBefore;
+                    grantManager.notBefore = token.content.notBefore;
                     context.response.writeHead(200);
                     context.response.end("ok");
                 }

@@ -64,9 +64,8 @@ export default class OldOracle implements IOracleController {
                     return context.connection
                         .rollbackAndClose()
                         .then(async () => {
-                            context.connection = await this.getConnection(
-                                context,
-                            );
+                            context.connection =
+                                await this.getConnection(context);
                             return;
                         })
                         .then(() => this.processSql(context, query));
@@ -104,9 +103,8 @@ export default class OldOracle implements IOracleController {
                     return context.connection
                         .rollbackAndClose()
                         .then(async () => {
-                            context.connection = await this.getConnection(
-                                context,
-                            );
+                            context.connection =
+                                await this.getConnection(context);
                             return;
                         })
                         .then(() => this.processDml(context, query));

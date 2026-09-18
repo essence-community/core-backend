@@ -1,7 +1,7 @@
 import * as JSONStream from "JSONStream";
 import { isBoolean, isObject, isString } from "lodash";
 import * as QueryString from "qs";
-import * as request from "request";
+import * as axios from "axios";
 import * as url from "url";
 import ErrorException from "../errors/ErrorException";
 import ICCTParams, { IParamsInfo } from "../ICCTParams";
@@ -93,21 +93,36 @@ export default class JsonGateCaller {
     ): Promise<IResultProvider> {
         const urlGate = url.parse(this.jsonGateUrl, true) as url.Url;
         urlGate.query = qs as any;
-        const params = {
-            gzip: !!this.params.useGzip,
+        const params: axios.AxiosRequestConfig = {
+            decompress: !!this.params.useGzip,
             headers,
             method,
             timeout: this.params.timeout ? this.params.timeout * 1000 : 660000,
             url: url.format(urlGate),
-        } as request.Options;
+            responseType: "stream",
+            validateStatus: () => true,
+        };
         if (isString(body) && !isEmpty(body)) {
-            params.body = body;
+            params.data = body;
         }
         if (isObject(body)) {
-            params.formData = body;
+            params.data = body;
         }
         if (this.params.proxy) {
-            params.proxy = this.params.proxy;
+            const proxy = this.params.proxy.startsWith("{")
+                ? JSON.parse(this.params.proxy)
+                : url.parse(this.params.proxy, true);
+            const proxyauth = proxy.auth ? proxy.auth.split(":") : [];
+            params.proxy = this.params.proxy.startsWith("{")
+                ? proxy
+                : {
+                      host: proxy.host,
+                      port: parseInt(proxy.port, 10),
+                      auth: proxy.auth
+                          ? { username: proxyauth[0], password: proxyauth[1] }
+                          : undefined,
+                      protocol: proxy.protocol,
+                  };
         }
         if (context.isDebugEnabled()) {
             context.debug(`Params caller: ${JSON.stringify(params)}`);
@@ -118,20 +133,6 @@ export default class JsonGateCaller {
                 metaData: {},
                 stream: JSONStream.parse("data.*"),
             };
-            const resp = request(params);
-            resp.on("error", (err) => {
-                if (err) {
-                    context.error(`Error query ${context.queryName}`, err);
-                    result.stream.emit(
-                        "error",
-                        new ErrorException(
-                            -1,
-                            "Ошибка вызова внешнего сервиса",
-                        ),
-                    );
-                }
-                return undefined;
-            });
 
             result.stream.on("header", (data) => {
                 if (isBoolean(data.success) && data.success && data.metaData) {
@@ -163,26 +164,59 @@ export default class JsonGateCaller {
                 }
             });
 
-            resp.on("response", (res) => {
-                const ctHeader =
-                    res.headers["content-type"] || "application/json";
-                if (context.isDebugEnabled()) {
-                    context.debug(
-                        `Response proxy headers: ${JSON.stringify(
-                            res.headers,
-                        )}`,
-                    );
-                }
-                if (!ctHeader.startsWith("application/json")) {
-                    result.stream.emit(
-                        "error",
-                        new ErrorException(
-                            -1,
-                            "Ошибка вызова внешнего сервиса",
-                        ),
-                    );
-                }
-            }).pipe(result.stream);
+            axios.default
+                .request(params)
+                .then((res) => {
+                    const ctHeader = `${
+                        res.headers["content-type"] || "application/json"
+                    }`;
+                    if (context.isDebugEnabled()) {
+                        context.debug(
+                            `Response proxy headers: ${JSON.stringify(
+                                res.headers,
+                            )}`,
+                        );
+                    }
+                    if (!ctHeader.startsWith("application/json")) {
+                        result.stream.emit(
+                            "error",
+                            new ErrorException(
+                                -1,
+                                "Ошибка вызова внешнего сервиса",
+                            ),
+                        );
+                    }
+                    res.data.on("error", (err) => {
+                        if (err) {
+                            context.error(
+                                `Error query ${context.queryName}`,
+                                err,
+                            );
+                            result.stream.emit(
+                                "error",
+                                new ErrorException(
+                                    -1,
+                                    "Ошибка вызова внешнего сервиса",
+                                ),
+                            );
+                        }
+                        return undefined;
+                    });
+                    res.data.pipe(result.stream);
+                })
+                .catch((err) => {
+                    if (err) {
+                        context.error(`Error query ${context.queryName}`, err);
+                        result.stream.emit(
+                            "error",
+                            new ErrorException(
+                                -1,
+                                "Ошибка вызова внешнего сервиса",
+                            ),
+                        );
+                    }
+                    return undefined;
+                });
             return resolve(result as any);
         });
     }

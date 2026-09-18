@@ -3,9 +3,8 @@ import { SessionOptions, Store } from "express-session-fork";
 import ILocalDB from "@ungate/plugininf/lib/db/local/ILocalDB";
 import Property from "../../property/Property";
 import { IStoreTypes, IGateSession } from "./Store.types";
-import Logger from "@ungate/plugininf/lib/Logger";
+import Logger, { IRufusLogger } from "@ungate/plugininf/lib/Logger";
 import { ISessionData } from "@ungate/plugininf/lib/ISession";
-import { IRufusLogger } from "rufus";
 import { ISessionStore } from "@ungate/plugininf/lib/ISessCtrl";
 
 export interface IDBSessionData {
@@ -21,8 +20,12 @@ export class NeDbSessionStore extends Store implements ISessionStore {
     ttl: number;
     private logger: IRufusLogger;
 
-    constructor (options: Partial<SessionOptions & IStoreTypes> = {}) {
-        // @ts-ignore
+    constructor(
+        options: Partial<SessionOptions & IStoreTypes> & {
+            nameContext: string;
+            ttl: number;
+        },
+    ) {
         super(options as any);
         this.logger = Logger.getLogger(
             `NeDbSessionStore.${options.nameContext}`,
@@ -32,7 +35,7 @@ export class NeDbSessionStore extends Store implements ISessionStore {
         this.emit("disconnect");
     }
 
-    init () {
+    init() {
         return Property.getSession(this.name).then((db) => {
             this.db = db;
             this.emit("connect");
@@ -40,7 +43,7 @@ export class NeDbSessionStore extends Store implements ISessionStore {
         });
     }
 
-    get (ck_id, cb: any = (err) => (err ? this.logger.error(err) : null)) {
+    get(ck_id, cb: any = (err) => (err ? this.logger.error(err) : null)) {
         this.logger.trace("GET %s", ck_id);
         const now = new Date();
         this.db
@@ -67,7 +70,7 @@ export class NeDbSessionStore extends Store implements ISessionStore {
                 (err) => cb(err),
             );
     }
-    set (
+    set(
         ck_id,
         data: IGateSession,
         cb: any = (err) => (err ? this.logger.error(err) : null),
@@ -90,7 +93,7 @@ export class NeDbSessionStore extends Store implements ISessionStore {
                 (err) => cb(err),
             );
     }
-    destroy (ck_id, cb: any = (err) => (err ? this.logger.error(err) : null)) {
+    destroy(ck_id, cb: any = (err) => (err ? this.logger.error(err) : null)) {
         this.logger.trace("DESTROY %s", ck_id);
         this.db
             .update(
@@ -104,7 +107,7 @@ export class NeDbSessionStore extends Store implements ISessionStore {
             );
     }
 
-    touch (
+    touch(
         ck_id,
         sess: IGateSession,
         cb: any = (err) => (err ? this.logger.error(err) : null),
@@ -139,7 +142,7 @@ export class NeDbSessionStore extends Store implements ISessionStore {
             );
     }
 
-    all (cb: any = (err) => (err ? this.logger.error(err) : null)) {
+    all(cb: any = (err) => (err ? this.logger.error(err) : null)) {
         this.logger.trace("ALL");
         this.db
             .find({
@@ -160,7 +163,7 @@ export class NeDbSessionStore extends Store implements ISessionStore {
             );
     }
 
-    allSession (
+    allSession(
         sessionId?: string | string[],
         isExpired?: boolean,
     ): Promise<{ [sid: string]: ISessionData } | null> {
@@ -194,14 +197,17 @@ export class NeDbSessionStore extends Store implements ISessionStore {
             .then((val: Record<string, any>) =>
                 val
                     .filter((value) => value.data.gsession)
-                    .reduce((res, value) => {
-                        res[value.ck_id] = value.data;
-                        return res;
-                    }, {} as { [sid: string]: ISessionData }),
+                    .reduce(
+                        (res, value) => {
+                            res[value.ck_id] = value.data;
+                            return res;
+                        },
+                        {} as { [sid: string]: ISessionData },
+                    ),
             );
     }
 
-    length (cb: any = (err) => (err ? this.logger.error(err) : null)) {
+    length(cb: any = (err) => (err ? this.logger.error(err) : null)) {
         this.logger.trace("LENGTH");
         this.db
             .count({
@@ -215,7 +221,7 @@ export class NeDbSessionStore extends Store implements ISessionStore {
             );
     }
 
-    clear (cb: any = (err) => (err ? this.logger.error(err) : null)) {
+    clear(cb: any = (err) => (err ? this.logger.error(err) : null)) {
         this.logger.trace("CLEAR");
         this.db
             .update(

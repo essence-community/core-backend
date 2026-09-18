@@ -43,14 +43,16 @@ export default class PostgreSQLDb extends NullProvider {
     public params: IParamPg;
     public dataSource: PostgresDB;
     private controller: IPostgreSQLController;
-    constructor(
-        name: string,
-        params: ICCTParams,
-        sessCtrl: ISessCtrl,
-    ) {
+    constructor(name: string, params: ICCTParams, sessCtrl: ISessCtrl) {
         super(name, params, sessCtrl);
         this.params = initParams(PostgreSQLDb.getParamsInfo(), this.params);
-        this.dataSource = new PostgresDB(`${this.name}_provider`, pick(this.params, ...Object.keys(PostgresDB.getParamsInfo())) as any);
+        this.dataSource = new PostgresDB(
+            `${this.name}_provider`,
+            pick(
+                this.params,
+                ...Object.keys(PostgresDB.getParamsInfo()),
+            ) as any,
+        );
         if (params.core) {
             this.controller = new CorePG(
                 this.name,
@@ -84,7 +86,7 @@ export default class PostgreSQLDb extends NullProvider {
                         autoCommit: true,
                     },
                 );
-                await new Promise((resolve, reject) => {
+                await new Promise<void>((resolve, reject) => {
                     res.stream.on("error", (err) => reject(err));
                     res.stream.on("data", noop);
                     res.stream.on("end", () => resolve());
@@ -101,7 +103,7 @@ export default class PostgreSQLDb extends NullProvider {
                         autoCommit: true,
                     },
                 );
-                await new Promise((resolve, reject) => {
+                await new Promise<void>((resolve, reject) => {
                     res.stream.on("error", (err) => reject(err));
                     res.stream.on("data", noop);
                     res.stream.on("end", () => resolve());
@@ -125,7 +127,7 @@ export default class PostgreSQLDb extends NullProvider {
                         )
                         .then(
                             (resPost) =>
-                                new Promise((resolve, reject) => {
+                                new Promise<void>((resolve, reject) => {
                                     resPost.stream.on("error", (err) =>
                                         reject(err),
                                     );
@@ -159,7 +161,7 @@ export default class PostgreSQLDb extends NullProvider {
                         )
                         .then(
                             (resPost) =>
-                                new Promise((resolve, reject) => {
+                                new Promise<void>((resolve, reject) => {
                                     resPost.stream.on("error", (err) =>
                                         reject(err),
                                     );

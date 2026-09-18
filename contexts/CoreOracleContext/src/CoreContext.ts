@@ -127,14 +127,13 @@ export default class CoreContext extends NullContext {
     private controller: ICoreController;
     private dataSource: OracleDB;
     private dbUsers: ILocalDB<IUserDbData>;
-    constructor(
-        name: string,
-        params: ICCTParams,
-        sessCtrl: ISessCtrl,
-    ) {
+    constructor(name: string, params: ICCTParams, sessCtrl: ISessCtrl) {
         super(name, params, sessCtrl);
         this.params = initParams(CoreContext.getParamsInfo(), this.params);
-        this.dataSource = new OracleDB(`${this.name}_context`, pick(this.params, ...Object.keys(OracleDB.getParamsInfo())) as any);
+        this.dataSource = new OracleDB(
+            `${this.name}_context`,
+            pick(this.params, ...Object.keys(OracleDB.getParamsInfo())) as any,
+        );
         this.params.modifyQueryName = this.params.modifyQueryName.toLowerCase();
         this.params.pageMetaQueryName =
             this.params.pageMetaQueryName.toLowerCase();

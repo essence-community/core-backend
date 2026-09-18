@@ -69,7 +69,7 @@ class NotificationController {
             },
             isMask ? 10 : 500,
         );
-    }
+    };
 
     public onRequest = async (request: websocket.request) => {
         try {
@@ -82,7 +82,8 @@ class NotificationController {
             const sessionId = decodeURIComponent(
                 (Array.isArray((request.resourceURL.query as ParsedQs).session)
                     ? (request.resourceURL.query as ParsedQs).session[0]
-                    : (request.resourceURL.query as ParsedQs).session) as string,
+                    : (request.resourceURL.query as ParsedQs)
+                          .session) as string,
             );
             const connection = request.accept(
                 "notification",
@@ -102,7 +103,9 @@ class NotificationController {
                 (this.contexts[0].sessCtrl as GateSession)
                     .loadSession(null, sessionId, true)
                     .then((session) =>
-                        session ? { session, context: this.contexts[0] } : session,
+                        session
+                            ? { session, context: this.contexts[0] }
+                            : session,
                     ),
             )) as {
                 session: ISession;
@@ -149,7 +152,7 @@ class NotificationController {
         } catch (err) {
             logger.error("Fail connect", err);
         }
-    }
+    };
 
     /**
      * Получить все подключеные id пользователей
@@ -161,10 +164,12 @@ class NotificationController {
             [],
         ) as IWSConnect[];
         if (!nameProvider) {
-            return allConn.map((conn) => conn.session.idUser)
+            return allConn.map((conn) => conn.session.idUser);
         }
-        return allConn.filter((conn) => conn.session.nameProvider === nameProvider).map((conn) => conn.session.idUser);
-    }
+        return allConn
+            .filter((conn) => conn.session.nameProvider === nameProvider)
+            .map((conn) => conn.session.idUser);
+    };
 
     /**
      * Отправка сообщения пользователю
@@ -192,7 +197,7 @@ class NotificationController {
             filter = (conn) => conn.session.idUser === ckUser;
         }
         allConn.filter(filter).forEach((conn) => conn.sendUTF(text));
-    }
+    };
 
     /**
      * Отправка всем пользователям
@@ -202,7 +207,7 @@ class NotificationController {
         forEach(this.notificationClient || {}, (userObj) => {
             forEach(userObj || {}, (conn) => conn.sendUTF(text));
         });
-    }
+    };
     /**
      * Обновление информации о пользователе
      * @param ckUser индификатор пользователя
@@ -219,7 +224,7 @@ class NotificationController {
                 conn.session.nameProvider === nameProvider;
         } else if (nameProvider) {
             filter = (conn) => conn.session.nameProvider === nameProvider;
-        }  else if (ckUser) {
+        } else if (ckUser) {
             filter = (conn) => conn.session.idUser === ckUser;
         }
 
@@ -278,7 +283,7 @@ class NotificationController {
                     .catch((err) => logger.error(err));
             });
         }
-    }
+    };
 
     /**
      * Проверка пользователей на актуальность сессий
@@ -339,7 +344,7 @@ class NotificationController {
             );
         }
         delay(() => this.checkConnection(), TIMEOUT);
-    }
+    };
 }
 
 export default new NotificationController();

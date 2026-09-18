@@ -1,6 +1,6 @@
 import Logger from "../Logger";
 const logger = Logger.getLogger("ProcessSender");
-import * as MSG from "msgpack-lite";
+import MSG from "msgpack-lite";
 
 export type TTarget =
     | "cluster"
