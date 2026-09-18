@@ -3,7 +3,7 @@ import Logger from "@ungate/plugininf/lib/Logger";
 import { sendProcess } from "@ungate/plugininf/lib/util/ProcessSender";
 import * as fs from "fs";
 import * as https from "https";
-import * as MSG from "msgpack-lite";
+import MSG from "msgpack-lite";
 import * as websocket from "websocket";
 import Constants from "../../core/Constants";
 import Property, { getLocalDb } from "../../core/property/Property";
@@ -48,13 +48,11 @@ class AdminEventController {
     private servers: Record<string, IServerConnect> = {};
     private dbServers: ILocalDB<IServerConfig>;
     public async init(): Promise<void> {
-        if (
-            !(
-                fs.existsSync(Constants.GATE_ADMIN_CLUSTER_KEY) &&
-                fs.existsSync(Constants.GATE_ADMIN_CLUSTER_CERT) &&
-                fs.existsSync(Constants.GATE_ADMIN_CLUSTER_CA)
-            )
-        ) {
+        if (!(
+            fs.existsSync(Constants.GATE_ADMIN_CLUSTER_KEY) &&
+            fs.existsSync(Constants.GATE_ADMIN_CLUSTER_CERT) &&
+            fs.existsSync(Constants.GATE_ADMIN_CLUSTER_CA)
+        )) {
             throw new Error(
                 `Not found ${Constants.GATE_ADMIN_CLUSTER_KEY} ${Constants.GATE_ADMIN_CLUSTER_CERT} ${Constants.GATE_ADMIN_CLUSTER_CA}`,
             );

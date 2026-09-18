@@ -63,17 +63,13 @@ export class RedisProvider extends NullProvider {
             extra: {
                 name: "Доп настройки",
                 type: "long_string",
-                defaultValue: "{}"
+                defaultValue: "{}",
             },
         };
         /* tslint:enable:object-literal-sort-keys */
     }
     public params: IProviderParam;
-    constructor(
-        name: string,
-        params: ICCTParams,
-        sessCtrl: ISessCtrl,
-    ) {
+    constructor(name: string, params: ICCTParams, sessCtrl: ISessCtrl) {
         super(name, params, sessCtrl);
         this.params = initParams(RedisProvider.getParamsInfo(), this.params);
     }

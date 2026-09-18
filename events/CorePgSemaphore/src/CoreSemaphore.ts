@@ -1,12 +1,12 @@
 import Connection from "@ungate/plugininf/lib/db/Connection";
 import PostgresDB from "@ungate/plugininf/lib/db/postgres";
-import { IParamsInfo } from "@ungate/plugininf/lib/ICCTParams";
+import {IParamsInfo} from "@ungate/plugininf/lib/ICCTParams";
 import ICCTParams from "@ungate/plugininf/lib/ICCTParams";
 import Logger from "@ungate/plugininf/lib/Logger";
 import NullEvent from "@ungate/plugininf/lib/NullEvent";
-import { sendProcess } from "@ungate/plugininf/lib/util/ProcessSender";
-import { initParams } from "@ungate/plugininf/lib/util/Util";
-import { delay, noop, pick } from "lodash";
+import {sendProcess} from "@ungate/plugininf/lib/util/ProcessSender";
+import {initParams} from "@ungate/plugininf/lib/util/Util";
+import {delay, noop, pick} from "lodash";
 const logger = Logger.getLogger("CorePgNotification");
 
 export default class CoreSemaphore extends NullEvent {
@@ -21,12 +21,15 @@ export default class CoreSemaphore extends NullEvent {
         };
     }
     private dataSource: PostgresDB;
-    private eventConnect: Connection;
+    private eventConnect: Connection | null = null;
     constructor(name: string, params: ICCTParams) {
         super(name, params);
         this.params = initParams(CoreSemaphore.getParamsInfo(), this.params);
         this.dataSource = new PostgresDB(`${this.name}_semaphore`, {
-            ...pick(this.params, ...Object.keys(PostgresDB.getParamsInfo())) as any,
+            ...(pick(
+                this.params,
+                ...Object.keys(PostgresDB.getParamsInfo()),
+            ) as any),
             poolMax: this.params.poolMax || 5,
             poolMin: this.params.poolMin || 1,
         });

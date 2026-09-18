@@ -101,7 +101,11 @@ export default class JsonRowColumnExtractor extends NullPlugin {
                     const res = columns.every((val) => {
                         if (Object.prototype.hasOwnProperty.call(chunk, val)) {
                             columnExtract = columnObjExtract(val);
-                            extractor._transform = ((childChunk, _encode, cb) => {
+                            extractor._transform = ((
+                                childChunk,
+                                _encode,
+                                cb,
+                            ) => {
                                 columnExtract(this, childChunk, cb);
                             }).bind(extractor);
                             columnExtract(this, chunk, done);
@@ -125,7 +129,11 @@ export default class JsonRowColumnExtractor extends NullPlugin {
                             isArray(val)
                         ) {
                             columnExtract = columnObjExtract(keys[0]);
-                            extractor._transform = ((childChunk, _encode, cb) => {
+                            extractor._transform = ((
+                                childChunk,
+                                _encode,
+                                cb,
+                            ) => {
                                 columnExtract(this, childChunk, cb);
                             }).bind(extractor);
                             columnExtract(this, chunk, done);

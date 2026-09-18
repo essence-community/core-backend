@@ -6,7 +6,7 @@ import ILocalDB, {
     UpdateQuery,
 } from "@ungate/plugininf/lib/db/local/ILocalDB";
 import { ICacheDb } from "@ungate/plugininf/lib/ISessCtrl";
-import { Connection } from "typeorm";
+import { DataSource } from "typeorm";
 import { CacheModel } from "./entries/CacheModel";
 import { addFilter } from "./Utils";
 import { EventEmitter } from "events";
@@ -18,8 +18,8 @@ interface ICache {
 export class CacheStore extends EventEmitter implements ILocalDB<ICacheDb> {
     dbname: string;
     isTemp: boolean = false;
-    connection: Connection;
-    constructor(name: string, conn: Connection) {
+    connection: DataSource;
+    constructor(name: string, conn: DataSource) {
         super();
         this.dbname = name;
         this.connection = conn;

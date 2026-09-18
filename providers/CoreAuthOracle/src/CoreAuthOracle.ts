@@ -11,7 +11,7 @@ import NullSessProvider, {
 } from "@ungate/plugininf/lib/NullSessProvider";
 import { ReadStreamToArray } from "@ungate/plugininf/lib/stream/Util";
 import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
-import * as moment from "moment";
+import moment from "moment";
 import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
 import { pick } from "lodash";
 
@@ -24,14 +24,13 @@ export default class CoreAuthOracle extends NullSessProvider {
 
     public dataSource: OracleDB;
 
-    constructor(
-        name: string,
-        params: ICCTParams,
-        sessCtrl: ISessCtrl,
-    ) {
+    constructor(name: string, params: ICCTParams, sessCtrl: ISessCtrl) {
         super(name, params, sessCtrl);
         this.params = initParams(CoreAuthOracle.getParamsInfo(), this.params);
-        this.dataSource = new OracleDB(`${this.name}_provider`, pick(this.params, ...Object.keys(OracleDB.getParamsInfo())) as any);
+        this.dataSource = new OracleDB(
+            `${this.name}_provider`,
+            pick(this.params, ...Object.keys(OracleDB.getParamsInfo())) as any,
+        );
     }
 
     /**
@@ -125,7 +124,7 @@ export default class CoreAuthOracle extends NullSessProvider {
                             users[chunk.ck_id] = {
                                 ...chunk,
                                 ca_actions: [],
-                                type_auth_provider: 'COREAUTHORACLE',
+                                type_auth_provider: "COREAUTHORACLE",
                             };
                         });
                         resUser.stream.on("end", () => {

@@ -1,48 +1,66 @@
 import { IFile } from "@ungate/plugininf/lib/IContext";
-import * as AWS from "aws-sdk";
+import {
+    DeleteObjectCommand,
+    GetObjectCommand,
+    HeadObjectCommand,
+    PutObjectCommand,
+    S3Client,
+} from "@aws-sdk/client-s3";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
-import { IRufusLogger } from "rufus";
+import { IRufusLogger } from "@ungate/plugininf/lib/Logger";
+import { Client } from "minio";
 import { Readable } from "stream";
 import { v4 as uuid } from "uuid";
 import { IPluginParams, IStorage } from "./Patcher.types";
+
+function minioFromUrl(url: string, accessKey: string, secretKey: string) {
+    const u = new URL(url.includes("://") ? url : `http://${url}`);
+    return new Client({
+        endPoint: u.hostname,
+        port: u.port ? Number(u.port) : u.protocol === "https:" ? 443 : 80,
+        useSSL: u.protocol === "https:",
+        accessKey,
+        secretKey,
+        region: "us-east-1",
+        pathStyle: true,
+    });
+}
+
+async function streamToBuffer(stream: NodeJS.ReadableStream): Promise<Buffer> {
+    const chunks: Buffer[] = [];
+    for await (const chunk of stream) {
+        chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    }
+    return Buffer.concat(chunks);
+}
+
 export class S3Storage implements IStorage {
-    private clients: AWS.S3;
+    private s3?: S3Client;
+    private minio?: Client;
     private params: IPluginParams;
     private logger: IRufusLogger;
     private UPLOAD_DIR: string = process.env.GATE_UPLOAD_DIR || os.tmpdir();
     constructor(params: IPluginParams, logger: IRufusLogger) {
         this.params = params;
         this.logger = logger;
-        const credentials = new AWS.Credentials({
-            accessKeyId: this.params.cvS3KeyId,
-            secretAccessKey: this.params.cvS3SecretKey,
-        });
         if (this.params.cvTypeStorage === "riak") {
-            const endpoint = new AWS.Endpoint("http://s3.amazonaws.com");
-            const config = {
-                apiVersion: "2006-03-01",
-                credentials,
-                endpoint,
-                httpOptions: {
-                    proxy: this.params.cvPath,
-                },
-                region: "us-east-1",
-                s3DisableBodySigning: true,
-                s3ForcePathStyle: true,
-                signatureVersion: "v2",
-                sslEnabled: false,
-            };
-            this.clients = new AWS.S3(new AWS.Config(config));
+            this.minio = minioFromUrl(
+                this.params.cvPath,
+                this.params.cvS3KeyId,
+                this.params.cvS3SecretKey,
+            );
         } else {
-            const endpoint = new AWS.Endpoint(this.params.cvPath);
-            const config = {
-                credentials,
-                endpoint,
-                s3ForcePathStyle: true,
-            };
-            this.clients = new AWS.S3(new AWS.Config(config));
+            this.s3 = new S3Client({
+                region: "us-east-1",
+                credentials: {
+                    accessKeyId: this.params.cvS3KeyId,
+                    secretAccessKey: this.params.cvS3SecretKey,
+                },
+                endpoint: this.params.cvPath,
+                forcePathStyle: true,
+            });
         }
     }
 
@@ -54,7 +72,7 @@ export class S3Storage implements IStorage {
      * @param query
      * @returns file
      */
-    public saveFile(
+    public async saveFile(
         key: string,
         buffer: Buffer | Readable,
         content: string,
@@ -63,92 +81,115 @@ export class S3Storage implements IStorage {
             ? undefined
             : Buffer.byteLength(buffer as Buffer),
     ): Promise<void> {
-        return new Promise((resolve, reject) => {
-            this.clients.putObject(
+        if (this.minio) {
+            await this.minio.putObject(
+                this.params.cvS3Bucket,
+                key,
+                buffer,
+                size,
                 {
                     ...(this.params.clS3ReadPublic
-                        ? { ACL: "public-read" }
+                        ? { "x-amz-acl": "public-read" }
                         : {}),
-                    Body: buffer,
-                    Bucket: this.params.cvS3Bucket,
-                    ContentLength: size,
-                    ContentType: content,
-                    Key: key,
-                    Metadata: {
-                        ...Metadata,
-                        originalFilename:
-                            Metadata &&
-                            encodeURIComponent(Metadata.originalFilename),
-                    },
-                },
-                (err) => {
-                    if (err) {
-                        return reject(err);
-                    }
-                    resolve();
+                    "Content-Type": content,
+                    ...Metadata,
+                    originalFilename:
+                        Metadata &&
+                        encodeURIComponent(Metadata.originalFilename),
                 },
             );
-        });
+            return;
+        }
+        await this.s3!.send(
+            new PutObjectCommand({
+                ...(this.params.clS3ReadPublic ? { ACL: "public-read" } : {}),
+                Body: buffer,
+                Bucket: this.params.cvS3Bucket,
+                ContentLength: size,
+                ContentType: content,
+                Key: key,
+                Metadata: {
+                    ...Metadata,
+                    originalFilename:
+                        Metadata &&
+                        encodeURIComponent(Metadata.originalFilename),
+                },
+            }),
+        );
     }
-    public deletePath(key: string): Promise<void> {
-        return new Promise((resolve, reject) => {
-            this.clients.headObject(
-                {
-                    Bucket: this.params.cvS3Bucket,
-                    Key: key,
-                },
-                (er) => {
-                    if (er) {
-                        this.logger.debug(er);
-                        return resolve();
-                    }
-                    this.clients.deleteObject(
-                        {
-                            Bucket: this.params.cvS3Bucket,
-                            Key: key,
-                        },
-                        (err) => {
-                            if (err) {
-                                return reject(err);
-                            }
-                            return resolve();
-                        },
-                    );
-                },
-            );
-        });
+    public async deletePath(key: string): Promise<void> {
+        try {
+            if (this.minio) {
+                await this.minio.statObject(this.params.cvS3Bucket, key);
+            } else {
+                await this.s3!.send(
+                    new HeadObjectCommand({
+                        Bucket: this.params.cvS3Bucket,
+                        Key: key,
+                    }),
+                );
+            }
+        } catch (er) {
+            this.logger.debug(er);
+            return;
+        }
+        if (this.minio) {
+            await this.minio.removeObject(this.params.cvS3Bucket, key);
+            return;
+        }
+        await this.s3!.send(
+            new DeleteObjectCommand({
+                Bucket: this.params.cvS3Bucket,
+                Key: key,
+            }),
+        );
     }
 
-    public getFile(key: string): Promise<IFile> {
-        return new Promise((resolve, reject) => {
-            this.clients.getObject(
-                {
-                    Bucket: this.params.cvS3Bucket,
-                    Key: key,
-                },
-                (err, response) => {
-                    if (err) {
-                        return reject(err);
-                    }
-                    const filePath = path.join(this.UPLOAD_DIR, uuid());
-                    fs.writeFile(filePath, response.Body as Buffer, (er) => {
-                        if (er) {
-                            return reject(er);
-                        }
-                        resolve({
-                            fieldName: "upload",
-                            headers: {
-                                "content-type": response.ContentType,
-                            },
-                            originalFilename:
-                                response.Metadata &&
-                                decodeURI(response.Metadata.originalfilename),
-                            path: filePath,
-                            size: response.ContentLength,
-                        });
-                    });
-                },
+    public async getFile(key: string): Promise<IFile> {
+        const filePath = path.join(this.UPLOAD_DIR, uuid());
+        if (this.minio) {
+            const stat = await this.minio.statObject(
+                this.params.cvS3Bucket,
+                key,
             );
-        });
+            await fs.promises.writeFile(
+                filePath,
+                await streamToBuffer(
+                    await this.minio.getObject(this.params.cvS3Bucket, key),
+                ),
+            );
+            return {
+                fieldName: "upload",
+                headers: {
+                    "content-type": stat.metaData["content-type"],
+                },
+                originalFilename: decodeURI(
+                    stat.metaData.originalfilename || "",
+                ),
+                path: filePath,
+                size: stat.size,
+            };
+        }
+        const response = await this.s3!.send(
+            new GetObjectCommand({
+                Bucket: this.params.cvS3Bucket,
+                Key: key,
+            }),
+        );
+        await fs.promises.writeFile(
+            filePath,
+            Buffer.from(await response.Body!.transformToByteArray()),
+        );
+        return {
+            fieldName: "upload",
+            headers: {
+                "content-type": response.ContentType,
+            },
+            originalFilename:
+                response.Metadata &&
+                decodeURI(response.Metadata.originalfilename),
+            path: filePath,
+            size: response.ContentLength,
+        };
     }
 }

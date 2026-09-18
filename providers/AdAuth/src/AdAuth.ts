@@ -123,11 +123,7 @@ export default class AdAuth extends NullSessProvider {
     }
     public params: IAdAuthParam;
     private ad: ActiveDirectory;
-    constructor(
-        name: string,
-        params: ICCTParams,
-        sessCtrl: ISessCtrl,
-    ) {
+    constructor(name: string, params: ICCTParams, sessCtrl: ISessCtrl) {
         super(name, params, sessCtrl);
         this.params = initParams(AdAuth.getParamsInfo(), this.params);
         const userAttr = [
@@ -250,7 +246,7 @@ export default class AdAuth extends NullSessProvider {
         const rows = [];
         this.params.adMapGroups.forEach(({ group }) => {
             rows.push(
-                new Promise((resolve, reject) => {
+                new Promise<void>((resolve, reject) => {
                     this.log.trace("Cache users...");
                     this.ad.getUsersForGroup(group, (err, users) => {
                         if (err) {
@@ -364,7 +360,7 @@ export default class AdAuth extends NullSessProvider {
                             ]),
                             ck_id:
                                 (userData.data || {}).ck_id || user.objectSID,
-                            type_auth_provider: 'ADAUTH',
+                            type_auth_provider: "ADAUTH",
                         },
                     );
                     if (!(userData.data || {}).ck_id) {
@@ -383,9 +379,7 @@ export default class AdAuth extends NullSessProvider {
                         idUser: data.ck_id,
                         userData: data,
                     })
-                        .then((res) =>
-                            this.sessCtrl.loadSession(res.session),
-                        )
+                        .then((res) => this.sessCtrl.loadSession(res.session))
                         .then((sess) => resolve(sess));
                 })
                 .catch((errFind) => {

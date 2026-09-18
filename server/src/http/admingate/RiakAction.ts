@@ -8,11 +8,32 @@ import {
     isEmpty,
     sortFilesData,
 } from "@ungate/plugininf/lib/util/Util";
-import * as AWS from "aws-sdk";
 import { forEach } from "lodash";
+import { Client } from "minio";
+
+function minioFromUrl(url: string, accessKey: string, secretKey: string) {
+    const u = new URL(url.includes("://") ? url : `http://${url}`);
+    return new Client({
+        endPoint: u.hostname,
+        port: u.port ? Number(u.port) : u.protocol === "https:" ? 443 : 80,
+        useSSL: u.protocol === "https:",
+        accessKey,
+        secretKey,
+        region: "us-east-1",
+        pathStyle: true,
+    });
+}
+
+async function streamToBuffer(stream: NodeJS.ReadableStream): Promise<Buffer> {
+    const chunks: Buffer[] = [];
+    for await (const chunk of stream) {
+        chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    }
+    return Buffer.concat(chunks);
+}
 
 interface IS3Clients {
-    [key: string]: AWS.S3;
+    [key: string]: Client;
 }
 
 export default class RiakAction {
@@ -24,22 +45,11 @@ export default class RiakAction {
         if (!isEmpty(this.params.cctBuckets)) {
             this.cctBuckets = JSON.parse(this.params.cctBuckets);
             forEach(this.cctBuckets, (val, key) => {
-                const ep = new AWS.Endpoint("http://s3.amazonaws.com");
-                const credentials = new AWS.Credentials(val);
-                const config = {
-                    apiVersion: "2006-03-01",
-                    credentials,
-                    endpoint: ep,
-                    httpOptions: {
-                        proxy: this.params.cvRiakUrl,
-                    },
-                    region: "us-east-1",
-                    s3DisableBodySigning: true,
-                    s3ForcePathStyle: true,
-                    signatureVersion: "v2",
-                    sslEnabled: false,
-                };
-                this.clients[key] = new AWS.S3(new AWS.Config(config));
+                this.clients[key] = minioFromUrl(
+                    this.params.cvRiakUrl,
+                    val.accessKeyId,
+                    val.secretAccessKey,
+                );
             });
         }
     }
@@ -66,29 +76,24 @@ export default class RiakAction {
             },
         );
         const s3 = this.clients[json.filter.cv_bucket];
-        const params = {
-            Bucket: json.filter.cv_bucket,
-        };
-        return new Promise((resolve, reject) => {
-            s3.listObjects(params, (err, data) => {
-                if (err) {
-                    return reject(err);
-                }
-                return resolve(
-                    data
-                        ? data.Contents.map((obj) => {
-                              return {
-                                  ...obj,
-                                  ck_id: obj.Key,
-                                  cv_bucket: json.filter.cv_bucket,
-                              };
-                          })
-                              .sort(sortFilesData(gateContext))
-                              .filter(filterFilesData(gateContext))
-                        : [],
-                );
+        const contents = await new Promise<any[]>((resolve, reject) => {
+            const items = [];
+            const stream = s3.listObjects(json.filter.cv_bucket, "", true);
+            stream.on("data", (obj) => {
+                const name = obj.name || obj.key;
+                items.push({
+                    ...obj,
+                    Key: name,
+                    ck_id: name,
+                    cv_bucket: json.filter.cv_bucket,
+                });
             });
+            stream.on("error", reject);
+            stream.on("end", () => resolve(items));
         });
+        return contents
+            .sort(sortFilesData(gateContext))
+            .filter(filterFilesData(gateContext));
     }
 
     /**
@@ -110,31 +115,22 @@ export default class RiakAction {
             },
         );
         const s3 = this.clients[json.filter.cv_bucket];
-        const params = {
-            Bucket: json.filter.cv_bucket,
-            Key: json.master.ck_id,
-        };
-        return new Promise((resolve, reject) => {
-            s3.headObject(params, (err, data) => {
-                if (err) {
-                    return reject(err);
-                }
-                return resolve(
-                    data
-                        ? Object.entries(data.Metadata)
-                              .map((value) => ({
-                                  ck_id: value[0],
-                                  cv_value:
-                                      value[0] === "filename"
-                                          ? decodeURI(value[1] as string)
-                                          : value[1],
-                              }))
-                              .sort(sortFilesData(gateContext))
-                              .filter(filterFilesData(gateContext))
-                        : [],
-                );
-            });
-        });
+        const data = await s3.statObject(
+            json.filter.cv_bucket,
+            json.master.ck_id,
+        );
+        return data
+            ? Object.entries(data.metaData)
+                  .map((value) => ({
+                      ck_id: value[0],
+                      cv_value:
+                          value[0] === "filename"
+                              ? decodeURI(value[1] as string)
+                              : value[1],
+                  }))
+                  .sort(sortFilesData(gateContext))
+                  .filter(filterFilesData(gateContext))
+            : [];
     }
 
     /**
@@ -144,23 +140,13 @@ export default class RiakAction {
      */
     public async deleteRiakFile(gateContext: IContext, json): Promise<any> {
         const s3 = this.clients[json.data.cv_bucket];
-        const params = {
-            Bucket: json.data.cv_bucket,
-            Key: json.data.ck_id,
-        };
-        return new Promise((resolve, reject) => {
-            s3.deleteObject(params, (err) => {
-                if (err) {
-                    return reject(err);
-                }
-                return resolve([
-                    {
-                        ck_id: null,
-                        cv_error: null,
-                    },
-                ]);
-            });
-        });
+        await s3.removeObject(json.data.cv_bucket, json.data.ck_id);
+        return [
+            {
+                ck_id: null,
+                cv_error: null,
+            },
+        ];
     }
 
     /**
@@ -182,25 +168,20 @@ export default class RiakAction {
             },
         );
         const s3 = this.clients[json.data.cv_bucket];
-        const params = {
-            Bucket: json.data.cv_bucket,
-            Key: json.data.ck_id,
-        };
-        return new Promise((resolve, reject) => {
-            s3.getObject(params, (err, data) => {
-                if (err) {
-                    return reject(err);
-                }
-                return resolve([
-                    {
-                        filedata: data.Body,
-                        filename: data.Metadata.filename || data.Metadata.originalfilename
-                            ? decodeURI(data.Metadata.filename || data.Metadata.originalfilename)
-                            : json.data.ck_id,
-                        filetype: data.ContentType,
-                    },
-                ]);
-            });
-        });
+        const stat = await s3.statObject(json.data.cv_bucket, json.data.ck_id);
+        const filedata = await streamToBuffer(
+            await s3.getObject(json.data.cv_bucket, json.data.ck_id),
+        );
+        const filenameMeta =
+            stat.metaData.filename || stat.metaData.originalfilename;
+        return [
+            {
+                filedata,
+                filename: filenameMeta
+                    ? decodeURI(filenameMeta)
+                    : json.data.ck_id,
+                filetype: stat.metaData["content-type"],
+            },
+        ];
     }
 }

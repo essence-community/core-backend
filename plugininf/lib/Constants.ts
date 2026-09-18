@@ -21,7 +21,8 @@ export class Constants {
     /**
      * Формат даты по умолчанию
      */
-    public JSON_DATE_FORMAT = process.env.GATE_JSON_DATE_FORMAT || "YYYY-MM-DDTHH:mm:ss";
+    public JSON_DATE_FORMAT =
+        process.env.GATE_JSON_DATE_FORMAT || "YYYY-MM-DDTHH:mm:ss";
 
     /** Рабочая кодировка для json */
     public JSON_ENCODING = "utf-8";
@@ -50,7 +51,18 @@ export class Constants {
     /** Изменение Content-disposition для ответа на запрос файла */
     public RESPONSE_CONTENT_DISPOSITION = "answerContentDisposition";
     /** Префикс параметра с паролем */
-    public PASSWORD_PARAM_PREFIX = ["pwd", "cv_password", "cv_hash_password", "password", "pass", "passwd", "secret", "cv_password_hash", "cv_hash", "cv_token"];
+    public PASSWORD_PARAM_PREFIX = [
+        "pwd",
+        "cv_password",
+        "cv_hash_password",
+        "password",
+        "pass",
+        "passwd",
+        "secret",
+        "cv_password_hash",
+        "cv_hash",
+        "cv_token",
+    ];
     /** Имя или список через разделитель (запятая) имен плагинов для предварительной обработки */
     public PLUGIN_PARAM = "plugin";
     /** Наименование провайдера */

@@ -71,14 +71,16 @@ export default class PKOAuth extends NullSessProvider {
     private mapUserAttr: IObjectParam = {};
     private mapGroupActions: IObjectParam = {};
     private listDefaultActions: number[] = [];
-    constructor(
-        name: string,
-        params: ICCTParams,
-        sessCtrl: ISessCtrl,
-    ) {
+    constructor(name: string, params: ICCTParams, sessCtrl: ISessCtrl) {
         super(name, params, sessCtrl);
         this.params = initParams(PKOAuth.getParamsInfo(), this.params);
-        this.dataSource = new PostgresDB(`${this.name}_provider`, pick(this.params, ...Object.keys(PostgresDB.getParamsInfo())) as any);
+        this.dataSource = new PostgresDB(
+            `${this.name}_provider`,
+            pick(
+                this.params,
+                ...Object.keys(PostgresDB.getParamsInfo()),
+            ) as any,
+        );
         const userAttr = [
             "dn",
             "sAMAccountName",
@@ -183,7 +185,9 @@ export default class PKOAuth extends NullSessProvider {
                             this.log.error(
                                 err ? err.message : "Invalid password or login",
                             );
-                            reject(new ErrorException(ErrorGate.AUTH_UNAUTHORIZED));
+                            reject(
+                                new ErrorException(ErrorGate.AUTH_UNAUTHORIZED),
+                            );
                             return;
                         }
                         this.initSession(
@@ -269,7 +273,7 @@ export default class PKOAuth extends NullSessProvider {
                                 )
                                 .then(
                                     (resAction) =>
-                                        new Promise(
+                                        new Promise<void>(
                                             (resolveAction, rejectAction) => {
                                                 resAction.stream.on(
                                                     "error",
@@ -421,7 +425,7 @@ export default class PKOAuth extends NullSessProvider {
                             ]),
                             ck_id:
                                 (userData.data || {}).ck_id || user.objectSID,
-                            type_auth_provider: 'PKOAUTH',
+                            type_auth_provider: "PKOAUTH",
                         },
                     );
                     if (!(userData.data || {}).ck_id) {
@@ -447,9 +451,7 @@ export default class PKOAuth extends NullSessProvider {
                         idUser: data.ck_id,
                         userData: data,
                     })
-                        .then((res) =>
-                            this.sessCtrl.loadSession(res.session),
-                        )
+                        .then((res) => this.sessCtrl.loadSession(res.session))
                         .then((sess) => resolve(sess));
                 })
                 .catch((errFind) => {

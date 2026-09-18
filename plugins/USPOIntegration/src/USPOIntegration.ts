@@ -9,9 +9,9 @@ import NullPlugin from "@ungate/plugininf/lib/NullPlugin";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
 import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
 import { delay, forEach, isObject } from "lodash";
-import * as moment from "moment";
+import moment from "moment";
 import * as QueryString from "qs";
-import * as request from "request";
+import * as axios from "axios";
 import * as url from "url";
 import * as util from "util";
 
@@ -257,7 +257,7 @@ export default class USPOIntegration extends NullPlugin {
                                             },
                                         ]),
                                         type: "success",
-                                    } as IResult),
+                                    }) as IResult,
                             );
                         }
                         return {
@@ -460,8 +460,8 @@ export default class USPOIntegration extends NullPlugin {
         postData?: string,
     ): Promise<any> {
         return new Promise((resolve, reject) => {
-            const params: request.Options = {
-                body: postData,
+            const params: axios.AxiosRequestConfig = {
+                data: postData,
                 headers: {
                     Accept: "application/json",
                     "Content-Type": "application/json",
@@ -471,54 +471,75 @@ export default class USPOIntegration extends NullPlugin {
                           }
                         : {}),
                 },
-                method,
+                method: method as axios.Method,
                 timeout: this.params.timeout,
                 url: url.format(urlPrint),
+                responseType: "text",
+                validateStatus: () => true,
             };
             if (this.params.proxy) {
-                params.proxy = this.params.proxy;
+                const proxy = this.params.proxy.startsWith("{")
+                    ? JSON.parse(this.params.proxy)
+                    : url.parse(this.params.proxy, true);
+                const proxyauth = proxy.auth ? proxy.auth.split(":") : [];
+                params.proxy = this.params.proxy.startsWith("{")
+                    ? proxy
+                    : {
+                          host: proxy.host,
+                          port: parseInt(proxy.port, 10),
+                          auth: proxy.auth
+                              ? {
+                                    username: proxyauth[0],
+                                    password: proxyauth[1],
+                                }
+                              : undefined,
+                          protocol: proxy.protocol,
+                      };
             }
             if (gateContext.isDebugEnabled()) {
                 gateContext.debug(`Request params: ${JSON.stringify(params)}`);
             }
-            request(params, (err, res, body) => {
-                if (err) {
+            axios.default
+                .request(params)
+                .then((res) => {
+                    const body = res.data;
+                    if (gateContext.isDebugEnabled()) {
+                        gateContext.debug(
+                            `Response headers: ${JSON.stringify(
+                                res.headers,
+                            )}\nResponse Code: ${res.status}\nbody:\n${body}`,
+                        );
+                    }
+                    if (res.status > 400) {
+                        return reject(
+                            new Error(
+                                `Ошибка вызова ${urlPrint.hostname}\n` +
+                                    `Response Code: ${res.status}\nBody: ${body}`,
+                            ),
+                        );
+                    }
+                    try {
+                        const responseJson = JSON.parse(body);
+                        if (isObject(responseJson)) {
+                            return resolve({
+                                body,
+                                response: res,
+                                responseJson,
+                            });
+                        }
+                    } catch (e) {
+                        gateContext.error(`UNKNOWN_MESSAGE ${body}`);
+                        return reject(new Error("Error response print Server"));
+                    }
+                })
+                .catch((err) => {
                     gateContext.error(err);
                     return reject(
                         new Error(
                             `Ошибка вызова ${urlPrint.hostname}\nError: ${err.message}`,
                         ),
                     );
-                }
-                if (gateContext.isDebugEnabled()) {
-                    gateContext.debug(
-                        `Response headers: ${JSON.stringify(
-                            res.headers,
-                        )}\nResponse Code: ${res.statusCode}\nbody:\n${body}`,
-                    );
-                }
-                if (res.statusCode > 400) {
-                    return reject(
-                        new Error(
-                            `Ошибка вызова ${urlPrint.hostname}\n` +
-                                `Response Code: ${res.statusCode}\nBody: ${body}`,
-                        ),
-                    );
-                }
-                try {
-                    const responseJson = JSON.parse(body);
-                    if (isObject(responseJson)) {
-                        return resolve({
-                            body,
-                            response: res,
-                            responseJson,
-                        });
-                    }
-                } catch (e) {
-                    gateContext.error(`UNKNOWN_MESSAGE ${body}`);
-                    return reject(new Error("Error response print Server"));
-                }
-            });
+                });
             return;
         });
     }

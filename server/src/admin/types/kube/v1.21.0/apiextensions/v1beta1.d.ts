@@ -355,8 +355,7 @@ export interface JSONSchemaProps {
  * JSONSchemaPropsOrArray represents a value that can either be a JSONSchemaProps or an array of JSONSchemaProps. Mainly here for serialization purposes.
  */
 export declare type JSONSchemaPropsOrArray =
-    | JSONSchemaProps
-    | JSONSchemaProps[];
+    JSONSchemaProps | JSONSchemaProps[];
 /**
  * JSONSchemaPropsOrBool represents JSONSchemaProps or a boolean value. Defaults to true for the boolean property.
  */

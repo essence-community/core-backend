@@ -1,6 +1,11 @@
 import { IFile } from "@ungate/plugininf/lib/IContext";
 import { IEncoder, IEncoderParams } from "./Encoder.types";
-import {XMLParser, X2jOptions, XMLBuilder, XmlBuilderOptions} from "fast-xml-parser";
+import {
+    XMLParser,
+    X2jOptions,
+    XMLBuilder,
+    XmlBuilderOptions,
+} from "fast-xml-parser";
 import * as he from "he";
 import * as fs from "fs";
 
@@ -69,7 +74,9 @@ export class XMLEncoder implements IEncoder {
                     const xml = fs.readFileSync(file.path).toString();
                     fs.writeFileSync(
                         newFile,
-                        JSON.stringify(this.xmlToJsonParser.parse(xml, this.j2xoptions)),
+                        JSON.stringify(
+                            this.xmlToJsonParser.parse(xml, this.j2xoptions),
+                        ),
                     );
                     fs.unlinkSync(file.path);
                     file.path = newFile;

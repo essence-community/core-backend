@@ -6,12 +6,12 @@ import IResult from "@ungate/plugininf/lib/IResult";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
 import { safePipe, safeResponsePipe } from "@ungate/plugininf/lib/stream/Util";
 import { isEmpty } from "@ungate/plugininf/lib/util/Util";
-import * as accepts from "accepts";
+import accepts from "accepts";
 import * as js2xmlparser from "js2xmlparser";
-import * as JSONStream from "JSONStream";
+import JSONStream from "JSONStream";
 import { isArray, isBoolean, isDate, isNumber, isObject } from "lodash";
-import * as moment from "moment";
-import * as through from "through";
+import moment from "moment";
+import through from "through";
 import Constants from "../../core/Constants";
 import RequestContext from "../../core/request/RequestContext";
 
@@ -29,7 +29,7 @@ class ResultController {
         let first = true;
         let total = 0;
         const ResultTransform = through(
-            function(data) {
+            function (data) {
                 let resultData = data;
                 if (first) {
                     resultData = `{"success":${
@@ -40,7 +40,7 @@ class ResultController {
                 total += 1;
                 this.queue(resultData);
             },
-            function() {
+            function () {
                 this.queue(
                     `,"metaData": ${JSON.stringify({
                         ...metaData,
@@ -95,7 +95,7 @@ class ResultController {
         let first = true;
         const self = this;
         const ResultTransform = through(
-            function(data) {
+            function (data) {
                 let xml = js2xmlparser.parse(
                     "data",
                     Object.entries(data).reduce(
@@ -138,7 +138,7 @@ class ResultController {
                 }
                 this.queue(xml);
             },
-            function() {
+            function () {
                 const metaData = js2xmlparser.parse(
                     "metaData",
                     {
@@ -188,10 +188,7 @@ class ResultController {
                 if (typeof fileData === "string") {
                     fileData = Buffer.from(fileData);
                 }
-                if (
-                    fileData.length > 2147483648 ||
-                    fileData.length <= 0
-                ) {
+                if (fileData.length > 2147483648 || fileData.length <= 0) {
                     return this.responseCheck(
                         gateContext,
                         null,
@@ -268,10 +265,7 @@ class ResultController {
                 if (typeof fileData === "string") {
                     fileData = Buffer.from(fileData);
                 }
-                if (
-                    fileData.length > 2147483648 ||
-                    fileData.length <= 0
-                ) {
+                if (fileData.length > 2147483648 || fileData.length <= 0) {
                     return this.responseCheck(
                         gateContext,
                         null,
@@ -475,24 +469,25 @@ class ResultController {
                 case "success":
                 case "false": {
                     switch (gateContext.actionName) {
-                      case "getfile":
-                      case "file": 
-                          this.responseJson(gateContext, result);
-                          break;
-                      default: {
-                          switch (accept.type(["json", "xml"])) {
-                            case "json":
-                                this.responseJson(gateContext, result);
-                                break;
-                            case "xml":
-                                this.responseXml(gateContext, result);
-                                break;
-                            default:
-                                this.responseJson(gateContext, result);
-                                break;
-                          }
-                      }
-                      break;
+                        case "getfile":
+                        case "file":
+                            this.responseJson(gateContext, result);
+                            break;
+                        default:
+                            {
+                                switch (accept.type(["json", "xml"])) {
+                                    case "json":
+                                        this.responseJson(gateContext, result);
+                                        break;
+                                    case "xml":
+                                        this.responseXml(gateContext, result);
+                                        break;
+                                    default:
+                                        this.responseJson(gateContext, result);
+                                        break;
+                                }
+                            }
+                            break;
                     }
                     break;
                 }
@@ -506,24 +501,34 @@ class ResultController {
                     break;
                 case "error": {
                     switch (gateContext.actionName) {
-                      case "getfile":
-                      case "file":
-                        this.responseErrorJson(gateContext, result);
-                        break;
-                      default: {
-                          switch (accept.type(["json", "xml"])) {
-                            case "json":
-                                this.responseErrorJson(gateContext, result);
-                                break;
-                            case "xml":
-                                this.responseErrorXml(gateContext, result);
-                                break;
-                            default:
-                                this.responseErrorJson(gateContext, result);
-                                break;
-                          }
-                        }
-                        break;
+                        case "getfile":
+                        case "file":
+                            this.responseErrorJson(gateContext, result);
+                            break;
+                        default:
+                            {
+                                switch (accept.type(["json", "xml"])) {
+                                    case "json":
+                                        this.responseErrorJson(
+                                            gateContext,
+                                            result,
+                                        );
+                                        break;
+                                    case "xml":
+                                        this.responseErrorXml(
+                                            gateContext,
+                                            result,
+                                        );
+                                        break;
+                                    default:
+                                        this.responseErrorJson(
+                                            gateContext,
+                                            result,
+                                        );
+                                        break;
+                                }
+                            }
+                            break;
                     }
                     break;
                 }

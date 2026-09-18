@@ -1,17 +1,15 @@
-import {forEach, isObject, noop} from "lodash";
+import { forEach, isObject, noop } from "lodash";
 import * as pg from "pg";
 import * as fs from "fs";
-// @ts-ignore
-import * as QueryStream from "pg-query-stream";
-import {IRufusLogger} from "rufus";
-import {Readable, Transform, TransformCallback} from "stream";
+import QueryStream from "pg-query-stream";
+import { Readable, Transform, TransformCallback } from "stream";
 import * as URL from "url";
-import {IParamsInfo} from "../../ICCTParams";
+import { IParamsInfo } from "../../ICCTParams";
 import IObjectParam from "../../IObjectParam";
-import {IResultProvider} from "../../IResult";
-import Logger from "../../Logger";
-import {safePipe} from "../../stream/Util";
-import {hiddenSecret, initParams, isEmpty} from "../../util/Util";
+import { IResultProvider } from "../../IResult";
+import Logger, { IRufusLogger } from "../../Logger";
+import { safePipe } from "../../stream/Util";
+import { hiddenSecret, initParams, isEmpty } from "../../util/Util";
 import Connection from "../Connection";
 import IOptions from "../IOptions";
 
@@ -122,18 +120,18 @@ export default class PostgresDB {
                     {
                         ck_id: "NOTSET",
                     },
-                    {ck_id: "VERBOSE"},
-                    {ck_id: "DEBUG"},
-                    {ck_id: "INFO"},
-                    {ck_id: "WARNING"},
-                    {ck_id: "ERROR"},
-                    {ck_id: "CRITICAL"},
-                    {ck_id: "WARN"},
-                    {ck_id: "TRACE"},
-                    {ck_id: "FATAL"},
+                    { ck_id: "VERBOSE" },
+                    { ck_id: "DEBUG" },
+                    { ck_id: "INFO" },
+                    { ck_id: "WARNING" },
+                    { ck_id: "ERROR" },
+                    { ck_id: "CRITICAL" },
+                    { ck_id: "WARN" },
+                    { ck_id: "TRACE" },
+                    { ck_id: "FATAL" },
                 ],
                 type: "combo",
-                valueField: [{in: "ck_id"}],
+                valueField: [{ in: "ck_id" }],
             },
             /* tslint:enable:object-literal-sort-keys */
         };
@@ -231,15 +229,15 @@ export default class PostgresDB {
     public resetPool(): Promise<void> {
         return this.pool
             ? this.pool.end().then(
-                () => {
-                    this.pool = null;
-                    return Promise.resolve();
-                },
-                () => {
-                    this.pool = null;
-                    return Promise.resolve();
-                },
-            )
+                  () => {
+                      this.pool = null;
+                      return Promise.resolve();
+                  },
+                  () => {
+                      this.pool = null;
+                      return Promise.resolve();
+                  },
+              )
             : Promise.resolve();
     }
 
@@ -316,7 +314,10 @@ export default class PostgresDB {
                 pgconn.removeListener("error", this.onLogError);
                 pgconn.on("error", this.onLogError);
                 if ((pgconn as any).stream) {
-                    (pgconn as any).stream.removeListener("error", this.onLogError);
+                    (pgconn as any).stream.removeListener(
+                        "error",
+                        this.onLogError,
+                    );
                     (pgconn as any).stream.on("error", this.onLogError);
                 }
 
@@ -374,9 +375,9 @@ export default class PostgresDB {
             }
             return (conn as pg.PoolClient).release
                 ? new Promise<void>((resolve) => {
-                    (conn as pg.PoolClient).release();
-                    resolve();
-                })
+                      (conn as pg.PoolClient).release();
+                      resolve();
+                  })
                 : (conn as pg.Client).end();
         }
         return Promise.resolve();
@@ -395,9 +396,9 @@ export default class PostgresDB {
             }
             return (conn as pg.PoolClient).release
                 ? new Promise((resolve) => {
-                    (conn as pg.PoolClient).release();
-                    resolve();
-                })
+                      (conn as pg.PoolClient).release();
+                      resolve();
+                  })
                 : (conn as pg.Client).end();
         }
         return Promise.resolve();
@@ -509,12 +510,12 @@ export default class PostgresDB {
         const conn: pg.Client | pg.PoolClient = inConnection
             ? inConnection
             : await this.getConnection().then(async (c) =>
-                c.getCurrentConnection(),
-            );
+                  c.getCurrentConnection(),
+              );
         const isRelease = isEmpty(inConnection) || options.isRelease;
 
         if (this.log.isTraceEnabled()) {
-            const logParam = hiddenSecret({...params});
+            const logParam = hiddenSecret({ ...params });
             this.log.trace(
                 `execute sql:\n${sql}\nparams:\n${JSON.stringify(logParam)}`,
             );

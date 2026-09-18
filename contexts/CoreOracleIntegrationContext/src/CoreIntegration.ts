@@ -30,11 +30,7 @@ export default class CoreOracleIntegration extends NullContext {
     private dbQuery: ILocalDB<Record<string, any>>;
     private dataSource: OracleDB;
     private caller: any;
-    constructor(
-        name: string,
-        params: ICCTParams,
-        sessCtrl: ISessCtrl,
-    ) {
+    constructor(name: string, params: ICCTParams, sessCtrl: ISessCtrl) {
         super(name, params, sessCtrl);
         this.params = initParams(
             CoreOracleIntegration.getParamsInfo(),
@@ -45,7 +41,10 @@ export default class CoreOracleIntegration extends NullContext {
         } else {
             this.caller = this.offlineInitContext;
         }
-        this.dataSource = new OracleDB(`${this.name}_context`, pick(this.params, ...Object.keys(OracleDB.getParamsInfo())) as any);
+        this.dataSource = new OracleDB(
+            `${this.name}_context`,
+            pick(this.params, ...Object.keys(OracleDB.getParamsInfo())) as any,
+        );
     }
     /**
      * Инициализация плагина

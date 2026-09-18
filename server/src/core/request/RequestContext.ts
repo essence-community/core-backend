@@ -8,16 +8,16 @@ import IContext, {
 } from "@ungate/plugininf/lib/IContext";
 import IContextPlugin from "@ungate/plugininf/lib/IContextPlugin";
 import IProvider from "@ungate/plugininf/lib/IProvider";
-import {IGateQuery} from "@ungate/plugininf/lib/IQuery";
-import {IMetaData} from "@ungate/plugininf/lib/IResult";
+import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
+import { IMetaData } from "@ungate/plugininf/lib/IResult";
 import ISession from "@ungate/plugininf/lib/ISession";
 import Logger from "@ungate/plugininf/lib/Logger";
 import * as crypto from "crypto";
 import * as http from "http";
-import {noop} from "lodash";
+import { noop } from "lodash";
 import Constants from "../Constants";
 import * as fs from "fs";
-import {hiddenSecret} from "@ungate/plugininf/lib/util/Util";
+import { hiddenSecret } from "@ungate/plugininf/lib/util/Util";
 const log = Logger.getLogger("RequestContext");
 function prePareMsg(context: RequestContext, str: string): string {
     return str && str.length > context.gateContextPlugin.maxLogParamLen
@@ -79,16 +79,19 @@ export default class RequestContext implements IContext {
         return this._extraHeaders;
     }
     public set extraHeaders(value: IHeader) {
-        const old = this._extraHeaders
+        const old = this._extraHeaders;
         this._extraHeaders = {
             ...this._extraHeaders,
             ...value,
         };
         if (value) {
             Object.entries(value).forEach(([key, value]) => {
-                if (key.toLocaleLowerCase() === 'set-cookie' && old[key]) {
+                if (key.toLocaleLowerCase() === "set-cookie" && old[key]) {
                     const oldValue = old[key] as string | string[];
-                    this._extraHeaders[key] = [...(Array.isArray(oldValue) ? oldValue : [oldValue]), ...(Array.isArray(value) ? value : [value])] as any;
+                    this._extraHeaders[key] = [
+                        ...(Array.isArray(oldValue) ? oldValue : [oldValue]),
+                        ...(Array.isArray(value) ? value : [value]),
+                    ] as any;
                 }
             });
         }
@@ -219,15 +222,16 @@ export default class RequestContext implements IContext {
         response.writeHead = (...args) => {
             if (!isWriteHead) {
                 isWriteHead = true;
-                return writeHead.apply(response, args);
+                return writeHead.apply(response, args as any);
             }
         };
         response.once("finish", () => {
             if (!context.isExcludeAccessLog) {
                 this.info(
                     `${this.request.method}(${this.actionName},${this.queryName}` +
-                    `,${this.providerName}) time execute ${(new Date().getTime() - this.startTime) / 1000
-                    }`,
+                        `,${this.providerName}) time execute ${
+                            (new Date().getTime() - this.startTime) / 1000
+                        }`,
                 );
             }
             if (
@@ -303,19 +307,34 @@ export default class RequestContext implements IContext {
     }
 
     public info(str: string, ...args: any[]): void {
-        log.info(`${this.hash} - ${prePareMsg(this, str)}`, ...hiddenSecret(args));
+        log.info(
+            `${this.hash} - ${prePareMsg(this, str)}`,
+            ...hiddenSecret(args),
+        );
     }
     public warn(str: string, ...args: any[]): void {
-        log.warn(`${this.hash} - ${prePareMsg(this, str)}`, ...hiddenSecret(args));
+        log.warn(
+            `${this.hash} - ${prePareMsg(this, str)}`,
+            ...hiddenSecret(args),
+        );
     }
     public error(str: string, ...args: any[]): void {
-        log.error(`${this.hash} - ${prePareMsg(this, str)}`, ...hiddenSecret(args));
+        log.error(
+            `${this.hash} - ${prePareMsg(this, str)}`,
+            ...hiddenSecret(args),
+        );
     }
     public debug(str: string, ...args: any[]): void {
-        log.debug(`${this.hash} - ${prePareMsg(this, str)}`, ...hiddenSecret(args));
+        log.debug(
+            `${this.hash} - ${prePareMsg(this, str)}`,
+            ...hiddenSecret(args),
+        );
     }
     public trace(str: string, ...args: any[]): void {
-        log.trace(`${this.hash} - ${prePareMsg(this, str)}`, ...hiddenSecret(args));
+        log.trace(
+            `${this.hash} - ${prePareMsg(this, str)}`,
+            ...hiddenSecret(args),
+        );
     }
     public isDebugEnabled = () => log.isDebugEnabled();
     public isTraceEnabled = () => log.isTraceEnabled();

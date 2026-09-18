@@ -23,9 +23,12 @@ export default class CoreSemaphore extends NullEvent {
         super(name, params);
         this.params = initParams(CoreSemaphore.getParamsInfo(), this.params);
         this.dataSource = new OracleDB(`${this.name}_semaphore`, {
-            ...pick(this.params, ...Object.keys(OracleDB.getParamsInfo())) as any,
+            ...(pick(
+                this.params,
+                ...Object.keys(OracleDB.getParamsInfo()),
+            ) as any),
             poolMax: this.params.poolMax || 10,
-            poolMin: this.params.poolMin || 0
+            poolMin: this.params.poolMin || 0,
         });
     }
     /**

@@ -1,5 +1,5 @@
 import * as URL from "url";
-import * as jwkToPem from "jwk-to-pem";
+import jwkToPem from "jwk-to-pem";
 import axios from "axios";
 import { IRotationConfig } from "./TokenAuth.types";
 export class Rotation {
@@ -13,7 +13,8 @@ export class Rotation {
     public config: IRotationConfig;
     constructor(config: IRotationConfig, logger: any) {
         this.realmUrl = config.realmUrl;
-        this.minTimeBetweenJwksRequests = config.minTimeBetweenJwksRequests || 0;
+        this.minTimeBetweenJwksRequests =
+            config.minTimeBetweenJwksRequests || 0;
         this.certsUrl = config.certsUrl;
         this.jwks = [];
         this.lastTimeRequesTime = 0;
@@ -25,7 +26,8 @@ export class Rotation {
     retrieveJWKs(callback?: (err?: Error) => void) {
         const url = this.certsUrl
             ? this.certsUrl
-            : (this.proxyUrl || this.realmUrl) + "/protocol/openid-connect/certs";
+            : (this.proxyUrl || this.realmUrl) +
+              "/protocol/openid-connect/certs";
         const options = URL.parse(url);
         const promise = axios
             .get<{
@@ -38,7 +40,12 @@ export class Rotation {
                 httpsAgent: this.config.httpsAgent,
             })
             .then((response) => {
-                this.logger.debug("retrieveJWKs status: %s, header: %j, response %j", response.status, response.headers, response.data);
+                this.logger.debug(
+                    "retrieveJWKs status: %s, header: %j, response %j",
+                    response.status,
+                    response.headers,
+                    response.data,
+                );
                 if (response.status < 200 || response.status >= 300) {
                     throw new Error("Error fetching JWK Keys");
                 }
@@ -63,7 +70,7 @@ export class Rotation {
         const self = this;
 
         if (count > 5) {
-            throw new Error("Not found cert")
+            throw new Error("Not found cert");
         }
 
         // check if we are allowed to send request
@@ -88,7 +95,10 @@ export class Rotation {
             );
 
             return new Promise((resolve, reject) => {
-                setTimeout(() => this.getJWK(kid, count + 1).then(resolve, reject), 1000);
+                setTimeout(
+                    () => this.getJWK(kid, count + 1).then(resolve, reject),
+                    1000,
+                );
             });
         }
     }

@@ -9,9 +9,9 @@
         "@iarna/toml": "^2.2.5",
         "axon": "^2.0.3",
         "errio": "^1.2.2",
-        "js-yaml": "^4.0.0",
+        "js-yaml": "^5.4.2",
         "lodash": "^4.17.15",
-        "msgpack-lite": "^0.1.26",
+        "msgpack-lite": "^0.2.2",
         "nedb": "^1.8.0",
         "nedb-multi": "^1.2.2"
     }

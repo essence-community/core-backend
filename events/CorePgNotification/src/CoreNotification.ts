@@ -10,7 +10,7 @@ import { delay, isObject, noop, pick } from "lodash";
 const logger = Logger.getLogger("CoreNotification");
 
 export default class CoreNotification extends NullEvent {
-    public static getParamsInfo (): IParamsInfo {
+    public static getParamsInfo(): IParamsInfo {
         return {
             authProvider: {
                 name: "Наименвание провайдера авторизации",
@@ -27,15 +27,21 @@ export default class CoreNotification extends NullEvent {
     private dataSource: PostgresDB;
     private eventConnect: Connection;
     private timer?: NodeJS.Timeout;
-    constructor (name: string, params: ICCTParams) {
+    constructor(name: string, params: ICCTParams) {
         super(name, params);
         this.params = initParams(CoreNotification.getParamsInfo(), this.params);
-        this.dataSource = new PostgresDB(`${this.name}_events`, pick(this.params, ...Object.keys(PostgresDB.getParamsInfo())) as any);
+        this.dataSource = new PostgresDB(
+            `${this.name}_events`,
+            pick(
+                this.params,
+                ...Object.keys(PostgresDB.getParamsInfo()),
+            ) as any,
+        );
     }
     /**
      * Инициализация
      */
-    public async init (reload?: boolean): Promise<void> {
+    public async init(reload?: boolean): Promise<void> {
         if (this.eventConnect) {
             const conn = this.eventConnect;
             this.eventConnect = null;
@@ -85,7 +91,7 @@ export default class CoreNotification extends NullEvent {
     /**
      * Подключаем слежение к таблице
      */
-    public initEvents (): Promise<void> {
+    public initEvents(): Promise<void> {
         logger.info(`Init event provider ${this.name}`);
         this.readMessage();
         const conn = this.eventConnect.getCurrentConnection();
@@ -106,7 +112,7 @@ export default class CoreNotification extends NullEvent {
      * Поиск оповещений
      * @param processData объект с юзерами
      */
-    public async eventCorePgNotification (data?: any): Promise<void> {
+    public async eventCorePgNotification(data?: any): Promise<void> {
         logger.debug("LoadEventNotification: %j", data);
         const ckUsers = data?.users;
         if (isEmpty(ckUsers)) {
@@ -191,7 +197,7 @@ export default class CoreNotification extends NullEvent {
      * @param params
      * @returns {*|Promise.<TResult>}
      */
-    private async updateNotification (conn: Connection, params = []) {
+    private async updateNotification(conn: Connection, params = []) {
         if (params.length) {
             return Promise.all(
                 params.map((param) =>
@@ -353,7 +359,7 @@ export default class CoreNotification extends NullEvent {
     /**
      * Перезагрузка оповещение в случае сбоя
      */
-    private reload () {
+    private reload() {
         this.init().then(noop, (err) => {
             logger.error(`Ошибка оповещения ${this.name} ${err.message}`, err);
             delay(this.reload, 15000);

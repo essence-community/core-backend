@@ -32,7 +32,10 @@ export default class CoreNotification extends NullEvent {
     constructor(name: string, params: ICCTParams) {
         super(name, params);
         this.params = initParams(CoreNotification.getParamsInfo(), this.params);
-        this.dataSource = new OracleDB(`${this.name}_events`, pick(this.params, ...Object.keys(OracleDB.getParamsInfo())) as any);
+        this.dataSource = new OracleDB(
+            `${this.name}_events`,
+            pick(this.params, ...Object.keys(OracleDB.getParamsInfo())) as any,
+        );
     }
     /**
      * Инициализация
@@ -88,8 +91,11 @@ export default class CoreNotification extends NullEvent {
             },
             target: "cluster",
         });
-        this.timer = setTimeout(() => this.readMessage(), this.params.timeoutTimer * 1000);
-    }
+        this.timer = setTimeout(
+            () => this.readMessage(),
+            this.params.timeoutTimer * 1000,
+        );
+    };
     /**
      * Подключаем слежение к таблице
      */

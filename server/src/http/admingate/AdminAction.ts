@@ -367,7 +367,10 @@ export default class AdminAction {
                     "schedulerNode",
                 ),
             gtgetriakbuckets: (...arg) =>
-                this.riakAction.gtgetriakbuckets.apply(this.riakAction, arg),
+                this.riakAction.gtgetriakbuckets.apply(
+                    this.riakAction,
+                    arg as any,
+                ),
             gtgetriakfiles: (gateContext: IContext) =>
                 this.riakAction.loadRiakFiles(gateContext),
             gtgetriakfileinfo: (gateContext: IContext) =>
@@ -531,8 +534,8 @@ export default class AdminAction {
                 return isObject(params[name])
                     ? JSON.stringify(params[name])
                     : isEmpty(params[name])
-                    ? conf.defaultValue
-                    : params[name];
+                      ? conf.defaultValue
+                      : params[name];
             }
             case "form_nested": {
                 return Object.entries(conf.childs).reduce((res, [key, obj]) => {
@@ -576,14 +579,15 @@ export default class AdminAction {
                 const value = isEmpty(params[name])
                     ? 0
                     : +(typeof params[name] === "string"
-                          ? params[name] === "1" || params[name] === "true" || params[name] === "yes" || params[name] === "on"
+                          ? params[name] === "1" ||
+                            params[name] === "true" ||
+                            params[name] === "yes" ||
+                            params[name] === "on"
                           : params[name]);
                 if (isEmpty(conf.defaultValue)) {
                     return isEmpty(params[name]) ? defaultValue : value;
                 }
-                return +(isEmpty(params[name])
-                    ? defaultValue || 0
-                    : value);
+                return +(isEmpty(params[name]) ? defaultValue || 0 : value);
             }
             case "combo": {
                 return isEmpty(params[name]) ? conf.defaultValue : params[name];
@@ -636,13 +640,13 @@ export default class AdminAction {
                     initvalue: isObject(params[name])
                         ? JSON.stringify(params[name])
                         : isEmpty(params[name])
-                        ? conf.defaultValue
-                        : params[name],
+                          ? conf.defaultValue
+                          : params[name],
                     defaultvalue: isObject(params[name])
                         ? JSON.stringify(params[name])
                         : isEmpty(params[name])
-                        ? conf.defaultValue
-                        : params[name],
+                          ? conf.defaultValue
+                          : params[name],
                     type: "IFIELD",
                 };
             }
@@ -686,13 +690,13 @@ export default class AdminAction {
                     initvalue: isObject(params[name])
                         ? JSON.stringify(params[name])
                         : isEmpty(params[name])
-                        ? conf.defaultValue
-                        : params[name],
+                          ? conf.defaultValue
+                          : params[name],
                     defaultvalue: isObject(params[name])
                         ? JSON.stringify(params[name])
                         : isEmpty(params[name])
-                        ? conf.defaultValue
-                        : params[name],
+                          ? conf.defaultValue
+                          : params[name],
                     type: "IFIELD",
                 };
             }
@@ -731,7 +735,10 @@ export default class AdminAction {
                 const value = isEmpty(params[name])
                     ? 0
                     : +(typeof params[name] === "string"
-                          ? params[name] === "1" || params[name] === "true" || params[name] === "yes" || params[name] === "on"
+                          ? params[name] === "1" ||
+                            params[name] === "true" ||
+                            params[name] === "yes" ||
+                            params[name] === "on"
                           : params[name]);
                 if (isEmpty(conf.defaultValue)) {
                     return {

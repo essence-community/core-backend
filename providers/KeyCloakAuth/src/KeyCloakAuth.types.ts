@@ -1,8 +1,8 @@
-import {IRequest} from "@ungate/plugininf/lib/IContext";
+import { IRequest } from "@ungate/plugininf/lib/IContext";
 import * as KeyCloak from "keycloak-connect";
-import {ISessProviderParam} from "@ungate/plugininf/lib/NullSessProvider";
-import {Agent as HttpsAgent} from "https";
-import {Agent as HttpAgent} from "http";
+import { ISessProviderParam } from "@ungate/plugininf/lib/NullSessProvider";
+import { Agent as HttpsAgent } from "https";
+import { Agent as HttpAgent } from "http";
 
 export interface IGrantMap {
     grant: string;
@@ -76,4 +76,3 @@ export interface IGrantManagerConfig extends IRotationConfig {
     idpHint?: string;
     grantManagerConfigExtra?: any;
 }
-

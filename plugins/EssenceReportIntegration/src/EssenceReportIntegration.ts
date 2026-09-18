@@ -359,8 +359,7 @@ export default class EssenceReportIntegration extends NullPlugin {
                     res.on("end", () => {
                         try {
                             const parsedData = JSON.parse(rawData) as
-                                | ResultSuccess
-                                | ResultFault;
+                                ResultSuccess | ResultFault;
                             return resolve(parsedData);
                         } catch (e) {
                             this.logger.error(

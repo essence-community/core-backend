@@ -5,37 +5,40 @@ import ISession, {
     IUserData,
     IUserDbData,
 } from "@ungate/plugininf/lib/ISession";
-import Logger from "@ungate/plugininf/lib/Logger";
+import Logger, { IRufusLogger } from "@ungate/plugininf/lib/Logger";
 import * as crypto from "crypto";
-import {v4 as uuidv4} from "uuid";
+import { v4 as uuidv4 } from "uuid";
 import Constants from "../Constants";
 import Property from "../property/Property";
-import {IContextParams} from "@ungate/plugininf/lib/IContextPlugin";
-import {NeDbSessionStore} from "./store/NeDbSessionStore";
+import { IContextParams } from "@ungate/plugininf/lib/IContextPlugin";
+import { NeDbSessionStore } from "./store/NeDbSessionStore";
 import IContext from "@ungate/plugininf/lib/IContext";
-import {IRufusLogger} from "rufus";
 import NotificationController from "../../http/controllers/NotificationController";
 import {
     ISessCtrl,
     ICacheDb,
     ICreateSessionParam,
 } from "@ungate/plugininf/lib/ISessCtrl";
-import {ISessionStore} from "@ungate/plugininf/lib/ISessCtrl";
-import {ISessionData} from "@ungate/plugininf/lib/ISession";
-import {hiddenSecret, initParams, isEmpty} from "@ungate/plugininf/lib/util/Util";
+import { ISessionStore } from "@ungate/plugininf/lib/ISessCtrl";
+import { ISessionData } from "@ungate/plugininf/lib/ISession";
+import {
+    hiddenSecret,
+    initParams,
+    isEmpty,
+} from "@ungate/plugininf/lib/util/Util";
 import NullContext from "@ungate/plugininf/lib/NullContext";
 import RequestContext from "../request/RequestContext";
-import {debounce, dateBetween} from "@ungate/plugininf/lib/util/Util";
-import {noop} from "lodash";
-import * as moment from "moment-timezone";
-import {ConnectionManager} from "typeorm";
+import { debounce, dateBetween } from "@ungate/plugininf/lib/util/Util";
+import { noop } from "lodash";
+import moment from "moment-timezone";
+import { DataSource } from "typeorm";
 import * as path from "path";
-import {TypeOrmSessionStore} from "./store/TypeOrmSessionStore";
-import {TypeOrmLogger} from "@ungate/plugininf/lib/db/TypeOrmLogger";
-import {UserStore} from "./store/typeorm/UserStore";
-import {CacheStore} from "./store/typeorm/CacheStore";
-import {getSessionMaxAgeMs} from "../util";
-import {sendProcess} from "@ungate/plugininf/lib/util/ProcessSender";
+import { TypeOrmSessionStore } from "./store/TypeOrmSessionStore";
+import { TypeOrmLogger } from "@ungate/plugininf/lib/db/TypeOrmLogger";
+import { UserStore } from "./store/typeorm/UserStore";
+import { CacheStore } from "./store/typeorm/CacheStore";
+import { getSessionMaxAgeMs } from "../util";
+import { sendProcess } from "@ungate/plugininf/lib/util/ProcessSender";
 
 const REPLICA_TIMEOUT = parseInt(
     process.env.KUBERNETES_REPLICA_TIMEOUT || "0",
@@ -95,8 +98,7 @@ export class GateSession implements ISessCtrl {
                 };
             }
         } else if (this.params.paramSession.typeStore === "typeorm") {
-            const connectionManager = new ConnectionManager();
-            const connection = connectionManager.create({
+            const connection = new DataSource({
                 ...this.params.paramSession.typeorm,
                 extra: this.params.paramSession.typeorm.extra
                     ? JSON.parse(this.params.paramSession.typeorm.extra)
@@ -105,7 +107,6 @@ export class GateSession implements ISessCtrl {
                 ...(this.params.paramSession.typeorm.typeOrmExtra
                     ? JSON.parse(this.params.paramSession.typeorm.typeOrmExtra)
                     : {}),
-                name: `session_store_${this.name}`,
                 logging: true,
                 logger: new TypeOrmLogger(`${this.name}:session_store`),
                 entities: [
@@ -261,7 +262,7 @@ export class GateSession implements ISessCtrl {
             (context.request.session.gsession.sessionData.typeCheckAuth ===
                 "cookie" ||
                 context.request.session.gsession.sessionData.typeCheckAuth ===
-                "cookieorsession")
+                    "cookieorsession")
         ) {
             await this.prolongationSession(context);
             return context.request.session.gsession;
@@ -357,7 +358,7 @@ export class GateSession implements ISessCtrl {
     public findSessions(
         sessionId: string | string[],
         isExpired: boolean = false,
-    ): Promise<{[sid: string]: ISessionData}> {
+    ): Promise<{ [sid: string]: ISessionData }> {
         const sessions = Array.isArray(sessionId) ? sessionId : [sessionId];
 
         return this.store.allSession(
@@ -552,32 +553,34 @@ export class GateSession implements ISessCtrl {
                 }),
                 userActions.length
                     ? Promise.resolve({
-                        hash_user_action: this.sha1(userActionsJson),
-                    })
+                          hash_user_action: this.sha1(userActionsJson),
+                      })
                     : Promise.resolve({
-                        hash_user_action: null,
-                    }),
+                          hash_user_action: null,
+                      }),
                 userDepartments.length
                     ? Promise.resolve({
-                        hash_user_department: this.sha1(userDepartmentsJson),
-                    })
+                          hash_user_department: this.sha1(userDepartmentsJson),
+                      })
                     : Promise.resolve({
-                        hash_user_department: null,
+                          hash_user_department: null,
+                      }),
+            ])
+                .then((values) =>
+                    this.dbCache.insert({
+                        ck_id: "hash_user",
+                        ...values[0],
+                        ...values[1],
+                        ...values[2],
                     }),
-            ]).then((values) =>
-                this.dbCache.insert({
-                    ck_id: "hash_user",
-                    ...values[0],
-                    ...values[1],
-                    ...values[2],
-                }),
-            ).then(() => {
-                sendProcess({
-                    command: "updateHashAuth",
-                    data: {},
-                    target: "cluster",
+                )
+                .then(() => {
+                    sendProcess({
+                        command: "updateHashAuth",
+                        data: {},
+                        target: "cluster",
+                    });
                 });
-            });
         });
     }
     /**

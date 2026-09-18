@@ -6,8 +6,8 @@ import IQuery from "@ungate/plugininf/lib/IQuery";
 import ISession from "@ungate/plugininf/lib/ISession";
 import NullSessProvider from "@ungate/plugininf/lib/NullSessProvider";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
-import {hiddenSecret, isEmpty} from "@ungate/plugininf/lib/util/Util";
-import {noop} from "lodash";
+import { hiddenSecret, isEmpty } from "@ungate/plugininf/lib/util/Util";
+import { noop } from "lodash";
 import IProviderConfig from "../../core/property/IProviderConfig";
 import Constants from "../../core/Constants";
 import PluginManager from "../../core/pluginmanager/PluginManager";
@@ -54,8 +54,7 @@ class MainController {
                 sessProviders,
             );
 
-            const sessCtrl =
-                requestContext.gateContextPlugin.sessCtrl;
+            const sessCtrl = requestContext.gateContextPlugin.sessCtrl;
             // 2: Если передана сессия то инициализируем сессию
             if (isEmpty(session) && requestContext.sessionId) {
                 session = await sessCtrl.loadSession(
@@ -90,11 +89,11 @@ class MainController {
                     data: ResultStream(
                         session
                             ? [
-                                {
-                                    session: session.session,
-                                    ...session.userData,
-                                },
-                            ]
+                                  {
+                                      session: session.session,
+                                      ...session.userData,
+                                  },
+                              ]
                             : [],
                     ),
                     type: "success",
@@ -102,9 +101,10 @@ class MainController {
             }
             let query;
             // 4. Инициализируем Контекст насройки
-            const cResult = await requestContext.gateContextPlugin.initContext(
-                requestContext,
-            );
+            const cResult =
+                await requestContext.gateContextPlugin.initContext(
+                    requestContext,
+                );
             if (!isEmpty(cResult.connection)) {
                 requestContext.connection = cResult.connection;
             }
@@ -272,21 +272,24 @@ class MainController {
         if (gateContext.session) {
             gateContext.info(
                 `${gateContext.request.method}(${gateContext.actionName},${gateContext.queryName}` +
-                `,${gateContext.providerName || ""},${gateContext.isTraceEnabled()
-                    ? JSON.stringify(param)
-                    : ""
-                },${gateContext.isTraceEnabled()
-                    ? JSON.stringify(gateContext.session)
-                    : gateContext.session.session.substr(0, 10)
-                })`,
+                    `,${gateContext.providerName || ""},${
+                        gateContext.isTraceEnabled()
+                            ? JSON.stringify(param)
+                            : ""
+                    },${
+                        gateContext.isTraceEnabled()
+                            ? JSON.stringify(gateContext.session)
+                            : gateContext.session.session.substr(0, 10)
+                    })`,
             );
         } else {
             gateContext.info(
                 `${gateContext.request.method}(${gateContext.actionName},${gateContext.queryName}` +
-                `,${gateContext.providerName},${gateContext.isTraceEnabled()
-                    ? JSON.stringify(param)
-                    : ""
-                })`,
+                    `,${gateContext.providerName},${
+                        gateContext.isTraceEnabled()
+                            ? JSON.stringify(param)
+                            : ""
+                    })`,
             );
         }
     }
@@ -315,8 +318,8 @@ class MainController {
                     },
                     {
                         $or: [
-                            {ck_context: {$exists: false}},
-                            {ck_context: gateContext.gateContextPlugin.name},
+                            { ck_context: { $exists: false } },
+                            { ck_context: gateContext.gateContextPlugin.name },
                         ],
                     },
                 ],
@@ -331,15 +334,15 @@ class MainController {
         );
         provider = pluginClass.default
             ? new pluginClass.default(
-                config.ck_id,
-                config.cct_params,
-                gateContext.gateContextPlugin.sessCtrl,
-            )
+                  config.ck_id,
+                  config.cct_params,
+                  gateContext.gateContextPlugin.sessCtrl,
+              )
             : new pluginClass(
-                config.ck_id,
-                config.cct_params,
-                gateContext.gateContextPlugin.sessCtrl,
-            );
+                  config.ck_id,
+                  config.cct_params,
+                  gateContext.gateContextPlugin.sessCtrl,
+              );
         await provider.init();
         PluginManager.setGateProvider(
             gateContext.gateContextPlugin.name,
@@ -390,16 +393,16 @@ class MainController {
                 {
                     $or: [
                         isEmpty(gateContext.pluginName)
-                            ? {cl_default: 1}
-                            : {cv_name: {$in: gateContext.pluginName}},
-                        {cl_required: 1},
+                            ? { cl_default: 1 }
+                            : { cv_name: { $in: gateContext.pluginName } },
+                        { cl_required: 1 },
                     ],
                 },
-                {ck_d_provider: {$in: ["all", gateContext.providerName]}},
+                { ck_d_provider: { $in: ["all", gateContext.providerName] } },
                 {
                     $or: [
-                        {ck_context: {$exists: false}},
-                        {ck_context: gateContext.gateContextPlugin.name},
+                        { ck_context: { $exists: false } },
+                        { ck_context: gateContext.gateContextPlugin.name },
                     ],
                 },
             ],

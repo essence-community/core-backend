@@ -1,9 +1,9 @@
 import ICCTParams from "@ungate/plugininf/lib/ICCTParams";
 import IContext from "@ungate/plugininf/lib/IContext";
-import {IPluginRequestContext} from "@ungate/plugininf/lib/IPlugin";
-import {IGateQuery} from "@ungate/plugininf/lib/IQuery";
+import { IPluginRequestContext } from "@ungate/plugininf/lib/IPlugin";
+import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
 import NullPlugin from "@ungate/plugininf/lib/NullPlugin";
-import {hiddenSecret, isEmpty} from "@ungate/plugininf/lib/util/Util";
+import { hiddenSecret, isEmpty } from "@ungate/plugininf/lib/util/Util";
 
 const re = /^[A-z0-9_$]{2,30}$/;
 const PATTERN_FILTER = /\/\x2a\s*##\s*([^\s|\x2a]+)/gi;
@@ -52,14 +52,15 @@ export default class PrepareQuery extends NullPlugin {
                     (item) => !this.deepFindCheck(json, item),
                 );
 
-                const {filter = {}} = json;
+                const { filter = {} } = json;
                 const jnFetch = filter.jn_fetch;
                 const jnOffset = filter.jn_offset;
                 const jlFilter = filter.jl_filter;
                 const jlSort = filter.jl_sort;
                 if (gateContext.isDebugEnabled()) {
                     gateContext.debug(
-                        `jl_filter: ${jlFilter || ""}\njl_sort: ${jlSort || ""
+                        `jl_filter: ${jlFilter || ""}\njl_sort: ${
+                            jlSort || ""
                         }`,
                     );
                 }
@@ -75,8 +76,8 @@ export default class PrepareQuery extends NullPlugin {
                 if (!isEmpty(jlFilter)) {
                     vlFilter = "1 = 1";
                     jlFilter.forEach((item) => {
-                        const {datatype, format, property} = item;
-                        let {operator, value} = item;
+                        const { datatype, format, property } = item;
+                        let { operator, value } = item;
                         re.lastIndex = -1;
                         if (isEmpty(property) || !re.test(property)) {
                             return true;
@@ -89,7 +90,16 @@ export default class PrepareQuery extends NullPlugin {
                         let key = `${FILTER_PREFIX}${property.toLowerCase()}`;
                         let param;
                         let ind = 0;
-                        if (isEmpty(value) && ["null", "is null", "notnull", "not null", "is not null"].indexOf(operator) < 0) {
+                        if (
+                            isEmpty(value) &&
+                            [
+                                "null",
+                                "is null",
+                                "notnull",
+                                "not null",
+                                "is not null",
+                            ].indexOf(operator) < 0
+                        ) {
                             return true;
                         }
 
@@ -186,7 +196,11 @@ export default class PrepareQuery extends NullPlugin {
                                 break;
                             case "in":
                             case "not in": {
-                                if (!value || !Array.isArray(value) || value.length === 0) {
+                                if (
+                                    !value ||
+                                    !Array.isArray(value) ||
+                                    value.length === 0
+                                ) {
                                     return true;
                                 }
                                 let vlValue = "";
@@ -210,7 +224,12 @@ export default class PrepareQuery extends NullPlugin {
                         if (!param) {
                             param = `:${key}`;
                         }
-                        if (datatype === "date" && param != "null" && param != "not null" && gateContext.connection) {
+                        if (
+                            datatype === "date" &&
+                            param != "null" &&
+                            param != "not null" &&
+                            gateContext.connection
+                        ) {
                             if (gateContext.connection.name === "oracle") {
                                 nmColumn = this.dateTruncOracle(
                                     nmColumn,
@@ -234,7 +253,7 @@ export default class PrepareQuery extends NullPlugin {
                 if (!isEmpty(jlSort)) {
                     vlSort = "";
                     jlSort.forEach((item) => {
-                        const {property, direction} = item;
+                        const { property, direction } = item;
                         re.lastIndex = -1;
                         if (isEmpty(property) || !re.test(property)) {
                             return true;
@@ -275,9 +294,9 @@ export default class PrepareQuery extends NullPlugin {
             if (gateContext.isDebugEnabled()) {
                 gateContext.debug(
                     `jl_filter: ${vlFilter}\n` +
-                    `inParam: ${JSON.stringify(
-                        hiddenSecret(query.inParams),
-                    )}\njl_sort: ${vlSort}\n${query.queryStr}`,
+                        `inParam: ${JSON.stringify(
+                            hiddenSecret(query.inParams),
+                        )}\njl_sort: ${vlSort}\n${query.queryStr}`,
                 );
             }
             return resolve();
@@ -303,7 +322,10 @@ export default class PrepareQuery extends NullPlugin {
             } else {
                 inParam[param] = value;
             }
-        } else if (gateContext.connection?.name === "oracle" && typeof value === "boolean") {
+        } else if (
+            gateContext.connection?.name === "oracle" &&
+            typeof value === "boolean"
+        ) {
             inParam[param] = value ? 1 : 0;
         } else if (Array.isArray(value)) {
             value.forEach((val, index) => {

@@ -1,5 +1,4 @@
-import * as moment from "moment";
-import { IRufusLogger } from "rufus";
+import moment from "moment";
 import { ISessCtrl } from "./ISessCtrl";
 import ICCTParams from "./ICCTParams";
 import { IParamsInfo } from "./ICCTParams";
@@ -7,7 +6,7 @@ import IContext from "./IContext";
 import IProvider from "./IProvider";
 import IQuery, { IGateQuery } from "./IQuery";
 import { IResultProvider } from "./IResult";
-import Logger from "./Logger";
+import Logger, { IRufusLogger } from "./Logger";
 import { initParams, isEmpty } from "./util/Util";
 
 export interface IParamsProvider extends Record<string, any> {
@@ -76,11 +75,7 @@ export default abstract class NullProvider implements IProvider {
     public params: IParamsProvider;
     public log: IRufusLogger;
     public sessCtrl: ISessCtrl;
-    constructor(
-        name: string,
-        params: ICCTParams,
-        sessCtrl: ISessCtrl,
-    ) {
+    constructor(name: string, params: ICCTParams, sessCtrl: ISessCtrl) {
         this.name = name;
         this.params = initParams(NullProvider.getParamsInfo(), params);
         this.sessCtrl = sessCtrl;

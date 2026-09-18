@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as crypto from "crypto";
-import { isEmpty, questionReadline } from "../util";
+import {isEmpty, questionReadline} from "../util";
 import * as cu from "./cryptoUtil";
 
 export class Constants {
@@ -182,7 +182,9 @@ export function decryptPassword(value: string) {
 }
 
 export async function decryptPWCli() {
-    const encPw = (await questionReadline("Encrypt password: ", null, true)).trim();
+    const encPw = (
+        await questionReadline("Encrypt password: ", null, true)
+    ).trim();
     if (!isEmpty(encPw)) {
         const descPW = decryptPassword(encPw);
         /* tslint:disable:no-console */
@@ -193,13 +195,13 @@ export async function decryptPWCli() {
 export async function encryptPWCli() {
     const type = await questionReadline(
         "- privatekey\n" +
-            "- aes-128-gcm\n" +
-            "- aes-192-gcm\n" +
-            "- aes-256-gcm\n" +
-            "- aes-128-ccm\n" +
-            "- aes-192-ccm\n" +
-            "- aes-256-ccm\n" +
-            `Type encrypt(${Constant.DEFAULT_ALG}): `,
+        "- aes-128-gcm\n" +
+        "- aes-192-gcm\n" +
+        "- aes-256-gcm\n" +
+        "- aes-128-ccm\n" +
+        "- aes-192-ccm\n" +
+        "- aes-256-ccm\n" +
+        `Type encrypt(${Constant.DEFAULT_ALG}): `,
         Constant.DEFAULT_ALG,
     );
     const pw = (await questionReadline("Password: ", null, true)).trim();

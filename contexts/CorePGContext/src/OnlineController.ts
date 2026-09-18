@@ -16,7 +16,7 @@ import CoreContext, { ICoreParams } from "./CoreContext";
 import ICoreController, { IPropertyContext } from "./ICoreController";
 import { isObject, noop } from "lodash";
 import { FIND_SYMBOL, replaceNull } from "./Util";
-import { IRufusLogger } from "rufus";
+import { IRufusLogger } from "@ungate/plugininf/lib/Logger";
 import { safePipe } from "@ungate/plugininf/lib/stream/Util";
 import { Transform } from "stream";
 import { TempTable } from "./TempTable";
@@ -210,10 +210,10 @@ export default class OnlineController implements ICoreController {
                             return gateContext.session
                                 ? reject(CoreContext.accessDenied())
                                 : reject(
-                                    new ErrorException(
-                                        ErrorGate.REQUIRED_AUTH,
-                                    ),
-                                );
+                                      new ErrorException(
+                                          ErrorGate.REQUIRED_AUTH,
+                                      ),
+                                  );
                         }
                         return reject(
                             new BreakException({
@@ -248,22 +248,34 @@ export default class OnlineController implements ICoreController {
                             cv_value: gateContext.gateVersion,
                         },
                     ];
-                    const cacheData = await this.tempTable.dbSysSettings.findOne({
-                        ck_id: 'cache_date',
-                    }, true);
+                    const cacheData =
+                        await this.tempTable.dbSysSettings.findOne(
+                            {
+                                ck_id: "cache_date",
+                            },
+                            true,
+                        );
                     if (cacheData) {
                         data.push(cacheData);
                     }
-                    Object.entries(gateContext.request.headers).forEach(([key, value]) => {
-                        const keyUpper = key.toLocaleUpperCase();
-                        if (keyUpper.startsWith(this.params.headerPrefixSetting)) {
-                            data.push({
-                                ck_id: `g_sys_header_${key.substring(this.params.headerPrefixSetting.length).replace(FIND_SYMBOL, "_")}`,
-                                cv_description: `Header ${key}`,
-                                cv_value: Array.isArray(value) ? JSON.stringify(value) : value,
-                            });
-                        }
-                    });
+                    Object.entries(gateContext.request.headers).forEach(
+                        ([key, value]) => {
+                            const keyUpper = key.toLocaleUpperCase();
+                            if (
+                                keyUpper.startsWith(
+                                    this.params.headerPrefixSetting,
+                                )
+                            ) {
+                                data.push({
+                                    ck_id: `g_sys_header_${key.substring(this.params.headerPrefixSetting.length).replace(FIND_SYMBOL, "_")}`,
+                                    cv_description: `Header ${key}`,
+                                    cv_value: Array.isArray(value)
+                                        ? JSON.stringify(value)
+                                        : value,
+                                });
+                            }
+                        },
+                    );
                     res.stream.on("data", (row) => {
                         data.push(row);
                     });
@@ -354,10 +366,10 @@ export default class OnlineController implements ICoreController {
                                     },
                                     ...(this.params.debug
                                         ? {
-                                            cv_stack_trace:
-                                                doc.err_text ||
-                                                JSON.stringify(doc),
-                                        }
+                                              cv_stack_trace:
+                                                  doc.err_text ||
+                                                  JSON.stringify(doc),
+                                          }
                                         : {}),
                                 },
                             ]),
@@ -370,7 +382,10 @@ export default class OnlineController implements ICoreController {
         } else if (result.type !== "success") {
             return Promise.resolve(result);
         }
-        const isCache = this.tempTable.caches.includes(gateContext.metaData.cache as string) && !this.params.disableCache;
+        const isCache =
+            this.tempTable.caches.includes(
+                gateContext.metaData.cache as string,
+            ) && !this.params.disableCache;
         if (gateContext.connection) {
             const rTransform = new Transform({
                 readableObjectMode: true,
@@ -382,8 +397,8 @@ export default class OnlineController implements ICoreController {
                             return;
                         }
                         if (
-                            (typeof chunk.cv_error === "object") ||
-                            (typeof chunk.jt_form_message === "object") 
+                            typeof chunk.cv_error === "object" ||
+                            typeof chunk.jt_form_message === "object"
                         ) {
                             const cvErrors = [
                                 ...(isEmpty(chunk.cv_error)
@@ -391,15 +406,14 @@ export default class OnlineController implements ICoreController {
                                     : Object.keys(chunk.cv_error)),
                                 ...(isEmpty(chunk.jt_form_message)
                                     ? []
-                                    : Object.entries(chunk.jt_form_message).reduce(
-                                        (arr, [, values]) => {
-                                            return [
-                                                ...arr,
-                                                ...Object.keys(values),
-                                            ];
-                                        },
-                                        [],
-                                    )),
+                                    : Object.entries(
+                                          chunk.jt_form_message,
+                                      ).reduce((arr, [, values]) => {
+                                          return [
+                                              ...arr,
+                                              ...Object.keys(values),
+                                          ];
+                                      }, [])),
                             ];
                             if (
                                 chunk.jt_form_message &&
@@ -424,7 +438,10 @@ export default class OnlineController implements ICoreController {
                                             .rollback()
                                             .then(noop)
                                             .catch((err) => {
-                                                gateContext.warn(err.message, err);
+                                                gateContext.warn(
+                                                    err.message,
+                                                    err,
+                                                );
                                             });
                                     }
                                     resolve();
@@ -448,44 +465,64 @@ export default class OnlineController implements ICoreController {
                             return;
                         }
                         resolve();
-                    }).then(() => {
-                        rTransform._transform = ((childChunk, _encode, cb) => {
-                            cb(null, childChunk);
-                        }).bind(rTransform);
-                        callback(null, chunk);
-                    }, (err) => {
-                        gateContext.warn(err.message, err);
-                        rTransform._transform = ((childChunk, _encode, cb) => {
-                            cb(null, childChunk);
-                        }).bind(rTransform);
-                        callback(null, chunk);
-                    });
-                }
+                    }).then(
+                        () => {
+                            rTransform._transform = ((
+                                childChunk,
+                                _encode,
+                                cb,
+                            ) => {
+                                cb(null, childChunk);
+                            }).bind(rTransform);
+                            callback(null, chunk);
+                        },
+                        (err) => {
+                            gateContext.warn(err.message, err);
+                            rTransform._transform = ((
+                                childChunk,
+                                _encode,
+                                cb,
+                            ) => {
+                                cb(null, childChunk);
+                            }).bind(rTransform);
+                            callback(null, chunk);
+                        },
+                    );
+                },
             });
             result.data = safePipe(result.data, rTransform);
         }
         if (isCache) {
             const data = [];
-            result.data = safePipe(result.data, new Transform({
-                readableObjectMode: true,
-                writableObjectMode: true,
-                transform(chunk, encode, callback) {
-                    data.push(chunk);
-                    callback(null, chunk);
-                }
-            }));
-            result.data.once('end', () => {
-                const param = (gateContext.metaData?.cache_key_param as string[] || []).reduce((res, value) => {
-                    const found = deepParam(value, gateContext.params);
-                    res.push(found);
-                    return res;
-                }, []) || [];
+            result.data = safePipe(
+                result.data,
+                new Transform({
+                    readableObjectMode: true,
+                    writableObjectMode: true,
+                    transform(chunk, encode, callback) {
+                        data.push(chunk);
+                        callback(null, chunk);
+                    },
+                }),
+            );
+            result.data.once("end", () => {
+                const param =
+                    (
+                        (gateContext.metaData?.cache_key_param as string[]) ||
+                        []
+                    ).reduce((res, value) => {
+                        const found = deepParam(value, gateContext.params);
+                        res.push(found);
+                        return res;
+                    }, []) || [];
                 const shasum = crypto.createHash("sha1");
                 shasum.update(JSON.stringify(param));
-                this.tempTable.dbQueryCache.insert({
-                    ck_id: `${gateContext.queryName}_${shasum.digest("hex")}`,
-                    cct_data: data,
-                }).catch((err) => this.logger.error(err));
+                this.tempTable.dbQueryCache
+                    .insert({
+                        ck_id: `${gateContext.queryName}_${shasum.digest("hex")}`,
+                        cct_data: data,
+                    })
+                    .catch((err) => this.logger.error(err));
             });
         }
         return Promise.resolve(result);
@@ -606,14 +643,10 @@ export default class OnlineController implements ICoreController {
                                     children,
                                     route: isObject(row.route)
                                         ? row.route
-                                        : JSON.parse(
-                                            row.route || "{}",
-                                        ),
+                                        : JSON.parse(row.route || "{}"),
                                     global_value: isObject(row.global_value)
                                         ? row.global_value
-                                        : JSON.parse(
-                                            row.global_value || "{}",
-                                        ),
+                                        : JSON.parse(row.global_value || "{}"),
                                 };
                                 if (
                                     children.length === 1 &&
@@ -662,10 +695,10 @@ export default class OnlineController implements ICoreController {
                                 return gateContext.session
                                     ? reject(CoreContext.accessDenied())
                                     : reject(
-                                        new ErrorException(
-                                            ErrorGate.REQUIRED_AUTH,
-                                        ),
-                                    );
+                                          new ErrorException(
+                                              ErrorGate.REQUIRED_AUTH,
+                                          ),
+                                      );
                             }
                             if (version === "3") {
                                 return reject(
@@ -720,7 +753,9 @@ export default class OnlineController implements ICoreController {
                                 cr_access: row.cr_access,
                                 cr_type: row.cr_type,
                                 cr_cache: row.cr_cache,
-                                cv_cache_key_param: row.cv_cache_key_param ? JSON.parse(row.cv_cache_key_param) : [],
+                                cv_cache_key_param: row.cv_cache_key_param
+                                    ? JSON.parse(row.cv_cache_key_param)
+                                    : [],
                             });
                         });
                         res.stream.on("end", async () => {
@@ -790,22 +825,25 @@ export default class OnlineController implements ICoreController {
                                             },
                                             ...(doc.cr_type === "report"
                                                 ? [
-                                                    {
-                                                        cv_name:
-                                                            "EXTRACT_META_DATA",
-                                                        outType: "DEFAULT",
-                                                    },
-                                                ]
+                                                      {
+                                                          cv_name:
+                                                              "EXTRACT_META_DATA",
+                                                          outType: "DEFAULT",
+                                                      },
+                                                  ]
                                                 : []),
                                         ],
                                         needSession: doc.cr_access !== "free",
                                         queryData: doc,
                                         queryStr: doc.cc_query,
                                     },
-                                    metaData: this.params.disableCache ? {} : {
-                                        cache: doc.cr_cache,
-                                        cache_key_param: doc.cv_cache_key_param,
-                                    },
+                                    metaData: this.params.disableCache
+                                        ? {}
+                                        : {
+                                              cache: doc.cr_cache,
+                                              cache_key_param:
+                                                  doc.cv_cache_key_param,
+                                          },
                                 });
                             }
                             return reject(

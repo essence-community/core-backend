@@ -31,7 +31,10 @@ class ProcessController {
             );
             Promise.all(
                 providers.map((provider) =>
-                    PluginManager.removeGateProvider(data.nameContext, provider.name),
+                    PluginManager.removeGateProvider(
+                        data.nameContext,
+                        provider.name,
+                    ),
                 ),
             )
                 .then(() => true)

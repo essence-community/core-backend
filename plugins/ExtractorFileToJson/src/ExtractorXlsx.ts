@@ -20,7 +20,7 @@ export class ExtractorXlsx extends EventEmitter {
     constructor(path: string, packRows: number) {
         super();
         this.packRows = packRows;
-        
+
         this.xlsx = XLSX.readFile(path);
         this.worksheets = Object.entries(this.xlsx.Sheets).map(([id, ws]) => {
             return {
@@ -44,13 +44,13 @@ export class ExtractorXlsx extends EventEmitter {
         const ws = this.worksheets[0].ws;
         this.worksheet = new Readable({
             objectMode: true,
-            read(size) { 
+            read(size) {
                 const data = XLSX.utils.sheet_to_json(ws, { header: 1 });
                 data.forEach((row) => {
                     this.push(row);
                 });
                 this.push(null);
-            }
+            },
         }) as IWSReadable;
         this.worksheet.id = this.worksheets[0].id;
         if (this.worksheet) {
@@ -93,7 +93,7 @@ export class ExtractorXlsx extends EventEmitter {
         try {
             const rowData = {};
             row.forEach((val, index) => {
-                rowData[getColumnName(index+1)] = val;
+                rowData[getColumnName(index + 1)] = val;
             });
             self.pack.push(rowData);
             if (self.pack.length >= self.packRows) {

@@ -1,5 +1,5 @@
 import { IOPAEval, IOPARenderParams } from "./OPARender.types";
-import { IRufusLogger } from "rufus";
+import { IRufusLogger } from "@ungate/plugininf/lib/Logger";
 import path = require("path");
 import { spawn } from "child_process";
 import * as fs from "fs";

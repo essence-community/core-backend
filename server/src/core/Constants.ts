@@ -1,6 +1,6 @@
 import IGlobalObject from "@ungate/plugininf/lib/IGlobalObject";
-import {Constants as Constant} from "@ungate/plugininf/lib/Constants";
-import * as moment from "moment-timezone";
+import { Constants as Constant } from "@ungate/plugininf/lib/Constants";
+import moment from "moment-timezone";
 import * as os from "os";
 import * as path from "path";
 

@@ -16,7 +16,7 @@ import ICoreController from "./ICoreController";
 import OnlineController from "./OnlineController";
 import { TempTable } from "./TempTable";
 import { IPropertyContext } from "./ICoreController";
-import { IRufusLogger } from "rufus";
+import { IRufusLogger } from "@ungate/plugininf/lib/Logger";
 import { FIND_SYMBOL } from "./Util";
 
 export default class OfflineController implements ICoreController {
@@ -55,7 +55,9 @@ export default class OfflineController implements ICoreController {
                 data.push({
                     ck_id: `g_sys_header_${key.substring(this.params.headerPrefixSetting.length).replace(FIND_SYMBOL, "_")}`,
                     cv_description: `Header ${key}`,
-                    cv_value: Array.isArray(value) ? JSON.stringify(value) : value,
+                    cv_value: Array.isArray(value)
+                        ? JSON.stringify(value)
+                        : value,
                 });
             }
         });
@@ -220,8 +222,8 @@ export default class OfflineController implements ICoreController {
                     type: "success",
                     metaData: {
                         cache: "all",
-                        cache_key_param: ['json'],
-                        cached: true as any
+                        cache_key_param: ["json"],
+                        cached: true as any,
                     },
                 });
             }
@@ -231,9 +233,9 @@ export default class OfflineController implements ICoreController {
                 type: "success",
                 metaData: {
                     cache: "all",
-                    cache_key_param: ['json'],
-                    cached: true as any
-                }
+                    cache_key_param: ["json"],
+                    cached: true as any,
+                },
             });
         }
         return this.controller.findPages(
@@ -298,21 +300,23 @@ export default class OfflineController implements ICoreController {
                                 },
                                 ...(doc.cr_type === "report"
                                     ? [
-                                        {
-                                            cv_name: "EXTRACT_META_DATA",
-                                            outType: "DEFAULT",
-                                        },
-                                    ]
+                                          {
+                                              cv_name: "EXTRACT_META_DATA",
+                                              outType: "DEFAULT",
+                                          },
+                                      ]
                                     : []),
                             ],
                             needSession: doc.cr_access !== "free",
                             queryData: doc,
                             queryStr: doc.cc_query,
                         },
-                        metaData: this.params.disableCache ? {} : {
-                            cache: doc.cr_cache,
-                            cache_key_param: doc.cv_cache_key_param,
-                        },
+                        metaData: this.params.disableCache
+                            ? {}
+                            : {
+                                  cache: doc.cr_cache,
+                                  cache_key_param: doc.cv_cache_key_param,
+                              },
                     };
                 }
                 return this.controller.findQuery(gateContext, name);

@@ -7,4 +7,4 @@ export interface IAuditServiceParam {
     database?: string;
     typeOrmExtra?: string;
     extra?: string;
-};
+}

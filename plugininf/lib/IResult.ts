@@ -5,13 +5,7 @@ import { Readable } from "stream";
  */
 export interface IMetaData {
     [key: string]:
-        | string
-        | string[]
-        | number[]
-        | number
-        | Date
-        | IMetaData
-        | IMetaData[];
+        string | string[] | number[] | number | Date | IMetaData | IMetaData[];
 }
 export interface IResultBase {
     type:

@@ -75,11 +75,7 @@ export default class AuthCrmWs extends NullSessProvider {
     }
     private crmWSCaller: CrmWsCaller;
     private nsiJsonGateCaller: JsonGateCaller;
-    constructor(
-        name: string,
-        params: ICCTParams,
-        sessCtrl: ISessCtrl,
-    ) {
+    constructor(name: string, params: ICCTParams, sessCtrl: ISessCtrl) {
         super(name, params, sessCtrl);
         this.params = initParams(AuthCrmWs.getParamsInfo(), this.params);
         this.crmWSCaller = new CrmWsCaller(this.params);
@@ -314,7 +310,7 @@ export default class AuthCrmWs extends NullSessProvider {
                 ...item,
                 ca_actions: [],
                 ca_department: [],
-                type_auth_provider: 'AUTHCRMWS',
+                type_auth_provider: "AUTHCRMWS",
             };
         });
 

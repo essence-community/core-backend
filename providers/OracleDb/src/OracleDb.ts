@@ -7,7 +7,7 @@ import NullProvider from "@ungate/plugininf/lib/NullProvider";
 import { initParams } from "@ungate/plugininf/lib/util/Util";
 import { isEmpty } from "@ungate/plugininf/lib/util/Util";
 import { noop, pick } from "lodash";
-import * as moment from "moment";
+import moment from "moment";
 import CoreOracle from "./CoreOracle";
 import IOracleController from "./IOracleController";
 import OldOracle from "./OldOracle";
@@ -49,14 +49,13 @@ export default class OracleDBPlugin extends NullProvider {
     public params: IParamOracle;
     public dataSource: OracleDB;
     private controller: IOracleController;
-    constructor(
-        name: string,
-        params: ICCTParams,
-        sessCtrl: ISessCtrl,
-    ) {
+    constructor(name: string, params: ICCTParams, sessCtrl: ISessCtrl) {
         super(name, params, sessCtrl);
         this.params = initParams(OracleDBPlugin.getParamsInfo(), this.params);
-        this.dataSource = new OracleDB(`${this.name}_provider`, pick(this.params, ...Object.keys(OracleDB.getParamsInfo())) as any);
+        this.dataSource = new OracleDB(
+            `${this.name}_provider`,
+            pick(this.params, ...Object.keys(OracleDB.getParamsInfo())) as any,
+        );
         if (params.core) {
             this.controller = new CoreOracle(
                 this.name,

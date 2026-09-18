@@ -1,6 +1,5 @@
-import Logger from "../Logger";
+import Logger, { IRufusLogger } from "../Logger";
 import { Logger as ILogger, QueryRunner } from "typeorm";
-import { IRufusLogger } from "rufus";
 
 export class TypeOrmLogger implements ILogger {
     public logger: IRufusLogger;

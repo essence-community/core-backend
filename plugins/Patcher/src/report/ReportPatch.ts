@@ -2,11 +2,21 @@ import Connection from "@ungate/plugininf/lib/db/Connection";
 import * as fs from "fs";
 import * as path from "path";
 import { IJson } from "../Patcher.types";
-import { DFormat } from './DFormat';
-import { sqlDFormat, sqlAsset, sqlAData, sqlReport, sqlDSource, sqlSource, sqlReportFormat, sqlReportAsset, sqlReportQuery } from './SqlPostgres';
-import { Asset } from './Asset';
-import { AData } from './AData';
-import { Report } from './Report';
+import { DFormat } from "./DFormat";
+import {
+    sqlDFormat,
+    sqlAsset,
+    sqlAData,
+    sqlReport,
+    sqlDSource,
+    sqlSource,
+    sqlReportFormat,
+    sqlReportAsset,
+    sqlReportQuery,
+} from "./SqlPostgres";
+import { Asset } from "./Asset";
+import { AData } from "./AData";
+import { Report } from "./Report";
 import {
     closeFsWriteStream,
     createChangeXml,
@@ -157,110 +167,110 @@ export async function patchReport(dir: string, json: IJson, conn: Connection) {
             );
         await closeFsWriteStream(asset);
 
-         // Report
-         const report = createWriteStream(meta, "Report");
-         include.push("Report");
-         await conn
-             .executeStmt(
-                 sqlReport,
-                 {
-                     cct_report: cctReport,
-                 },
-                 {},
-                 {
-                     autoCommit: true,
-                     resultSet: true,
-                 },
-             )
-             .then(
-                 (res) =>
-                     new Promise<void>((resolve, reject) => {
-                         res.stream.on("data", (row) => {
+        // Report
+        const report = createWriteStream(meta, "Report");
+        include.push("Report");
+        await conn
+            .executeStmt(
+                sqlReport,
+                {
+                    cct_report: cctReport,
+                },
+                {},
+                {
+                    autoCommit: true,
+                    resultSet: true,
+                },
+            )
+            .then(
+                (res) =>
+                    new Promise<void>((resolve, reject) => {
+                        res.stream.on("data", (row) => {
                             report.write(new Report(row).toRow());
-                         });
-                         res.stream.on("error", (err) => reject(err));
-                         res.stream.on("end", () => resolve());
-                     }),
-             );
-         await closeFsWriteStream(report);
-         // ReportFormat
-         const reportFormat = createWriteStream(meta, "ReportFormat");
-         include.push("ReportFormat");
-         await conn
-             .executeStmt(
-                 sqlReportFormat,
-                 {
-                     cct_report: cctReport,
-                 },
-                 {},
-                 {
-                     autoCommit: true,
-                     resultSet: true,
-                 },
-             )
-             .then(
-                 (res) =>
-                     new Promise<void>((resolve, reject) => {
-                         res.stream.on("data", (row) => {
+                        });
+                        res.stream.on("error", (err) => reject(err));
+                        res.stream.on("end", () => resolve());
+                    }),
+            );
+        await closeFsWriteStream(report);
+        // ReportFormat
+        const reportFormat = createWriteStream(meta, "ReportFormat");
+        include.push("ReportFormat");
+        await conn
+            .executeStmt(
+                sqlReportFormat,
+                {
+                    cct_report: cctReport,
+                },
+                {},
+                {
+                    autoCommit: true,
+                    resultSet: true,
+                },
+            )
+            .then(
+                (res) =>
+                    new Promise<void>((resolve, reject) => {
+                        res.stream.on("data", (row) => {
                             reportFormat.write(new ReportFormat(row).toRow());
-                         });
-                         res.stream.on("error", (err) => reject(err));
-                         res.stream.on("end", () => resolve());
-                     }),
-             );
-         await closeFsWriteStream(reportFormat);
-         // ReportAsset
-         const reportAsset = createWriteStream(meta, "ReportAsset");
-         include.push("ReportAsset");
-         await conn
-             .executeStmt(
-                 sqlReportAsset,
-                 {
-                     cct_report: cctReport,
-                 },
-                 {},
-                 {
-                     autoCommit: true,
-                     resultSet: true,
-                 },
-             )
-             .then(
-                 (res) =>
-                     new Promise<void>((resolve, reject) => {
-                         res.stream.on("data", (row) => {
+                        });
+                        res.stream.on("error", (err) => reject(err));
+                        res.stream.on("end", () => resolve());
+                    }),
+            );
+        await closeFsWriteStream(reportFormat);
+        // ReportAsset
+        const reportAsset = createWriteStream(meta, "ReportAsset");
+        include.push("ReportAsset");
+        await conn
+            .executeStmt(
+                sqlReportAsset,
+                {
+                    cct_report: cctReport,
+                },
+                {},
+                {
+                    autoCommit: true,
+                    resultSet: true,
+                },
+            )
+            .then(
+                (res) =>
+                    new Promise<void>((resolve, reject) => {
+                        res.stream.on("data", (row) => {
                             reportAsset.write(new ReportAsset(row).toRow());
-                         });
-                         res.stream.on("error", (err) => reject(err));
-                         res.stream.on("end", () => resolve());
-                     }),
-             );
-         await closeFsWriteStream(reportAsset);
-         // ReportQuery
-         const reportQuery = createWriteStream(meta, "ReportQuery");
-         include.push("ReportQuery");
-         await conn
-             .executeStmt(
-                 sqlReportQuery,
-                 {
-                     cct_report: cctReport,
-                 },
-                 {},
-                 {
-                     autoCommit: true,
-                     resultSet: true,
-                 },
-             )
-             .then(
-                 (res) =>
-                     new Promise<void>((resolve, reject) => {
-                         res.stream.on("data", (row) => {
+                        });
+                        res.stream.on("error", (err) => reject(err));
+                        res.stream.on("end", () => resolve());
+                    }),
+            );
+        await closeFsWriteStream(reportAsset);
+        // ReportQuery
+        const reportQuery = createWriteStream(meta, "ReportQuery");
+        include.push("ReportQuery");
+        await conn
+            .executeStmt(
+                sqlReportQuery,
+                {
+                    cct_report: cctReport,
+                },
+                {},
+                {
+                    autoCommit: true,
+                    resultSet: true,
+                },
+            )
+            .then(
+                (res) =>
+                    new Promise<void>((resolve, reject) => {
+                        res.stream.on("data", (row) => {
                             reportQuery.write(new ReportQuery(row).toRow());
-                         });
-                         res.stream.on("error", (err) => reject(err));
-                         res.stream.on("end", () => resolve());
-                     }),
-             );
-         await closeFsWriteStream(reportQuery);
+                        });
+                        res.stream.on("error", (err) => reject(err));
+                        res.stream.on("end", () => resolve());
+                    }),
+            );
+        await closeFsWriteStream(reportQuery);
     }
     return createChangeXml(
         path.join(meta, "report.xml"),

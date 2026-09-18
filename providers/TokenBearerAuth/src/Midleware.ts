@@ -14,29 +14,32 @@ export async function GrantAttacher(
             access_token: header.substring(7),
         });
     } else if (header.substr(0, 6).toLowerCase().indexOf("basic ") === 0) {
-        const basic = Buffer.from(
-                    header.substring(6),
-                    "base64",
-            ).toString("ascii");
+        const basic = Buffer.from(header.substring(6), "base64").toString(
+            "ascii",
+        );
         const split = basic.indexOf(":");
-        return grantManager.obtainDirectly(
-            basic.substring(0, split),
-            basic.substring(split+1)
-        ).then(async ([grant, headers]: [Grant, Record<string, any>]) => {
-            // tslint:disable:triple-equals
-            if (
-                gateContext.request.session[`token_bearer_${name}`] !=
-                (grant as any).__raw
-            ) {
-                if (grantManager.tokenVerifyUrl) {
-                    await grantManager.validateAccessToken(grant.access_token);
+        return grantManager
+            .obtainDirectly(
+                basic.substring(0, split),
+                basic.substring(split + 1),
+            )
+            .then(async ([grant, headers]: [Grant, Record<string, any>]) => {
+                // tslint:disable:triple-equals
+                if (
+                    gateContext.request.session[`token_bearer_${name}`] !=
+                    (grant as any).__raw
+                ) {
+                    if (grantManager.tokenVerifyUrl) {
+                        await grantManager.validateAccessToken(
+                            grant.access_token,
+                        );
+                    }
+                    gateContext.request.session[`token_bearer_${name}`] = (
+                        grant as any
+                    ).__raw;
                 }
-                gateContext.request.session[`token_bearer_${name}`] = (
-                    grant as any
-                ).__raw;
-            }
-            return grant as Grant;
-        });
+                return grant as Grant;
+            });
     } else if (gateContext.request.session[`token_bearer_${name}`]) {
         accessToken = gateContext.request.session[`token_bearer_${name}`];
     }
@@ -44,20 +47,22 @@ export async function GrantAttacher(
         gateContext.debug("Access Token Found %s", accessToken);
     }
     return accessToken
-        ? grantManager.createGrant(accessToken).then(async (grant: Grant) => {
-            // tslint:disable:triple-equals
-            if (
-                gateContext.request.session[`token_bearer_${name}`] !=
-                (grant as any).__raw
-            ) {
-                if (grantManager.tokenVerifyUrl) {
-                    await grantManager.validateAccessToken(grant.access_token);
-                }
-                gateContext.request.session[`token_bearer_${name}`] = (
-                    grant as any
-                ).__raw;
-            }
-            return grant as Grant;
-        })
+        ? grantManager.createGrant(accessToken).then(async (grant: any) => {
+              // tslint:disable:triple-equals
+              if (
+                  gateContext.request.session[`token_bearer_${name}`] !=
+                  (grant as any).__raw
+              ) {
+                  if (grantManager.tokenVerifyUrl) {
+                      await grantManager.validateAccessToken(
+                          grant.access_token,
+                      );
+                  }
+                  gateContext.request.session[`token_bearer_${name}`] = (
+                      grant as any
+                  ).__raw;
+              }
+              return grant as Grant;
+          })
         : null;
 }

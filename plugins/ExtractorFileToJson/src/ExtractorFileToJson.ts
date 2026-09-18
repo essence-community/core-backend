@@ -31,8 +31,12 @@ export default class ExtractorFileToJson extends NullPlugin {
                 type: "combo",
                 valueField: [{ in: "ck_id" }],
                 displayField: "ck_id",
-                records: [{ "ck_id": "dir" }, { "ck_id": "aws" }, { "ck_id": "riak" }],
-                getGlobal: "g_cvTypeStorage"
+                records: [
+                    { ck_id: "dir" },
+                    { ck_id: "aws" },
+                    { ck_id: "riak" },
+                ],
+                getGlobal: "g_cvTypeStorage",
             },
             cvPath: {
                 name: "Адрес",
@@ -43,19 +47,19 @@ export default class ExtractorFileToJson extends NullPlugin {
                 name: "Наименование корзины s3",
                 type: "string",
                 hidden: true,
-                hiddenRules: "g_cvTypeStorage === 'dir'"
+                hiddenRules: "g_cvTypeStorage === 'dir'",
             },
             cvS3KeyId: {
                 name: "Id key S3 Storage",
                 type: "string",
                 hidden: true,
-                hiddenRules: "g_cvTypeStorage === 'dir'"
+                hiddenRules: "g_cvTypeStorage === 'dir'",
             },
             cvS3SecretKey: {
                 name: "Secret key S3 Storage",
                 type: "password",
                 hidden: true,
-                hiddenRules: "g_cvTypeStorage === 'dir'"
+                hiddenRules: "g_cvTypeStorage === 'dir'",
             },
             cnRowSize: {
                 name: "Колличество строк при вызове",
@@ -67,7 +71,7 @@ export default class ExtractorFileToJson extends NullPlugin {
                 name: "Устанавливать права доступа public, добавляемым файлам в riak/aws",
                 type: "boolean",
                 hidden: true,
-                hiddenRules: "g_cvTypeStorage === 'dir'"
+                hiddenRules: "g_cvTypeStorage === 'dir'",
             },
             cvCsvDelimiter: {
                 defaultValue: ";",
@@ -126,25 +130,24 @@ export default class ExtractorFileToJson extends NullPlugin {
             }
             const rows = [];
             const json = JSON.parse(query.inParams.json) as IJson;
-            forEach((gateContext.request.body as IFormData).files, (val, name) => {
-                if (val && val.length) {
-                    val.forEach((value) => {
-                        rows.push(
-                            this.extract(name, json, value),
-                        );
-                    });
-                }
-            });
-            return Promise.all(rows).then(
-                async () => {
-                    query.inParams.json = JSON.stringify(json);
-                    const values = await this.callRows(gateContext, query);
-                    return {
-                        data: ResultStream(values),
-                        type: "success",
-                    } as IResult
+            forEach(
+                (gateContext.request.body as IFormData).files,
+                (val, name) => {
+                    if (val && val.length) {
+                        val.forEach((value) => {
+                            rows.push(this.extract(name, json, value));
+                        });
+                    }
                 },
             );
+            return Promise.all(rows).then(async () => {
+                query.inParams.json = JSON.stringify(json);
+                const values = await this.callRows(gateContext, query);
+                return {
+                    data: ResultStream(values),
+                    type: "success",
+                } as IResult;
+            });
         } else if (gateContext.actionName === "dml") {
             if (isEmpty(query.inParams.json)) {
                 throw new ErrorException(
@@ -160,12 +163,7 @@ export default class ExtractorFileToJson extends NullPlugin {
                 return;
             } else {
                 const file = await this.getFile(json.data.cv_file_guid);
-                await this.extract(
-                    file.fieldName,
-                    json,
-                    file,
-                    false,
-                );
+                await this.extract(file.fieldName, json, file, false);
                 query.inParams.json = JSON.stringify(json);
                 const values = await this.callRows(gateContext, query);
                 fs.unlinkSync(file.path);
@@ -237,11 +235,7 @@ export default class ExtractorFileToJson extends NullPlugin {
             `Неизвестный формат файла ${file.originalFilename} mime ${file.headers["content-type"]}`,
         );
     }
-    private parseCsv(
-        json: IJson,
-        file: IFile,
-        data: Record<string, any>,
-    ) {
+    private parseCsv(json: IJson, file: IFile, data: Record<string, any>) {
         return new Promise((resolve, reject) => {
             let result = [];
             const extractCsv = new ExtractorCsv(
@@ -274,12 +268,7 @@ export default class ExtractorFileToJson extends NullPlugin {
             extractCsv.on("pack", (pack) => {
                 extractCsv.pause();
                 queues.push(
-                    this.readSheet(
-                        data,
-                        pack,
-                        1,
-                        (numPack += 1),
-                    ).then(
+                    this.readSheet(data, pack, 1, (numPack += 1)).then(
                         () => {
                             extractCsv.resume();
                             return;
@@ -294,11 +283,7 @@ export default class ExtractorFileToJson extends NullPlugin {
             });
         });
     }
-    private parseXlsx(
-        _json: IJson,
-        file: IFile,
-        data: Record<string, any>,
-    ) {
+    private parseXlsx(_json: IJson, file: IFile, data: Record<string, any>) {
         return new Promise((resolve, reject) => {
             let result = [];
             const extractorXlsx = new ExtractorXlsx(
@@ -316,12 +301,7 @@ export default class ExtractorFileToJson extends NullPlugin {
             extractorXlsx.on("pack", (pack, id) => {
                 extractorXlsx.pause();
                 queues.push(
-                    this.readSheet(
-                        data,
-                        pack,
-                        id,
-                        (numPack += 1),
-                    ).then(
+                    this.readSheet(data, pack, id, (numPack += 1)).then(
                         () => {
                             extractorXlsx.resume();
                             return;
@@ -337,11 +317,7 @@ export default class ExtractorFileToJson extends NullPlugin {
             extractorXlsx.process();
         });
     }
-    private parseDbf(
-        json: IJson,
-        file: IFile,
-        data: Record<string, any>,
-    ) {
+    private parseDbf(json: IJson, file: IFile, data: Record<string, any>) {
         return new Promise((resolve, reject) => {
             let result = [];
             const queues = [];
@@ -360,12 +336,7 @@ export default class ExtractorFileToJson extends NullPlugin {
             extractorDbf.on("pack", (pack) => {
                 extractorDbf.pause();
                 queues.push(
-                    this.readSheet(
-                        data,
-                        pack,
-                        1,
-                        (numPack += 1),
-                    ).then(
+                    this.readSheet(data, pack, 1, (numPack += 1)).then(
                         () => {
                             extractorDbf.resume();
                             return;
@@ -420,7 +391,7 @@ export default class ExtractorFileToJson extends NullPlugin {
             extract_rows: pack,
             num_pack: numPack,
         });
-        data['page'] = page;
+        data["page"] = page;
     }
     /**
      * Сохраняем
@@ -428,10 +399,7 @@ export default class ExtractorFileToJson extends NullPlugin {
      * @param gateContext
      * @param query
      */
-    private callRows(
-        gateContext: IContext,
-        query: IGateQuery,
-    ) {
+    private callRows(gateContext: IContext, query: IGateQuery) {
         return gateContext.provider
             .processDml(gateContext, query)
             .then((res) => ReadStreamToArray(res.stream))

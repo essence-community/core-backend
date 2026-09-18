@@ -1,11 +1,11 @@
 import BreakException from "@ungate/plugininf/lib/errors/BreakException";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
-import {IParamsInfo} from "@ungate/plugininf/lib/ICCTParams";
-import IContext, {IFormData} from "@ungate/plugininf/lib/IContext";
-import {IGateQuery} from "@ungate/plugininf/lib/IQuery";
-import {parse as parseAsync} from "@ungate/plugininf/lib/parser/parserAsync";
-import {parse as parseSync} from "@ungate/plugininf/lib/parser/parser";
-import IResult, {IResultProvider} from "@ungate/plugininf/lib/IResult";
+import { IParamsInfo } from "@ungate/plugininf/lib/ICCTParams";
+import IContext, { IFormData } from "@ungate/plugininf/lib/IContext";
+import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
+import { parse as parseAsync } from "@ungate/plugininf/lib/parser/parserAsync";
+import { parse as parseSync } from "@ungate/plugininf/lib/parser/parser";
+import IResult, { IResultProvider } from "@ungate/plugininf/lib/IResult";
 import NullProvider, {
     IParamsProvider,
 } from "@ungate/plugininf/lib/NullProvider";
@@ -14,20 +14,25 @@ import {
     ReadStreamToArray,
     safeResponsePipe,
 } from "@ungate/plugininf/lib/stream/Util";
-import {Agent as HttpsAgent, AgentOptions} from "https";
-import {Agent as HttpAgent} from "http";
+import { Agent as HttpsAgent, AgentOptions } from "https";
+import { Agent as HttpAgent } from "http";
 import * as JSONStream from "JSONStream";
 import * as axios from "axios";
 import * as url from "url";
-import {hiddenSecret, initParams, isEmpty, stripBOM} from "@ungate/plugininf/lib/util/Util";
+import {
+    hiddenSecret,
+    initParams,
+    isEmpty,
+    stripBOM,
+} from "@ungate/plugininf/lib/util/Util";
 import * as fs from "fs";
 import * as path from "path";
 import * as QueryString from "qs";
-import * as FormData from "form-data";
-import {IFile} from "@ungate/plugininf/lib/IContext";
-import {BreakResult} from "./BreakResult";
+import FormData from "form-data";
+import { IFile } from "@ungate/plugininf/lib/IContext";
+import { BreakResult } from "./BreakResult";
 import ICCTParams from "@ungate/plugininf/lib/ICCTParams";
-import {ISessCtrl} from "@ungate/plugininf/lib/ISessCtrl";
+import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
 
 const optionsRequest = [
     "url",
@@ -52,8 +57,7 @@ const optionsRequest = [
 
 const validHeader = ["application/json", "application/xml", "text/"];
 
-export interface IRestEssenceProxyConfig
-    extends Partial<axios.AxiosRequestConfig> {
+export interface IRestEssenceProxyConfig extends Partial<axios.AxiosRequestConfig> {
     header?: Record<string, string | string[]>;
     includeHeader?: string[];
     url?: string;
@@ -197,26 +201,22 @@ export default class RestTransformProxy extends NullProvider {
                         required: true,
                     },
                 },
-            }
+            },
         };
     }
     private extraParam: Record<string, string> = {};
     public params: IRestEssenceProxyParams;
 
-    constructor(
-        name: string,
-        params: ICCTParams,
-        sessCtrl: ISessCtrl,
-    ) {
+    constructor(name: string, params: ICCTParams, sessCtrl: ISessCtrl) {
         super(name, params, sessCtrl);
         this.params = initParams(RestTransformProxy.getParamsInfo(), params);
         if (this.params.extraParam) {
-            this.params.extraParam.forEach(({key, value}) => {
+            this.params.extraParam.forEach(({ key, value }) => {
                 this.extraParam[key] = value;
             });
         }
         if (this.params.extraParamEncrypt) {
-            this.params.extraParamEncrypt.forEach(({key, value}) => {
+            this.params.extraParamEncrypt.forEach(({ key, value }) => {
                 this.extraParam[key] = value;
             });
         }
@@ -248,11 +248,11 @@ export default class RestTransformProxy extends NullProvider {
         const param = {
             jt_in_param:
                 typeof gateContext.request.body === "object" &&
-                    (gateContext.request.body as IFormData).files
+                (gateContext.request.body as IFormData).files
                     ? {
-                        ...query.inParams,
-                        ...(gateContext.request.body as IFormData).files,
-                    }
+                          ...query.inParams,
+                          ...(gateContext.request.body as IFormData).files,
+                      }
                     : query.inParams,
             jt_request_header: gateContext.request.headers,
             jt_request_method: gateContext.request.method,
@@ -297,7 +297,7 @@ export default class RestTransformProxy extends NullProvider {
         }
 
         if (result.length && typeof result[0] !== "object") {
-            result = result.map((res) => ({raw: res}));
+            result = result.map((res) => ({ raw: res }));
         }
 
         return {
@@ -363,7 +363,7 @@ export default class RestTransformProxy extends NullProvider {
         }
         let headers: any = {};
         if (this.params.defaultIncludeHeader) {
-            this.params.defaultIncludeHeader.forEach(({key}) => {
+            this.params.defaultIncludeHeader.forEach(({ key }) => {
                 if (!isEmpty(gateContext.request.headers[key])) {
                     headers[key] = gateContext.request.headers[key];
                 }
@@ -471,9 +471,20 @@ export default class RestTransformProxy extends NullProvider {
                 if (typeof value === "undefined" || value === null) {
                     return;
                 }
-                formData.append(key, Buffer.from(Array.isArray(value) || typeof value === "object" ? JSON.stringify(value) : `${value}`), {
-                    contentType: Array.isArray(value) || typeof value === "object" ? "application/json" : "text/plain",
-                });
+                formData.append(
+                    key,
+                    Buffer.from(
+                        Array.isArray(value) || typeof value === "object"
+                            ? JSON.stringify(value)
+                            : `${value}`,
+                    ),
+                    {
+                        contentType:
+                            Array.isArray(value) || typeof value === "object"
+                                ? "application/json"
+                                : "text/plain",
+                    },
+                );
             });
             params.data = formData;
             params.headers = {
@@ -483,7 +494,7 @@ export default class RestTransformProxy extends NullProvider {
         }
 
         if (Object.keys(headers).length) {
-            params.headers = {...headers, ...params.headers} as any;
+            params.headers = { ...headers, ...params.headers } as any;
         }
 
         if (this.params.proxy) {
@@ -494,13 +505,13 @@ export default class RestTransformProxy extends NullProvider {
             params.proxy = this.params.proxy.startsWith("{")
                 ? proxy
                 : {
-                    host: proxy.host,
-                    port: parseInt(proxy.port, 10),
-                    auth: proxy.auth
-                        ? {username: proxyauth[0], password: proxyauth[1]}
-                        : undefined,
-                    protocol: proxy.protocol,
-                };
+                      host: proxy.host,
+                      port: parseInt(proxy.port, 10),
+                      auth: proxy.auth
+                          ? { username: proxyauth[0], password: proxyauth[1] }
+                          : undefined,
+                      protocol: proxy.protocol,
+                  };
         }
 
         if (typeof params.proxy === "string") {
@@ -511,23 +522,23 @@ export default class RestTransformProxy extends NullProvider {
             params.proxy = (params.proxy as string).startsWith("{")
                 ? proxy
                 : {
-                    host: proxy.host,
-                    port: parseInt(proxy.port, 10),
-                    auth: proxy.auth
-                        ? {username: proxyauth[0], password: proxyauth[1]}
-                        : undefined,
-                    protocol: proxy.protocol,
-                };
+                      host: proxy.host,
+                      port: parseInt(proxy.port, 10),
+                      auth: proxy.auth
+                          ? { username: proxyauth[0], password: proxyauth[1] }
+                          : undefined,
+                      protocol: proxy.protocol,
+                  };
         }
         if (this.params.httpsAgent) {
             params.httpsAgent = JSON.parse(this.params.httpsAgent);
         }
         if (params.httpsAgent) {
-            const httpsAgent: AgentOptions = typeof params.httpsAgent === "string" && (
-                params.httpsAgent as string
-            ).startsWith("{")
-                ? JSON.parse(params.httpsAgent as string)
-                : params.httpsAgent;
+            const httpsAgent: AgentOptions =
+                typeof params.httpsAgent === "string" &&
+                (params.httpsAgent as string).startsWith("{")
+                    ? JSON.parse(params.httpsAgent as string)
+                    : params.httpsAgent;
             if (
                 typeof httpsAgent.key === "string" &&
                 httpsAgent.key.indexOf("/") > -1 &&
@@ -579,9 +590,11 @@ export default class RestTransformProxy extends NullProvider {
         }
 
         if (params.httpAgent) {
-            const httpAgent = typeof params.httpsAgent === "string" && (params.httpAgent as string).startsWith("{")
-                ? JSON.parse(params.httpAgent as string)
-                : params.httpAgent;
+            const httpAgent =
+                typeof params.httpsAgent === "string" &&
+                (params.httpAgent as string).startsWith("{")
+                    ? JSON.parse(params.httpAgent as string)
+                    : params.httpAgent;
 
             params.httpAgent = new HttpAgent(httpAgent);
         }
@@ -592,10 +605,9 @@ export default class RestTransformProxy extends NullProvider {
 
         if (this.log.isDebugEnabled()) {
             this.log.debug(
-                `Request: proxy params:\n${JSON.stringify(hiddenSecret(params)).substr(
-                    0,
-                    4000,
-                )}`,
+                `Request: proxy params:\n${JSON.stringify(
+                    hiddenSecret(params),
+                ).substr(0, 4000)}`,
             );
         }
         return new Promise(async (resolve, reject) => {
@@ -624,7 +636,11 @@ export default class RestTransformProxy extends NullProvider {
                             delete rheaders[item];
                         });
                     }
-                    gateContext.response.writeHead(response.status, response.statusText, rheaders as any);
+                    gateContext.response.writeHead(
+                        response.status,
+                        response.statusText,
+                        rheaders as any,
+                    );
                     response.data.on("end", () =>
                         reject(new BreakException("break")),
                     );
@@ -681,10 +697,26 @@ export default class RestTransformProxy extends NullProvider {
                                     )
                                         ? responseBuffer.length === 0
                                             ? []
-                                            : JSON.parse(stripBOM(Buffer.concat(responseBuffer).toString(config.responseEncoding || "utf8")))
+                                            : JSON.parse(
+                                                  stripBOM(
+                                                      Buffer.concat(
+                                                          responseBuffer,
+                                                      ).toString(
+                                                          config.responseEncoding ||
+                                                              "utf8",
+                                                      ),
+                                                  ),
+                                              )
                                         : {
-                                            response_data: stripBOM(Buffer.concat(responseBuffer).toString(config.responseEncoding || "utf8")),
-                                        };
+                                              response_data: stripBOM(
+                                                  Buffer.concat(
+                                                      responseBuffer,
+                                                  ).toString(
+                                                      config.responseEncoding ||
+                                                          "utf8",
+                                                  ),
+                                              ),
+                                          };
                                     resolveArr(parseData);
                                 } catch (e) {
                                     this.log.error(
@@ -945,8 +977,13 @@ export default class RestTransformProxy extends NullProvider {
                 }
                 return resolve(result);
             } catch (err) {
-                this.log.error(`Ошибка вызова внешнего сервиса ${name} ${config.url}`, err);
-                reject(new ErrorException(101, "Ошибка вызова внешнего сервиса"));
+                this.log.error(
+                    `Ошибка вызова внешнего сервиса ${name} ${config.url}`,
+                    err,
+                );
+                reject(
+                    new ErrorException(101, "Ошибка вызова внешнего сервиса"),
+                );
             }
         });
     }

@@ -75,7 +75,9 @@ class PluginManager {
             const name = file.replace(".js", "").toLowerCase();
             rows.push(
                 new Promise<void>((resolve) => {
-                    const Class = require(`${Constants.SCHEDULER_PLUGIN_DIR}/${file}`);
+                    const Class = require(
+                        `${Constants.SCHEDULER_PLUGIN_DIR}/${file}`,
+                    );
                     GateSchedulersClass[name] = Class.default || Class;
                     logger.info(`Найден класс scheduler ${name}`);
                     return resolve();
@@ -134,7 +136,9 @@ class PluginManager {
             const name = file.replace(".js", "").toLowerCase();
             rows.push(
                 new Promise<void>((resolve) => {
-                    const Class = require(`${Constants.EVENT_PLUGIN_DIR}/${file}`);
+                    const Class = require(
+                        `${Constants.EVENT_PLUGIN_DIR}/${file}`,
+                    );
                     GateEventsClass[name] = Class.default || Class;
                     logger.info(`Найден класс events ${name}`);
                     return resolve();
@@ -197,7 +201,9 @@ class PluginManager {
             const name = file.replace(".js", "").toLowerCase();
             rows.push(
                 new Promise<void>((resolve) => {
-                    const Class = require(`${Constants.PROVIDER_PLUGIN_DIR}/${file}`);
+                    const Class = require(
+                        `${Constants.PROVIDER_PLUGIN_DIR}/${file}`,
+                    );
                     GateProviderClass[name] = Class.default || Class;
                     logger.info(`Найден класс провайдера ${name}`);
                     return resolve();
@@ -225,15 +231,19 @@ class PluginManager {
                                 PluginClass.default.isAuth)))
                 ) {
                     if (PluginClass) {
-                        (doc.ck_context
-                            ? [
-                                  [
-                                      doc.ck_context,
-                                      this.getGateContext(doc.ck_context),
-                                  ],
-                              ]
-                            : Object.entries(GateContext)
-                        ).forEach(([name, value]: [string, IContextPlugin]) => {
+                        (
+                            (doc.ck_context
+                                ? [
+                                      [
+                                          doc.ck_context,
+                                          this.getGateContext(doc.ck_context),
+                                      ],
+                                  ]
+                                : Object.entries(GateContext)) as [
+                                string,
+                                IContextPlugin,
+                            ][]
+                        ).forEach(([name, value]) => {
                             GateProvider[name][doc.ck_id] = PluginClass.default
                                 ? new PluginClass.default(
                                       doc.ck_id,
@@ -310,8 +320,8 @@ class PluginManager {
         return [];
     }
     public getGateSessProviders(context: string) {
-        return Object.values(GateProvider[context]).filter(
-            (provider: NullSessProvider) => provider.isAuth,
+        return Object.values(GateProvider[context] || {}).filter(
+            (provider) => (provider as NullSessProvider).isAuth,
         );
     }
     public getGateProviders(context: string) {
@@ -323,28 +333,41 @@ class PluginManager {
     }
 
     public async removeGateProvider(context: string, key: string) {
-        await Promise.all((context ? [GateProvider[context]] : Object.values(GateProvider)).map(async (ContextProvider) => {
-            try {
-                await ContextProvider[key].destroy();
-                delete ContextProvider[key];
-            } catch (e) {
-                delete ContextProvider[key];
-            }
-        }));
+        await Promise.all(
+            (context
+                ? [GateProvider[context]]
+                : Object.values(GateProvider)
+            ).map(async (ContextProvider) => {
+                try {
+                    await ContextProvider[key].destroy();
+                    delete ContextProvider[key];
+                } catch (e) {
+                    delete ContextProvider[key];
+                }
+            }),
+        );
         return true;
     }
 
     public async removeAllGateProvider(context?: string) {
         const rows = [];
-        await Promise.all((context ? [GateProvider[context]] : Object.values(GateProvider))
-        .map((ContextProvider) => Promise.all(Object.values(ContextProvider).map(async (provider) => {
-            try {
-                await provider.destroy();
-                delete ContextProvider[provider.name];
-            } catch (e) {
-                delete ContextProvider[provider.name];
-            }
-        }))));
+        await Promise.all(
+            (context
+                ? [GateProvider[context]]
+                : Object.values(GateProvider)
+            ).map((ContextProvider) =>
+                Promise.all(
+                    Object.values(ContextProvider).map(async (provider) => {
+                        try {
+                            await provider.destroy();
+                            delete ContextProvider[provider.name];
+                        } catch (e) {
+                            delete ContextProvider[provider.name];
+                        }
+                    }),
+                ),
+            ),
+        );
         return true;
     }
 
@@ -367,7 +390,9 @@ class PluginManager {
             const name = file.replace(".js", "").toLowerCase();
             rows.push(
                 new Promise<void>((resolve) => {
-                    const Class = require(`${Constants.DATA_PLUGIN_DIR}/${file}`);
+                    const Class = require(
+                        `${Constants.DATA_PLUGIN_DIR}/${file}`,
+                    );
                     GatePluginsClass[name] = Class.default || Class;
                     logger.info(`Найден класс плагина ${name}`);
                     return resolve();
@@ -461,7 +486,9 @@ class PluginManager {
             const name = file.replace(".js", "").toLowerCase();
             rows.push(
                 new Promise<void>((resolve) => {
-                    const Class = require(`${Constants.CONTEXT_PLUGIN_DIR}/${file}`);
+                    const Class = require(
+                        `${Constants.CONTEXT_PLUGIN_DIR}/${file}`,
+                    );
                     GateContextClass[name] = Class.default || Class;
                     logger.info(`Найден класс плагина контекста ${name}`);
                     return resolve();
@@ -495,11 +522,7 @@ class PluginManager {
                               doc.cct_params,
                               sessCtrl,
                           )
-                        : new PluginClass(
-                              doc.ck_id,
-                              doc.cct_params,
-                              sessCtrl,
-                          );
+                        : new PluginClass(doc.ck_id, doc.cct_params, sessCtrl);
                     rowContext.push(
                         (GateContext[doc.ck_id].sessCtrl as GateSession)
                             .init()

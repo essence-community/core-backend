@@ -3,7 +3,7 @@ import IContext from "@ungate/plugininf/lib/IContext";
 import { IContextPluginResult } from "@ungate/plugininf/lib/IContextPlugin";
 import IResult from "@ungate/plugininf/lib/IResult";
 import { ICoreParams } from "./CoreContext";
-import { IRufusLogger } from "rufus";
+import { IRufusLogger } from "@ungate/plugininf/lib/Logger";
 import { TempTable } from "./TempTable";
 
 export default interface ICoreController {

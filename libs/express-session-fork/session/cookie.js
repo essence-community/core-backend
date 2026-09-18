@@ -133,8 +133,8 @@ Cookie.prototype = {
    * @api public
    */
 
-  serialize: function(name, val){
-    return cookie.serialize(name, val, this.data);
+  serialize: function (name, val) {
+    return cookie.stringifyCookie({[name]: val}, this.data);
   },
 
   /**
@@ -144,7 +144,7 @@ Cookie.prototype = {
    * @api private
    */
 
-  toJSON: function(){
+  toJSON: function () {
     return this.data;
   }
 };
