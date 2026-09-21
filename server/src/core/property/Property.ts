@@ -50,7 +50,7 @@ export async function loadProperty<T extends ObjectLiteral>(
             localDataStore = new DataSource({
                 type: "better-sqlite3",
                 enableWAL: true,
-                database: path.join(Constants.TEMP_DB, `config.sqlite`),
+                database: path.join(Constants.TEMP_DB, `property_gate.sqlite`),
                 logging: true,
                 synchronize: true,
                 logger: new TypeOrmLogger(`Property:config_store`),
@@ -66,6 +66,10 @@ export async function loadProperty<T extends ObjectLiteral>(
                 subscribers: [
                     PropertySubscriber,
                 ],
+                prepareDatabase: (db) => {
+                    db.pragma("journal_mode = WAL");
+                    db.pragma("busy_timeout = 2000");
+                },
             });
             await localDataStore.initialize();
         }
@@ -94,12 +98,12 @@ export async function loadProperty<T extends ObjectLiteral>(
             const db: Repository<any> = localDataStore.getRepository(ContextModel);
             if (force) {
                 const data = typeFile === "yaml" ? await loadYaml<IContextConfig[]>(filename) : await loadToml<IContextConfig[]>(filename);
-                await Promise.all(data.map(async item => {
+                await db.save(data.map(item => {
                     if (!item.ck_id) {
-                        return;
+                        return null;
                     }
-                    return db.save(fromContext(item));
-                }));
+                    return fromContext(item);
+                }).filter(Boolean));
             }
             propertyLoaded.context = true;
             LocalProperty.set(name, db);
@@ -109,12 +113,12 @@ export async function loadProperty<T extends ObjectLiteral>(
             const db: Repository<any> = localDataStore.getRepository(ProviderModel);
             if (force) {
                 const data = typeFile === "yaml" ? await loadYaml<IProviderConfig[]>(filename) : await loadToml<IProviderConfig[]>(filename);
-                await Promise.all(data.map(async item => {
+                await db.save(data.map(item => {
                     if (!item.ck_id) {
-                        return;
+                        return null;
                     }
-                    return db.save(fromProvider(item));
-                }));
+                    return fromProvider(item);
+                }).filter(Boolean));
             }
             propertyLoaded.providers = true;
             LocalProperty.set(name, db);
@@ -124,12 +128,12 @@ export async function loadProperty<T extends ObjectLiteral>(
             const db: Repository<any> = localDataStore.getRepository(PluginModel);
             if (force) {
                 const data = typeFile === "yaml" ? await loadYaml<IPluginConfig[]>(filename) : await loadToml<IPluginConfig[]>(filename);
-                await Promise.all(data.map(async item => {
+                await db.save(data.map(item => {
                     if (!item.ck_id) {
-                        return;
+                        return null;
                     }
-                    return db.save(fromPlugin(item));
-                }));
+                    return fromPlugin(item);
+                }).filter(Boolean));
             }
             propertyLoaded.plugins = true;
             LocalProperty.set(name, db);
@@ -139,12 +143,12 @@ export async function loadProperty<T extends ObjectLiteral>(
             const db: Repository<any> = localDataStore.getRepository(QueryModel);
             if (force) {
                 const data = typeFile === "yaml" ? await loadYaml<IQueryConfig[]>(filename) : await loadToml<IQueryConfig[]>(filename);
-                await Promise.all(data.map(async item => {
+                await db.save(data.map(item => {
                     if (!item.ck_id) {
-                        return;
+                        return null;
                     }
-                    return db.save(fromQuery(item));
-                }));
+                    return fromQuery(item);
+                }).filter(Boolean));
             }
             propertyLoaded.query = true;
             LocalProperty.set(name, db);
@@ -154,12 +158,12 @@ export async function loadProperty<T extends ObjectLiteral>(
             const db: Repository<any> = localDataStore.getRepository(ServerModel);
             if (force) {
                 const data = typeFile === "yaml" ? await loadYaml<IServerConfig[]>(filename) : await loadToml<IServerConfig[]>(filename);
-                await Promise.all(data.map(async item => {
+                await db.save(data.map(item => {
                     if (!item.ck_id) {
-                        return;
+                        return null;
                     }
-                    return db.save(fromServer(item));
-                }));
+                    return fromServer(item);
+                }).filter(Boolean));
             }
             propertyLoaded.server = true;
             LocalProperty.set(name, db);
@@ -169,12 +173,12 @@ export async function loadProperty<T extends ObjectLiteral>(
             const db: Repository<any> = localDataStore.getRepository(EventModel);
             if (force) {
                 const data = typeFile === "yaml" ? await loadYaml<IEventConfig[]>(filename) : await loadToml<IEventConfig[]>(filename);
-                await Promise.all(data.map(async item => {
+                await db.save(data.map(item => {
                     if (!item.ck_id) {
-                        return;
+                        return null;
                     }
-                    return db.save(fromEvent(item));
-                }));
+                    return fromEvent(item);
+                }).filter(Boolean));
             }
             propertyLoaded.event = true;
             LocalProperty.set(name, db);
@@ -184,12 +188,12 @@ export async function loadProperty<T extends ObjectLiteral>(
             const db: Repository<any> = localDataStore.getRepository(SchedulerModel);
             if (force) {
                 const data = typeFile === "yaml" ? await loadYaml<IShedulerConfig[]>(filename) : await loadToml<IShedulerConfig[]>(filename);
-                await Promise.all(data.map(async item => {
+                await db.save(data.map(item => {
                     if (!item.ck_id) {
-                        return;
+                        return null;
                     }
-                    return db.save(fromScheduler(item));
-                }));
+                    return fromScheduler(item);
+                }).filter(Boolean));
             }
             propertyLoaded.scheduler = true;
             LocalProperty.set(name, db);
@@ -239,25 +243,25 @@ class BuildProperty {
         localDataStore = undefined;
         return Promise.resolve();
     }
-    public getContext(force?: boolean): Promise<Repository<ContextModel>> {
+    public getContext(force: boolean = true): Promise<Repository<ContextModel>> {
         return loadProperty<ContextModel>("t_context", force);
     }
-    public getProviders(force?: boolean): Promise<Repository<ProviderModel>> {
+    public getProviders(force: boolean = true): Promise<Repository<ProviderModel>> {
         return loadProperty<ProviderModel>("t_providers", force);
     }
-    public getPlugins(force?: boolean): Promise<Repository<PluginModel>> {
+    public getPlugins(force: boolean = true): Promise<Repository<PluginModel>> {
         return loadProperty<PluginModel>("t_plugins", force);
     }
-    public getQuery(force?: boolean): Promise<Repository<QueryModel>> {
+    public getQuery(force: boolean = true): Promise<Repository<QueryModel>> {
         return loadProperty<QueryModel>("t_query", force);
     }
-    public getServers(force?: boolean): Promise<Repository<ServerModel>> {
+    public getServers(force: boolean = true): Promise<Repository<ServerModel>> {
         return loadProperty<ServerModel>("t_servers", force);
     }
-    public getEvents(force?: boolean): Promise<Repository<EventModel>> {
+    public getEvents(force: boolean = true): Promise<Repository<EventModel>> {
         return loadProperty<EventModel>("t_events", force);
     }
-    public getSchedulers(force?: boolean): Promise<Repository<SchedulerModel>> {
+    public getSchedulers(force: boolean = true): Promise<Repository<SchedulerModel>> {
         return loadProperty<SchedulerModel>("t_schedulers", force);
     }
     public handlers: Record<string, (data?: any) => void> = {

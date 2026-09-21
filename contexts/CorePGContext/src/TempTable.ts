@@ -194,9 +194,6 @@ export class TempTable {
         initProcess(
             {
                 reloadPageCache: debounce(async () => {
-                    if (process.env.UNGATE_HTTP_ID !== "1") {
-                        return;
-                    }
                     Promise.all([
                         this.loadPages(),
                         this.loadQuery(),
@@ -608,6 +605,10 @@ export class TempTable {
                 SysSettingModel,
                 ObjectModel,
             ],
+            prepareDatabase: (db) => {
+                db.pragma("journal_mode = WAL");
+                db.pragma("busy_timeout = 5000");
+            },
         });
         await this.ds.initialize();
         this.dbPage = this.ds.getRepository(PageModel);

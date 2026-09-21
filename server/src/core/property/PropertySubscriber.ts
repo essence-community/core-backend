@@ -10,6 +10,7 @@ import {SchedulerModel} from "./entities/SchedulerModel";
 import {sendProcess} from "@ungate/plugininf/lib/util/ProcessSender";
 import {toContext, toProvider, toPlugin, toQuery, toServer, toEvent, toScheduler} from "./map";
 import {ObjectLiteral} from "typeorm";
+import Property from "./Property";
 
 export const propertyLoaded: IPropertyLoaded = {
     context: false,
@@ -52,13 +53,7 @@ export class PropertySubscriber implements EntitySubscriberInterface {
             return;
         }
         if (entity instanceof ContextModel && propertyLoaded.context) {
-            sendProcess({
-                target: "master",
-                command: "propertySave",
-                data: {
-                    command: "saveContext",
-                },
-            });
+            Property.handlers.saveContext();
             sendProcess({
                 target: "clusterAdmin",
                 command: "sendServerAdminCmdAll",
@@ -73,13 +68,7 @@ export class PropertySubscriber implements EntitySubscriberInterface {
             });
         }
         if (entity instanceof ProviderModel && propertyLoaded.providers) {
-            sendProcess({
-                target: "master",
-                command: "propertySave",
-                data: {
-                    command: "saveProviders",
-                },
-            });
+            Property.handlers.saveProviders();
             sendProcess({
                 target: "clusterAdmin",
                 command: "sendServerAdminCmdAll",
@@ -94,13 +83,7 @@ export class PropertySubscriber implements EntitySubscriberInterface {
             });
         }
         if (entity instanceof PluginModel && propertyLoaded.plugins) {
-            sendProcess({
-                target: "master",
-                command: "propertySave",
-                data: {
-                    command: "savePlugins",
-                },
-            });
+            Property.handlers.savePlugins();
             sendProcess({
                 target: "clusterAdmin",
                 command: "sendServerAdminCmdAll",
@@ -115,13 +98,7 @@ export class PropertySubscriber implements EntitySubscriberInterface {
             });
         }
         if (entity instanceof QueryModel && propertyLoaded.query) {
-            sendProcess({
-                target: "master",
-                command: "propertySave",
-                data: {
-                    command: "saveQuery",
-                },
-            });
+            Property.handlers.saveQuery();
             sendProcess({
                 target: "clusterAdmin",
                 command: "sendServerAdminCmdAll",
@@ -136,13 +113,7 @@ export class PropertySubscriber implements EntitySubscriberInterface {
             });
         }
         if (entity instanceof ServerModel && propertyLoaded.server) {
-            sendProcess({
-                target: "master",
-                command: "propertySave",
-                data: {
-                    command: "saveServers",
-                },
-            });
+            Property.handlers.saveServers();
             sendProcess({
                 target: "clusterAdmin",
                 command: "sendServerAdminCmdAll",
@@ -157,13 +128,7 @@ export class PropertySubscriber implements EntitySubscriberInterface {
             });
         }
         if (entity instanceof EventModel && propertyLoaded.event) {
-            sendProcess({
-                target: "master",
-                command: "propertySave",
-                data: {
-                    command: "saveEvents",
-                },
-            });
+            Property.handlers.saveEvents();
             sendProcess({
                 target: "clusterAdmin",
                 command: "sendServerAdminCmdAll",
@@ -178,13 +143,7 @@ export class PropertySubscriber implements EntitySubscriberInterface {
             });
         }
         if (entity instanceof SchedulerModel && propertyLoaded.scheduler) {
-            sendProcess({
-                target: "master",
-                command: "propertySave",
-                data: {
-                    command: "saveSchedulers",
-                },
-            });
+            Property.handlers.saveSchedulers();
             sendProcess({
                 target: "clusterAdmin",
                 command: "sendServerAdminCmdAll",

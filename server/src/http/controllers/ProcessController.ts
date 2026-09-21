@@ -43,7 +43,7 @@ class ProcessController {
                     if (doc.id) {
                         user.update(doc.id, doc);
                     } else {
-                        user.save(doc);
+                        user.save(doc, {listeners: false});
                     }
                     break;
                 }
@@ -53,7 +53,7 @@ class ProcessController {
                     if (doc.id) {
                         cache.update(doc.id, doc);
                     } else {
-                        cache.save(doc);
+                        cache.save(doc, {listeners: false});
                     }
                     break;
                 }
@@ -63,7 +63,7 @@ class ProcessController {
                     if (doc.id) {
                         session.update(doc.id, doc);
                     } else {
-                        session.save(doc);
+                        session.save(doc, {listeners: false});
                     }
                     break;
                 }

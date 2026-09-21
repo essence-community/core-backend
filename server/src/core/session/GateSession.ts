@@ -110,6 +110,10 @@ export class GateSession implements ISessCtrl {
                     SessionModel,
                 ],
                 subscribers: [sessionSubscriber(this.name)],
+                prepareDatabase: (db) => {
+                    db.pragma("journal_mode = WAL");
+                    db.pragma("busy_timeout = 2000");
+                },
             });
             this.userStore = connection.getRepository(UserModel);
             this.sessionStore = connection.getRepository(SessionModel);

@@ -64,6 +64,10 @@ export default class CoreOracleIntegration extends NullContext {
                 logging: true,
                 logger: new TypeOrmLogger(`${this.name}.TempTable`),
                 entities: [InterfaceModel],
+                prepareDatabase: (db) => {
+                    db.pragma("journal_mode = WAL");
+                    db.pragma("busy_timeout = 5000");
+                },
             });
             await this.ds.initialize();
             this.dbQuery = this.ds.getRepository(InterfaceModel);
