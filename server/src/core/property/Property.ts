@@ -231,8 +231,11 @@ async function loadToml<T>(file: string): Promise<T> {
     });
 }
 class BuildProperty {
-    public reset(): Promise<void> {
+    public async reset(): Promise<void> {
         LocalProperty.clear();
+        if (localDataStore) {
+            await localDataStore.destroy();
+        }
         localDataStore = undefined;
         return Promise.resolve();
     }
