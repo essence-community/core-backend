@@ -1,16 +1,18 @@
-import ILocalDB from "@ungate/plugininf/lib/db/local/ILocalDB";
 import PostgresDB from "@ungate/plugininf/lib/db/postgres";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
-import ICCTParams, { IParamsInfo } from "@ungate/plugininf/lib/ICCTParams";
+import ICCTParams, {IParamsInfo} from "@ungate/plugininf/lib/ICCTParams";
 import IContext from "@ungate/plugininf/lib/IContext";
-import { IContextPluginResult } from "@ungate/plugininf/lib/IContextPlugin";
-import IGlobalObject from "@ungate/plugininf/lib/IGlobalObject";
+import {IContextPluginResult} from "@ungate/plugininf/lib/IContextPlugin";
 import NullContext from "@ungate/plugininf/lib/NullContext";
-import { initParams } from "@ungate/plugininf/lib/util/Util";
-import { noop, pick } from "lodash";
-import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
-const createTempTable = (global as any as IGlobalObject).createTempTable;
+import {initParams} from "@ungate/plugininf/lib/util/Util";
+import {noop, pick} from "lodash";
+import {ISessCtrl} from "@ungate/plugininf/lib/ISessCtrl";
+import {DataSource, Repository} from "typeorm";
+import {InterfaceModel} from "./entities/InterfaceModel";
+import Constants from "@ungate/plugininf/lib/Constants";
+import {TypeOrmLogger} from "@ungate/plugininf/lib/db/TypeOrmLogger";
+import path from "path";
 
 const querySql = "select q.* from t_interface q";
 const queryFindSql =
@@ -27,7 +29,8 @@ export default class CoreIntegration extends NullContext {
             },
         };
     }
-    private dbQuery: ILocalDB<Record<string, any>>;
+    private dbQuery!: Repository<InterfaceModel>;
+    private ds!: DataSource;
     private dataSource: PostgresDB;
     private caller: any;
     constructor(name: string, params: ICCTParams, sessCtrl: ISessCtrl) {
@@ -52,10 +55,18 @@ export default class CoreIntegration extends NullContext {
      * @returns init
      */
     public async init(reload?: boolean): Promise<void> {
-        if (!this.dbQuery) {
-            this.dbQuery = await createTempTable(
-                `tt_core_integration_${this.name}`,
-            );
+        if (!this.ds?.isInitialized) {
+            this.ds = new DataSource({
+                type: "better-sqlite3",
+                enableWAL: true,
+                database: path.join(Constants.TEMP_DB, `temp_${this.name}.db`),
+                synchronize: true,
+                logging: true,
+                logger: new TypeOrmLogger(`${this.name}.TempTable`),
+                entities: [InterfaceModel],
+            });
+            await this.ds.initialize();
+            this.dbQuery = this.ds.getRepository(InterfaceModel);
         }
         if (this.dataSource.pool) {
             await this.dataSource.resetPool();
@@ -88,16 +99,16 @@ export default class CoreIntegration extends NullContext {
         return this.dataSource
             .executeStmt(
                 querySql,
-                null,
-                {},
-                {},
+                undefined,
+                undefined,
+                undefined,
                 {
                     resultSet: true,
                 },
             )
             .then((res) => {
                 return new Promise<void>((resolve, reject) => {
-                    const data = [];
+                    const data: any[] = [];
                     res.stream.on("error", (err) =>
                         reject(new Error(err.message)),
                     );
@@ -108,11 +119,23 @@ export default class CoreIntegration extends NullContext {
                             cn_action: parseInt(row.cn_action, 10),
                         });
                     });
-                    res.stream.on("end", () => {
-                        this.dbQuery.insert(data).then(
-                            () => resolve(),
-                            (err) => reject(new Error(err.message)),
-                        );
+                    res.stream.on("end", async () => {
+                        try {
+                            await this.dbQuery.clear();
+                            if (data.length) {
+                                await this.dbQuery.save(
+                                    data.map((row) => {
+                                        const m = new InterfaceModel();
+                                        m.id = row.ck_id;
+                                        m.data = row;
+                                        return m;
+                                    }),
+                                );
+                            }
+                            resolve();
+                        } catch (err) {
+                            reject(new Error((err as Error).message));
+                        }
                     });
                 });
             });
@@ -126,11 +149,11 @@ export default class CoreIntegration extends NullContext {
         gateContext: IContext,
         isSave: boolean = false,
     ): Promise<IContextPluginResult> {
-        const res = await this.dataSource.executeStmt(queryFindSql, null, {
+        const res = await this.dataSource.executeStmt(queryFindSql, undefined, {
             ck_query: gateContext.queryName,
         });
         const resultContext = await new Promise((resolve, reject) => {
-            const data = [];
+            const data: any[] = [];
             res.stream.on("error", (err) => reject(new Error(err.message)));
             res.stream.on("data", (row) => {
                 data.push({
@@ -141,7 +164,16 @@ export default class CoreIntegration extends NullContext {
             });
             res.stream.on("end", () => {
                 if (isSave) {
-                    this.dbQuery.insert(data).then(noop, noop);
+                    this.dbQuery
+                        .save(
+                            data.map((row) => {
+                                const m = new InterfaceModel();
+                                m.id = row.ck_id;
+                                m.data = row;
+                                return m;
+                            }),
+                        )
+                        .then(noop, noop);
                 }
                 if (data.length) {
                     const row = data[0];
@@ -185,7 +217,7 @@ export default class CoreIntegration extends NullContext {
                 return reject(new ErrorException(ErrorGate.NOTFOUND_QUERY));
             });
         });
-        return resultContext;
+        return resultContext as IContextPluginResult;
     }
 
     /**
@@ -196,12 +228,10 @@ export default class CoreIntegration extends NullContext {
     private async offlineInitContext(
         gateContext: IContext,
     ): Promise<IContextPluginResult> {
-        const row = await this.dbQuery.findOne(
-            {
-                ck_id: gateContext.queryName,
-            },
-            true,
-        );
+        const found = await this.dbQuery.findOne({
+            where: {id: gateContext.queryName},
+        });
+        const row = found?.data;
         if (!row) {
             return this.onlineInitContext(gateContext, true);
         }
@@ -218,8 +248,8 @@ export default class CoreIntegration extends NullContext {
             providerName: row.ck_d_provider,
             query: {
                 extraOutParams: [
-                    { cv_name: "result", outType: "DEFAULT" },
-                    { cv_name: "cur_result", outType: "CURSOR" },
+                    {cv_name: "result", outType: "DEFAULT"},
+                    {cv_name: "cur_result", outType: "CURSOR"},
                 ],
                 needSession: row.ck_d_interface !== "auth",
                 queryData: row,

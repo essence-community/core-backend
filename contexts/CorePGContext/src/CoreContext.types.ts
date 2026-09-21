@@ -1,6 +1,6 @@
 export interface ISysSettingData {
     ck_id: string;
-    cv_value: string;
+    cv_value?: string;
     cv_description: string;
 }
 
@@ -23,14 +23,14 @@ export interface IModifyData {
 }
 
 export interface IQueryData {
-    cc_query: string;
+    cc_query?: string;
     ck_id: string;
     ck_provider: string;
-    cn_action: number;
-    cr_access: string;
-    cr_type: string;
-    cr_cache: string;
-    cv_cache_key_param: string[];
+    cn_action?: number;
+    cr_access?: string;
+    cr_type?: string;
+    cr_cache?: string;
+    cv_cache_key_param?: string[];
 }
 
 export interface IQueryCacheData {
@@ -39,7 +39,7 @@ export interface IQueryCacheData {
 }
 export interface IPageData {
     ck_id: string;
-    cn_action: number;
+    cn_action?: number;
     cv_name: string;
     cv_url?: string;
     children: Record<string, any>[];
@@ -49,6 +49,6 @@ export interface IPageData {
 
 export interface IObjectData {
     ck_id: string;
-    cn_action: number;
+    cn_action?: number;
     json: Record<string, any>[];
 }

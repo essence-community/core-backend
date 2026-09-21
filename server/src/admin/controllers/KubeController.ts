@@ -1,16 +1,16 @@
-import ILocalDB from "@ungate/plugininf/lib/db/local/ILocalDB";
 import * as fs from "fs";
 import Constants from "../../core/Constants";
-import IServerConfig from "../../core/property/IServerConfig";
 import Property from "../../core/property/Property";
+import {ServerModel} from "../../core/property/entities/ServerModel";
 import axios from "axios";
-import { Agent as HttpsAgent } from "https";
-import { Pod, PodList } from "../types/kube/v1.21.0/core/v1";
-import { noop } from "lodash";
+import {Agent as HttpsAgent} from "https";
+import {Pod, PodList} from "../types/kube/v1.21.0/core/v1";
+import {noop} from "lodash";
 import Logger from "@ungate/plugininf/lib/Logger";
-import { clearInterval } from "timers";
+import {clearInterval} from "timers";
 import * as qs from "qs";
 import adminEventController from "./AdminEventController";
+import {In, Not, Repository} from "typeorm";
 const logger = Logger.getLogger("KubeController");
 
 export class KubeController {
@@ -131,38 +131,36 @@ export class KubeController {
         .KUBERNETES_USE_NOT_READY_ADDRESSES
         ? process.env.KUBERNETES_USE_NOT_READY_ADDRESSES === "true"
         : true;
-    protected dbServer: ILocalDB<IServerConfig>;
-    protected serverData: IServerConfig;
-    protected readTimerKube: NodeJS.Timeout;
-    protected masterUrlApi: string;
-    protected token: string;
-    protected httpsAgent: HttpsAgent;
-    private getAllPodsUrl: string;
+    protected dbServer!: Repository<ServerModel>;
+    protected serverData!: ServerModel;
+    protected readTimerKube!: NodeJS.Timeout;
+    protected masterUrlApi!: string;
+    protected token!: string;
+    protected httpsAgent!: HttpsAgent;
+    private getAllPodsUrl!: string;
     public async init() {
         this.dbServer = await Property.getServers();
-        this.serverData = (await this.dbServer.findOne(
-            {
-                ck_id: Constants.GATE_NODE_NAME,
-            },
-            true,
-        )) || {
-            ck_id: Constants.GATE_NODE_NAME,
-            cn_port: Constants.GATE_ADMIN_CLUSTER_PORT,
-            cv_ip: "127.0.0.1",
-        };
+        this.serverData = (await this.dbServer.findOne({
+            where: {id: Constants.GATE_NODE_NAME},
+        })) ||
+            Object.assign(new ServerModel(), {
+                id: Constants.GATE_NODE_NAME,
+                port: Constants.GATE_ADMIN_CLUSTER_PORT,
+                ip: "127.0.0.1",
+            });
 
         if (this.masterHost && this.masterPort) {
             this.masterUrlApi = `${this.masterProtocol}://${this.masterHost}:${this.masterPort}/api/${this.apiVersion}`;
             this.token = fs.readFileSync(this.saTokenFile).toString();
             logger.trace("Init Kube Watch url %s", this.masterUrlApi);
             if (
-                fs.existsSync(this.clientCertFile) ||
-                fs.existsSync(this.clientKeyFile)
+                fs.existsSync(this.clientCertFile as string) ||
+                fs.existsSync(this.clientKeyFile as string)
             ) {
                 this.httpsAgent = new HttpsAgent({
                     ca: fs.readFileSync(this.caCertFile),
-                    cert: fs.readFileSync(this.clientCertFile),
-                    key: fs.readFileSync(this.clientKeyFile),
+                    cert: fs.readFileSync(this.clientCertFile as string),
+                    key: fs.readFileSync(this.clientKeyFile as string),
                     passphrase: this.clientKeyPassword,
                     timeout: this.connectTimeout,
                 });
@@ -195,7 +193,7 @@ export class KubeController {
                         if (result.status >= 400 && result.status < 500) {
                             return this.serverData;
                         }
-                        if (!this.labels && result.data.metadata.labels) {
+                        if (!this.labels && result.data?.metadata?.labels) {
                             this.labels = Object.entries(
                                 result.data.metadata.labels,
                             )
@@ -207,11 +205,10 @@ export class KubeController {
                         }
                         logger.trace("Get Labels", this.labels);
                         if (this.labels) {
-                            this.getAllPodsUrl = `${
-                                this.masterUrlApi
-                            }/namespaces/${this.namespace}/pods?${qs.stringify({
-                                labelSelector: this.labels,
-                            })}`;
+                            this.getAllPodsUrl = `${this.masterUrlApi
+                                }/namespaces/${this.namespace}/pods?${qs.stringify({
+                                    labelSelector: this.labels,
+                                })}`;
                             this.initKube().then(noop, (err) =>
                                 logger.error(err),
                             );
@@ -224,11 +221,11 @@ export class KubeController {
                             );
                         }
 
-                        return {
-                            ck_id: Constants.GATE_NODE_NAME,
-                            cv_ip: result.data.status.podIP,
-                            cn_port: Constants.GATE_ADMIN_CLUSTER_PORT,
-                        };
+                        return Object.assign(new ServerModel(), {
+                            id: Constants.GATE_NODE_NAME,
+                            ip: result.data?.status?.podIP,
+                            port: Constants.GATE_ADMIN_CLUSTER_PORT,
+                        });
                     },
                     (err) => {
                         logger.error(err);
@@ -236,13 +233,13 @@ export class KubeController {
                         return this.serverData;
                     },
                 );
-            this.dbServer.insert(this.serverData);
+            this.dbServer.save(this.serverData);
         } else {
-            this.dbServer.insert(this.serverData);
+            this.dbServer.save(this.serverData);
         }
     }
     protected async initKube() {
-        const pods: IServerConfig[] = await axios
+        const pods: ServerModel[] = await axios
             .get<PodList>(this.getAllPodsUrl, {
                 headers: {
                     authorization: `Bearer ${this.token}`,
@@ -269,11 +266,13 @@ export class KubeController {
                         }
                         return [];
                     }
-                    return result.data.items.map((pod) => ({
-                        ck_id: pod.metadata.name,
-                        cv_ip: pod.status.podIP,
-                        cn_port: Constants.GATE_ADMIN_CLUSTER_PORT,
-                    }));
+                    return result.data.items.map((pod) =>
+                        Object.assign(new ServerModel(), {
+                            id: pod.metadata?.name,
+                            ip: pod.status?.podIP,
+                            port: Constants.GATE_ADMIN_CLUSTER_PORT,
+                        }),
+                    );
                 },
                 (err) => {
                     logger.error(err);
@@ -281,13 +280,11 @@ export class KubeController {
                 },
             );
         if (pods && pods.length) {
-            this.dbServer.insert(pods).then(noop, (err) => logger.error(err));
+            this.dbServer.save(pods).then(noop, (err) => logger.error(err));
 
             this.dbServer
-                .remove({
-                    ck_id: {
-                        $nin: pods.map((value) => value.ck_id),
-                    },
+                .delete({
+                    id: Not(In(pods.map((value) => value.id))),
                 })
                 .then(noop, (err) => logger.error(err));
         }

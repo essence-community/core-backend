@@ -1,4 +1,4 @@
-import { SessionData } from "express-session-fork";
+import {SessionData} from "express-session-fork";
 
 /**
  * Created by artemov_i on 04.12.2018.
@@ -12,7 +12,7 @@ export default interface ISession {
     sessionData: {
         [key: string]: any;
         typeCheckAuth?:
-            "cookie" | "session" | "cookieandsession" | "cookieorsession";
+        "cookie" | "session" | "cookieandsession" | "cookieorsession";
     };
 }
 
@@ -25,13 +25,6 @@ export interface IUserData {
     ck_dept?: any;
     cv_timezone?: string;
     [key: string]: any;
-}
-
-export interface IUserDbData {
-    ck_d_provider: string;
-    ck_id: string;
-    cv_login?: string;
-    data: IUserData;
 }
 
 export interface ISessionData extends SessionData {

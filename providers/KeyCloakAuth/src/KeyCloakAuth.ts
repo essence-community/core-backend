@@ -1,32 +1,33 @@
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
-import ICCTParams, { IParamsInfo } from "@ungate/plugininf/lib/ICCTParams";
+import ICCTParams, {IParamsInfo} from "@ungate/plugininf/lib/ICCTParams";
 import IContext from "@ungate/plugininf/lib/IContext";
 import IQuery from "@ungate/plugininf/lib/IQuery";
-import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
-import ISession, { IUserData } from "@ungate/plugininf/lib/ISession";
+import {IGateQuery} from "@ungate/plugininf/lib/IQuery";
+import ISession, {IUserData} from "@ungate/plugininf/lib/ISession";
 import NullSessProvider, {
     IAuthResult,
 } from "@ungate/plugininf/lib/NullSessProvider";
-import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
-import { ICacheDb, ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
+import {initParams, isEmpty} from "@ungate/plugininf/lib/util/Util";
+import {ISessCtrl} from "@ungate/plugininf/lib/ISessCtrl";
 import * as KeyCloak from "keycloak-connect";
-import { IKeyCloakAuthParams, IRequestExtra } from "./KeyCloakAuth.types";
+import {IKeyCloakAuthParams, IRequestExtra} from "./KeyCloakAuth.types";
 import * as QueryString from "qs";
 import * as URL from "url";
-import { Admin, GrantAttacher, PostAuth } from "./Midleware";
+import {Admin, GrantAttacher, PostAuth} from "./Midleware";
 import BreakException from "@ungate/plugininf/lib/errors/BreakException";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
-import { uniq, forEach } from "lodash";
+import {uniq} from "lodash";
 import * as fs from "fs";
-import { Constant } from "@ungate/plugininf/lib/Constants";
+import {Constant} from "@ungate/plugininf/lib/Constants";
 import * as Token from "keycloak-connect/middleware/auth-utils/token";
 import * as Grant from "keycloak-connect/middleware/auth-utils/grant";
-import { GrantManager } from "./util/GrantManager";
+import {GrantManager} from "./util/GrantManager";
 import * as crypto from "crypto";
-import { Agent as HttpsAgent, AgentOptions } from "https";
-import { Agent as HttpAgent } from "http";
-import ILocalDB from "@ungate/plugininf/lib/db/local/ILocalDB";
+import {Agent as HttpsAgent, AgentOptions} from "https";
+import {Agent as HttpAgent} from "http";
+import {CacheModel} from "@ungate/plugininf/lib/entries/CacheModel";
+import {Repository} from "typeorm";
 
 const FLAG_REDIRECT = "jl_keycloak_auth_callback";
 const USE_REDIRECT = "jl_keycloak_use_redirect";
@@ -35,8 +36,8 @@ const TOKEN_KEY = "keycloak-token";
 
 export default class KeyCloakAuth extends NullSessProvider {
     public async init(reload?: boolean): Promise<void> {
-        if (!this.dbCache) {
-            this.dbCache = this.sessCtrl.getCacheDb();
+        if (!this.cacheStore) {
+            this.cacheStore = this.sessCtrl.getCacheStore();
         }
         return;
     }
@@ -304,7 +305,7 @@ export default class KeyCloakAuth extends NullSessProvider {
                         allownew: "new#",
                         query: "MTGetPageAction",
                         displayField: "cn_action",
-                        valueField: [{ in: "cn_action" }],
+                        valueField: [{in: "cn_action"}],
                         querymode: "remote",
                         queryparam: "cn_action",
                         idproperty: "cn_action",
@@ -315,36 +316,37 @@ export default class KeyCloakAuth extends NullSessProvider {
             },
         };
     }
-    public params: IKeyCloakAuthParams;
+    public params!: IKeyCloakAuthParams;
     private grantManager: GrantManager;
-    private dbCache: ILocalDB<ICacheDb>;
-    private grantManagers: Record<string, GrantManager>;
+    private cacheStore!: Repository<CacheModel>;
+    private grantManagers: Record<string, GrantManager> = {};
 
     constructor(name: string, params: ICCTParams, sessCtrl: ISessCtrl) {
         super(name, params, sessCtrl);
         this.params = initParams(KeyCloakAuth.getParamsInfo(), this.params);
         if (
             !isEmpty(this.params.grantManagerConfig.publicKey) &&
-            fs.existsSync(this.params.grantManagerConfig.publicKey)
+            fs.existsSync(this.params.grantManagerConfig?.publicKey || "")
         ) {
             this.params.grantManagerConfig.publicKey = fs
-                .readFileSync(this.params.grantManagerConfig.publicKey)
+                .readFileSync(this.params.grantManagerConfig?.publicKey || "")
                 .toString();
         }
         if (
             !isEmpty(this.params.grantManagerConfig.publicKey) &&
-            !isEmpty(this.params.grantManagerConfig.publicKey.trim())
+            !isEmpty(this.params.grantManagerConfig?.publicKey?.trim())
         ) {
             this.params.grantManagerConfig.publicKey =
-                this.params.grantManagerConfig.publicKey
+                this.params.grantManagerConfig?.publicKey?.trim()
                     .replace("-----BEGIN PUBLIC KEY-----\n", "")
                     .replace("-----END PUBLIC KEY-----", "")
                     .trim();
         }
-        Object.entries(this.params.grantManagerConfig).forEach(
+        const grantManagerConfig = this.params.grantManagerConfig;
+        Object.entries(grantManagerConfig).forEach(
             ([key, value]) => {
                 if (isEmpty(value)) {
-                    delete this.params.grantManagerConfig[key];
+                    delete grantManagerConfig[key as keyof typeof grantManagerConfig];
                 }
             },
         );
@@ -359,7 +361,7 @@ export default class KeyCloakAuth extends NullSessProvider {
         if (this.params.httpsAgent) {
             const httpsAgent: AgentOptions =
                 typeof this.params.httpsAgent == "string" &&
-                (this.params.httpsAgent as string).startsWith("{")
+                    (this.params.httpsAgent as string).startsWith("{")
                     ? JSON.parse(this.params.httpsAgent as string)
                     : this.params.httpsAgent;
             if (
@@ -413,7 +415,7 @@ export default class KeyCloakAuth extends NullSessProvider {
         if (this.params.httpAgent) {
             const httpAgent =
                 typeof this.params.httpAgent == "string" &&
-                (this.params.httpAgent as string).startsWith("{")
+                    (this.params.httpAgent as string).startsWith("{")
                     ? JSON.parse(this.params.httpAgent as string)
                     : params.httpAgent;
 
@@ -422,7 +424,7 @@ export default class KeyCloakAuth extends NullSessProvider {
         if (
             this.params.grantManagerConfig.grantManagerConfigExtra &&
             typeof this.params.grantManagerConfig.grantManagerConfigExtra ===
-                "string"
+            "string"
         ) {
             this.params.grantManagerConfig = {
                 ...JSON.parse(this.params.grantManagerConfigExtra),
@@ -441,7 +443,7 @@ export default class KeyCloakAuth extends NullSessProvider {
                     acc[config.realmUrl] = new GrantManager(config, this.log);
                     return acc;
                 },
-                {},
+                {} as Record<string, GrantManager>,
             );
         }
     }
@@ -455,8 +457,8 @@ export default class KeyCloakAuth extends NullSessProvider {
     public async afterSession(
         gateContext: IContext,
         sessionId: string,
-        session: ISession,
-    ): Promise<ISession> {
+        session?: ISession,
+    ): Promise<ISession | null | undefined> {
         if (
             gateContext.params[this.params.keyCloakParamName] ||
             gateContext.params[this.params.flagRedirect] === "1"
@@ -535,15 +537,10 @@ export default class KeyCloakAuth extends NullSessProvider {
                 gateContext.params[this.params.adminPathParam],
             );
             throw new BreakException("break");
-        } else if (
-            gateContext.request.headers.authorization
-                ?.substring(0, 7)
-                .toLowerCase()
-                .indexOf("bearer ") > -1 ||
-            gateContext.request.headers.authorization
-                ?.substring(0, 6)
-                .toLowerCase()
-                .indexOf("basic ") > -1
+        } else if (gateContext.request.headers &&
+            gateContext.request.headers.authorization &&
+            (gateContext.request.headers.authorization.substring(0, 7).toLowerCase().indexOf("bearer ") > -1 ||
+                gateContext.request.headers.authorization.substring(0, 6).toLowerCase().indexOf("basic ") > -1)
         ) {
             gateContext.debug("KeyCloak Init grant");
 
@@ -553,7 +550,7 @@ export default class KeyCloakAuth extends NullSessProvider {
                 this.grantManagers,
             )
                 .then((grant) => {
-                    return this.updateToken(gateContext, grant, session);
+                    return this.updateToken(gateContext, grant as KeyCloak.Grant, session);
                 })
                 .catch(async (err) => {
                     gateContext.warn("KeyCloak Auth Error", err);
@@ -616,8 +613,8 @@ export default class KeyCloakAuth extends NullSessProvider {
     private async updateToken(
         gateContext: IContext,
         grant: KeyCloak.Grant,
-        session: ISession,
-    ): Promise<ISession> {
+        session?: ISession,
+    ): Promise<ISession | null | undefined> {
         if (!grant) {
             throw new Error("Not Auth");
         }
@@ -690,7 +687,7 @@ export default class KeyCloakAuth extends NullSessProvider {
     private async generateUserData(
         grant: KeyCloak.Grant,
         grantManager: GrantManager,
-    ): Promise<{ userData: IUserData; idUser: string }> {
+    ): Promise<{userData: IUserData; idUser: string}> {
         const token: Token = grant.access_token;
         const userInfo =
             grantManager.realmUrl && grantManager.userInfoUrl
@@ -709,7 +706,7 @@ export default class KeyCloakAuth extends NullSessProvider {
             client_id: grantManager.clientId,
         } as IUserData;
 
-        this.params.mapKeyCloakUserInfo.forEach((obj) => {
+        this.params.mapKeyCloakUserInfo?.forEach((obj) => {
             if (!isEmpty(userInfo[obj.in])) {
                 dataUser[obj.out] = userInfo[obj.in];
             }
@@ -720,14 +717,14 @@ export default class KeyCloakAuth extends NullSessProvider {
         if (typeof dataUser.ca_actions === "string") {
             dataUser.ca_actions =
                 (dataUser.ca_actions as string).startsWith("[") &&
-                (dataUser.ca_actions as string).endsWith("]")
+                    (dataUser.ca_actions as string).endsWith("]")
                     ? JSON.parse(dataUser.ca_actions)
                     : dataUser.ca_actions;
         }
         if (typeof dataUser.ca_role === "string") {
             dataUser.ca_role =
                 (dataUser.ca_role as string).startsWith("[") &&
-                (dataUser.ca_role as string).endsWith("]")
+                    (dataUser.ca_role as string).endsWith("]")
                     ? JSON.parse(dataUser.ca_role)
                     : dataUser.ca_role;
         }
@@ -739,8 +736,8 @@ export default class KeyCloakAuth extends NullSessProvider {
         }
         this.params.mapKeyCloakGrant?.forEach((obj) => {
             if (
-                grant.access_token.hasRole(obj.grant) ||
-                grant.access_token.hasRealmRole(obj.grant)
+                grant.access_token?.hasRole(obj.grant) ||
+                grant.access_token?.hasRealmRole(obj.grant)
             ) {
                 dataUser.ca_actions.push(
                     typeof obj.action === "string"
@@ -754,19 +751,20 @@ export default class KeyCloakAuth extends NullSessProvider {
             this.params.mapKeyCloakGrantRole.length
         ) {
             const hashObj =
-                (await this.dbCache.findOne(
+                (await this.cacheStore.findOne(
                     {
-                        ck_id: "role_user",
+                        where: {
+                            id: "role_user",
+                        },
                     },
-                    true,
-                )) || {};
-            this.params.mapKeyCloakGrantRole.forEach((obj) => {
+                )) || {} as CacheModel;
+            this.params.mapKeyCloakGrantRole?.forEach((obj) => {
                 if (
-                    grant.access_token.hasRole(obj.grant) ||
-                    grant.access_token.hasRealmRole(obj.grant)
+                    grant.access_token?.hasRole(obj.grant) ||
+                    grant.access_token?.hasRealmRole(obj.grant)
                 ) {
                     dataUser.ca_role.push(obj.role);
-                    const actions = hashObj[obj.role] as any[];
+                    const actions = hashObj.data[obj.role] as any[];
                     actions?.forEach((action) => {
                         dataUser.ca_actions.push(
                             typeof action === "string"
@@ -779,7 +777,7 @@ export default class KeyCloakAuth extends NullSessProvider {
         }
         dataUser.ca_role = uniq(dataUser.ca_role);
         dataUser.ca_actions = uniq(dataUser.ca_actions);
-        return { userData: dataUser, idUser };
+        return {userData: dataUser, idUser};
     }
     private async redirectAccess(context: IContext): Promise<any> {
         const redirectUrl = URL.parse(this.params.redirectUrl, true);
@@ -841,7 +839,7 @@ export default class KeyCloakAuth extends NullSessProvider {
                     if (headers) {
                         Object.entries(headers).forEach(([key, value]) => {
                             if (key.toLocaleLowerCase() === "set-cookie") {
-                                context.extraHeaders = { [key]: value };
+                                context.extraHeaders = {[key]: value};
                             }
                         });
                     }
@@ -860,7 +858,7 @@ export default class KeyCloakAuth extends NullSessProvider {
                     };
                 },
             )
-            .catch((errFind) => {
+            .catch((errFind: any) => {
                 this.log.error(errFind);
                 return this.redirectAccess(context);
             });

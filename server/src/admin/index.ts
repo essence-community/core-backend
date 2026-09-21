@@ -1,5 +1,5 @@
 import Logger from "@ungate/plugininf/lib/Logger";
-import { initProcess } from "@ungate/plugininf/lib/util/ProcessSender";
+import {initProcess} from "@ungate/plugininf/lib/util/ProcessSender";
 import AdminEventController from "./controllers/AdminEventController";
 import KubeController from "./controllers/KubeController";
 const logger = Logger.getLogger("Admin");
@@ -12,7 +12,7 @@ process.on("uncaughtException", (err, origin) => {
     logger.error("Uncaught Exception at: %s\nreason: %s", err, origin);
     process.exit(1);
 });
-initProcess(AdminEventController.command, "clusterAdmin");
+initProcess(AdminEventController.handlers, "clusterAdmin");
 Promise.all([AdminEventController.init(), KubeController.init()]).then(
     () => logger.info("Init Admin Notification Server"),
     (err) =>

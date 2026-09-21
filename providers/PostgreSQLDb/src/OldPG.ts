@@ -3,8 +3,8 @@ import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
 import IContext from "@ungate/plugininf/lib/IContext";
 import IQuery from "@ungate/plugininf/lib/IQuery";
-import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
-import { IResultProvider } from "@ungate/plugininf/lib/IResult";
+import {IGateQuery} from "@ungate/plugininf/lib/IQuery";
+import {IResultProvider} from "@ungate/plugininf/lib/IResult";
 import IPostgreSQLController from "./IPostgreSQLController";
 const wsQuerySQL =
     "select vl_query, kd_type, pr_auth from report.wd_sqlstore where upper(query) = upper(:query)";
@@ -20,7 +20,7 @@ export default class OldPG extends IPostgreSQLController {
         context: IContext,
         query: IGateQuery,
     ): Promise<IResultProvider> {
-        return context.connection.executeStmt(
+        return context.connection!.executeStmt(
             query.queryStr,
             query.inParams,
             query.outParams,
@@ -33,7 +33,7 @@ export default class OldPG extends IPostgreSQLController {
         context: IContext,
         query: IGateQuery,
     ): Promise<IResultProvider> {
-        return context.connection.executeStmt(
+        return context.connection!.executeStmt(
             query.queryStr,
             query.inParams,
             query.outParams,
@@ -47,18 +47,18 @@ export default class OldPG extends IPostgreSQLController {
             return this.dataSource
                 .executeStmt(
                     wsQuerySQL,
-                    context.connection.getCurrentConnection(),
+                    context.connection!.getCurrentConnection(),
                     {
                         query: context.queryName,
                     },
-                    null,
+                    undefined,
                     {
                         autoCommit: true,
                     },
                 )
                 .then((res) => {
                     return new Promise((resolve, reject) => {
-                        const data = [];
+                        const data: any[] = [];
                         res.stream.on("error", (err) => reject(err));
                         res.stream.on("data", (chunk) => data.push(chunk));
                         res.stream.on("end", () => {

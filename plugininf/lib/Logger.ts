@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as util from "util";
 import pino from "pino";
-import { createStream as createRotatingStream } from "rotating-file-stream";
+import {createStream as createRotatingStream} from "rotating-file-stream";
 import IGlobalObject from "./IGlobalObject";
 
 export interface IRufusLogger {
@@ -50,7 +50,7 @@ const pathConf =
         "logger.json",
     );
 
-let root: pino.Logger = pino({ level: "info" });
+let root: pino.Logger = pino({level: "info"});
 const children = new Map<string, pino.Logger>();
 
 function toPinoLevel(lvl: string): pino.LevelWithSilent {
@@ -75,7 +75,7 @@ function wrap(name: string): IRufusLogger {
     const get = () => {
         let child = children.get(name);
         if (!child) {
-            child = name ? root.child({ name }) : root;
+            child = name ? root.child({name}) : root;
             children.set(name, child);
         }
         return child;
@@ -158,7 +158,7 @@ function openStream(handler: any): NodeJS.WritableStream {
     const file = handler.file;
     const dir = path.dirname(file);
     if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
+        fs.mkdirSync(dir, {recursive: true});
     }
     if (handler.maxSize || /rotat/i.test(handler.class || "")) {
         return createRotatingStream(path.basename(file), {
@@ -169,7 +169,7 @@ function openStream(handler: any): NodeJS.WritableStream {
             maxFiles: parseInt(handler.maxFile, 10) || 30,
         });
     }
-    return pino.destination({ dest: file, mkdir: true, sync: false }) as any;
+    return pino.destination({dest: file, mkdir: true, sync: false}) as any;
 }
 
 function applyConfig(json: any): void {
@@ -180,10 +180,11 @@ function applyConfig(json: any): void {
             ? rootCfg.handlers
             : Object.keys(handlers);
     const streams = handlerNames
-        .map((name) => handlers[name])
+        .map((name) => handlers[name] ? [handlers[name]] : rootCfg.handlers)
         .filter(Boolean)
+        .flat()
         .map((handler) => ({
-            level: toPinoLevel(handler.level || "trace") as pino.Level,
+            level: toPinoLevel(handler.level || "info") as pino.Level,
             stream: openStream(handler),
         }));
     children.clear();
@@ -200,8 +201,8 @@ class Logger {
     public static loadConfig(): void {
         if (!fs.existsSync(pathConf)) {
             applyConfig({
-                handlers: { console: {} },
-                loggers: { root: { level: "INFO", handlers: ["console"] } },
+                handlers: {console: {}},
+                loggers: {root: {level: "INFO", handlers: ["console"]}},
             });
             return;
         }
@@ -210,8 +211,8 @@ class Logger {
         } catch (err) {
             console.error("Ошибка инициализации настроек логера", err);
             applyConfig({
-                handlers: { console: {} },
-                loggers: { root: { level: "INFO", handlers: ["console"] } },
+                handlers: {console: {}},
+                loggers: {root: {level: "INFO", handlers: ["console"]}},
             });
         }
     }

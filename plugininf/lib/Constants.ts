@@ -72,7 +72,7 @@ export class Constants {
     /** Префикс для выходного параметра (не входит в имя параметра запроса к БД) */
     public OUT_PARAM_PREFIX = "out_";
     /** Префикс для параметра с типом дата (входит в имя параметра запроса к БД) */
-    public DATE_PARAM_PREFIX: ["dt_", "cd_", "ct_"];
+    public DATE_PARAM_PREFIX: string[] = ["dt_", "cd_", "ct_"];
     /** Параметр, возвращающий информацию о неуспешной авторизации в запросе-авторизации */
     public AUTH_NOT_AUTH_PARAM = "not_authorized";
     /** Префикс для авторизационного параметра, который не попадает в сессию */
@@ -105,13 +105,16 @@ export class Constants {
     /** Сервис выхода */
     public QUERY_LOGOUT = "logout";
 
+    public TEMP_DB: string =
+        process.env.TEMP_DB || process.env.NEDB_TEMP_DB || path.join(os.tmpdir(), "db");
+
     /** Секрет для подписи сессии */
     public SESSION_SECRET =
         process.env.SESSION_SECRET ||
         "9cb564113f96325c37b9e43280eebfb6723176b65db38627c85f763d32c20fa8";
 
     /** PW для шифрования пароля */
-    public PW_KEY_SECRET: string;
+    public PW_KEY_SECRET!: string;
     /** SALT для шифрования пароля */
     public PW_SALT_SECRET: string =
         process.env.ESSENCE_PW_SALT ||
@@ -120,8 +123,8 @@ export class Constants {
     public DEFAULT_ALG = process.env.ESSENCE_PW_DEFAULT_ALG || "aes-256-gcm";
 
     /** PW Key RSA для шифрования пароля */
-    public PW_RSA_SECRET: string;
-    public PW_RSA_SECRET_PASSPHRASE: string;
+    public PW_RSA_SECRET!: string;
+    public PW_RSA_SECRET_PASSPHRASE!: string;
 
     public isUseEncrypt = false;
 

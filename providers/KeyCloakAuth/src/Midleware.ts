@@ -2,8 +2,8 @@ import * as KeyCloak from "keycloak-connect";
 import * as Token from "keycloak-connect/middleware/auth-utils/token";
 import * as Signature from "keycloak-connect/middleware/auth-utils/signature";
 import IContext from "@ungate/plugininf/lib/IContext";
-import { IRequestExtra, IKeyCloakAuthParam } from "./KeyCloakAuth.types";
-import { GrantManager } from "./util/GrantManager";
+import {IRequestExtra, IKeyCloakAuthParam} from "./KeyCloakAuth.types";
+import {GrantManager} from "./util/GrantManager";
 
 export async function PostAuth(
     gateContext: IContext,
@@ -71,8 +71,8 @@ export async function GrantAttacher(
     }
     return accessToken
         ? grantManager
-              .createGrant(accessToken)
-              .then((grant) => grant as KeyCloak.Grant)
+            .createGrant(accessToken)
+            .then((grant) => grant as KeyCloak.Grant)
         : null;
 }
 
@@ -88,7 +88,7 @@ async function adminLogout(context: IContext, grantManager: GrantManager) {
         const signature = new Signature(grantManager.config);
         return signature
             .verify(preToken)
-            .then((token) => {
+            .then((token: any) => {
                 if (token.content.action === "LOGOUT") {
                     const sessionIDs = token.content.adapterSessionIds;
                     if (!sessionIDs) {
@@ -100,10 +100,10 @@ async function adminLogout(context: IContext, grantManager: GrantManager) {
                     context.debug("KeyCloak logout %j", sessionIDs);
                     if (sessionIDs && sessionIDs.length > 0) {
                         let seen = 0;
-                        sessionIDs.forEach((id) => {
+                        sessionIDs.forEach((id: string) => {
                             context.gateContextPlugin.sessCtrl
                                 .getSessionStore()
-                                .destroy(id);
+                                .delete(id);
                             ++seen;
                             if (seen === sessionIDs.length) {
                                 context.response.writeHead(200);
@@ -119,11 +119,11 @@ async function adminLogout(context: IContext, grantManager: GrantManager) {
                     context.response.end();
                 }
             })
-            .catch((err) => {
+            .catch((err: any) => {
                 context.response.writeHead(401);
                 context.response.end(err.message);
             });
-    } catch (err) {
+    } catch (err: any) {
         context.response.writeHead(400);
         context.response.end(err.message);
     }
@@ -141,18 +141,18 @@ async function adminNotBefore(context: IContext, grantManager: GrantManager) {
         const signature = new Signature(grantManager.config);
         return signature
             .verify(preToken)
-            .then((token) => {
+            .then((token: any) => {
                 if (token.content.action === "PUSH_NOT_BEFORE") {
                     grantManager.notBefore = token.content.notBefore;
                     context.response.writeHead(200);
                     context.response.end("ok");
                 }
             })
-            .catch((err) => {
+            .catch((err: any) => {
                 context.response.writeHead(401);
                 context.response.end(err.message);
             });
-    } catch (err) {
+    } catch (err: any) {
         context.response.writeHead(400);
         context.response.end(err.message);
     }

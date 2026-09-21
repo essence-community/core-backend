@@ -1,20 +1,21 @@
 import Connection from "@ungate/plugininf/lib/db/Connection";
-import ILocalDB from "@ungate/plugininf/lib/db/local/ILocalDB";
 import OracleDB from "@ungate/plugininf/lib/db/oracle";
 import BreakException from "@ungate/plugininf/lib/errors/BreakException";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
 import IContext from "@ungate/plugininf/lib/IContext";
-import IQuery, { IGateQuery } from "@ungate/plugininf/lib/IQuery";
-import { IResultProvider } from "@ungate/plugininf/lib/IResult";
-import { IUserData } from "@ungate/plugininf/lib/ISession";
+import IQuery, {IGateQuery} from "@ungate/plugininf/lib/IQuery";
+import {IResultProvider} from "@ungate/plugininf/lib/IResult";
+import {IUserData} from "@ungate/plugininf/lib/ISession";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
-import { isObject } from "lodash";
+import {isObject} from "lodash";
 import IOracleController from "./IOracleController";
-import { IParamOracle } from "./OracleDb.types";
-import { ISessCtrl, ICacheDb } from "@ungate/plugininf/lib/ISessCtrl";
-import { IUserDbData } from "@ungate/plugininf/lib/ISession";
-import { hiddenSecret } from "@ungate/plugininf/lib/util/Util";
+import {IParamOracle} from "./OracleDb.types";
+import {ISessCtrl} from "@ungate/plugininf/lib/ISessCtrl";
+import {hiddenSecret} from "@ungate/plugininf/lib/util/Util";
+import {UserModel} from "@ungate/plugininf/lib/entries/UserModel";
+import {Repository} from "typeorm";
+import {CacheModel} from "@ungate/plugininf/lib/entries/CacheModel";
 const wsQuerySQL =
     "select cc_query from t_query where upper(ck_id) = upper(:query)";
 
@@ -22,8 +23,8 @@ export default class CoreOracle implements IOracleController {
     public dataSource: OracleDB;
     public params: IParamOracle;
     public name: string;
-    private dbUsers: ILocalDB<IUserDbData>;
-    private dbCache: ILocalDB<ICacheDb>;
+    private usersStore!: Repository<UserModel>;
+    private cacheStore!: Repository<CacheModel>;
     constructor(
         name: string,
         params: IParamOracle,
@@ -35,12 +36,8 @@ export default class CoreOracle implements IOracleController {
         this.dataSource = dataSource;
     }
     public async init(): Promise<void> {
-        if (!this.dbUsers) {
-            this.dbUsers = this.sessCtrl.getUserDb();
-        }
-        if (!this.dbCache) {
-            this.dbCache = this.sessCtrl.getCacheDb();
-        }
+        this.usersStore = await this.sessCtrl.getUserStore();
+        this.cacheStore = await this.sessCtrl.getCacheStore();
     }
     public async getConnection(context: IContext): Promise<Connection> {
         const conn = await this.dataSource.getConnection();
@@ -51,13 +48,13 @@ export default class CoreOracle implements IOracleController {
         context: IContext,
         query: IGateQuery,
     ): Promise<IResultProvider> {
-        return context.connection
+        return context.connection!
             .executeStmt(query.queryStr, query.inParams, query.outParams, {
                 resultSet: true,
             })
             .catch((err) => {
                 if (err && (err.message || "").indexOf("ORA-04061") > -1) {
-                    return context.connection
+                    return context.connection!
                         .rollbackAndClose()
                         .then(async () => {
                             context.connection =
@@ -73,11 +70,11 @@ export default class CoreOracle implements IOracleController {
         context: IContext,
         query: IGateQuery,
     ): Promise<IResultProvider> {
-        return context.connection
+        return context.connection!
             .executeStmt(query.queryStr, query.inParams, query.outParams)
             .catch((err) => {
                 if (err && (err.message || "").indexOf("ORA-04061") > -1) {
-                    return context.connection
+                    return context.connection!
                         .rollbackAndClose()
                         .then(async () => {
                             context.connection =
@@ -102,14 +99,14 @@ export default class CoreOracle implements IOracleController {
                     {
                         query: context.queryName,
                     },
-                    null,
+                    undefined,
                     {
                         autoCommit: true,
                     },
                 )
                 .then((res) => {
                     return new Promise((resolve, reject) => {
-                        const data = [];
+                        const data: any[] = [];
                         res.stream.on("error", (err) => reject(err));
                         res.stream.on("data", (chunk) => data.push(chunk));
                         res.stream.on("end", () => {
@@ -138,17 +135,17 @@ export default class CoreOracle implements IOracleController {
     public async initTempTableSession(gateContext: IContext, connection: any) {
         const res = await this.dataSource.executeStmt(
             "select pkg_json_user.f_get_context('hash_user') as hash_user, " +
-                "pkg_json_user.f_get_context('hash_user_action') as hash_user_action, " +
-                "pkg_json_user.f_get_context('hash_user_department') as hash_user_department from dual",
+            "pkg_json_user.f_get_context('hash_user_action') as hash_user_action, " +
+            "pkg_json_user.f_get_context('hash_user_department') as hash_user_department from dual",
             connection,
-            null,
-            null,
+            undefined,
+            undefined,
             {
                 autoCommit: true,
             },
         );
         return new Promise<void>((resolve, reject) => {
-            const data = [];
+            const data: any[] = [];
             res.stream.on("error", (err) => reject(err));
             res.stream.on("data", (chunk) => data.push(chunk));
             res.stream.on("end", () =>
@@ -173,92 +170,93 @@ export default class CoreOracle implements IOracleController {
                 `Hash session ${JSON.stringify(hiddenSecret(data))}`,
             );
         }
-        const users = [];
-        const userActions = [];
-        const userDepartments = [];
+        const users: any[] = [];
+        const userActions: any[] = [];
+        const userDepartments: any[] = [];
         const row = data[0];
         let updateUser = false;
         let updateUserAction = false;
         let updateUserDepartment = false;
-        const hashObj = await this.dbCache.findOne(
+        const hashObj = await this.cacheStore.findOne(
             {
-                ck_id: "hash_user",
+                where: {
+                    id: "hash_user",
+                },
             },
-            true,
         );
         if (hashObj) {
-            if (hashObj.hash_user !== row.hash_user) {
+            if (hashObj.data.hash_user !== row.hash_user) {
                 updateUser = true;
                 updateUserAction = true;
                 updateUserDepartment = true;
             }
-            if (hashObj.hash_user_action !== row.hash_user_action) {
+            if (hashObj.data.hash_user_action !== row.hash_user_action) {
                 updateUserAction = true;
             }
-            if (hashObj.hash_user_department !== row.hash_user_department) {
+            if (hashObj.data.hash_user_department !== row.hash_user_department) {
                 updateUserDepartment = true;
             }
         }
         await Promise.all([
             updateUser || updateUserAction || updateUserDepartment
-                ? this.dbUsers.find().then(async (usersRows) => {
-                      let errRow;
-                      const result = usersRows.every((userRow) => {
-                          const item: Partial<IUserData> = userRow.data || {};
-                          if (!isObject(item)) {
-                              gateContext.error(`Bad tt_user data ${userRow}`);
-                              errRow = new ErrorException(
-                                  -1,
-                                  "Bad tt_users data",
-                              );
-                              return false;
-                          }
-                          if (!Array.isArray(item.ca_actions)) {
-                              if (
-                                  typeof item.ca_actions === "string" &&
-                                  (item.ca_actions as any).startsWith("[")
-                              ) {
-                                  item.ca_actions = JSON.parse(item.ca_actions);
-                              } else {
-                                  item.ca_actions = [];
-                              }
-                          }
-                          (item.ca_actions || []).forEach((action) => {
-                              userActions.push({
-                                  ck_user: item.ck_id,
-                                  cn_action: action,
-                              });
-                          });
-                          if (!Array.isArray(item.ca_department)) {
-                              if (
-                                  typeof item.ca_department === "string" &&
-                                  (item.ca_department as any).startsWith("[")
-                              ) {
-                                  item.ca_department = JSON.parse(
-                                      item.ca_department,
-                                  );
-                              } else {
-                                  item.ca_department = [];
-                              }
-                          }
-                          (item.ca_department || []).forEach((dep) => {
-                              userDepartments.push({
-                                  ck_department: dep,
-                                  ck_user: item.ck_id,
-                              });
-                          });
-                          delete item.ca_actions;
-                          delete item.ca_department;
-                          delete item.ck_dept;
-                          delete item.cv_timezone;
-                          users.push(item);
-                          return true;
-                      });
-                      if (!result) {
-                          throw errRow;
-                      }
-                      return;
-                  })
+                ? this.usersStore.find().then(async (usersRows) => {
+                    let errRow;
+                    const result = usersRows.every((userRow: UserModel) => {
+                        const item: Partial<IUserData> = userRow.data || {};
+                        if (!isObject(item)) {
+                            gateContext.error(`Bad tt_user data ${userRow}`);
+                            errRow = new ErrorException(
+                                -1,
+                                "Bad tt_users data",
+                            );
+                            return false;
+                        }
+                        if (!Array.isArray(item.ca_actions)) {
+                            if (
+                                typeof item.ca_actions === "string" &&
+                                (item.ca_actions as any).startsWith("[")
+                            ) {
+                                item.ca_actions = JSON.parse(item.ca_actions);
+                            } else {
+                                item.ca_actions = [];
+                            }
+                        }
+                        (item.ca_actions || []).forEach((action) => {
+                            userActions.push({
+                                ck_user: item.ck_id,
+                                cn_action: action,
+                            });
+                        });
+                        if (!Array.isArray(item.ca_department)) {
+                            if (
+                                typeof item.ca_department === "string" &&
+                                (item.ca_department as any).startsWith("[")
+                            ) {
+                                item.ca_department = JSON.parse(
+                                    item.ca_department,
+                                );
+                            } else {
+                                item.ca_department = [];
+                            }
+                        }
+                        (item.ca_department || []).forEach((dep) => {
+                            userDepartments.push({
+                                ck_department: dep,
+                                ck_user: item.ck_id,
+                            });
+                        });
+                        delete item.ca_actions;
+                        delete item.ca_department;
+                        delete item.ck_dept;
+                        delete item.cv_timezone;
+                        users.push(item);
+                        return true;
+                    });
+                    if (!result) {
+                        throw errRow;
+                    }
+                    return;
+                })
                 : Promise.resolve(),
         ]);
         const actions = [];
@@ -266,7 +264,7 @@ export default class CoreOracle implements IOracleController {
             const jsonUser = JSON.stringify(users);
             actions.push(
                 Promise.resolve({
-                    hashObj: hashObj.hash_user,
+                    hashObj: hashObj?.data?.hash_user,
                     json: jsonUser,
                     name: "f_modify_user",
                 }),
@@ -276,7 +274,7 @@ export default class CoreOracle implements IOracleController {
             const jsonUserAction = JSON.stringify(userActions);
             actions.push(
                 Promise.resolve({
-                    hashObj: hashObj.hash_user_action,
+                    hashObj: hashObj?.data?.hash_user_action,
                     json: jsonUserAction,
                     name: "f_modify_user_action",
                 }),
@@ -286,7 +284,7 @@ export default class CoreOracle implements IOracleController {
             const jsonUserDepartment = JSON.stringify(userDepartments);
             actions.push(
                 Promise.resolve({
-                    hashObj: hashObj.hash_user_department,
+                    hashObj: hashObj?.data?.hash_user_department,
                     json: jsonUserDepartment,
                     name: "f_modify_user_department",
                 }),
@@ -343,8 +341,8 @@ export default class CoreOracle implements IOracleController {
         return this.dataSource
             .executeStmt(
                 "begin\n" +
-                    `:result := pkg_json_user.${nameFunction}(pc_json => :json, pv_hash => :hash);\n` +
-                    "end;",
+                `:result := pkg_json_user.${nameFunction}(pc_json => :json, pv_hash => :hash);\n` +
+                "end;",
                 connection,
                 {
                     hash,
@@ -358,7 +356,7 @@ export default class CoreOracle implements IOracleController {
                 },
             )
             .then((res) => {
-                const rows = [];
+                const rows: any[] = [];
                 res.stream.on("data", (chunk) => rows.push(chunk));
                 return new Promise<void>((resolve, reject) => {
                     res.stream.on("error", (err) => reject(err));
@@ -368,8 +366,7 @@ export default class CoreOracle implements IOracleController {
                                 const result = JSON.parse(rows[0].result);
                                 if (result.cv_error) {
                                     gateContext.error(
-                                        `Provider ${
-                                            this.name
+                                        `Provider ${this.name
                                         } Error ${nameFunction}, ${JSON.stringify(
                                             result.cv_error,
                                         )}`,

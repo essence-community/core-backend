@@ -3,20 +3,20 @@ import OracleDB from "@ungate/plugininf/lib/db/oracle";
 import BreakException from "@ungate/plugininf/lib/errors/BreakException";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
-import ICCTParams, { IParamsInfo } from "@ungate/plugininf/lib/ICCTParams";
+import ICCTParams, {IParamsInfo} from "@ungate/plugininf/lib/ICCTParams";
 import IContext from "@ungate/plugininf/lib/IContext";
 import IObjectParam from "@ungate/plugininf/lib/IObjectParam";
-import IQuery, { IGateQuery } from "@ungate/plugininf/lib/IQuery";
-import { IResultProvider } from "@ungate/plugininf/lib/IResult";
+import IQuery, {IGateQuery} from "@ungate/plugininf/lib/IQuery";
+import {IResultProvider} from "@ungate/plugininf/lib/IResult";
 import NullProvider from "@ungate/plugininf/lib/NullProvider";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
-import { hiddenSecret, initParams } from "@ungate/plugininf/lib/util/Util";
-import { isEmpty } from "@ungate/plugininf/lib/util/Util";
-import { isObject, noop, pick } from "lodash";
+import {hiddenSecret, initParams} from "@ungate/plugininf/lib/util/Util";
+import {isEmpty} from "@ungate/plugininf/lib/util/Util";
+import {isObject, noop, pick} from "lodash";
 import moment from "moment";
 import * as axios from "axios";
 import * as URL from "url";
-import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
+import {ISessCtrl} from "@ungate/plugininf/lib/ISessCtrl";
 
 interface IResultSequence {
     res?: IResultProvider;
@@ -57,11 +57,11 @@ export default class CoreOracleIntegration extends NullProvider {
     ): Promise<IQuery> {
         const query = await super.initContext(context, preQuery);
         const conn = await this.dataSource.getConnection();
-        query.extraOutParams.push({
+        query.extraOutParams?.push({
             cv_name: "result",
             outType: "DEFAULT",
         });
-        query.extraOutParams.push({
+        query.extraOutParams?.push({
             cv_name: "cur_result",
             outType: "CURSOR",
         });
@@ -69,7 +69,7 @@ export default class CoreOracleIntegration extends NullProvider {
         if (context.session) {
             inParam.sess_session = context.session.session;
             Object.keys(context.session.userData).forEach((key) => {
-                inParam[`sess_${key}`] = context.session.userData[key];
+                inParam[`sess_${key}`] = context.session!.userData[key];
             });
         }
         try {
@@ -94,7 +94,7 @@ export default class CoreOracleIntegration extends NullProvider {
                     .then(
                         (res) =>
                             new Promise((resolve, reject) => {
-                                const data = [];
+                                const data: any[] = [];
                                 res.stream.on("error", (err) => reject(err));
                                 res.stream.on("data", (chunk) =>
                                     data.push(chunk),
@@ -102,7 +102,7 @@ export default class CoreOracleIntegration extends NullProvider {
                                 res.stream.on("end", () => {
                                     if (data.length) {
                                         const doc = data[0];
-                                        query.queryData.querys = data;
+                                        query.queryData!.querys = data;
                                         query.queryStr = doc.cc_request;
                                         return resolve(query);
                                     }
@@ -118,10 +118,10 @@ export default class CoreOracleIntegration extends NullProvider {
             return conn
                 .executeStmt(
                     "select i.*\n" +
-                        "  from s_it.t_interface i\n" +
-                        " start with upper(i.ck_id) = upper(:ck_query)\n" +
-                        "connect by i.ck_id = prior i.ck_parent\n" +
-                        " order by level desc",
+                    "  from s_it.t_interface i\n" +
+                    " start with upper(i.ck_id) = upper(:ck_query)\n" +
+                    "connect by i.ck_id = prior i.ck_parent\n" +
+                    " order by level desc",
                     {
                         ck_query: context.queryName,
                         ...context.params,
@@ -138,13 +138,13 @@ export default class CoreOracleIntegration extends NullProvider {
                 .then(
                     (res) =>
                         new Promise((resolve, reject) => {
-                            const data = [];
+                            const data: any[] = [];
                             res.stream.on("error", (err) => reject(err));
                             res.stream.on("data", (chunk) => data.push(chunk));
                             res.stream.on("end", () => {
                                 if (data.length) {
                                     const doc = data[0];
-                                    query.queryData.querys = data;
+                                    query.queryData!.querys = data;
                                     query.queryStr = doc.cc_request;
                                     return resolve(query);
                                 }
@@ -188,7 +188,7 @@ export default class CoreOracleIntegration extends NullProvider {
         return query.queryData.querys
             .slice(1)
             .reduce(
-                (current, queryData) =>
+                (current: Promise<IResultSequence>, queryData: any) =>
                     current.then((res) => {
                         if (res.res) {
                             return Promise.resolve(res);
@@ -201,7 +201,7 @@ export default class CoreOracleIntegration extends NullProvider {
                                     queryData.ck_d_interface,
                                 ),
                             },
-                            { ...res.params, ...query.inParams },
+                            {...res.params, ...query.inParams},
                         );
                     }),
                 this.processIntegration(
@@ -216,13 +216,13 @@ export default class CoreOracleIntegration extends NullProvider {
                 ),
             )
             .then(
-                async (res) => {
+                async (res: IResultSequence) => {
                     return res.row
-                        ? { stream: ResultStream([res.row]) }
+                        ? {stream: ResultStream([res.row])}
                         : res.res;
                 },
-                async (err) => {
-                    gateContext.connection.rollbackAndRelease().then(noop);
+                async (err: any) => {
+                    gateContext.connection!.rollbackAndRelease().then(noop);
                     throw err;
                 },
             );
@@ -249,7 +249,7 @@ export default class CoreOracleIntegration extends NullProvider {
      * @param array
      * @returns {{dir: (BIND_IN|{value, enumerable}), val: *}}
      */
-    public arrayInParams(array): any {
+    public arrayInParams(array: any[]): any {
         return {
             dir: this.dataSource.oracledb.BIND_IN,
             val: array,
@@ -260,21 +260,21 @@ export default class CoreOracleIntegration extends NullProvider {
      * @param array
      * @returns {{dir: (BIND_IN|{value, enumerable}), val: *}}
      */
-    public dateInParams(value): any {
+    public dateInParams(value: string): any {
         return isEmpty(value)
             ? ""
             : {
-                  dir: this.dataSource.oracledb.BIND_IN,
-                  type: this.dataSource.oracledb.DATE,
-                  val: moment(value).toDate(),
-              };
+                dir: this.dataSource.oracledb.BIND_IN,
+                type: this.dataSource.oracledb.DATE,
+                val: moment(value).toDate(),
+            };
     }
     /**
      * Переводим файл/buffer в правильный тип для провайдера
      * @param array
      * @returns {{dir: (BIND_IN|{value, enumerable}), val: *}}
      */
-    public fileInParams(value): any {
+    public fileInParams(value: Buffer): any {
         return {
             dir: this.dataSource.oracledb.BIND_IN,
             type: this.dataSource.oracledb.BLOB,
@@ -294,14 +294,14 @@ export default class CoreOracleIntegration extends NullProvider {
         if (gateContext.isDebugEnabled()) {
             gateContext.debug(
                 `step db cc_request sql: ${queryData.cc_request}` +
-                    `\ninParam: ${JSON.stringify(
-                        hiddenSecret(inParams),
-                    )}\noutParam: ${JSON.stringify(
-                        gateContext.query.outParams,
-                    )}`,
+                `\ninParam: ${JSON.stringify(
+                    hiddenSecret(inParams),
+                )}\noutParam: ${JSON.stringify(
+                    gateContext.query.outParams,
+                )}`,
             );
         }
-        let executeRes = await gateContext.connection.executeStmt(
+        let executeRes = await gateContext.connection!.executeStmt(
             queryData.cc_request,
             inParams,
             gateContext.query.outParams,
@@ -323,15 +323,14 @@ export default class CoreOracleIntegration extends NullProvider {
             });
             if (gateContext.isDebugEnabled()) {
                 gateContext.debug(
-                    `step db cc_response sql: ${
-                        queryData.cc_response
+                    `step db cc_response sql: ${queryData.cc_response
                     }\ninParam: ${JSON.stringify(hiddenSecret(responseInParams))}` +
-                        `\noutParam: ${JSON.stringify(
-                            gateContext.query.outParams,
-                        )}`,
+                    `\noutParam: ${JSON.stringify(
+                        gateContext.query.outParams,
+                    )}`,
                 );
             }
-            executeRes = await gateContext.connection.executeStmt(
+            executeRes = await gateContext.connection!.executeStmt(
                 queryData.cc_response,
                 responseInParams,
                 gateContext.query.outParams,
@@ -410,7 +409,7 @@ export default class CoreOracleIntegration extends NullProvider {
         let param: any = {};
         try {
             param = JSON.parse(row.result) || {};
-        } catch (e) {
+        } catch (e: any) {
             gateContext.error(`${row.result}\n${e.message}`, e);
             throw e;
         }
@@ -433,13 +432,13 @@ export default class CoreOracleIntegration extends NullProvider {
                 const headers = Object.assign(
                     method === "GET"
                         ? {
-                              cookie: gateContext.request.headers.cookie,
-                          }
+                            cookie: gateContext.request.headers.cookie,
+                        }
                         : {
-                              cookie: gateContext.request.headers.cookie,
-                              "Content-Length": length,
-                              "Content-Type": "application/json",
-                          },
+                            cookie: gateContext.request.headers.cookie,
+                            "Content-Length": length,
+                            "Content-Type": "application/json",
+                        },
                     isEmpty(param.headers) ? {} : param.headers,
                 );
                 const params: axios.AxiosRequestConfig = {
@@ -461,16 +460,16 @@ export default class CoreOracleIntegration extends NullProvider {
                     params.proxy = this.params.proxy.startsWith("{")
                         ? proxy
                         : {
-                              host: proxy.host,
-                              port: parseInt(proxy.port, 10),
-                              auth: proxy.auth
-                                  ? {
-                                        username: proxyauth[0],
-                                        password: proxyauth[1],
-                                    }
-                                  : undefined,
-                              protocol: proxy.protocol,
-                          };
+                            host: proxy.host,
+                            port: parseInt(proxy.port, 10),
+                            auth: proxy.auth
+                                ? {
+                                    username: proxyauth[0],
+                                    password: proxyauth[1],
+                                }
+                                : undefined,
+                            protocol: proxy.protocol,
+                        };
                 }
                 if (method === "GET") {
                     delete params.data;
@@ -536,6 +535,6 @@ export default class CoreOracleIntegration extends NullProvider {
         return Object.entries(params).reduce((obj, arr) => {
             obj[arr[0]] = isObject(arr[1]) ? JSON.stringify(arr[1]) : arr[1];
             return obj;
-        }, {});
+        }, {} as Record<string, any>);
     }
 }

@@ -8,23 +8,23 @@ import IScheduler from "@ungate/plugininf/lib/IScheduler";
 import Logger from "@ungate/plugininf/lib/Logger";
 import NullSessProvider from "@ungate/plugininf/lib/NullSessProvider";
 import NullContext from "@ungate/plugininf/lib/NullContext";
-import { initParams } from "@ungate/plugininf/lib/util/Util";
+import {initParams} from "@ungate/plugininf/lib/util/Util";
 import * as fs from "fs";
 import Constants from "../Constants";
 import IPluginConfig from "../property/IPluginConfig";
 import Property from "../property/Property";
-import { GateSession } from "../session/GateSession";
+import {GateSession} from "../session/GateSession";
 const logger = Logger.getLogger("PluginManager");
 
 interface IPluginM extends IPluginConfig {
     plugin: IPlugin;
 }
 
-let GatePluginsClass = {};
-let GateProviderClass = {};
-let GateContextClass = {};
-let GateSchedulersClass = {};
-let GateEventsClass = {};
+let GatePluginsClass: Record<string, any> = {};
+let GateProviderClass: Record<string, any> = {};
+let GateContextClass: Record<string, any> = {};
+let GateSchedulersClass: Record<string, any> = {};
+let GateEventsClass: Record<string, any> = {};
 let GateProvider: {
     [key: string]: {
         [key: string]: IProvider;
@@ -59,7 +59,7 @@ class PluginManager {
      */
     public resetSchedulersClass() {
         GateSchedulersClass = {};
-        const rows = [];
+        const rows: Promise<void>[] = [];
         if (!fs.existsSync(Constants.SCHEDULER_PLUGIN_DIR)) {
             logger.error(`Нет папки ${Constants.SCHEDULER_PLUGIN_DIR}`);
             return;
@@ -122,7 +122,7 @@ class PluginManager {
      */
     public resetEventsClass() {
         GateEventsClass = {};
-        const rows = [];
+        const rows: Promise<void>[] = [];
         if (!fs.existsSync(Constants.EVENT_PLUGIN_DIR)) {
             logger.error(`Нет папки ${Constants.EVENT_PLUGIN_DIR}`);
             return;
@@ -185,7 +185,7 @@ class PluginManager {
         GateProviderClass = {
             admingate: require("../../http/admingate/AdminGate"),
         };
-        const rows = [];
+        const rows: Promise<void>[] = [];
         if (!fs.existsSync(Constants.PROVIDER_PLUGIN_DIR)) {
             logger.error(`Нет папки ${Constants.PROVIDER_PLUGIN_DIR}`);
             return;
@@ -218,13 +218,13 @@ class PluginManager {
         });
         const db = await Property.getProviders();
         const docs = await db.find();
-        const rowsInit = [];
+        const rowsInit: Promise<void>[] = [];
         if (docs) {
             docs.forEach((doc) => {
                 const PluginClass =
-                    GateProviderClass[doc.ck_d_plugin.toLowerCase()];
+                    GateProviderClass[doc.plugin.toLowerCase()];
                 if (
-                    doc.cl_autoload ||
+                    doc.autoload ||
                     (PluginClass &&
                         (PluginClass.isAuth ||
                             (PluginClass.default &&
@@ -232,34 +232,34 @@ class PluginManager {
                 ) {
                     if (PluginClass) {
                         (
-                            (doc.ck_context
+                            (doc.context
                                 ? [
-                                      [
-                                          doc.ck_context,
-                                          this.getGateContext(doc.ck_context),
-                                      ],
-                                  ]
+                                    [
+                                        doc.context,
+                                        this.getGateContext(doc.context),
+                                    ],
+                                ]
                                 : Object.entries(GateContext)) as [
-                                string,
-                                IContextPlugin,
-                            ][]
+                                    string,
+                                    IContextPlugin,
+                                ][]
                         ).forEach(([name, value]) => {
-                            GateProvider[name][doc.ck_id] = PluginClass.default
+                            GateProvider[name][doc.id] = PluginClass.default
                                 ? new PluginClass.default(
-                                      doc.ck_id,
-                                      doc.cct_params,
-                                      value.sessCtrl,
-                                  )
+                                    doc.id,
+                                    doc.params,
+                                    value.sessCtrl,
+                                )
                                 : new PluginClass(
-                                      doc.ck_id,
-                                      doc.cct_params,
-                                      value.sessCtrl,
-                                  );
+                                    doc.id,
+                                    doc.params,
+                                    value.sessCtrl,
+                                );
                             rowsInit.push(
-                                GateProvider[name][doc.ck_id].init().then(
+                                GateProvider[name][doc.id].init().then(
                                     () => {
                                         logger.info(
-                                            `Загружен провайдер ${doc.ck_id}`,
+                                            `Загружен провайдер ${doc.id}`,
                                         );
                                         return Promise.resolve();
                                     },
@@ -307,15 +307,15 @@ class PluginManager {
                 : [];
         }
         if (key) {
-            return Object.values(GateProvider).reduce((res, val) => {
+            return Object.values(GateProvider).reduce((res: IProvider[], val) => {
                 if (key === "all") {
-                    return res.concat(Object.values(val));
+                    return res.concat(Object.values(val) as IProvider[]);
                 }
                 if (val[key]) {
-                    res.push(val[key]);
+                    res.push(val[key] as IProvider);
                 }
                 return res;
-            }, []);
+            }, [] as IProvider[]);
         }
         return [];
     }
@@ -376,7 +376,7 @@ class PluginManager {
      */
     public async resetGatePluginsClass() {
         GatePluginsClass = {};
-        const rows = [];
+        const rows: Promise<void>[] = [];
         if (!fs.existsSync(Constants.DATA_PLUGIN_DIR)) {
             logger.error(`Нет папки ${Constants.DATA_PLUGIN_DIR}`);
             return;
@@ -457,7 +457,7 @@ class PluginManager {
     }
 
     public async removeAllGatePlugins() {
-        const rows = [];
+        const rows: Promise<void>[] = [];
         GatePlugins.forEach((pl) => {
             rows.push(pl.plugin.destroy());
         });
@@ -470,7 +470,7 @@ class PluginManager {
      */
     public async resetGateContextClass() {
         GateContextClass = {};
-        const rows = [];
+        const rows: Promise<void>[] = [];
         if (!fs.existsSync(Constants.CONTEXT_PLUGIN_DIR)) {
             logger.error(`Нет папки ${Constants.CONTEXT_PLUGIN_DIR}`);
             return;
@@ -499,38 +499,38 @@ class PluginManager {
         await this.removeAllGateContext();
         const tContext = await Property.getContext();
         const docs = await tContext.find({});
-        const rowContext = [];
+        const rowContext: Promise<void>[] = [];
         if (docs) {
             docs.forEach((doc) => {
                 const PluginClass =
-                    GateContextClass[doc.ck_d_plugin.toLowerCase()];
+                    GateContextClass[doc.plugin.toLowerCase()];
                 if (PluginClass) {
                     const params = initParams(
                         NullContext.getParamsInfo(),
-                        doc.cct_params,
+                        doc.params,
                     );
                     const sessCtrl = new GateSession(
-                        doc.ck_id,
+                        doc.id,
                         params,
                         GateSession.sha1(
-                            `${doc.ck_id}_session_${Constants.SESSION_SECRET}`,
+                            `${doc.id}_session_${Constants.SESSION_SECRET}`,
                         ),
                     );
-                    GateContext[doc.ck_id] = PluginClass.default
+                    GateContext[doc.id] = PluginClass.default
                         ? new PluginClass.default(
-                              doc.ck_id,
-                              doc.cct_params,
-                              sessCtrl,
-                          )
-                        : new PluginClass(doc.ck_id, doc.cct_params, sessCtrl);
+                            doc.id,
+                            doc.params,
+                            sessCtrl,
+                        )
+                        : new PluginClass(doc.id, doc.params, sessCtrl);
                     rowContext.push(
-                        (GateContext[doc.ck_id].sessCtrl as GateSession)
+                        (GateContext[doc.id].sessCtrl as GateSession)
                             .init()
-                            .then(() => GateContext[doc.ck_id].init())
+                            .then(() => GateContext[doc.id].init())
                             .then(
                                 () => {
                                     logger.info(
-                                        `Загружен контекст ${doc.ck_id}`,
+                                        `Загружен контекст ${doc.id}`,
                                     );
                                     return Promise.resolve();
                                 },
@@ -577,7 +577,7 @@ class PluginManager {
     }
 
     public async removeAllGateContext() {
-        const rows = [];
+        const rows: Promise<void>[] = [];
         Object.values(GateContext).forEach((pl) => {
             rows.push(pl.destroy());
         });

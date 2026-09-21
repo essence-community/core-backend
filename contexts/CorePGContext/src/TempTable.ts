@@ -1,13 +1,11 @@
-import ILocalDB from "@ungate/plugininf/lib/db/local/ILocalDB";
-import { isObject, toString } from "lodash";
-import { replaceNull } from "./Util";
+import {isObject, toString} from "lodash";
+import {replaceNull} from "./Util";
 import PostgresDB from "@ungate/plugininf/lib/db/postgres";
-import { ICoreParams } from "./CoreContext";
-import { IRufusLogger } from "@ungate/plugininf/lib/Logger";
-import IGlobalObject from "@ungate/plugininf/lib/IGlobalObject";
-import { IPropertyContext } from "./ICoreController";
-import { isEmpty, debounce } from "@ungate/plugininf/lib/util/Util";
-import { initProcess } from "@ungate/plugininf/lib/util/ProcessSender";
+import {ICoreParams} from "./CoreContext";
+import {IRufusLogger} from "@ungate/plugininf/lib/Logger";
+import {IPropertyTempTable} from "./ICoreController";
+import {isEmpty, debounce} from "@ungate/plugininf/lib/util/Util";
+import {initProcess} from "@ungate/plugininf/lib/util/ProcessSender";
 import {
     IPageData,
     IQueryData,
@@ -15,10 +13,29 @@ import {
     IModifyData,
     IMessageData,
     ISysSettingData,
-    IObjectData,
-    IQueryCacheData,
 } from "./CoreContext.types";
-const createTempTable = (global as any as IGlobalObject).createTempTable;
+import {DataSource, In, ObjectLiteral, Repository} from "typeorm";
+import {PageModel} from "./entities/PageModel";
+import {QueryModel} from "./entities/QueryModel";
+import {QueryCacheModel} from "./entities/QueryCacheModel";
+import {ActionModel} from "./entities/ActionModel";
+import {ModifyActionModel} from "./entities/ModifyActionModel";
+import {ModifyModel} from "./entities/ModifyModel";
+import {MessageModel} from "./entities/MessageModel";
+import {SysSettingModel} from "./entities/SysSettingModel";
+import {ObjectModel} from "./entities/ObjectModel";
+import {
+    fromAction,
+    fromMessage,
+    fromModify,
+    fromModifyAction,
+    fromPage,
+    fromQuery,
+    fromSysSetting,
+} from "./entities/map";
+import Constants from "@ungate/plugininf/lib/Constants";
+import path from "path";
+import {TypeOrmLogger} from "@ungate/plugininf/lib/db/TypeOrmLogger";
 
 const MAX_TIME_WAIT = 5000;
 
@@ -153,29 +170,30 @@ export class TempTable {
         "       m.cv_text\n" +
         "  from t_message m\n" +
         " order by m.ck_id asc";
-    public dbPage: ILocalDB<IPageData>;
-    public dbQuery: ILocalDB<IQueryData>;
-    public dbQueryCache: ILocalDB<IQueryCacheData>;
-    public dbQueryAction: ILocalDB<IActionData>;
-    public dbModify: ILocalDB<IModifyData>;
-    public dbModifyAction: ILocalDB<IActionData>;
-    public dbMessage: ILocalDB<IMessageData>;
-    public dbSysSettings: ILocalDB<ISysSettingData>;
-    public dbObject: ILocalDB<IObjectData>;
+    public dbPage!: Repository<PageModel>;
+    public dbQuery!: Repository<QueryModel>;
+    public dbQueryCache!: Repository<QueryCacheModel>;
+    public dbQueryAction!: Repository<ActionModel>;
+    public dbModify!: Repository<ModifyModel>;
+    public dbModifyAction!: Repository<ModifyActionModel>;
+    public dbMessage!: Repository<MessageModel>;
+    public dbSysSettings!: Repository<SysSettingModel>;
+    public dbObject!: Repository<ObjectModel>;
+    private ds!: DataSource;
     private dataSource: PostgresDB;
     public params: ICoreParams;
     public logger: IRufusLogger;
     public name: string;
     public caches = ["all", "back"];
 
-    constructor({ dataSource, params, logger, name }: IPropertyContext) {
+    constructor({dataSource, params, logger, name}: IPropertyTempTable) {
         this.dataSource = dataSource;
         this.params = params;
         this.logger = logger;
         this.name = name;
         initProcess(
             {
-                reloadPageCache: debounce(() => {
+                reloadPageCache: debounce(async () => {
                     if (process.env.UNGATE_HTTP_ID !== "1") {
                         return;
                     }
@@ -189,19 +207,29 @@ export class TempTable {
                         this.loadMessage(),
                         this.loadSysSetting(),
                     ]).catch((err) => logger.error(err));
-                }, MAX_TIME_WAIT),
+                }, MAX_TIME_WAIT) as any,
             },
             "cluster",
         );
+    }
+
+    private async replaceAll<T extends ObjectLiteral>(
+        repo: Repository<T>,
+        rows: T[],
+    ): Promise<void> {
+        await repo.clear();
+        if (rows.length) {
+            await repo.save(rows);
+        }
     }
 
     public loadSysSetting(): Promise<void> {
         return this.dataSource
             .executeStmt(
                 this.sysSettings,
-                null,
-                {},
-                {},
+                undefined,
+                undefined,
+                undefined,
                 {
                     resultSet: true,
                 },
@@ -209,7 +237,7 @@ export class TempTable {
             .then(
                 (res) =>
                     new Promise((resolve, reject) => {
-                        const data = [];
+                        const data: ISysSettingData[] = [];
                         res.stream.on("data", (row) => {
                             data.push(row);
                             if (row.ck_id === "g_sys_anonymous_action") {
@@ -221,14 +249,11 @@ export class TempTable {
                         });
                         res.stream.on("end", async () => {
                             try {
-                                await this.dbSysSettings.remove(
-                                    {},
-                                    { multi: true },
+                                await this.replaceAll(
+                                    this.dbSysSettings,
+                                    data.map(fromSysSetting),
                                 );
-                                await this.dbSysSettings.insert(data).then(
-                                    () => resolve(),
-                                    (err) => reject(err),
-                                );
+                                resolve();
                             } catch (e) {
                                 reject(e);
                             }
@@ -242,9 +267,15 @@ export class TempTable {
      * @param {Object} options Дополнительные параметры
      * @returns {*}
      */
-    public findMessage(ckError = [], options = {}) {
+    public findMessage(ckError: any[] = [], options: {cr_type?: string} = {}) {
+        if (!ckError.length) {
+            return Promise.resolve(0);
+        }
         return this.dbMessage.count({
-            $and: [{ ck_id: { $in: ckError } }, options],
+            where: {
+                id: In(ckError),
+                ...(options.cr_type ? {type: options.cr_type} : {}),
+            },
         });
     }
 
@@ -255,9 +286,9 @@ export class TempTable {
         return this.dataSource
             .executeStmt(
                 this.pageSql,
-                null,
-                {},
-                {},
+                undefined,
+                undefined,
+                undefined,
                 {
                     resultSet: true,
                 },
@@ -295,7 +326,7 @@ export class TempTable {
                                 ) {
                                     children.length = 0;
                                 }
-                            } catch (e) {
+                            } catch (e: any) {
                                 this.logger.error(
                                     `Error parse: ${row.json} ${e.message}`,
                                     e,
@@ -304,14 +335,12 @@ export class TempTable {
                         });
                         res.stream.on("end", async () => {
                             try {
-                                await this.dbPage.remove({}, { multi: true });
-                                await this.dbPage
-                                    .insert(Object.values(data))
-                                    .then(
-                                        () => resolve(),
-                                        (err) => reject(err),
-                                    );
-                            } catch (e) {
+                                await this.replaceAll(
+                                    this.dbPage,
+                                    Object.values(data).map(fromPage),
+                                );
+                                resolve();
+                            } catch (e: any) {
                                 reject(e);
                             }
                         });
@@ -326,9 +355,9 @@ export class TempTable {
         return this.dataSource
             .executeStmt(
                 this.messageSql,
-                null,
-                {},
-                {},
+                undefined,
+                undefined,
+                undefined,
                 {
                     resultSet: true,
                 },
@@ -336,7 +365,7 @@ export class TempTable {
             .then(
                 (res) =>
                     new Promise((resolve, reject) => {
-                        const data = [];
+                        const data: IMessageData[] = [];
                         res.stream.on("error", (err) =>
                             reject(new Error(err.message)),
                         );
@@ -346,8 +375,8 @@ export class TempTable {
                                     ck_id: toString(row.ck_id),
                                     cr_type: row.cr_type,
                                     cv_text: row.cv_text,
-                                });
-                            } catch (e) {
+                                } as any);
+                            } catch (e: any) {
                                 this.logger.error(
                                     `Error parse: ${row.json} ${e.message}`,
                                     e,
@@ -356,15 +385,12 @@ export class TempTable {
                         });
                         res.stream.on("end", async () => {
                             try {
-                                await this.dbMessage.remove(
-                                    {},
-                                    { multi: true },
+                                await this.replaceAll(
+                                    this.dbMessage,
+                                    data.map(fromMessage),
                                 );
-                                await this.dbMessage.insert(data).then(
-                                    () => resolve(),
-                                    (err) => reject(err),
-                                );
-                            } catch (e) {
+                                resolve();
+                            } catch (e: any) {
                                 reject(e);
                             }
                         });
@@ -379,9 +405,9 @@ export class TempTable {
         return this.dataSource
             .executeStmt(
                 this.querySql,
-                null,
-                {},
-                {},
+                undefined,
+                undefined,
+                undefined,
                 {
                     resultSet: true,
                 },
@@ -389,7 +415,7 @@ export class TempTable {
             .then(
                 (res) =>
                     new Promise((resolve, reject) => {
-                        const data = [];
+                        const data: IQueryData[] = [];
                         res.stream.on("error", (err) =>
                             reject(new Error(err.message)),
                         );
@@ -411,12 +437,12 @@ export class TempTable {
                         });
                         res.stream.on("end", async () => {
                             try {
-                                await this.dbQuery.remove({}, { multi: true });
-                                await this.dbQuery.insert(data).then(
-                                    () => resolve(),
-                                    (err) => reject(err),
+                                await this.replaceAll(
+                                    this.dbQuery,
+                                    data.map(fromQuery),
                                 );
-                            } catch (e) {
+                                resolve();
+                            } catch (e: any) {
                                 reject(e);
                             }
                         });
@@ -428,7 +454,7 @@ export class TempTable {
      * Кэширование все запросов
      */
     public loadQueryCache(): Promise<void> {
-        return this.dbQueryCache.remove({}, { multi: true });
+        return this.dbQueryCache.clear();
     }
 
     /**
@@ -438,9 +464,9 @@ export class TempTable {
         return this.dataSource
             .executeStmt(
                 this.queryActionSql,
-                null,
-                {},
-                {},
+                undefined,
+                undefined,
+                undefined,
                 {
                     resultSet: true,
                 },
@@ -448,7 +474,7 @@ export class TempTable {
             .then(
                 (res) =>
                     new Promise((resolve, reject) => {
-                        const data = [];
+                        const data: IActionData[] = [];
                         res.stream.on("error", (err) =>
                             reject(new Error(err.message)),
                         );
@@ -463,15 +489,12 @@ export class TempTable {
                         });
                         res.stream.on("end", async () => {
                             try {
-                                await this.dbQueryAction.remove(
-                                    {},
-                                    { multi: true },
+                                await this.replaceAll(
+                                    this.dbQueryAction,
+                                    data.map(fromAction),
                                 );
-                                await this.dbQueryAction.insert(data).then(
-                                    () => resolve(),
-                                    (err) => reject(err),
-                                );
-                            } catch (e) {
+                                resolve();
+                            } catch (e: any) {
                                 reject(e);
                             }
                         });
@@ -486,9 +509,9 @@ export class TempTable {
         return this.dataSource
             .executeStmt(
                 this.modifySql,
-                null,
-                {},
-                {},
+                undefined,
+                undefined,
+                undefined,
                 {
                     resultSet: true,
                 },
@@ -496,7 +519,7 @@ export class TempTable {
             .then(
                 (res) =>
                     new Promise((resolve, reject) => {
-                        const data = [];
+                        const data: IModifyData[] = [];
                         res.stream.on("error", (err) =>
                             reject(new Error(err.message)),
                         );
@@ -509,12 +532,12 @@ export class TempTable {
                         });
                         res.stream.on("end", async () => {
                             try {
-                                await this.dbModify.remove({}, { multi: true });
-                                await this.dbModify.insert(data).then(
-                                    () => resolve(),
-                                    (err) => reject(err),
+                                await this.replaceAll(
+                                    this.dbModify,
+                                    data.map(fromModify),
                                 );
-                            } catch (e) {
+                                resolve();
+                            } catch (e: any) {
                                 reject(e);
                             }
                         });
@@ -529,9 +552,9 @@ export class TempTable {
         return this.dataSource
             .executeStmt(
                 this.modifyActionSql,
-                null,
-                {},
-                {},
+                undefined,
+                undefined,
+                undefined,
                 {
                     resultSet: true,
                 },
@@ -539,7 +562,7 @@ export class TempTable {
             .then(
                 (res) =>
                     new Promise((resolve, reject) => {
-                        const data = [];
+                        const data: IActionData[] = [];
                         res.stream.on("data", (row) => {
                             data.push({
                                 ck_id: `${row.ck_id}:${row.cn_action}`,
@@ -551,14 +574,11 @@ export class TempTable {
                         });
                         res.stream.on("end", async () => {
                             try {
-                                await this.dbModifyAction.remove(
-                                    {},
-                                    { multi: true },
+                                await this.replaceAll(
+                                    this.dbModifyAction,
+                                    data.map(fromModifyAction),
                                 );
-                                await this.dbModifyAction.insert(data).then(
-                                    () => resolve(),
-                                    (err) => reject(err),
-                                );
+                                resolve();
                             } catch (e) {
                                 reject(e);
                             }
@@ -567,23 +587,37 @@ export class TempTable {
             );
     }
     public async initTempDb() {
-        this.dbPage = await createTempTable(`tt_page_${this.name}`);
-        this.dbQuery = await createTempTable(`tt_query_${this.name}`);
-        this.dbQueryCache = await createTempTable(
-            `tt_query_cache_${this.name}`,
-        );
-        this.dbQueryAction = await createTempTable(
-            `tt_query_action_${this.name}`,
-        );
-        this.dbObject = await createTempTable(`tt_object_${this.name}`);
-        this.dbModify = await createTempTable(`tt_modify_${this.name}`);
-        this.dbModifyAction = await createTempTable(
-            `tt_modify_action_${this.name}`,
-        );
-        this.dbMessage = await createTempTable(`tt_message_${this.name}`);
-        this.dbSysSettings = await createTempTable(
-            `tt_sys_settings_${this.name}`,
-        );
-        return Promise.resolve();
+        if (this.ds?.isInitialized) {
+            await this.ds.destroy();
+        }
+        this.ds = new DataSource({
+            type: "better-sqlite3",
+            enableWAL: true,
+            database: path.join(Constants.TEMP_DB, `temp_${this.name}.db`),
+            synchronize: true,
+            logging: true,
+            logger: new TypeOrmLogger(`${this.name}.TempTable`),
+            entities: [
+                PageModel,
+                QueryModel,
+                QueryCacheModel,
+                ActionModel,
+                ModifyActionModel,
+                ModifyModel,
+                MessageModel,
+                SysSettingModel,
+                ObjectModel,
+            ],
+        });
+        await this.ds.initialize();
+        this.dbPage = this.ds.getRepository(PageModel);
+        this.dbQuery = this.ds.getRepository(QueryModel);
+        this.dbQueryCache = this.ds.getRepository(QueryCacheModel);
+        this.dbQueryAction = this.ds.getRepository(ActionModel);
+        this.dbObject = this.ds.getRepository(ObjectModel);
+        this.dbModify = this.ds.getRepository(ModifyModel);
+        this.dbModifyAction = this.ds.getRepository(ModifyActionModel);
+        this.dbMessage = this.ds.getRepository(MessageModel);
+        this.dbSysSettings = this.ds.getRepository(SysSettingModel);
     }
 }

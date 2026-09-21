@@ -2,12 +2,12 @@
  * Created by artemov_i on 04.12.2018.
  */
 import Connection from "./db/Connection";
-import { ISessCtrl } from "./ISessCtrl";
+import {ISessCtrl} from "./ISessCtrl";
 import ICCTParams from "./ICCTParams";
-import IContext, { TAction } from "./IContext";
-import IQuery, { IGateQuery } from "./IQuery";
+import IContext, {TAction} from "./IContext";
+import IQuery, {IGateQuery} from "./IQuery";
 import IResult from "./IResult";
-import { IMetaData } from "./IResult";
+import {IMetaData} from "./IResult";
 
 export interface IContextPluginResult {
     actionName?: TAction;
@@ -49,7 +49,7 @@ export interface IContextParams extends ICCTParams {
         saveUninitialized: boolean;
         secret: string;
         unset: "keep" | "destroy";
-        typeStore: "nedb" | "typeorm";
+        typeStore: "nedb" | "typeorm" | "local";
         typeorm?: {
             type: string;
             host: string;

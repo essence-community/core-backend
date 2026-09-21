@@ -1,9 +1,9 @@
 import IGlobalObject from "@ungate/plugininf/lib/IGlobalObject";
 import ISession from "@ungate/plugininf/lib/ISession";
 import Logger from "@ungate/plugininf/lib/Logger";
-import { debounce } from "@ungate/plugininf/lib/util/Util";
-import { isFunction, isObject, noop } from "lodash";
-import { IMask, TCallBack } from "@ungate/plugininf/lib/IMask";
+import {debounce} from "@ungate/plugininf/lib/util/Util";
+import {isFunction, isObject, noop} from "lodash";
+import {IMask, TCallBack} from "@ungate/plugininf/lib/IMask";
 const logger = Logger.getLogger("Mask");
 interface IFObject {
     scope?: any;
@@ -80,7 +80,7 @@ class BMask implements IMask {
         }
     }
 
-    public isEvent(event, callback) {
+    public isEvent(event: string, callback: TCallBack) {
         if (arguments.length !== 2 || !isFunction(callback)) {
             return false;
         }
@@ -93,7 +93,7 @@ class BMask implements IMask {
         return false;
     }
 
-    public on(event, callback, scope = null) {
+    public on(event: string, callback: TCallBack, scope: any = null) {
         if (arguments.length < 2 || !isFunction(callback)) {
             return;
         }
@@ -112,7 +112,7 @@ class BMask implements IMask {
         }
     }
 
-    public un(event, callback) {
+    public un(event: string, callback: TCallBack) {
         if (arguments.length < 2 || !isFunction(callback)) {
             return;
         }
@@ -123,7 +123,7 @@ class BMask implements IMask {
         }
     }
 
-    public fireEvent(event, ...arg) {
+    public fireEvent(event: string, ...arg: any[]) {
         if (this._events[event]) {
             return this._events[event].reduce(
                 (obj, val) =>

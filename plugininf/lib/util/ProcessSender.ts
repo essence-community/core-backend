@@ -6,7 +6,6 @@ export type TTarget =
     | "cluster"
     | "clusterAdmin"
     | "eventNode"
-    | "localDbNode"
     | "schedulerNode"
     | "master";
 export interface ISenderOption {
@@ -18,6 +17,7 @@ export interface ISenderOptions extends ISenderOption {
     data: any;
     id?: any;
     callback?: ISenderOption;
+    doubleCluser?: boolean;
 }
 /**
  *
@@ -42,7 +42,21 @@ export async function sendProcess(
         if (option.data) {
             option.data = MSG.encode(option.data);
         }
+        if (option.callback && option.callback.data) {
+            option.callback.data = MSG.encode(option.callback.data);
+        }
         process.send(option);
+    }
+    if (option.doubleCluser) {
+        sendProcess({
+            target: "clusterAdmin",
+            command: "sendServerAdminCmdAll",
+            data: {
+                command: option.command,
+                target: option.target,
+                data: option.data,
+            },
+        });
     }
 }
 /**
@@ -51,13 +65,9 @@ export async function sendProcess(
  * @param target
  */
 export function initProcess(
-    controller: any = {},
+    controller: Record<string, (data?: Record<string, any>) => Promise<any>>,
     target:
-        | "cluster"
-        | "clusterAdmin"
-        | "eventNode"
-        | "localDbNode"
-        | "schedulerNode",
+        TTarget,
     isLogger = true,
 ) {
     process.on("message", async (message: ISenderOptions) => {
@@ -68,8 +78,7 @@ export function initProcess(
             message.command !== "sendAllServerCallDb"
         ) {
             logger.trace(
-                `Process target ${target} receive pid: ${
-                    process.pid
+                `Process target ${target} receive pid: ${process.pid
                 } message ${JSON.stringify(message)}`,
             );
         }
@@ -84,11 +93,13 @@ export function initProcess(
             ) {
                 message.data = MSG.decode(Buffer.from(message.data.data));
             }
-            const data = await controller[message.command].call(
-                controller,
+            const data = await controller[message.command](
                 message.data,
             );
             if (message.callback) {
+                if (message.callback.data) {
+                    message.callback.data = MSG.decode(Buffer.from(message.callback.data.data));
+                }
                 sendProcess({
                     ...message.callback,
                     data: {

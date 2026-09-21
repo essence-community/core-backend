@@ -2,26 +2,26 @@ import Connection from "@ungate/plugininf/lib/db/Connection";
 import PostgresDB from "@ungate/plugininf/lib/db/postgres";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
-import ICCTParams, { IParamsInfo } from "@ungate/plugininf/lib/ICCTParams";
+import ICCTParams, {IParamsInfo} from "@ungate/plugininf/lib/ICCTParams";
 import IContext from "@ungate/plugininf/lib/IContext";
-import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
+import {IGateQuery} from "@ungate/plugininf/lib/IQuery";
 import IQuery from "@ungate/plugininf/lib/IQuery";
-import { IResultProvider } from "@ungate/plugininf/lib/IResult";
+import {IResultProvider} from "@ungate/plugininf/lib/IResult";
 import NullSessProvider, {
     IAuthResult,
     ISessProviderParam,
 } from "@ungate/plugininf/lib/NullSessProvider";
-import { ReadStreamToArray } from "@ungate/plugininf/lib/stream/Util";
-import { initParams, isEmpty, debounce } from "@ungate/plugininf/lib/util/Util";
-import { noop, isObject, pick } from "lodash";
+import {ReadStreamToArray} from "@ungate/plugininf/lib/stream/Util";
+import {initParams, isEmpty, debounce} from "@ungate/plugininf/lib/util/Util";
+import {noop, isObject, pick} from "lodash";
 import ISession from "@ungate/plugininf/lib/ISession";
-import { ICacheDb, ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
-import { v4 as uuid } from "uuid";
+import {ISessCtrl} from "@ungate/plugininf/lib/ISessCtrl";
 import {
     initProcess,
     sendProcess,
 } from "@ungate/plugininf/lib/util/ProcessSender";
-import ILocalDB from "@ungate/plugininf/lib/db/local/ILocalDB";
+import {CacheModel} from "@ungate/plugininf/lib/entries/CacheModel";
+import {Repository} from "typeorm";
 
 const MAX_WAIT_RELOAD = 5000;
 
@@ -70,7 +70,7 @@ export default class CoreAuthPg extends NullSessProvider {
                 query: "AuthShowAccount",
                 pagesize: 10,
                 displayField: "cv_login",
-                valueField: [{ in: "ck_id" }],
+                valueField: [{in: "ck_id"}],
                 querymode: "remote",
                 queryparam: "cv_login",
             },
@@ -84,10 +84,10 @@ export default class CoreAuthPg extends NullSessProvider {
     }
 
     public dataSource: PostgresDB;
-    public params: IParamsProvider;
+    public params!: IParamsProvider;
 
-    private dbCache: ILocalDB<ICacheDb>;
-    private eventConnect: Connection;
+    private cacheStore!: Repository<CacheModel>;
+    private eventConnect?: Connection;
     private syncFlag: Record<string, number> = {};
     private reloadTemp = debounce(() => {
         this.initTemp().then(noop, (err) => this.log.error(err));
@@ -105,11 +105,11 @@ export default class CoreAuthPg extends NullSessProvider {
         if (this.params.addedExternal) {
             initProcess(
                 {
-                    addUser: (data) => {
+                    addUser: async (data?: Record<string, any>): Promise<any> => {
                         if (
-                            data.nameProvider == this.name ||
+                            data?.nameProvider == this.name ||
                             (this.syncFlag[
-                                `${data.nameProvider}:${data.idUser}`
+                                `${data?.nameProvider}:${data?.idUser}`
                             ] || 0) > 0
                         ) {
                             return;
@@ -117,23 +117,23 @@ export default class CoreAuthPg extends NullSessProvider {
                         setTimeout(
                             () =>
                                 this.syncExternalAuthUserInfo(
-                                    data.idUser,
-                                    data.nameProvider,
-                                    data.data,
+                                    data?.idUser,
+                                    data?.nameProvider,
+                                    data?.data,
                                 ),
                             process.env.UNGATE_HTTP_ID != "1"
-                                ? parseInt(process.env.UNGATE_HTTP_ID, 10) *
-                                      10 +
-                                      300
+                                ? parseInt(process.env.UNGATE_HTTP_ID || "0", 10) *
+                                10 +
+                                300
                                 : 0,
                         );
                     },
-                    [`maskAddUser${this.name}`]: (data) =>
-                        (this.syncFlag[data.id] =
-                            (this.syncFlag[data.id] || 0) + 1),
-                    [`unMaskAddUser${this.name}`]: (data) =>
-                        (this.syncFlag[data.id] =
-                            (this.syncFlag[data.id] || 0) - 1),
+                    [`maskAddUser${this.name}`]: async (data?: Record<string, any>): Promise<any> =>
+                    (this.syncFlag[data?.id] =
+                        (this.syncFlag[data?.id] || 0) + 1),
+                    [`unMaskAddUser${this.name}`]: async (data?: Record<string, any>): Promise<any> =>
+                    (this.syncFlag[data?.id] =
+                        (this.syncFlag[data?.id] || 0) - 1),
                 },
                 "cluster",
                 false,
@@ -144,7 +144,7 @@ export default class CoreAuthPg extends NullSessProvider {
         context: IContext,
         sessionId?: string,
         session?: ISession,
-    ): Promise<ISession> {
+    ): Promise<ISession | null | undefined> {
         if (session) {
             return session;
         }
@@ -168,9 +168,9 @@ export default class CoreAuthPg extends NullSessProvider {
             !isEmpty(this.params.guestAccount) &&
             context.params.connect_guest === "true"
         ) {
-            const { session: sessGuest }: any = await this.createSession({
+            const {session: sessGuest}: any = await this.createSession({
                 context,
-                idUser: this.params.guestAccount,
+                idUser: this.params.guestAccount || "",
                 userData: {} as any,
             });
             return this.sessCtrl.loadSession(sessGuest);
@@ -181,9 +181,9 @@ export default class CoreAuthPg extends NullSessProvider {
     private async getSession(context: IContext, param: Record<string, string>) {
         const res = await this.dataSource.executeStmt(
             QUERY,
-            null,
+            undefined,
             param,
-            null,
+            undefined,
             {
                 resultSet: true,
             },
@@ -203,7 +203,7 @@ export default class CoreAuthPg extends NullSessProvider {
             };
         }
 
-        const { session: sessGuest }: any = await this.createSession({
+        const {session: sessGuest}: any = await this.createSession({
             context,
             idUser: userData.ck_id,
             userData,
@@ -227,60 +227,60 @@ export default class CoreAuthPg extends NullSessProvider {
         );
         sendProcess({
             command: `maskAddUser${this.name}`,
-            data: { id: `${nameProvider}:${idUser}` },
+            data: {id: `${nameProvider}:${idUser}`},
             target: "cluster",
         });
         await this.dataSource
             .executeStmt(
                 "select\n" +
-                    "    pkg_json_account.f_modify_account(t.ck_account_ext, t.ck_account_ext, jsonb_build_object(\n" +
-                    "        'data',\n" +
-                    "        :data::jsonb || jsonb_build_object(\n" +
-                    "            'ck_id',\n" +
-                    "            case\n" +
-                    "                when tae.ck_id is null then public.uuid_generate_v4()::varchar\n" +
-                    "                else ta.ck_id::varchar\n" +
-                    "            end,\n" +
-                    "            'cv_hash_password',\n" +
-                    "            case\n" +
-                    "                when tae.ck_id is null then public.uuid_generate_v4()::varchar\n" +
-                    "                else ta.cv_hash_password::varchar\n" +
-                    "            end,\n" +
-                    "            'ck_account_ext',\n" +
-                    "            t.ck_account_ext,\n" +
-                    "            'ck_provider_ext',\n" +
-                    "            t.ck_provider_ext\n" +
-                    "        ),\n" +
-                    "        'service',\n" +
-                    "        jsonb_build_object(\n" +
-                    "            'cv_action',\n" +
-                    "            case\n" +
-                    "                when tae.ck_id is null then 'I'\n" +
-                    "                else 'U'\n" +
-                    "            end\n" +
-                    "        )\n" +
-                    "    )) as result\n" +
-                    "from\n" +
-                    "    (\n" +
-                    "        select\n" +
-                    "            :ck_account_ext::varchar as ck_account_ext,\n" +
-                    "            :ck_provider_ext::varchar as ck_provider_ext\n" +
-                    "    ) as t\n" +
-                    "left join s_at.t_account_ext tae \n" +
-                    "on\n" +
-                    "    tae.ck_account_ext = t.ck_account_ext\n" +
-                    "    and tae.ck_provider = t.ck_provider_ext\n" +
-                    "left join s_at.t_account ta \n" +
-                    "on tae.ck_account_int = ta.ck_id \n" +
-                    "where ta.ck_id is null or (ta.ck_id is not null and (ta.ct_change + interval '5' minute) < now())\n",
-                null,
+                "    pkg_json_account.f_modify_account(t.ck_account_ext, t.ck_account_ext, jsonb_build_object(\n" +
+                "        'data',\n" +
+                "        :data::jsonb || jsonb_build_object(\n" +
+                "            'ck_id',\n" +
+                "            case\n" +
+                "                when tae.ck_id is null then public.uuid_generate_v4()::varchar\n" +
+                "                else ta.ck_id::varchar\n" +
+                "            end,\n" +
+                "            'cv_hash_password',\n" +
+                "            case\n" +
+                "                when tae.ck_id is null then public.uuid_generate_v4()::varchar\n" +
+                "                else ta.cv_hash_password::varchar\n" +
+                "            end,\n" +
+                "            'ck_account_ext',\n" +
+                "            t.ck_account_ext,\n" +
+                "            'ck_provider_ext',\n" +
+                "            t.ck_provider_ext\n" +
+                "        ),\n" +
+                "        'service',\n" +
+                "        jsonb_build_object(\n" +
+                "            'cv_action',\n" +
+                "            case\n" +
+                "                when tae.ck_id is null then 'I'\n" +
+                "                else 'U'\n" +
+                "            end\n" +
+                "        )\n" +
+                "    )) as result\n" +
+                "from\n" +
+                "    (\n" +
+                "        select\n" +
+                "            :ck_account_ext::varchar as ck_account_ext,\n" +
+                "            :ck_provider_ext::varchar as ck_provider_ext\n" +
+                "    ) as t\n" +
+                "left join s_at.t_account_ext tae \n" +
+                "on\n" +
+                "    tae.ck_account_ext = t.ck_account_ext\n" +
+                "    and tae.ck_provider = t.ck_provider_ext\n" +
+                "left join s_at.t_account ta \n" +
+                "on tae.ck_account_int = ta.ck_id \n" +
+                "where ta.ck_id is null or (ta.ck_id is not null and (ta.ct_change + interval '5' minute) < now())\n",
+                undefined,
                 {
                     data: JSON.stringify(data),
                     ck_account_ext: idUser,
                     ck_provider_ext: nameProvider,
                 },
-                {},
-                { autoCommit: true },
+                undefined,
+                {autoCommit: true},
             )
             .then(
                 async (res) => {
@@ -298,7 +298,7 @@ export default class CoreAuthPg extends NullSessProvider {
                 setTimeout(() => {
                     sendProcess({
                         command: `unMaskAddUser${this.name}`,
-                        data: { id: `${nameProvider}:${idUser}` },
+                        data: {id: `${nameProvider}:${idUser}`},
                         target: "cluster",
                     });
                     this.syncFlag[`${nameProvider}:${idUser}`] = 0;
@@ -312,7 +312,7 @@ export default class CoreAuthPg extends NullSessProvider {
         context: IContext,
         query: IGateQuery,
     ): Promise<IAuthResult> {
-        const res = await context.connection.executeStmt(
+        const res = await context.connection!.executeStmt(
             query.queryStr,
             query.inParams,
             query.outParams,
@@ -340,7 +340,7 @@ export default class CoreAuthPg extends NullSessProvider {
         context: IContext,
         query: IGateQuery,
     ): Promise<IResultProvider> {
-        return context.connection.executeStmt(
+        return context.connection!.executeStmt(
             query.queryStr,
             query.inParams,
             query.outParams,
@@ -353,19 +353,19 @@ export default class CoreAuthPg extends NullSessProvider {
         context: IContext,
         query: IGateQuery,
     ): Promise<IResultProvider> {
-        return context.connection.executeStmt(
+        return context.connection!.executeStmt(
             query.queryStr,
             query.inParams,
             query.outParams,
         );
     }
     public async init(reload?: boolean): Promise<void> {
-        if (!this.dbCache) {
-            this.dbCache = this.sessCtrl.getCacheDb();
+        if (!this.cacheStore) {
+            this.cacheStore = this.sessCtrl.getCacheStore();
         }
         if (this.eventConnect) {
             await this.eventConnect.rollbackAndClose();
-            this.eventConnect = null;
+            this.eventConnect = undefined;
         }
         if (this.dataSource.pool) {
             await this.dataSource.resetPool();
@@ -409,11 +409,11 @@ export default class CoreAuthPg extends NullSessProvider {
             this.log.info(`Init event ${this.name}`);
             if (this.eventConnect) {
                 await this.eventConnect.rollbackAndClose();
-                this.eventConnect = null;
+                this.eventConnect = undefined;
             }
             this.eventConnect = await this.dataSource.getConnection();
             const conn = this.eventConnect.getCurrentConnection();
-            conn.on("notification", (msg) => {
+            conn.on("notification", (msg: any) => {
                 this.log.trace("Notification %j", msg);
                 const payload = JSON.parse(msg.payload);
                 const table = payload.table?.toLowerCase();
@@ -445,32 +445,32 @@ export default class CoreAuthPg extends NullSessProvider {
      * Обновление информации по пользователям
      */
     private async initTemp() {
-        const users = {};
+        const users: Record<string, any> = {};
         this.log.trace("Cache users...");
         await this.dataSource
             .executeStmt(
                 "select\n" +
-                    "    tr.cv_name as role,\n" +
-                    "    jsonb_agg(tra.ck_action)::text as ca_action\n" +
-                    "from\n" +
-                    "    s_at.t_role tr\n" +
-                    "join s_at.t_role_action tra\n" +
-                    "on\n" +
-                    "    tr.ck_id = tra.ck_role\n" +
-                    "group by\n" +
-                    "    tr.cv_name\n",
-                null,
-                null,
-                null,
+                "    tr.cv_name as role,\n" +
+                "    jsonb_agg(tra.ck_action)::text as ca_action\n" +
+                "from\n" +
+                "    s_at.t_role tr\n" +
+                "join s_at.t_role_action tra\n" +
+                "on\n" +
+                "    tr.ck_id = tra.ck_role\n" +
+                "group by\n" +
+                "    tr.cv_name\n",
+                undefined,
+                undefined,
+                undefined,
                 {
                     resultSet: true,
                 },
             )
             .then(async (res) => {
                 const rows = await ReadStreamToArray(res.stream);
-                return this.dbCache.insert({
-                    ck_id: "role_user",
-                    ...rows.reduce((res, value) => {
+                return this.cacheStore.save({
+                    id: "role_user",
+                    data: rows.reduce((res, value) => {
                         res[value.role] =
                             typeof value.ca_action === "string"
                                 ? JSON.parse(value.ca_action)
@@ -482,29 +482,29 @@ export default class CoreAuthPg extends NullSessProvider {
         return this.dataSource
             .executeStmt(
                 "select jsonb_build_object('ck_id', case when tae.ck_id is null then u.ck_id::varchar else tae.ck_account_ext end,\n" +
-                    "                   'cv_login', u.cv_login,\n" +
-                    "                   'cv_name', u.cv_name,\n" +
-                    "                   'cv_surname', u.cv_surname,\n" +
-                    "                   'cv_patronymic', u.cv_patronymic,\n" +
-                    "                   'cv_email', u.cv_email,\n" +
-                    "                   'ck_provider_ext', tae.ck_provider,\n" +
-                    "                   'cv_timezone', u.cv_timezone) || coalesce(info.attr, '{}'::jsonb) as json\n" +
-                    "  from s_at.t_account u\n" +
-                    "  left join s_at.t_account_ext tae\n" +
-                    "    on tae.ck_account_int = u.ck_id\n" +
-                    "  left join (select a.ck_id,\n" +
-                    "                jsonb_object_agg(a.ck_d_info, pkg_json_account.f_decode_attr(ainf.cv_value, a.cr_type)) as attr\n" +
-                    "          from (select ac.ck_id, inf.ck_id as ck_d_info, inf.cr_type\n" +
-                    "                  from s_at.t_account ac, s_at.t_d_info inf) a\n" +
-                    "          left join s_at.t_account_info ainf\n" +
-                    "            on a.ck_d_info = ainf.ck_d_info and a.ck_id = ainf.ck_account\n" +
-                    "          where ainf.cv_value is not null\n" +
-                    "         group by a.ck_id) as info\n" +
-                    "    on u.ck_id = info.ck_id\n" +
-                    "    where u.cl_deleted = 0\n",
-                null,
-                null,
-                null,
+                "                   'cv_login', u.cv_login,\n" +
+                "                   'cv_name', u.cv_name,\n" +
+                "                   'cv_surname', u.cv_surname,\n" +
+                "                   'cv_patronymic', u.cv_patronymic,\n" +
+                "                   'cv_email', u.cv_email,\n" +
+                "                   'ck_provider_ext', tae.ck_provider,\n" +
+                "                   'cv_timezone', u.cv_timezone) || coalesce(info.attr, '{}'::jsonb) as json\n" +
+                "  from s_at.t_account u\n" +
+                "  left join s_at.t_account_ext tae\n" +
+                "    on tae.ck_account_int = u.ck_id\n" +
+                "  left join (select a.ck_id,\n" +
+                "                jsonb_object_agg(a.ck_d_info, pkg_json_account.f_decode_attr(ainf.cv_value, a.cr_type)) as attr\n" +
+                "          from (select ac.ck_id, inf.ck_id as ck_d_info, inf.cr_type\n" +
+                "                  from s_at.t_account ac, s_at.t_d_info inf) a\n" +
+                "          left join s_at.t_account_info ainf\n" +
+                "            on a.ck_d_info = ainf.ck_d_info and a.ck_id = ainf.ck_account\n" +
+                "          where ainf.cv_value is not null\n" +
+                "         group by a.ck_id) as info\n" +
+                "    on u.ck_id = info.ck_id\n" +
+                "    where u.cl_deleted = 0\n",
+                undefined,
+                undefined,
+                undefined,
                 {
                     resultSet: true,
                 },
@@ -527,20 +527,20 @@ export default class CoreAuthPg extends NullSessProvider {
                             this.dataSource
                                 .executeStmt(
                                     "select distinct case when tae.ck_id is null then t.ck_account::varchar else tae.ck_account_ext end as ck_account, t.ck_action from (\n" +
-                                        " select ur.ck_account, dra.ck_action\n" +
-                                        "  from t_account_role ur\n" +
-                                        "  join t_role_action dra on ur.ck_role = dra.ck_role\n" +
-                                        " union all\n" +
-                                        " select ta.ck_account, ta.ck_action from t_account_action ta \n" +
-                                        ") as t" +
-                                        "  join s_at.t_account ta\n" +
-                                        "    on ta.ck_id = t.ck_account\n" +
-                                        "  left join s_at.t_account_ext tae\n" +
-                                        "    on tae.ck_account_int = t.ck_account\n" +
-                                        "    where ta.cl_deleted = 0\n",
-                                    null,
-                                    null,
-                                    null,
+                                    " select ur.ck_account, dra.ck_action\n" +
+                                    "  from t_account_role ur\n" +
+                                    "  join t_role_action dra on ur.ck_role = dra.ck_role\n" +
+                                    " union all\n" +
+                                    " select ta.ck_account, ta.ck_action from t_account_action ta \n" +
+                                    ") as t" +
+                                    "  join s_at.t_account ta\n" +
+                                    "    on ta.ck_id = t.ck_account\n" +
+                                    "  left join s_at.t_account_ext tae\n" +
+                                    "    on tae.ck_account_int = t.ck_account\n" +
+                                    "    where ta.cl_deleted = 0\n",
+                                    undefined,
+                                    undefined,
+                                    undefined,
                                     {
                                         resultSet: true,
                                     },
@@ -558,7 +558,7 @@ export default class CoreAuthPg extends NullSessProvider {
                                                     (val) => {
                                                         if (
                                                             users[
-                                                                val.ck_account
+                                                            val.ck_account
                                                             ]
                                                         ) {
                                                             users[

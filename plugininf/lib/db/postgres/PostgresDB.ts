@@ -1,22 +1,22 @@
-import { forEach, isObject, noop } from "lodash";
+import {forEach, isObject, noop} from "lodash";
 import * as pg from "pg";
 import * as fs from "fs";
 import QueryStream from "pg-query-stream";
-import { Readable, Transform, TransformCallback } from "stream";
+import {Readable, Transform, TransformCallback} from "stream";
 import * as URL from "url";
-import { IParamsInfo } from "../../ICCTParams";
+import {IParamsInfo} from "../../ICCTParams";
 import IObjectParam from "../../IObjectParam";
-import { IResultProvider } from "../../IResult";
-import Logger, { IRufusLogger } from "../../Logger";
-import { safePipe } from "../../stream/Util";
-import { hiddenSecret, initParams, isEmpty } from "../../util/Util";
+import {IResultProvider} from "../../IResult";
+import Logger, {IRufusLogger} from "../../Logger";
+import {safePipe} from "../../stream/Util";
+import {hiddenSecret, initParams, isEmpty} from "../../util/Util";
 import Connection from "../Connection";
 import IOptions from "../IOptions";
 
 const re = /(?!\B'[^']*):(\w+)(?![^']*'\B)/gi;
 const prepareSql = (query: string) => {
-    return (data: object) => {
-        const values = [];
+    return (data: Record<string, any>) => {
+        const values: any[] = [];
         return {
             text: query.replace(
                 /(--.*?$)|(\/\*[\s\S]*?\*\/)|('[^']*?')|("[^"]*?")|(::?)([a-zA-Z0-9_]+)/g,
@@ -120,18 +120,18 @@ export default class PostgresDB {
                     {
                         ck_id: "NOTSET",
                     },
-                    { ck_id: "VERBOSE" },
-                    { ck_id: "DEBUG" },
-                    { ck_id: "INFO" },
-                    { ck_id: "WARNING" },
-                    { ck_id: "ERROR" },
-                    { ck_id: "CRITICAL" },
-                    { ck_id: "WARN" },
-                    { ck_id: "TRACE" },
-                    { ck_id: "FATAL" },
+                    {ck_id: "VERBOSE"},
+                    {ck_id: "DEBUG"},
+                    {ck_id: "INFO"},
+                    {ck_id: "WARNING"},
+                    {ck_id: "ERROR"},
+                    {ck_id: "CRITICAL"},
+                    {ck_id: "WARN"},
+                    {ck_id: "TRACE"},
+                    {ck_id: "FATAL"},
                 ],
                 type: "combo",
-                valueField: [{ in: "ck_id" }],
+                valueField: [{in: "ck_id"}],
             },
             /* tslint:enable:object-literal-sort-keys */
         };
@@ -211,7 +211,7 @@ export default class PostgresDB {
             }
         }
         if (!isEmpty(params.queryTimeout)) {
-            this.queryTimeout = params.queryTimeout * 1000;
+            this.queryTimeout = params.queryTimeout ? params.queryTimeout * 1000 : undefined;
         } else {
             this.queryTimeout = undefined;
         }
@@ -229,15 +229,15 @@ export default class PostgresDB {
     public resetPool(): Promise<void> {
         return this.pool
             ? this.pool.end().then(
-                  () => {
-                      this.pool = null;
-                      return Promise.resolve();
-                  },
-                  () => {
-                      this.pool = null;
-                      return Promise.resolve();
-                  },
-              )
+                () => {
+                    this.pool = undefined;
+                    return Promise.resolve();
+                },
+                () => {
+                    this.pool = undefined;
+                    return Promise.resolve();
+                },
+            )
             : Promise.resolve();
     }
 
@@ -262,17 +262,19 @@ export default class PostgresDB {
             true,
         );
         const [user, pass] = (connectionString.auth || "").split(":");
-        delete connectionString.auth;
+        if (connectionString.auth) {
+            delete (connectionString as any).auth;
+        }
         /* tslint:disable:object-literal-sort-keys */
         const pool = new pg.Pool({
             ...connectionString.query,
             ...this.extraPoolPgConfig,
             application_name: this.name,
-            host: connectionString.hostname,
+            host: connectionString.hostname || undefined,
             port: parseInt(connectionString.port || "5432", 10),
             user: this.connectionConfig.user || user,
             password: this.connectionConfig.password || pass,
-            database: connectionString.path.substr(1),
+            database: connectionString.path ? connectionString.path.substr(1) : undefined,
             connectionTimeoutMillis:
                 this.connectionConfig.connectionTimeoutMillis ||
                 (PostgresDB.getParamsInfo().connectionTimeoutMillis
@@ -325,7 +327,7 @@ export default class PostgresDB {
             });
     }
 
-    private onLogError(err) {
+    private onLogError(err: any) {
         this.log.error("Error pg connect %s", err.message, err);
     }
 
@@ -375,9 +377,9 @@ export default class PostgresDB {
             }
             return (conn as pg.PoolClient).release
                 ? new Promise<void>((resolve) => {
-                      (conn as pg.PoolClient).release();
-                      resolve();
-                  })
+                    (conn as pg.PoolClient).release();
+                    resolve();
+                })
                 : (conn as pg.Client).end();
         }
         return Promise.resolve();
@@ -396,9 +398,9 @@ export default class PostgresDB {
             }
             return (conn as pg.PoolClient).release
                 ? new Promise((resolve) => {
-                      (conn as pg.PoolClient).release();
-                      resolve();
-                  })
+                    (conn as pg.PoolClient).release();
+                    resolve();
+                })
                 : (conn as pg.Client).end();
         }
         return Promise.resolve();
@@ -445,7 +447,7 @@ export default class PostgresDB {
         outParam?: IObjectParam,
         options?: IOptions,
     ): Promise<IResultProvider> {
-        const params = {};
+        const params: Record<string, any> = {};
         /**
          * Проверка параметров на соответсвие с квери
          */
@@ -506,16 +508,16 @@ export default class PostgresDB {
         options: IOptions,
         inConnection?: pg.Client | pg.PoolClient,
     ): Promise<IResultProvider> {
-        let result;
+        let result: IResultProvider;
         const conn: pg.Client | pg.PoolClient = inConnection
             ? inConnection
             : await this.getConnection().then(async (c) =>
-                  c.getCurrentConnection(),
-              );
+                c.getCurrentConnection(),
+            );
         const isRelease = isEmpty(inConnection) || options.isRelease;
 
         if (this.log.isTraceEnabled()) {
-            const logParam = hiddenSecret({ ...params });
+            const logParam = hiddenSecret({...params});
             this.log.trace(
                 `execute sql:\n${sql}\nparams:\n${JSON.stringify(logParam)}`,
             );
@@ -608,7 +610,7 @@ export default class PostgresDB {
                 );
             }
             if (isRelease) {
-                result.stream.on("end", () => {
+                result!.stream.on("end", () => {
                     if (options.autoCommit) {
                         this.onRelease(conn).then(noop, noop);
                     } else {
@@ -624,13 +626,13 @@ export default class PostgresDB {
                     }
                 });
             }
-            const errFn = (err) => result.stream.emit("error", err);
+            const errFn = (err: any) => result!.stream.emit("error", err);
             conn.once("error", errFn);
-            result.stream.on("end", () => {
+            result!.stream.on("end", () => {
                 conn.removeListener("error", errFn);
             });
-            return result;
-        } catch (err) {
+            return result!;
+        } catch (err: any) {
             if (isRelease && conn) {
                 await this.onRollBack(conn)
                     .then(() => this.onClose(conn))
@@ -649,8 +651,8 @@ export default class PostgresDB {
             readableObjectMode: true,
             writableObjectMode: true,
             transform(chunk: any, encode: string, callback: TransformCallback) {
-                const ret = {};
-                const column = {};
+                const ret: Record<string, any> = {};
+                const column: Record<string, any> = {};
                 forEach(chunk, (value, key) => {
                     ret[key.toLowerCase()] = value;
                     column[key] = {
@@ -662,7 +664,7 @@ export default class PostgresDB {
                     encodeStr: string,
                     callBack: TransformCallback,
                 ) => {
-                    const ref = {};
+                    const ref: Record<string, any> = {};
                     forEach(column, (value: any, key) => {
                         ref[value.name] = chunkData[key];
                     });

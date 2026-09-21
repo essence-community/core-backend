@@ -18,6 +18,14 @@ import { TempTable } from "./TempTable";
 import { IPropertyContext } from "./ICoreController";
 import { IRufusLogger } from "@ungate/plugininf/lib/Logger";
 import { FIND_SYMBOL } from "./Util";
+import { In } from "typeorm";
+import {
+    toModify,
+    toObject,
+    toPage,
+    toQuery,
+    toSysSetting,
+} from "./entities/map";
 
 export default class OfflineController implements ICoreController {
     public params: ICoreParams;
@@ -43,7 +51,9 @@ export default class OfflineController implements ICoreController {
         if (ckId) {
             await this.tempTable.loadSysSetting();
         }
-        const data = await this.tempTable.dbSysSettings.find({});
+        const data = (await this.tempTable.dbSysSettings.find()).map(
+            toSysSetting,
+        );
         data.push({
             ck_id: "core_gate_version",
             cv_description: "Версия шлюза",
@@ -95,12 +105,10 @@ export default class OfflineController implements ICoreController {
             this.params.anonymousAction,
             ...(gateContext.session?.userData.ca_actions || []),
         ];
-        const row = await this.tempTable.dbObject.findOne(
-            {
-                ck_id: ckPageObject,
-            },
-            true,
-        );
+        const found = await this.tempTable.dbObject.findOne({
+            where: { id: ckPageObject },
+        });
+        const row = found && toObject(found);
         if (!row) {
             return this.controller.findObjectPage(gateContext);
         }
@@ -128,47 +136,44 @@ export default class OfflineController implements ICoreController {
             ...(gateContext.session?.userData.ca_actions || []),
         ];
         return this.tempTable.dbModifyAction
-            .findOne(
-                {
-                    $and: [
-                        { ck_page_object: pageObject },
-                        { cn_action: { $in: caActions } },
-                    ],
+            .findOne({
+                where: {
+                    pageObject,
+                    action: In(caActions),
                 },
-                this.params.disableCheckAccess,
-            )
-            .then(() =>
-                this.tempTable.dbModify
-                    .findOne(
-                        {
-                            ck_id: pageObject,
-                        },
-                        true,
-                    )
-                    .then((doc) => {
-                        if (doc) {
-                            const data = {
-                                defaultActionName: "dml",
-                                providerName: doc.ck_provider,
-                                query: {
-                                    extraOutParams: [
-                                        {
-                                            cv_name: "result",
-                                            outType: "DEFAULT",
-                                        },
-                                        {
-                                            cv_name: "cur_result",
-                                            outType: "CURSOR",
-                                        },
-                                    ],
-                                    modifyMethod: doc.cv_modify,
+            })
+            .then((access) => {
+                if (!access && !this.params.disableCheckAccess) {
+                    throw new Error("not found");
+                }
+                return this.tempTable.dbModify.findOne({
+                    where: { id: pageObject },
+                });
+            })
+            .then((found) => {
+                if (found) {
+                    const doc = toModify(found);
+                    const data = {
+                        defaultActionName: "dml",
+                        providerName: doc.ck_provider,
+                        query: {
+                            extraOutParams: [
+                                {
+                                    cv_name: "result",
+                                    outType: "DEFAULT",
                                 },
-                            };
-                            return Promise.resolve(data);
-                        }
-                        return this.controller.findModify(gateContext);
-                    }),
-            )
+                                {
+                                    cv_name: "cur_result",
+                                    outType: "CURSOR",
+                                },
+                            ],
+                            modifyMethod: doc.cv_modify,
+                        },
+                    };
+                    return Promise.resolve(data);
+                }
+                return this.controller.findModify(gateContext);
+            })
             .catch(() =>
                 Promise.reject(
                     new BreakException({
@@ -191,19 +196,10 @@ export default class OfflineController implements ICoreController {
         caActions: any[],
         version: "1" | "2" | "3",
     ): Promise<any> {
-        const doc = await this.tempTable.dbPage.findOne(
-            {
-                $or: [
-                    {
-                        ck_id: ckPage,
-                    },
-                    {
-                        cv_url: ckPage,
-                    },
-                ],
-            },
-            true,
-        );
+        const found = await this.tempTable.dbPage.findOne({
+            where: [{ id: ckPage }, { url: ckPage }],
+        });
+        const doc = found && toPage(found);
         if (doc) {
             if (isEmpty(doc.cn_action) || !caActions.includes(doc.cn_action)) {
                 throw gateContext.session
@@ -253,28 +249,23 @@ export default class OfflineController implements ICoreController {
         ];
         const pageObject = (gateContext.params.page_object || "").toLowerCase();
         return this.tempTable.dbQuery
-            .findOne(
-                {
-                    ck_id: name,
-                },
-                true,
-            )
-            .then(async (doc) => {
+            .findOne({
+                where: { id: name },
+            })
+            .then(async (found) => {
+                const doc = found && toQuery(found);
                 if (doc) {
                     if (doc.cr_access !== "free" && !gateContext.session) {
                         throw new ErrorException(ErrorGate.REQUIRED_AUTH);
                     }
                     if (doc.cr_access === "po_session") {
                         const access =
-                            await this.tempTable.dbQueryAction.findOne(
-                                {
-                                    $and: [
-                                        { ck_page_object: pageObject },
-                                        { cn_action: { $in: caActions } },
-                                    ],
+                            await this.tempTable.dbQueryAction.findOne({
+                                where: {
+                                    pageObject,
+                                    action: In(caActions),
                                 },
-                                true,
-                            );
+                            });
                         if (
                             isEmpty(access) &&
                             !this.params.disableCheckAccess

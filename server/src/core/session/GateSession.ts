@@ -1,26 +1,20 @@
-import ILocalDB from "@ungate/plugininf/lib/db/local/ILocalDB";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
 import ISession, {
     IUserData,
-    IUserDbData,
 } from "@ungate/plugininf/lib/ISession";
-import Logger, { IRufusLogger } from "@ungate/plugininf/lib/Logger";
+import Logger, {IRufusLogger} from "@ungate/plugininf/lib/Logger";
 import * as crypto from "crypto";
-import { v4 as uuidv4 } from "uuid";
+import {v4 as uuidv4} from "uuid";
 import Constants from "../Constants";
-import Property from "../property/Property";
-import { IContextParams } from "@ungate/plugininf/lib/IContextPlugin";
-import { NeDbSessionStore } from "./store/NeDbSessionStore";
+import {IContextParams} from "@ungate/plugininf/lib/IContextPlugin";
 import IContext from "@ungate/plugininf/lib/IContext";
 import NotificationController from "../../http/controllers/NotificationController";
 import {
     ISessCtrl,
-    ICacheDb,
     ICreateSessionParam,
 } from "@ungate/plugininf/lib/ISessCtrl";
-import { ISessionStore } from "@ungate/plugininf/lib/ISessCtrl";
-import { ISessionData } from "@ungate/plugininf/lib/ISession";
+import {ISessionData} from "@ungate/plugininf/lib/ISession";
 import {
     hiddenSecret,
     initParams,
@@ -28,17 +22,20 @@ import {
 } from "@ungate/plugininf/lib/util/Util";
 import NullContext from "@ungate/plugininf/lib/NullContext";
 import RequestContext from "../request/RequestContext";
-import { debounce, dateBetween } from "@ungate/plugininf/lib/util/Util";
-import { noop } from "lodash";
+import {debounce, dateBetween} from "@ungate/plugininf/lib/util/Util";
+import {noop} from "lodash";
 import moment from "moment-timezone";
-import { DataSource } from "typeorm";
-import * as path from "path";
-import { TypeOrmSessionStore } from "./store/TypeOrmSessionStore";
-import { TypeOrmLogger } from "@ungate/plugininf/lib/db/TypeOrmLogger";
-import { UserStore } from "./store/typeorm/UserStore";
-import { CacheStore } from "./store/typeorm/CacheStore";
-import { getSessionMaxAgeMs } from "../util";
-import { sendProcess } from "@ungate/plugininf/lib/util/ProcessSender";
+import {DataSource, In, IsNull, LessThanOrEqual, Repository} from "typeorm";
+import {TypeOrmLogger} from "@ungate/plugininf/lib/db/TypeOrmLogger";
+import {getSessionMaxAgeMs} from "../util";
+import {sendProcess} from "@ungate/plugininf/lib/util/ProcessSender";
+import {CacheModel} from "@ungate/plugininf/lib/entries/CacheModel";
+import {UserModel} from "@ungate/plugininf/lib/entries/UserModel";
+import {SessionModel} from "@ungate/plugininf/lib/entries/SessionModel";
+import path from "path";
+import {Store} from "express-session-fork";
+import {TypeOrmSessionStore} from "./store/TypeOrmSessionStore";
+import {sessionSubscriber} from "./store/SessionSubscriber";
 
 const REPLICA_TIMEOUT = parseInt(
     process.env.KUBERNETES_REPLICA_TIMEOUT || "0",
@@ -46,11 +43,11 @@ const REPLICA_TIMEOUT = parseInt(
 );
 
 export class GateSession implements ISessCtrl {
-    private dbUsers: ILocalDB<IUserDbData>;
-    private store: ISessionStore;
-    private dbCache: ILocalDB<ICacheDb>;
+    private userStore!: Repository<UserModel>;
+    private sessionStore!: Repository<SessionModel>;
+    private cacheStore!: Repository<CacheModel>;
+    private expressSessionStore!: Store;
     private logger: IRufusLogger;
-    public updateUserInfo: typeof NotificationController.updateUserInfo;
     private params: IContextParams;
     private timezone: string;
 
@@ -64,9 +61,6 @@ export class GateSession implements ISessCtrl {
             .format("Z");
         this.params = initParams(NullContext.getParamsInfo(), params);
         this.logger = Logger.getLogger(`GateSession.${name}`);
-        this.updateUserInfo = NotificationController.updateUserInfo.bind(
-            NotificationController,
-        );
     }
 
     public async init() {
@@ -75,59 +69,58 @@ export class GateSession implements ISessCtrl {
             this.name,
             hiddenSecret(this.params),
         );
-        if (this.params.paramSession.typeStore === "nedb") {
-            this.store = new NeDbSessionStore({
-                nameContext: this.name,
-                ttl: this.params.paramSession.cookie.maxAge,
-            });
-            this.dbUsers = await Property.getUsers(this.name);
-            this.dbCache = await Property.getCache(this.name);
-            if (
-                process.env.KUBERNETES_SERVICE_HOST &&
-                process.env.KUBERNETES_SERVICE_PORT
-            ) {
-                this.saveSession = (context: IContext) => {
-                    return new Promise<void>((resolve, reject) => {
-                        context.request.session.save((errChild) => {
-                            if (errChild) {
-                                return reject(errChild);
-                            }
-                            setTimeout(resolve, REPLICA_TIMEOUT);
-                        });
-                    });
-                };
-            }
-        } else if (this.params.paramSession.typeStore === "typeorm") {
+        if (this.params.paramSession?.typeStore === "typeorm") {
             const connection = new DataSource({
                 ...this.params.paramSession.typeorm,
-                extra: this.params.paramSession.typeorm.extra
+                extra: this.params.paramSession.typeorm?.extra
                     ? JSON.parse(this.params.paramSession.typeorm.extra)
                     : undefined,
                 synchronize: false,
-                ...(this.params.paramSession.typeorm.typeOrmExtra
+                ...(this.params.paramSession.typeorm?.typeOrmExtra
                     ? JSON.parse(this.params.paramSession.typeorm.typeOrmExtra)
                     : {}),
                 logging: true,
                 logger: new TypeOrmLogger(`${this.name}:session_store`),
                 entities: [
-                    path.join(
-                        __dirname,
-                        "store",
-                        "typeorm",
-                        "entries",
-                        "*{.ts,.js}",
-                    ),
+                    CacheModel,
+                    UserModel,
+                    SessionModel,
                 ],
             });
-            this.store = new TypeOrmSessionStore({
+            this.userStore = connection.getRepository(UserModel);
+            this.sessionStore = connection.getRepository(SessionModel);
+            this.cacheStore = connection.getRepository(CacheModel);
+            await connection.initialize();
+            this.expressSessionStore = new TypeOrmSessionStore({
                 connection,
                 nameContext: this.name,
-                ttl: this.params.paramSession.cookie.maxAge,
+                ttl: this.params.paramSession?.cookie.maxAge ?? 60 * 60 * 24,
             });
-            this.dbUsers = new UserStore(this.name, connection);
-            this.dbCache = new CacheStore(this.name, connection);
+        } else {
+            const connection = new DataSource({
+                type: "better-sqlite3",
+                enableWAL: true,
+                database: path.join(Constants.TEMP_DB, `session_${this.name}.sqlite`),
+                logging: true,
+                synchronize: true,
+                logger: new TypeOrmLogger(`${this.name}:session_store`),
+                entities: [
+                    CacheModel,
+                    UserModel,
+                    SessionModel,
+                ],
+                subscribers: [sessionSubscriber(this.name)],
+            });
+            this.userStore = connection.getRepository(UserModel);
+            this.sessionStore = connection.getRepository(SessionModel);
+            this.cacheStore = connection.getRepository(CacheModel);
+            await connection.initialize();
+            this.expressSessionStore = new TypeOrmSessionStore({
+                connection,
+                nameContext: this.name,
+                ttl: this.params.paramSession?.cookie.maxAge ?? 60 * 60 * 24,
+            });
         }
-        await this.store.init();
 
         this.logger.info("Inited SessCtrl %s", this.name);
     }
@@ -143,25 +136,25 @@ export class GateSession implements ISessCtrl {
         });
     }
 
-    public sha1(buf): string {
+    public sha1(buf: string): string {
         const shasum = crypto.createHash("sha1");
         shasum.update(buf);
         return shasum.digest("hex");
     }
 
-    public static sha1(buf): string {
+    public static sha1(buf: string): string {
         const shasum = crypto.createHash("sha1");
         shasum.update(buf);
         return shasum.digest("hex");
     }
 
-    public sha256(buf): string {
+    public sha256(buf: string): string {
         const shasum = crypto.createHash("sha256");
         shasum.update(buf);
         return shasum.digest("hex");
     }
 
-    public static sha256(buf): string {
+    public static sha256(buf: string): string {
         const shasum = crypto.createHash("sha256");
         shasum.update(buf);
         return shasum.digest("hex");
@@ -216,7 +209,7 @@ export class GateSession implements ISessCtrl {
             userData.ca_actions = [];
         }
         const signed =
-            "s:" + this.sign(context.request.session.id, this.secret);
+            "s." + this.sign(context.request.session.id, this.secret);
 
         context.request.session.gsession = {
             nameProvider,
@@ -262,46 +255,51 @@ export class GateSession implements ISessCtrl {
             (context.request.session.gsession.sessionData.typeCheckAuth ===
                 "cookie" ||
                 context.request.session.gsession.sessionData.typeCheckAuth ===
-                    "cookieorsession")
+                "cookieorsession")
         ) {
             await this.prolongationSession(context);
             return context.request.session.gsession;
         }
 
-        if (sessionId && sessionId.substr(0, 2) === "s:") {
-            const val = this.unsign(sessionId.slice(2), this.secret);
+        if (sessionId && sessionId.substr(0, 2) === "s.") {
+            const id = this.unsign(sessionId.slice(2), this.secret);
 
-            if (val) {
-                return new Promise((resolve, reject) => {
-                    this.store.get(val, async (err, data: ISessionData) => {
-                        if (err) {
-                            return reject(err);
-                        }
-                        if (
-                            !data ||
-                            !data.gsession ||
-                            (data.gsession.sessionData.typeCheckAuth ===
-                                "cookieandsession" &&
-                                !isNotification)
-                        ) {
-                            return resolve(null);
-                        }
-                        if (context) {
-                            Object.entries(data)
-                                .filter(([key]) => key !== "cookie")
-                                .forEach(([key, value]) => {
-                                    context.request.session[key] = value;
-                                });
-                            await this.prolongationSession(context, false);
-                            this.saveSession(context).then(
-                                () => resolve(context.request.session.gsession),
-                                reject,
-                            );
-                            return;
-                        }
-                        await this.prolongationSession(context);
-                        return resolve((data as any).gsession);
-                    });
+            if (id) {
+                return this.sessionStore.findOne({
+                    where: [{
+                        id,
+                        isDelete: false,
+                    },
+                    {
+                        id,
+                        isDelete: IsNull(),
+                    },
+                    ],
+                }).then(async (data) => {
+                    if (!data) {
+                        return null;
+                    }
+                    if (
+                        !data.data.gsession ||
+                        (data.data.gsession.sessionData.typeCheckAuth ===
+                            "cookieandsession" &&
+                            !isNotification)
+                    ) {
+                        return null;
+                    }
+                    if (context) {
+                        Object.entries(data.data)
+                            .filter(([key]) => key !== "cookie")
+                            .forEach(([key, value]) => {
+                                context.request.session[key] = value;
+                            });
+                        await this.prolongationSession(context, false);
+                        await this.saveSession(context).then(
+                            () => context.request.session.gsession,
+                        );
+                        return context.request.session.gsession;
+                    }
+                    return data.data.gsession;
                 });
             }
         }
@@ -321,7 +319,7 @@ export class GateSession implements ISessCtrl {
             )
         ) {
             context.request.session.cookie.expires = new Date(
-                Date.now() + context.request.session.cookie.maxAge,
+                Date.now() + (context.request.session.cookie.maxAge || 60 * 60 * 24),
             );
             context.request.session.expires =
                 context.request.session.cookie.expires;
@@ -333,20 +331,15 @@ export class GateSession implements ISessCtrl {
      * Устаревание сессии
      * @param context {IContext}
      */
-    public logoutSession(context: RequestContext) {
-        return new Promise<void>((resolve, reject) => {
-            if (context.request.session.gsession) {
-                context.request.session.cookie.expires = new Date();
-                this.store.destroy(context.request.session.id, (err) => {
-                    context.request.sessionID = null;
-                    context.setSession(null);
-                    if (err) {
-                        return reject(err);
-                    }
-                    return resolve();
-                });
-            }
-        });
+    public async logoutSession(context: RequestContext) {
+        if (context.request.session.gsession) {
+            context.request.session.cookie.expires = new Date();
+            return this.sessionStore.delete(context.request.session.id).then(() => {
+                context.request.sessionID = null as any;
+                context.setSession(null as any);
+                return;
+            })
+        }
     }
 
     /**
@@ -358,23 +351,29 @@ export class GateSession implements ISessCtrl {
     public findSessions(
         sessionId: string | string[],
         isExpired: boolean = false,
-    ): Promise<{ [sid: string]: ISessionData }> {
+    ): Promise<{[sid: string]: ISessionData}> {
         const sessions = Array.isArray(sessionId) ? sessionId : [sessionId];
 
-        return this.store.allSession(
-            sessions
-                .map((session) =>
-                    session.substr(0, 2) === "s:"
-                        ? this.unsign(session.slice(2), this.secret)
-                        : session,
-                )
-                .filter((session) => typeof session === "string") as string[],
-            isExpired,
-        );
+        return this.sessionStore.find({
+            where: [{
+                id: In(sessions),
+                ...isExpired ? {expire: LessThanOrEqual(new Date())} : {},
+                isDelete: false,
+            }, {
+                id: In(sessions),
+                ...isExpired ? {expire: LessThanOrEqual(new Date())} : {},
+                isDelete: IsNull(),
+            }, ...isExpired ? [{id: In(sessions), isDelete: true}] : []],
+        }).then((data) => {
+            return data.reduce((acc: {[sid: string]: ISessionData}, item: SessionModel) => {
+                acc[item.id] = item.data as ISessionData;
+                return acc;
+            }, {} as {[sid: string]: ISessionData});
+        });
     }
 
     private updateHashDebounce = debounce(() => {
-        this.updateHashAuth().then(noop, (err) => this.logger.error(err));
+        this.updateHashAuth().then(noop, (err: Error) => this.logger.error(err));
     }, 5000);
 
     /**
@@ -419,11 +418,11 @@ export class GateSession implements ISessCtrl {
         if (!Array.isArray(data.ca_actions)) {
             data.ca_actions = [];
         }
-        return this.dbUsers
-            .insert({
-                ck_d_provider: nameProvider,
-                ck_id: `${idUser}:${nameProvider}`,
-                cv_login: login,
+        return this.userStore
+            .save({
+                id: `${idUser}:${nameProvider}`,
+                provider: nameProvider,
+                login,
                 data,
             })
             .then(() => {
@@ -442,6 +441,17 @@ export class GateSession implements ISessCtrl {
                 this.updateHashDebounce();
             });
     }
+
+    public updateUserInfo(nameProvider: string, idUser: string): Promise<void> {
+        return sendProcess({
+            command: "updateUserInfo",
+            data: {
+                idUser,
+                nameProvider,
+            },
+            target: "cluster",
+        });
+    }
     /**
      * Получаем данные о пользователе
      * @param idUser индификатор пользователя
@@ -452,14 +462,16 @@ export class GateSession implements ISessCtrl {
         nameProvider: string,
         isAccessErrorNotFound: boolean = false,
     ): Promise<IUserData | null> {
-        const data = await this.dbUsers.findOne(
+        const data = await this.userStore.findOne(
             {
-                ck_id: `${idUser}:${nameProvider}`,
+                where: {
+                    id: `${idUser}:${nameProvider}`,
+                    provider: nameProvider,
+                },
             },
-            true,
         );
         if (data) {
-            return data.data;
+            return data.data as IUserData;
         }
         if (isAccessErrorNotFound) {
             throw new ErrorException(ErrorGate.AUTH_DENIED);
@@ -467,16 +479,20 @@ export class GateSession implements ISessCtrl {
         return null;
     }
 
-    public getUserDb(): ILocalDB<IUserDbData> {
-        return this.dbUsers;
+    public getUserStore(): Repository<UserModel> {
+        return this.userStore;
     }
 
-    public getSessionStore(): ISessionStore {
-        return this.store;
+    public getSessionStore(): Repository<SessionModel> {
+        return this.sessionStore;
     }
 
-    public getCacheDb(): ILocalDB<ICacheDb> {
-        return this.dbCache;
+    public getCacheStore(): Repository<CacheModel> {
+        return this.cacheStore;
+    }
+
+    public getExpressSessionStore(): Store {
+        return this.expressSessionStore;
     }
 
     /**
@@ -484,11 +500,11 @@ export class GateSession implements ISessCtrl {
      * @returns {Promise.<*>}
      */
     public updateHashAuth() {
-        return this.dbUsers.find().then((data) => {
-            const users = [];
-            const userActions = [];
-            const userDepartments = [];
-            data.forEach((row) => {
+        return this.userStore.find().then((data: UserModel[]) => {
+            const users: IUserData[] = [];
+            const userActions: {ck_user: string; cn_action: string}[] = [];
+            const userDepartments: {ck_department: string; ck_user: string}[] = [];
+            data.forEach((row: UserModel) => {
                 const item: Partial<IUserData> = row.data || {};
                 if (!Array.isArray(item.ca_actions)) {
                     if (
@@ -524,7 +540,7 @@ export class GateSession implements ISessCtrl {
                 });
                 delete item.ca_actions;
                 delete item.ca_department;
-                users.push(item);
+                users.push(item as IUserData);
             });
             users.sort((a, b) => {
                 const idA = `${a.ck_id}`;
@@ -553,25 +569,27 @@ export class GateSession implements ISessCtrl {
                 }),
                 userActions.length
                     ? Promise.resolve({
-                          hash_user_action: this.sha1(userActionsJson),
-                      })
+                        hash_user_action: this.sha1(userActionsJson),
+                    })
                     : Promise.resolve({
-                          hash_user_action: null,
-                      }),
+                        hash_user_action: null,
+                    }),
                 userDepartments.length
                     ? Promise.resolve({
-                          hash_user_department: this.sha1(userDepartmentsJson),
-                      })
+                        hash_user_department: this.sha1(userDepartmentsJson),
+                    })
                     : Promise.resolve({
-                          hash_user_department: null,
-                      }),
+                        hash_user_department: null,
+                    }),
             ])
                 .then((values) =>
-                    this.dbCache.insert({
-                        ck_id: "hash_user",
-                        ...values[0],
-                        ...values[1],
-                        ...values[2],
+                    this.cacheStore.save({
+                        id: "hash_user",
+                        data: {
+                            ...values[0],
+                            ...values[1],
+                            ...values[2],
+                        },
                     }),
                 )
                 .then(() => {

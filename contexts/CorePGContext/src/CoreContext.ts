@@ -1,30 +1,30 @@
 import * as crypto from "crypto";
-import ILocalDB from "@ungate/plugininf/lib/db/local/ILocalDB";
 import PostgresDB from "@ungate/plugininf/lib/db/postgres";
 import BreakException from "@ungate/plugininf/lib/errors/BreakException";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
-import ICCTParams, { IParamsInfo } from "@ungate/plugininf/lib/ICCTParams";
-import IContext, { TAction } from "@ungate/plugininf/lib/IContext";
+import ICCTParams, {IParamsInfo} from "@ungate/plugininf/lib/ICCTParams";
+import IContext, {TAction} from "@ungate/plugininf/lib/IContext";
 import {
     IContextParams,
     IContextPluginResult,
 } from "@ungate/plugininf/lib/IContextPlugin";
 import IGlobalObject from "@ungate/plugininf/lib/IGlobalObject";
 import IResult from "@ungate/plugininf/lib/IResult";
-import ISession from "@ungate/plugininf/lib/ISession";
+import ISession, {IUserData} from "@ungate/plugininf/lib/ISession";
 import Logger from "@ungate/plugininf/lib/Logger";
 import NullContext from "@ungate/plugininf/lib/NullContext";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
-import { initParams } from "@ungate/plugininf/lib/util/Util";
-import { isObject, pick } from "lodash";
+import {initParams} from "@ungate/plugininf/lib/util/Util";
+import {isObject, pick} from "lodash";
 import ICoreController from "./ICoreController";
 import OfflineController from "./OfflineController";
 import OnlineController from "./OnlineController";
-import { TempTable } from "./TempTable";
-import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
-import { IUserDbData } from "@ungate/plugininf/lib/ISession";
-import { deepParam } from "@ungate/plugininf/lib/util/deepParam";
+import {TempTable} from "./TempTable";
+import {ISessCtrl} from "@ungate/plugininf/lib/ISessCtrl";
+import {deepParam} from "@ungate/plugininf/lib/util/deepParam";
+import {UserModel} from "@ungate/plugininf/lib/entries/UserModel";
+import {Repository} from "typeorm";
 const logger = Logger.getLogger("CoreContext");
 const Mask = (global as any as IGlobalObject).maskgate;
 export interface ICoreParams extends IContextParams {
@@ -164,10 +164,10 @@ export default class CoreContext extends NullContext {
                 return "sql";
         }
     }
-    public params: ICoreParams;
+    public params!: ICoreParams;
     private controller: ICoreController;
     private dataSource: PostgresDB;
-    private dbUsers: ILocalDB<IUserDbData>;
+    private usersStore!: Repository<UserModel>;
     private tempTable: TempTable;
     constructor(name: string, params: ICCTParams, sessCtrl: ISessCtrl) {
         super(name, params, sessCtrl);
@@ -228,7 +228,7 @@ export default class CoreContext extends NullContext {
     }
 
     public async init(reload?: boolean): Promise<void> {
-        this.dbUsers = this.sessCtrl.getUserDb();
+        this.usersStore = this.sessCtrl.getUserStore();
         return this.controller.init(reload);
     }
     public async initContext(
@@ -316,28 +316,27 @@ export default class CoreContext extends NullContext {
             default:
                 const res = await this.controller.findQuery(gateContext, name);
                 if (
-                    this.tempTable.caches.includes(res.metaData.cache as string)
+                    this.tempTable.caches.includes(res?.metaData?.cache as string)
                 ) {
                     const param =
                         (
                             (res.metaData?.cache_key_param as string[]) || []
-                        ).reduce((res, value) => {
+                        ).reduce((res: string[], value: string) => {
                             const found = deepParam(value, gateContext.params);
                             res.push(found);
                             return res;
                         }, []) || [];
                     const shasum = crypto.createHash("sha1");
                     shasum.update(JSON.stringify(param));
-                    const cache = await this.tempTable.dbQueryCache.findOne(
-                        {
-                            ck_id: `${name}_${shasum.digest("hex")}`,
+                    const cache = await this.tempTable.dbQueryCache.findOne({
+                        where: {
+                            id: `${name}_${shasum.digest("hex")}`,
                         },
-                        true,
-                    );
+                    });
                     if (cache) {
                         return Promise.reject(
                             new BreakException({
-                                data: ResultStream(cache.cct_data),
+                                data: ResultStream(cache.data),
                                 type: "success",
                                 metaData: {
                                     ...res.metaData,
@@ -364,14 +363,21 @@ export default class CoreContext extends NullContext {
             return Promise.reject(CoreContext.accessDenied());
         }
         const json = JSON.parse(gateContext.params.json);
-        return this.dbUsers
+        return this.usersStore
             .findOne({
-                ck_id: `${gateContext.session.idUser}:${gateContext.session.nameProvider}`,
+                where: {
+                    id: `${gateContext.session?.idUser}:${gateContext.session?.nameProvider}`,
+                    provider: gateContext.session?.nameProvider,
+                },
             })
-            .then((value) => {
-                return this.dbUsers.update(
+            .then((value: UserModel | null) => {
+                if (!value) {
+                    return Promise.reject(new ErrorException(ErrorGate.REQUIRED_AUTH));
+                }
+                return this.usersStore.update(
                     {
-                        ck_id: `${gateContext.session.idUser}:${gateContext.session.nameProvider}`,
+                        id: `${gateContext.session?.idUser}:${gateContext.session?.nameProvider}`,
+                        provider: gateContext.session?.nameProvider,
                     },
                     {
                         ...value,
@@ -379,7 +385,7 @@ export default class CoreContext extends NullContext {
                             ...value.data,
                             ck_dept: json.data.ck_dept,
                             cv_timezone: json.data.cv_timezone || "+03:00",
-                        },
+                        } as Partial<IUserData>,
                     },
                 );
             })
@@ -437,13 +443,13 @@ export default class CoreContext extends NullContext {
             conn
                 .executeStmt(
                     "select pkg_json_semaphore.f_modify_semaphore(:ck_id,\n" +
-                        " :session,\n" +
-                        " :json) as result;",
+                    " :session,\n" +
+                    " :json) as result;",
                     {
                         ...session,
                         json: JSON.stringify({
-                            data: { ck_id: "GUI_blocked" },
-                            service: { cv_action: newFlag ? "inc" : "dec" },
+                            data: {ck_id: "GUI_blocked"},
+                            service: {cv_action: newFlag ? "inc" : "dec"},
                         }),
                     },
                     {
@@ -457,7 +463,7 @@ export default class CoreContext extends NullContext {
                 .then(
                     (docs) =>
                         new Promise<void>((resolv) => {
-                            const rows = [];
+                            const rows: any[] = [];
                             docs.stream.on("data", (chunk) => rows.push(chunk));
                             docs.stream.on("error", (err) => {
                                 logger.error(err);
@@ -475,7 +481,7 @@ export default class CoreContext extends NullContext {
                                         }
                                     } catch (e) {
                                         logger.error(e);
-                                        return resolv(e);
+                                        return resolv();
                                     }
                                 }
                                 return resolv();

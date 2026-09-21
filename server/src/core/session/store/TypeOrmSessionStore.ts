@@ -1,25 +1,25 @@
-import { SessionOptions, Store } from "express-session-fork";
-import { IStoreTypes, IGateSession } from "./Store.types";
-import Logger, { IRufusLogger } from "@ungate/plugininf/lib/Logger";
-import { ISessionData } from "@ungate/plugininf/lib/ISession";
-import { ISessionStore } from "@ungate/plugininf/lib/ISessCtrl";
-import { Brackets, DataSource, IsNull, MoreThanOrEqual } from "typeorm";
-import { SessionModel } from "./typeorm/entries/SessionModel";
+import {SessionOptions, Store} from "express-session-fork";
+import {IStoreTypes, IGateSession} from "./Store.types";
+import Logger, {IRufusLogger} from "@ungate/plugininf/lib/Logger";
+import {ISessionData} from "@ungate/plugininf/lib/ISession";
+import {Brackets, DataSource, IsNull, MoreThanOrEqual, Repository} from "typeorm";
+import {SessionModel} from "@ungate/plugininf/lib/entries/SessionModel";
 
 export interface IPTypeOrmSessionStore {
     connection: DataSource;
 }
-export class TypeOrmSessionStore extends Store implements ISessionStore {
+export class TypeOrmSessionStore extends Store {
     name: string;
     ttl: number;
     connection: DataSource;
+    sessionStore: Repository<SessionModel>;
     private logger: IRufusLogger;
 
     constructor(
         options: Partial<
             IPTypeOrmSessionStore &
-                SessionOptions &
-                IStoreTypes & { nameContext: string; ttl: number }
+            SessionOptions &
+            IStoreTypes & {nameContext: string; ttl: number}
         >,
     ) {
         super(options as any);
@@ -29,6 +29,7 @@ export class TypeOrmSessionStore extends Store implements ISessionStore {
         );
         this.name = options.nameContext as string;
         this.ttl = options.ttl as number;
+        this.sessionStore = this.connection.getRepository(SessionModel);
         this.emit("disconnect");
     }
 
@@ -38,11 +39,10 @@ export class TypeOrmSessionStore extends Store implements ISessionStore {
         return;
     }
 
-    get(id, cb: any = (err) => (err ? this.logger.error(err) : null)) {
+    get(id: string, cb: any = (err: Error) => (err ? this.logger.error(err) : null)) {
         this.logger.trace("GET %s", id);
         const now = new Date();
-        this.connection
-            .getRepository(SessionModel)
+        this.sessionStore
             .findOne({
                 where: [
                     {
@@ -67,15 +67,14 @@ export class TypeOrmSessionStore extends Store implements ISessionStore {
             .catch((err) => cb(err));
     }
     set(
-        id,
+        id: string,
         data: IGateSession,
-        cb: any = (err) => (err ? this.logger.error(err) : null),
+        cb: any = (err: Error) => (err ? this.logger.error(err) : null),
     ) {
         this.logger.trace("SET %s data %j", id, data);
         data.expires =
-            data.cookie.expires || new Date(Date.now() + data.cookie.maxAge);
-        this.connection
-            .getRepository(SessionModel)
+            data.cookie.expires || new Date(Date.now() + (data.cookie.maxAge ?? 60 * 60 * 24));
+        this.sessionStore
             .save({
                 id,
                 data,
@@ -86,34 +85,29 @@ export class TypeOrmSessionStore extends Store implements ISessionStore {
                 (err) => cb(err),
             );
     }
-    destroy(id, cb: any = (err) => (err ? this.logger.error(err) : null)) {
+    destroy(id: string, cb: any = (err: Error) => (err ? this.logger.error(err) : null)) {
         this.logger.trace("DESTROY %s", id);
-        this.connection
-            .getRepository(SessionModel)
-            .save({
+        this.sessionStore
+            .update({
                 id,
+            }, {
                 isDelete: true,
-            })
-            .then(
-                () => cb(),
-                (err) => cb(err),
-            );
+            });
     }
 
     touch(
-        id,
+        id: string,
         sess: IGateSession,
-        cb: any = (err) => (err ? this.logger.error(err) : null),
+        cb: any = (err: Error) => (err ? this.logger.error(err) : null),
     ) {
         this.logger.trace("TOUCH %s data %j", id, sess);
-        this.connection
-            .getRepository(SessionModel)
+        this.sessionStore
             .createQueryBuilder("session")
             .update(SessionModel)
             .set({
                 expire:
                     sess.cookie.expires ||
-                    new Date(Date.now() + sess.cookie.maxAge),
+                    new Date(Date.now() + (sess.cookie.maxAge ?? 60 * 60 * 24)),
                 data: sess,
             })
             .where([
@@ -134,10 +128,9 @@ export class TypeOrmSessionStore extends Store implements ISessionStore {
             );
     }
 
-    all(cb: any = (err) => (err ? this.logger.error(err) : null)) {
+    all(cb: any = (err: Error) => (err ? this.logger.error(err) : null)) {
         this.logger.trace("ALL");
-        this.connection
-            .getRepository(SessionModel)
+        this.sessionStore
             .find({
                 where: [
                     {
@@ -163,10 +156,9 @@ export class TypeOrmSessionStore extends Store implements ISessionStore {
     allSession(
         sessionId?: string | string[],
         isExpired?: boolean,
-    ): Promise<{ [sid: string]: ISessionData } | null> {
+    ): Promise<{[sid: string]: ISessionData} | null> {
         const now = new Date();
-        const rep = this.connection
-            .getRepository(SessionModel)
+        const rep = this.sessionStore
             .createQueryBuilder("session")
             .where(
                 new Brackets((qb) =>
@@ -201,15 +193,14 @@ export class TypeOrmSessionStore extends Store implements ISessionStore {
                         res[value.id] = value.data;
                         return res;
                     },
-                    {} as { [sid: string]: any },
+                    {} as {[sid: string]: any},
                 ),
         );
     }
 
-    length(cb: any = (err) => (err ? this.logger.error(err) : null)) {
+    length(cb: any = (err: Error) => (err ? this.logger.error(err) : null)) {
         this.logger.trace("LENGTH");
-        this.connection
-            .getRepository(SessionModel)
+        this.sessionStore
             .count({
                 where: [
                     {
@@ -226,10 +217,9 @@ export class TypeOrmSessionStore extends Store implements ISessionStore {
             );
     }
 
-    clear(cb: any = (err) => (err ? this.logger.error(err) : null)) {
+    clear(cb: any = (err: Error) => (err ? this.logger.error(err) : null)) {
         this.logger.trace("CLEAR");
-        this.connection
-            .getRepository(SessionModel)
+        this.sessionStore
             .createQueryBuilder("session")
             .update(SessionModel)
             .set({

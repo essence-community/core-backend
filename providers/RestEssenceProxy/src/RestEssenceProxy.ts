@@ -1,16 +1,16 @@
 import BreakException from "@ungate/plugininf/lib/errors/BreakException";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
-import { IParamsInfo } from "@ungate/plugininf/lib/ICCTParams";
-import IContext, { IFormData } from "@ungate/plugininf/lib/IContext";
-import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
-import { IResultProvider } from "@ungate/plugininf/lib/IResult";
+import {IParamsInfo} from "@ungate/plugininf/lib/ICCTParams";
+import IContext, {IFormData} from "@ungate/plugininf/lib/IContext";
+import {IGateQuery} from "@ungate/plugininf/lib/IQuery";
+import {IResultProvider} from "@ungate/plugininf/lib/IResult";
 import NullProvider, {
     IParamsProvider,
 } from "@ungate/plugininf/lib/NullProvider";
-import { Agent as HttpsAgent, AgentOptions } from "https";
-import { Agent as HttpAgent } from "http";
+import {Agent as HttpsAgent, AgentOptions} from "https";
+import {Agent as HttpAgent} from "http";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
-import { safeResponsePipe } from "@ungate/plugininf/lib/stream/Util";
+import {safeResponsePipe} from "@ungate/plugininf/lib/stream/Util";
 import * as axios from "axios";
 import * as url from "url";
 import {
@@ -24,7 +24,7 @@ import * as fs from "fs";
 import FormData from "form-data";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
 import ICCTParams from "@ungate/plugininf/lib/ICCTParams";
-import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
+import {ISessCtrl} from "@ungate/plugininf/lib/ISessCtrl";
 
 const validHeader = ["application/json", "application/xml", "text/"];
 const defaultHeader = ["content-type", "cookie"];
@@ -80,7 +80,7 @@ export default class RestEssenceProxy extends NullProvider {
         };
     }
 
-    public params: IRestEssenceProxyParams;
+    public params!: IRestEssenceProxyParams;
 
     constructor(name: string, params: ICCTParams, sessCtrl: ISessCtrl) {
         super(name, params, sessCtrl);
@@ -111,16 +111,15 @@ export default class RestEssenceProxy extends NullProvider {
             throw new ErrorException(101, "Empty query string");
         }
         const headers = gateContext.request.headers;
-        const contentType = headers["content-type"].toLowerCase();
+        const contentType = headers["content-type"]?.toLowerCase() || "";
         const paramsQuery = {
             action: gateContext.actionName,
             session: gateContext.sessionId,
             ...gateContext.params,
         };
         const urlGate = url.parse(
-            `${this.params.defaultGateUrl}/${
-                query.queryStr || query.modifyMethod
-            }`
+            `${this.params.defaultGateUrl}/${query.queryStr || query.modifyMethod
+                }`
                 .replace("//", "/")
                 .replace(":/", "://"),
             true,
@@ -131,26 +130,26 @@ export default class RestEssenceProxy extends NullProvider {
         urlGate.query.session = gateContext.sessionId;
 
         const params: axios.AxiosRequestConfig = {
-            method: gateContext.request.method.toUpperCase() as axios.Method,
+            method: gateContext.request.method?.toUpperCase() as axios.Method || "GET",
             timeout: this.params.timeout
                 ? parseInt(this.params.timeout, 10) * 1000
                 : 660000,
             url: url.format(urlGate),
-            headers: {},
+            headers: {} as any,
             responseType: "stream",
             validateStatus: () => true,
         };
 
         defaultHeader.forEach((item) => {
             if (!isEmpty(headers[item])) {
-                params.headers[item] = headers[item] as any;
+                params.headers![item] = headers[item] as any;
             }
         });
 
         if (this.params.includeHeaderIn) {
             this.params.includeHeaderIn.split(",").forEach((item) => {
                 if (!isEmpty(headers[item])) {
-                    params.headers[item] = headers[item] as any;
+                    params.headers![item] = headers[item] as any;
                 }
             });
         }
@@ -207,7 +206,7 @@ export default class RestEssenceProxy extends NullProvider {
                                 {
                                     contentType:
                                         Array.isArray(item) ||
-                                        typeof item === "object"
+                                            typeof item === "object"
                                             ? "application/json"
                                             : "text/plain",
                                 },
@@ -236,13 +235,13 @@ export default class RestEssenceProxy extends NullProvider {
             params.proxy = this.params.proxy.startsWith("{")
                 ? proxy
                 : {
-                      host: proxy.host,
-                      port: parseInt(proxy.port, 10),
-                      auth: proxy.auth
-                          ? { username: proxyauth[0], password: proxyauth[1] }
-                          : undefined,
-                      protocol: proxy.protocol,
-                  };
+                    host: proxy.host,
+                    port: parseInt(proxy.port, 10),
+                    auth: proxy.auth
+                        ? {username: proxyauth[0], password: proxyauth[1]}
+                        : undefined,
+                    protocol: proxy.protocol,
+                };
         }
         if (this.params.httpsAgent) {
             params.httpsAgent = JSON.parse(this.params.httpsAgent);
@@ -250,7 +249,7 @@ export default class RestEssenceProxy extends NullProvider {
         if (params.httpsAgent) {
             const httpsAgent: AgentOptions =
                 typeof params.httpsAgent === "string" &&
-                (params.httpsAgent as string).startsWith("{")
+                    (params.httpsAgent as string).startsWith("{")
                     ? JSON.parse(params.httpsAgent as string)
                     : params.httpsAgent;
             if (
@@ -306,7 +305,7 @@ export default class RestEssenceProxy extends NullProvider {
         if (params.httpAgent) {
             const httpAgent =
                 typeof params.httpAgent === "string" &&
-                (params.httpAgent as string).startsWith("{")
+                    (params.httpAgent as string).startsWith("{")
                     ? JSON.parse(params.httpAgent as string)
                     : params.httpAgent;
 
@@ -327,10 +326,10 @@ export default class RestEssenceProxy extends NullProvider {
 
         return new Promise(async (resolve, reject) => {
             try {
-                let response: axios.AxiosResponse<any> = null;
+                let response: axios.AxiosResponse<any>;
                 try {
                     response = await axios.default.request(params);
-                } catch (err) {
+                } catch (err: any) {
                     if (err && err.isAxiosError) {
                         gateContext.error(
                             `Error query ${gateContext.queryName}`,
@@ -364,20 +363,20 @@ export default class RestEssenceProxy extends NullProvider {
                 if (gateContext.isDebugEnabled()) {
                     gateContext.debug(
                         "Response: Status: %s,  proxy headers:\n%j",
-                        response.status,
-                        response.headers,
+                        response!.status,
+                        response!.headers,
                     );
                 }
-                if (response?.status === 403) {
+                if (response!.status === 403) {
                     return reject(new ErrorException(ErrorGate.REQUIRED_AUTH));
                 }
                 const ctHeader =
-                    response.headers["content-type"] || "application/json";
+                    response!.headers["content-type"] || "application/json";
                 const rheaders = {
-                    ...response.headers,
+                    ...response!.headers,
                 };
 
-                response.data.on("error", (err) => {
+                response!.data.on("error", (err: any) => {
                     if (err) {
                         gateContext.error(
                             `Error query ${gateContext.queryName}`,
@@ -392,34 +391,34 @@ export default class RestEssenceProxy extends NullProvider {
                     }
                     return undefined;
                 });
-                if (validHeader.find((key) => ctHeader.startsWith(key))) {
+                if (validHeader.find((key) => (ctHeader as string).startsWith(key as string))) {
                     let arr = [];
                     arr = await new Promise<any[]>((resolveArr) => {
-                        const responseBuffer = [];
-                        response.data.on("data", (chunk) => {
+                        const responseBuffer: any[] = [];
+                        response.data.on("data", (chunk: any) => {
                             responseBuffer.push(chunk);
                         });
                         response.data.on("end", () => {
                             try {
-                                const parseData = ctHeader.startsWith(
+                                const parseData = (ctHeader as string).startsWith(
                                     "application/json",
                                 )
                                     ? responseBuffer.length === 0
                                         ? []
                                         : JSON.parse(
-                                              stripBOM(
-                                                  Buffer.concat(
-                                                      responseBuffer,
-                                                  ).toString("utf8"),
-                                              ),
-                                          )
+                                            stripBOM(
+                                                Buffer.concat(
+                                                    responseBuffer,
+                                                ).toString("utf8"),
+                                            ),
+                                        )
                                     : {
-                                          response_data: stripBOM(
-                                              Buffer.concat(
-                                                  responseBuffer,
-                                              ).toString("utf8"),
-                                          ),
-                                      };
+                                        response_data: stripBOM(
+                                            Buffer.concat(
+                                                responseBuffer,
+                                            ).toString("utf8"),
+                                        ),
+                                    };
                                 resolveArr(parseData);
                             } catch (e) {
                                 this.log.error(
@@ -463,14 +462,14 @@ export default class RestEssenceProxy extends NullProvider {
                     });
                 }
                 gateContext.response.writeHead(
-                    response.status,
-                    response.statusText,
+                    response!.status,
+                    response!.statusText,
                     rheaders as any,
                 );
-                response.data.on("end", () =>
+                response!.data.on("end", () =>
                     reject(new BreakException("break")),
                 );
-                safeResponsePipe(response.data as any, gateContext.response);
+                safeResponsePipe(response!.data as any, gateContext.response);
                 return undefined;
             } catch (err) {
                 reject(err);

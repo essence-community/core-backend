@@ -1,19 +1,19 @@
-import { isString } from "lodash";
+import {isString} from "lodash";
 import moment from "moment";
 import ErrorException from "./errors/ErrorException";
 import ErrorGate from "./errors/ErrorGate";
-import { IParamsInfo } from "./ICCTParams";
+import {IParamsInfo} from "./ICCTParams";
 import ICCTParams from "./ICCTParams";
 import IContext from "./IContext";
 import IObjectParam from "./IObjectParam";
-import IQuery, { IGateQuery } from "./IQuery";
-import { IResultProvider } from "./IResult";
+import IQuery, {IGateQuery} from "./IQuery";
+import {IResultProvider} from "./IResult";
 import ISession from "./ISession";
 import NullProvider from "./NullProvider";
-import { IParamsProvider } from "./NullProvider";
-import { isEmpty } from "./util/Util";
-import { ISessCtrl, ICreateSessionParam } from "./ISessCtrl";
-import { initParams } from "@ungate/plugininf/lib/util/Util";
+import {IParamsProvider} from "./NullProvider";
+import {isEmpty} from "./util/Util";
+import {ISessCtrl, ICreateSessionParam} from "./ISessCtrl";
+import {initParams} from "@ungate/plugininf/lib/util/Util";
 import Logger from "./Logger";
 
 export interface IAuthResult {
@@ -26,7 +26,7 @@ export interface ISessProviderParam extends IParamsProvider {
     sessionDuration: number;
     idKey: string;
     typeCheckAuth:
-        "cookie" | "session" | "cookieandsession" | "cookieorsession";
+    "cookie" | "session" | "cookieandsession" | "cookieorsession";
 }
 export default abstract class NullSessProvider extends NullProvider {
     public static getParamsInfo(): IParamsInfo {
@@ -50,12 +50,12 @@ export default abstract class NullSessProvider extends NullProvider {
                 name: "Auth check",
                 type: "combo",
                 displayField: "ck_id",
-                valueField: [{ in: "ck_id" }],
+                valueField: [{in: "ck_id"}],
                 records: [
-                    { ck_id: "cookie" },
-                    { ck_id: "session" },
-                    { ck_id: "cookieandsession" },
-                    { ck_id: "cookieorsession" },
+                    {ck_id: "cookie"},
+                    {ck_id: "session"},
+                    {ck_id: "cookieandsession"},
+                    {ck_id: "cookieorsession"},
                 ],
                 defaultValue: "session",
             },
@@ -66,22 +66,22 @@ export default abstract class NullSessProvider extends NullProvider {
                     {
                         ck_id: "NOTSET",
                     },
-                    { ck_id: "VERBOSE" },
-                    { ck_id: "DEBUG" },
-                    { ck_id: "INFO" },
-                    { ck_id: "WARNING" },
-                    { ck_id: "ERROR" },
-                    { ck_id: "CRITICAL" },
-                    { ck_id: "WARN" },
-                    { ck_id: "TRACE" },
-                    { ck_id: "FATAL" },
+                    {ck_id: "VERBOSE"},
+                    {ck_id: "DEBUG"},
+                    {ck_id: "INFO"},
+                    {ck_id: "WARNING"},
+                    {ck_id: "ERROR"},
+                    {ck_id: "CRITICAL"},
+                    {ck_id: "WARN"},
+                    {ck_id: "TRACE"},
+                    {ck_id: "FATAL"},
                 ],
                 type: "combo",
-                valueField: [{ in: "ck_id" }],
+                valueField: [{in: "ck_id"}],
             },
         };
     }
-    public params: ISessProviderParam;
+    public params!: ISessProviderParam;
     public static isAuth: boolean = true;
     public isAuth: boolean = true;
     constructor(name: string, params: ICCTParams, sessCtrl: ISessCtrl) {
@@ -103,14 +103,14 @@ export default abstract class NullSessProvider extends NullProvider {
     public async beforeSession(
         context: IContext,
         sessionId?: string,
-    ): Promise<ISession | void> {
+    ): Promise<ISession | undefined | null> {
         return;
     }
     public async afterSession(
         context: IContext,
         sessionId?: string,
-        session?: ISession,
-    ): Promise<ISession> {
+        session?: ISession | null | undefined,
+    ): Promise<ISession | null | undefined> {
         return session;
     }
     public async checkQuery(
@@ -178,7 +178,7 @@ export default abstract class NullSessProvider extends NullProvider {
             context,
             idUser,
             nameProvider: this.name,
-            userData: { ...dataUser, ...userData },
+            userData: {...dataUser, ...userData},
             sessionDuration,
             sessionData: {
                 ...sessionData,
@@ -186,7 +186,7 @@ export default abstract class NullSessProvider extends NullProvider {
                 typeCheckAuth: this.params.typeCheckAuth || "session",
             },
         });
-        return this.params.onlySession ? { session: session.session } : session;
+        return this.params.onlySession ? {session: session.session} : session;
     }
     public async destroy(): Promise<void> {
         return;

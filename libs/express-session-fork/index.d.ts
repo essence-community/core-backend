@@ -11,7 +11,7 @@
 // TypeScript Version: 2.3
 
 import express = require("express");
-import { EventEmitter } from "events";
+import {EventEmitter} from "events";
 
 declare global {
     namespace Express {
@@ -65,7 +65,7 @@ declare namespace session {
          * Function to call to generate a new session ID. Provide a function that returns a string that will be used as a session ID.
          * The function is given the request as the first argument if you want to use some value attached to it when generating the ID.
          *
-         * The default value is a function which uses the uid-safe library to generate IDs.
+         * The default value is a function which uses the uuid library to generate IDs.
          * Be careful to generate unique IDs so your sessions do not conflict.
          */
         genid?(req: express.Request): string;
@@ -345,7 +345,7 @@ declare namespace session {
         all?(
             callback: (
                 err: any,
-                obj?: SessionData[] | { [sid: string]: SessionData } | null,
+                obj?: SessionData[] | {[sid: string]: SessionData} | null,
             ) => void,
         ): void;
 
@@ -378,7 +378,7 @@ declare namespace session {
         all(
             callback: (
                 err: any,
-                obj?: { [sid: string]: SessionData } | null,
+                obj?: {[sid: string]: SessionData} | null,
             ) => void,
         ): void;
         length(callback: (err: any, length: number) => void): void;

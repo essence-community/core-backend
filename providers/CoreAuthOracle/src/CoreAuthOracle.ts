@@ -2,18 +2,19 @@ import Connection from "@ungate/plugininf/lib/db/Connection";
 import OracleDB from "@ungate/plugininf/lib/db/oracle";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
-import ICCTParams, { IParamsInfo } from "@ungate/plugininf/lib/ICCTParams";
+import ICCTParams, {IParamsInfo} from "@ungate/plugininf/lib/ICCTParams";
 import IContext from "@ungate/plugininf/lib/IContext";
-import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
+import {IGateQuery} from "@ungate/plugininf/lib/IQuery";
 import IQuery from "@ungate/plugininf/lib/IQuery";
 import NullSessProvider, {
     IAuthResult,
 } from "@ungate/plugininf/lib/NullSessProvider";
-import { ReadStreamToArray } from "@ungate/plugininf/lib/stream/Util";
-import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
+import {ReadStreamToArray} from "@ungate/plugininf/lib/stream/Util";
+import {initParams, isEmpty} from "@ungate/plugininf/lib/util/Util";
 import moment from "moment";
-import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
-import { pick } from "lodash";
+import {ISessCtrl} from "@ungate/plugininf/lib/ISessCtrl";
+import {pick} from "lodash";
+import {Readable} from "stream";
 
 export default class CoreAuthOracle extends NullSessProvider {
     public static getParamsInfo(): IParamsInfo {
@@ -38,7 +39,7 @@ export default class CoreAuthOracle extends NullSessProvider {
      * @param array
      * @returns {{dir: (BIND_IN|{value, enumerable}), val: *}}
      */
-    public arrayInParams(array): any {
+    public arrayInParams(array: any[]): any {
         return {
             dir: this.dataSource.oracledb.BIND_IN,
             val: array,
@@ -49,21 +50,21 @@ export default class CoreAuthOracle extends NullSessProvider {
      * @param array
      * @returns {{dir: (BIND_IN|{value, enumerable}), val: *}}
      */
-    public dateInParams(value): any {
+    public dateInParams(value: string): any {
         return isEmpty(value)
             ? ""
             : {
-                  dir: this.dataSource.oracledb.BIND_IN,
-                  type: this.dataSource.oracledb.DATE,
-                  val: moment(value).toDate(),
-              };
+                dir: this.dataSource.oracledb.BIND_IN,
+                type: this.dataSource.oracledb.DATE,
+                val: moment(value).toDate(),
+            };
     }
     /**
      * Переводим файл/buffer в правильный тип для провайдера
      * @param array
      * @returns {{dir: (BIND_IN|{value, enumerable}), val: *}}
      */
-    public fileInParams(value): any {
+    public fileInParams(value: Buffer): any {
         return {
             dir: this.dataSource.oracledb.BIND_IN,
             type: this.dataSource.oracledb.BLOB,
@@ -78,11 +79,11 @@ export default class CoreAuthOracle extends NullSessProvider {
         query: IGateQuery,
     ): Promise<IAuthResult> {
         const res = await context.connection
-            .executeStmt(query.queryStr, query.inParams, query.outParams)
+            ?.executeStmt(query.queryStr, query.inParams, query.outParams)
             .catch((err) => {
                 if (err && (err.message || "").indexOf("ORA-04061") > -1) {
                     return context.connection
-                        .rollbackAndClose()
+                        ?.rollbackAndClose()
                         .then(async () => {
                             context.connection = await this.getConnection();
                             return;
@@ -91,7 +92,7 @@ export default class CoreAuthOracle extends NullSessProvider {
                 }
                 return Promise.reject(err);
             });
-        const arr = await ReadStreamToArray(res.stream);
+        const arr = await ReadStreamToArray(res?.stream as Readable);
         if (isEmpty(arr) || isEmpty(arr[0].ck_id)) {
             this.log.warn("Invalid login and password");
             throw new ErrorException(ErrorGate.AUTH_UNAUTHORIZED);
@@ -103,15 +104,15 @@ export default class CoreAuthOracle extends NullSessProvider {
     }
     public async init(reload?: boolean): Promise<void> {
         await this.dataSource.createPool();
-        const users = {};
+        const users: Record<string, any> = {};
         this.log.trace("Cache users...");
         return this.dataSource
             .executeStmt(
                 "select u.ck_id, u.cv_login, u.cv_name, u.cv_surname, u.cv_patronymic\n" +
-                    "  from t_user u",
-                null,
-                null,
-                null,
+                "  from t_user u",
+                undefined,
+                undefined,
+                undefined,
                 {
                     resultSet: true,
                 },
@@ -131,11 +132,11 @@ export default class CoreAuthOracle extends NullSessProvider {
                             this.dataSource
                                 .executeStmt(
                                     "select ur.ck_user, dra.ck_d_action from t_user_role ur\n" +
-                                        "  join t_d_role dr on dr.ck_id = ur.ck_d_role\n" +
-                                        "  join t_d_role_action dra on dra.ck_d_role = dr.ck_id",
-                                    null,
-                                    null,
-                                    null,
+                                    "  join t_d_role dr on dr.ck_id = ur.ck_d_role\n" +
+                                    "  join t_d_role_action dra on dra.ck_d_role = dr.ck_id",
+                                    undefined,
+                                    undefined,
+                                    undefined,
                                     {
                                         resultSet: true,
                                     },
@@ -169,12 +170,11 @@ export default class CoreAuthOracle extends NullSessProvider {
                                                     "end",
                                                     () => {
                                                         this.log.trace(
-                                                            `Find users ${
-                                                                users
-                                                                    ? JSON.stringify(
-                                                                          users,
-                                                                      )
-                                                                    : users
+                                                            `Find users ${users
+                                                                ? JSON.stringify(
+                                                                    users,
+                                                                )
+                                                                : users
                                                             }`,
                                                         );
                                                         resolveAction();

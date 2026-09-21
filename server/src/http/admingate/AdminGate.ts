@@ -1,17 +1,17 @@
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
-import ICCTParams, { IParamsInfo } from "@ungate/plugininf/lib/ICCTParams";
+import ICCTParams, {IParamsInfo} from "@ungate/plugininf/lib/ICCTParams";
 import IContext from "@ungate/plugininf/lib/IContext";
 import IQuery from "@ungate/plugininf/lib/IQuery";
-import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
-import { IResultProvider } from "@ungate/plugininf/lib/IResult";
+import {IGateQuery} from "@ungate/plugininf/lib/IQuery";
+import {IResultProvider} from "@ungate/plugininf/lib/IResult";
 import NullProvider from "@ungate/plugininf/lib/NullProvider";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
-import { isEmpty } from "@ungate/plugininf/lib/util/Util";
-import { initParams } from "@ungate/plugininf/lib/util/Util";
+import {isEmpty} from "@ungate/plugininf/lib/util/Util";
+import {initParams} from "@ungate/plugininf/lib/util/Util";
 import AdminAction from "./AdminAction";
 import AdminModify from "./AdminModify";
-import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
+import {ISessCtrl} from "@ungate/plugininf/lib/ISessCtrl";
 
 export = class AdminGate extends NullProvider {
     public static getParamsInfo(): IParamsInfo {
@@ -42,8 +42,8 @@ export = class AdminGate extends NullProvider {
         if (context.queryName === "modify") {
             result = await this.adminModify.checkModify(context, query);
         }
-        if (this.adminAction.handlers[context.queryName]) {
-            result = await this.adminAction.handlers[context.queryName].call(
+        if (this.adminAction.handlers[context.queryName as keyof typeof this.adminAction.handlers]) {
+            result = await this.adminAction.handlers[context.queryName as keyof typeof this.adminAction.handlers].call(
                 this.adminAction,
                 context,
                 query,
@@ -61,8 +61,8 @@ export = class AdminGate extends NullProvider {
         if (context.queryName === "modify") {
             result = await this.adminModify.checkModify(context, query);
         }
-        if (this.adminAction.handlers[context.queryName]) {
-            result = await this.adminAction.handlers[context.queryName].call(
+        if (this.adminAction.handlers[context.queryName as keyof typeof this.adminAction.handlers]) {
+            result = await this.adminAction.handlers[context.queryName as keyof typeof this.adminAction.handlers].call(
                 this.adminAction,
                 context,
                 query,
@@ -76,7 +76,7 @@ export = class AdminGate extends NullProvider {
         const res = await super.initContext(context, query);
         if (
             context.queryName !== "modify" &&
-            isEmpty(this.adminAction.handlers[context.queryName])
+            isEmpty(this.adminAction.handlers[context.queryName as keyof typeof this.adminAction.handlers])
         ) {
             throw new ErrorException(ErrorGate.NOTFOUND_QUERY);
         }

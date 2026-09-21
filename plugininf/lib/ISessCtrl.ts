@@ -1,9 +1,12 @@
-import { Store } from "express-session-fork";
-import ILocalDB from "./db/local/ILocalDB";
+import {Store} from "express-session-fork";
 import IContext from "./IContext";
 import IObjectParam from "./IObjectParam";
 import ISession from "./ISession";
-import { IUserData, ISessionData, IUserDbData } from "./ISession";
+import {IUserData, ISessionData} from "./ISession";
+import {Repository} from "typeorm";
+import {CacheModel} from "./entries/CacheModel";
+import {SessionModel} from "./entries/SessionModel";
+import {UserModel} from "./entries/UserModel";
 
 export interface ICreateSessionParam {
     context: IContext;
@@ -19,7 +22,7 @@ export interface ISessionStore extends Store {
     allSession(
         sessionId?: string | string[],
         isExpired?: boolean,
-    ): Promise<{ [sid: string]: ISessionData } | null>;
+    ): Promise<{[sid: string]: ISessionData} | null>;
 }
 
 export interface ICacheDb {
@@ -63,7 +66,7 @@ export interface ISessCtrl {
      * @param data данные пользователя
      * @param sessionDuration время жизни сессии в минутах
      */
-    createSession(ICreateSessionParam): Promise<IUserData>;
+    createSession(param: ICreateSessionParam): Promise<IUserData>;
 
     /**
      * Устаревание сессии
@@ -76,19 +79,29 @@ export interface ISessCtrl {
      * @param nameProvider наименование провайдера
      * @param ckUser индификатор пользовател
      */
-    updateUserInfo(nameProvider?: string, ckUser?: string);
+    updateUserInfo(nameProvider?: string, ckUser?: string): Promise<void>;
     /**
      * Локальная база пользователей
      * @returns user db
      */
-    getUserDb(): ILocalDB<IUserDbData>;
+    getUserStore(): Repository<UserModel>;
     /**
      * Локальная база temp
      * @returns temp db
      */
-    getCacheDb(): ILocalDB<ICacheDb>;
+    getCacheStore(): Repository<CacheModel>;
 
-    getSessionStore(): ISessionStore;
+    /**
+     * Локальная база сессий
+     * @returns session db
+     */
+    getSessionStore(): Repository<SessionModel>;
+
+    /**
+     * Получаем express session store
+     * @returns express session store
+     */
+    getExpressSessionStore(): Store;
     /**
      * Загрузка сессии
      * @param [sessionId]

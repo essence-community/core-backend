@@ -2,14 +2,14 @@ import BreakException from "@ungate/plugininf/lib/errors/BreakException";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import IContext from "@ungate/plugininf/lib/IContext";
 import IObjectParam from "@ungate/plugininf/lib/IObjectParam";
-import IPlugin, { IPluginRequestContext } from "@ungate/plugininf/lib/IPlugin";
-import IQuery, { IGateQuery } from "@ungate/plugininf/lib/IQuery";
+import IPlugin, {IPluginRequestContext} from "@ungate/plugininf/lib/IPlugin";
+import IQuery, {IGateQuery} from "@ungate/plugininf/lib/IQuery";
 import IResult from "@ungate/plugininf/lib/IResult";
 import ISession from "@ungate/plugininf/lib/ISession";
 import NullSessProvider, {
     IAuthResult,
 } from "@ungate/plugininf/lib/NullSessProvider";
-import { isEmpty } from "@ungate/plugininf/lib/util/Util";
+import {isEmpty} from "@ungate/plugininf/lib/util/Util";
 
 export interface IPlugins {
     plugin: IPlugin;
@@ -49,10 +49,10 @@ class PluginController {
                     ),
                 )
                 .then((result) =>
-                    Promise.resolve(isEmpty(result) ? res : (result as IQuery)),
+                    Promise.resolve(isEmpty(result) ? res as IQuery : (result as IQuery)),
                 );
         }
-        return Promise.resolve(query);
+        return Promise.resolve(query as IQuery);
     }
 
     /** Вызов плагинов после инициализацией запроса */
@@ -94,14 +94,14 @@ class PluginController {
         query: IGateQuery,
     ): Promise<IResult | null> {
         if (plugins.length) {
-            let res = null;
+            let res: IResult | null = null;
             return plugins
                 .slice(1)
                 .reduce(
                     (prom, plugin) =>
                         prom.then((result) => {
                             if (!isEmpty(result)) {
-                                res = result;
+                                res = result as IResult;
                             }
                             gateContext.trace(
                                 `plugin ${plugin.plugin.name} execute beforeQueryExecutePerform`,
@@ -109,10 +109,10 @@ class PluginController {
                             return res
                                 ? Promise.resolve(res)
                                 : plugin.plugin.beforeQueryExecutePerform(
-                                      gateContext,
-                                      plugins[0].context,
-                                      query,
-                                  );
+                                    gateContext,
+                                    plugins[0].context,
+                                    query,
+                                );
                         }),
                     plugins[0].plugin.beforeQueryExecutePerform(
                         gateContext,
@@ -121,7 +121,7 @@ class PluginController {
                     ),
                 )
                 .then((result) =>
-                    Promise.resolve(isEmpty(result) ? res : result),
+                    Promise.resolve(isEmpty(result) ? res : (result as IResult)),
                 );
         }
         return Promise.resolve(null);
@@ -131,7 +131,7 @@ class PluginController {
     public applyPluginBeforeSession(
         gateContext: IContext,
         plugins: IPlugins[],
-    ): Promise<(IAuthResult & { namePlugin: string }) | null> {
+    ): Promise<(IAuthResult & {namePlugin: string}) | null> {
         if (plugins.length) {
             return plugins
                 .slice(1)
@@ -150,12 +150,12 @@ class PluginController {
                                     isEmpty(res)
                                         ? null
                                         : ({
-                                              ...res,
-                                              namePlugin:
-                                                  plugins[0].plugin.name,
-                                          } as IAuthResult & {
-                                              namePlugin: string;
-                                          }),
+                                            ...res,
+                                            namePlugin:
+                                                plugins[0].plugin.name,
+                                        } as IAuthResult & {
+                                            namePlugin: string;
+                                        }),
                                 );
                         }),
                     plugins[0].plugin
@@ -164,9 +164,9 @@ class PluginController {
                             isEmpty(res)
                                 ? null
                                 : ({
-                                      ...res,
-                                      namePlugin: plugins[0].plugin.name,
-                                  } as IAuthResult & { namePlugin: string }),
+                                    ...res,
+                                    namePlugin: plugins[0].plugin.name,
+                                } as IAuthResult & {namePlugin: string}),
                         ),
                 )
                 .then((result) => (isEmpty(result) ? null : result));
@@ -195,10 +195,10 @@ class PluginController {
                             );
                             return res
                                 ? plugin.plugin.beforeSaveSession(
-                                      gateContext,
-                                      plugins[0].context,
-                                      data,
-                                  )
+                                    gateContext,
+                                    plugins[0].context,
+                                    data,
+                                )
                                 : Promise.resolve(res);
                         }),
                     plugins[0].plugin.beforeSaveSession(
@@ -230,7 +230,7 @@ class PluginController {
                             if (!isEmpty(result)) {
                                 if (res.data && (result as IResult).data) {
                                     res.data.on("error", (err) =>
-                                        (result as IResult).data.emit(
+                                        (result as IResult).data?.emit(
                                             "error",
                                             err,
                                         ),
@@ -307,7 +307,7 @@ class PluginController {
     public applyBeforeSession(
         gateContext: IContext,
         providers: NullSessProvider[] = [],
-    ): Promise<ISession | void> {
+    ): Promise<ISession | null | undefined> {
         if (providers.length) {
             return providers.slice(1).reduce(
                 (prom, provider) =>
@@ -326,14 +326,14 @@ class PluginController {
                 providers[0].beforeSession(gateContext, gateContext.sessionId),
             );
         }
-        return Promise.resolve();
+        return Promise.resolve(null);
     }
 
     public applyAfterSession(
         gateContext: IContext,
         session?: ISession,
         providers: NullSessProvider[] = [],
-    ): Promise<ISession> {
+    ): Promise<ISession | null | undefined> {
         if (providers.length) {
             return providers.slice(1).reduce(
                 (prom, provider) =>

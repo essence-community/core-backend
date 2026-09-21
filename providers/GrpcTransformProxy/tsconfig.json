@@ -1,5 +1,7 @@
 {
     "compilerOptions": {
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
         "types": ["node"],
         "lib": ["es2018"],
         "target": "ES2018",

@@ -11,26 +11,26 @@ class EventsNode {
     public async start(): Promise<any> {
         const dbEvents = await Property.getEvents();
         await ProcessController.init();
-        initProcess(ProcessController, "eventNode");
+        initProcess(ProcessController.handlers, "eventNode");
         await PluginManager.resetEventsClass();
         const confEvents = await dbEvents.find();
         return Promise.all(
             confEvents.map(async (conf) => {
                 const pluginClass = PluginManager.getGateEventsClass(
-                    conf.ck_d_plugin.toLowerCase(),
+                    conf.plugin.toLowerCase(),
                 );
                 if (pluginClass) {
                     const plugin = pluginClass.default
-                        ? new pluginClass.default(conf.ck_id, conf.cct_params)
-                        : new pluginClass(conf.ck_id, conf.cct_params);
+                        ? new pluginClass.default(conf.id, conf.params)
+                        : new pluginClass(conf.id, conf.params);
                     return plugin.init().then(
                         () => {
-                            PluginManager.setGateEvent(conf.ck_id, plugin);
+                            PluginManager.setGateEvent(conf.id, plugin);
                             return Promise.resolve();
                         },
-                        (err) => {
+                        (err: any) => {
                             logger.error(
-                                `Not init event plugin ${conf.ck_id}\n${err.message}`,
+                                `Not init event plugin ${conf.id}\n${err.message}`,
                                 err,
                             );
                             return Promise.resolve();

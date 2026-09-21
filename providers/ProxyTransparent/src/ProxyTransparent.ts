@@ -1,19 +1,19 @@
 import BreakException from "@ungate/plugininf/lib/errors/BreakException";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
-import { IParamsInfo } from "@ungate/plugininf/lib/ICCTParams";
-import IContext, { IFormData } from "@ungate/plugininf/lib/IContext";
-import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
-import { IResultProvider } from "@ungate/plugininf/lib/IResult";
+import {IParamsInfo} from "@ungate/plugininf/lib/ICCTParams";
+import IContext, {IFormData} from "@ungate/plugininf/lib/IContext";
+import {IGateQuery} from "@ungate/plugininf/lib/IQuery";
+import {IResultProvider} from "@ungate/plugininf/lib/IResult";
 import NullProvider from "@ungate/plugininf/lib/NullProvider";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
 import {
     ReadStreamToArray,
     safeResponsePipe,
 } from "@ungate/plugininf/lib/stream/Util";
-import { hiddenSecret, isEmpty } from "@ungate/plugininf/lib/util/Util";
+import {hiddenSecret, isEmpty} from "@ungate/plugininf/lib/util/Util";
 import * as fs from "fs";
 import * as JSONStream from "JSONStream";
-import { isArray, isBoolean } from "lodash";
+import {isArray, isBoolean} from "lodash";
 import * as QueryString from "qs";
 import * as axios from "axios";
 import FormData from "form-data";
@@ -67,7 +67,7 @@ export default class ProxyTransparent extends NullProvider {
         query: IGateQuery,
     ): Promise<IResultProvider> {
         const headers = gateContext.request.headers;
-        const contentType = headers["content-type"].toLowerCase();
+        const contentType = headers["content-type"]?.toLowerCase() || "";
         delete headers["content-encoding"];
         delete headers["content-length"];
         delete headers["transfer-encoding"];
@@ -88,7 +88,7 @@ export default class ProxyTransparent extends NullProvider {
         const params: axios.AxiosRequestConfig = {
             decompress: !!this.params.useGzip,
             headers,
-            method: gateContext.request.method.toUpperCase() as axios.Method,
+            method: gateContext.request.method?.toUpperCase() as axios.Method || "GET",
             timeout: this.params.timeout
                 ? parseInt(this.params.timeout, 10) * 1000
                 : 660000,
@@ -160,13 +160,13 @@ export default class ProxyTransparent extends NullProvider {
             params.proxy = this.params.proxy.startsWith("{")
                 ? proxy
                 : {
-                      host: proxy.host,
-                      port: parseInt(proxy.port, 10),
-                      auth: proxy.auth
-                          ? { username: proxyauth[0], password: proxyauth[1] }
-                          : undefined,
-                      protocol: proxy.protocol,
-                  };
+                    host: proxy.host,
+                    port: parseInt(proxy.port, 10),
+                    auth: proxy.auth
+                        ? {username: proxyauth[0], password: proxyauth[1]}
+                        : undefined,
+                    protocol: proxy.protocol,
+                };
         }
         if (params.method === "GET") {
             delete params.data;
@@ -180,7 +180,7 @@ export default class ProxyTransparent extends NullProvider {
         }
         return new Promise(async (resolve, reject) => {
             const stream = JSONStream.parse("data.*");
-            stream.on("header", (data) => {
+            stream.on("header", (data: any) => {
                 if (isArray(data)) {
                     stream.emit(
                         "error",
@@ -220,7 +220,7 @@ export default class ProxyTransparent extends NullProvider {
                     );
                 }
             });
-            stream.on("footer", (data) => {
+            stream.on("footer", (data: any) => {
                 if (data.metaData) {
                     gateContext.metaData = data.metaData;
                 }
@@ -243,9 +243,8 @@ export default class ProxyTransparent extends NullProvider {
                 }
                 return undefined;
             }
-            const ctHeader = `${
-                res.headers["content-type"] || "application/json"
-            }`;
+            const ctHeader = `${res.headers["content-type"] || "application/json"
+                }`;
             const rheaders = {
                 ...res.headers,
             };
@@ -255,7 +254,7 @@ export default class ProxyTransparent extends NullProvider {
                 );
             }
             if (ctHeader.startsWith("application/json")) {
-                res.data.on("error", (err) => {
+                res.data.on("error", (err: any) => {
                     if (err) {
                         gateContext.error(
                             `Error query ${gateContext.queryName}`,
@@ -282,7 +281,7 @@ export default class ProxyTransparent extends NullProvider {
             delete rheaders.host;
             gateContext.response.writeHead(res.status, rheaders as any);
             res.data.on("end", () => reject(new BreakException("break")));
-            res.data.on("error", (err) => {
+            res.data.on("error", (err: any) => {
                 if (err) {
                     gateContext.error(
                         `Error query ${gateContext.queryName}`,

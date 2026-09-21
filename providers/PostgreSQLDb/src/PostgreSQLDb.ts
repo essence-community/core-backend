@@ -1,18 +1,18 @@
 import PostgresDB from "@ungate/plugininf/lib/db/postgres/index";
-import ICCTParams, { IParamsInfo } from "@ungate/plugininf/lib/ICCTParams";
+import ICCTParams, {IParamsInfo} from "@ungate/plugininf/lib/ICCTParams";
 import IContext from "@ungate/plugininf/lib/IContext";
-import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
+import {IGateQuery} from "@ungate/plugininf/lib/IQuery";
 import IQuery from "@ungate/plugininf/lib/IQuery";
-import { IResultProvider } from "@ungate/plugininf/lib/IResult";
+import {IResultProvider} from "@ungate/plugininf/lib/IResult";
 import NullProvider from "@ungate/plugininf/lib/NullProvider";
-import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
-import { noop, pick } from "lodash";
+import {initParams, isEmpty} from "@ungate/plugininf/lib/util/Util";
+import {noop, pick} from "lodash";
 import CorePG from "./CorePG";
 import IPostgreSQLController from "./IPostgreSQLController";
 import OldPG from "./OldPG";
-import { IParamPg } from "./PostgreSQLDb.types";
+import {IParamPg} from "./PostgreSQLDb.types";
 import SimplePG from "./SimplePG";
-import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
+import {ISessCtrl} from "@ungate/plugininf/lib/ISessCtrl";
 
 export default class PostgreSQLDb extends NullProvider {
     /* tslint:disable:object-literal-sort-keys */
@@ -40,7 +40,7 @@ export default class PostgreSQLDb extends NullProvider {
         };
     }
     /* tslint:enable:object-literal-sort-keys */
-    public params: IParamPg;
+    public params!: IParamPg;
     public dataSource: PostgresDB;
     private controller: IPostgreSQLController;
     constructor(name: string, params: ICCTParams, sessCtrl: ISessCtrl) {
@@ -78,8 +78,8 @@ export default class PostgreSQLDb extends NullProvider {
         if (!isEmpty(this.params.preExecuteSql)) {
             const processDmlPre = this.processDml;
             this.processDml = async (context: IContext, query: IGateQuery) => {
-                const res = await context.connection.executeStmt(
-                    this.params.preExecuteSql,
+                const res = await context.connection!.executeStmt(
+                    this.params.preExecuteSql!,
                     query.inParams,
                     query.outParams,
                     {
@@ -95,8 +95,8 @@ export default class PostgreSQLDb extends NullProvider {
             };
             const processSqlPre = this.processSql;
             this.processSql = async (context: IContext, query: IGateQuery) => {
-                const res = await context.connection.executeStmt(
-                    this.params.preExecuteSql,
+                const res = await context.connection!.executeStmt(
+                    this.params.preExecuteSql!,
                     query.inParams,
                     query.outParams,
                     {
@@ -116,9 +116,9 @@ export default class PostgreSQLDb extends NullProvider {
             this.processDml = async (context: IContext, query: IGateQuery) => {
                 const res = await processDmlPost.call(this, context, query);
                 res.stream.once("end", () => {
-                    context.connection
+                    context.connection!
                         .executeStmt(
-                            this.params.postExecuteSql,
+                            this.params.postExecuteSql!,
                             query.inParams,
                             query.outParams,
                             {
@@ -150,9 +150,9 @@ export default class PostgreSQLDb extends NullProvider {
             this.processSql = async (context: IContext, query: IGateQuery) => {
                 const res = await processSqlPost.call(this, context, query);
                 res.stream.once("end", () => {
-                    context.connection
+                    context.connection!
                         .executeStmt(
-                            this.params.postExecuteSql,
+                            this.params.postExecuteSql!,
                             query.inParams,
                             query.outParams,
                             {
@@ -213,7 +213,7 @@ export default class PostgreSQLDb extends NullProvider {
         } else if (res.modifyMethod === "_") {
             return res;
         }
-        if (!isEmpty(query.queryStr)) {
+        if (!isEmpty(query?.queryStr)) {
             return res;
         }
         return this.controller.initContext(context, res);

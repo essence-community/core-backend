@@ -1,14 +1,16 @@
 import Logger from "@ungate/plugininf/lib/Logger";
-import { ISenderOptions } from "@ungate/plugininf/lib/util/ProcessSender";
+import {ISenderOptions} from "@ungate/plugininf/lib/util/ProcessSender";
 import * as ChildProcess from "child_process";
 import * as path from "path";
 import Constants from "../core/Constants";
 import * as fs from "fs";
-import { deleteFolderRecursive } from "@ungate/plugininf/lib/util/Util";
+import {deleteFolderRecursive} from "@ungate/plugininf/lib/util/Util";
+import Property from "../core/property";
+import MsgPack from "msgpack-lite";
 const logger = Logger.getLogger("master");
 
 const checkMessage =
-    (nodes: INode, name: string, id) => (message: ISenderOptions) => {
+    (nodes: INode, name: string, id: number) => (message: ISenderOptions) => {
         if (
             logger.isTraceEnabled() &&
             message.target &&
@@ -20,7 +22,7 @@ const checkMessage =
                 )}`,
             );
         }
-        switch ((message as ISenderOptions).target) {
+        switch (message.target) {
             case "cluster":
                 if (nodes.http && id !== nodes.http.pid) {
                     nodes.http.send(message);
@@ -36,21 +38,21 @@ const checkMessage =
                     nodes.events.send(message);
                 }
                 break;
-            case "localDbNode":
-                if (nodes.localDbNode && id !== nodes.localDbNode.pid) {
-                    nodes.localDbNode.send(message);
-                }
-                break;
             case "schedulerNode":
                 if (nodes.schedulers && id !== nodes.schedulers.pid) {
                     nodes.schedulers.send(message);
                 }
                 break;
             case "master": {
-                if (ProcessController[(message as ISenderOptions).command]) {
-                    ProcessController[(message as ISenderOptions).command].call(
-                        ProcessController,
-                        (message as ISenderOptions).data,
+                if (
+                    "object" === typeof message.data &&
+                    message.data.type === "Buffer"
+                ) {
+                    message.data = MsgPack.decode(Buffer.from(message.data.data));
+                }
+                if (ProcessController.handler[message.command as keyof typeof ProcessController.handler]) {
+                    ProcessController.handler[message.command as keyof typeof ProcessController.handler](
+                        message.data,
                     );
                 }
                 break;
@@ -95,7 +97,7 @@ function initNode(nodes: INode, name: string, paths: string) {
         );
         node.kill(1);
     });
-    node.on("message", checkMessage(nodes, name, node.pid));
+    node.on("message", checkMessage(nodes, name, node.pid as number));
     node.on("close", () => {
         delete nodes[name];
         initNode(nodes, name, paths);
@@ -110,84 +112,94 @@ interface INode {
 class BuilderProcessController {
     private isClusterStarted = false;
     private nodes: INode = {};
-    public init() {
+    public handler: Record<string, (data?: any) => void> = {
+        startedCluster: () => {
+            if (!this.isClusterStarted) {
+                this.isClusterStarted = true;
+                initNode(
+                    this.nodes,
+                    "events",
+                    path.join(Constants.HOME_DIR, "events", "index.js"),
+                );
+                initNode(
+                    this.nodes,
+                    "schedulers",
+                    path.join(Constants.HOME_DIR, "schedulers", "index.js"),
+                );
+                initNode(
+                    this.nodes,
+                    "admin",
+                    path.join(Constants.HOME_DIR, "admin", "index.js"),
+                );
+            }
+        },
+        startedEventNode: () => {
+            return;
+        },
+        startedSchedulerNode: () => {
+            return;
+        },
+        restartCluster: () => {
+            this.isClusterStarted = false;
+            const killNodes = [
+                killNode(this.nodes, "events"),
+                killNode(this.nodes, "schedulers"),
+                killNode(this.nodes, "admin"),
+                killNode(this.nodes, "http"),
+            ];
+            Promise.all(killNodes).then(() => {
+                setTimeout(() => this.init(false), 500);
+            });
+        },
+        restartAll: () => {
+            this.isClusterStarted = false;
+            const killNodes = [
+                killNode(this.nodes, "events"),
+                killNode(this.nodes, "schedulers"),
+                killNode(this.nodes, "admin"),
+                killNode(this.nodes, "http"),
+            ];
+            Promise.all(killNodes).then(() => {
+                setTimeout(() => this.init(), 500);
+            });
+        },
+
+        propertySave: (data: {command: string}) => {
+            if (Property.handlers[data.command]) {
+                Property.handlers[data.command].call(Property);
+            }
+        },
+
+        savePropertyEntity: (data: {entity: any, table: string}) => {
+            Property.handlers.savePropertyEntity(data);
+        },
+    };
+    public async init(removeTempDb = true) {
         if (fs.existsSync(Constants.UPLOAD_DIR)) {
             deleteFolderRecursive(Constants.UPLOAD_DIR);
         }
         fs.mkdirSync(Constants.UPLOAD_DIR, {
             recursive: true,
         });
-        if (Constants.LOCAL_DB === "nedb") {
-            initNode(
-                this.nodes,
-                "localDbNode",
-                path.join(Constants.HOME_DIR, "localDbNode", "index.js"),
-            );
-        } else {
-            initNode(
-                this.nodes,
-                "http",
-                path.join(Constants.HOME_DIR, "http", "index.js"),
-            );
+        if (removeTempDb && fs.existsSync(Constants.TEMP_DB)) {
+            deleteFolderRecursive(Constants.TEMP_DB);
+            await Property.reset();
         }
-    }
-    public startedLocalDbNode() {
+        fs.mkdirSync(Constants.TEMP_DB, {
+            recursive: true,
+        });
+        await Property.getContext(true);
+        await Property.getProviders(true);
+        await Property.getPlugins(true);
+        await Property.getQuery(true);
+        await Property.getServers(true);
+        await Property.getEvents(true);
+        await Property.getSchedulers(true);
         initNode(
             this.nodes,
             "http",
             path.join(Constants.HOME_DIR, "http", "index.js"),
         );
-    }
-    public startedCluster() {
-        if (!this.isClusterStarted) {
-            this.isClusterStarted = true;
-            initNode(
-                this.nodes,
-                "events",
-                path.join(Constants.HOME_DIR, "events", "index.js"),
-            );
-            initNode(
-                this.nodes,
-                "schedulers",
-                path.join(Constants.HOME_DIR, "schedulers", "index.js"),
-            );
-            initNode(
-                this.nodes,
-                "admin",
-                path.join(Constants.HOME_DIR, "admin", "index.js"),
-            );
-        }
-    }
-    public startedEventNode() {
-        return;
-    }
-    public startedSchedulerNode() {
-        return;
-    }
-    public restartCluster() {
-        this.isClusterStarted = false;
-        const killNodes = [
-            killNode(this.nodes, "events"),
-            killNode(this.nodes, "schedulers"),
-            killNode(this.nodes, "admin"),
-            killNode(this.nodes, "http"),
-        ];
-        Promise.all(killNodes).then(() => {
-            setTimeout(() => this.startedLocalDbNode(), 500);
-        });
-    }
-    public restartAll() {
-        this.isClusterStarted = false;
-        const killNodes = [
-            killNode(this.nodes, "localDbNode"),
-            killNode(this.nodes, "events"),
-            killNode(this.nodes, "schedulers"),
-            killNode(this.nodes, "admin"),
-            killNode(this.nodes, "http"),
-        ];
-        Promise.all(killNodes).then(() => {
-            setTimeout(() => this.init(), 500);
-        });
     }
 }
 

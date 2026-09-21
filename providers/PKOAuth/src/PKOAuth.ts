@@ -2,21 +2,22 @@ import Connection from "@ungate/plugininf/lib/db/Connection";
 import PostgresDB from "@ungate/plugininf/lib/db/postgres";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
-import ICCTParams, { IParamsInfo } from "@ungate/plugininf/lib/ICCTParams";
+import ICCTParams, {IParamsInfo} from "@ungate/plugininf/lib/ICCTParams";
 import IContext from "@ungate/plugininf/lib/IContext";
 import IObjectParam from "@ungate/plugininf/lib/IObjectParam";
 import IQuery from "@ungate/plugininf/lib/IQuery";
-import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
-import ISession from "@ungate/plugininf/lib/ISession";
+import {IGateQuery} from "@ungate/plugininf/lib/IQuery";
+import ISession, {IUserData} from "@ungate/plugininf/lib/ISession";
 import NullSessProvider, {
     IAuthResult,
 } from "@ungate/plugininf/lib/NullSessProvider";
-import { ReadStreamToArray } from "@ungate/plugininf/lib/stream/Util";
-import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
+import {ReadStreamToArray} from "@ungate/plugininf/lib/stream/Util";
+import {initParams, isEmpty} from "@ungate/plugininf/lib/util/Util";
 import * as ActiveDirectory from "activedirectory";
-import { X509 } from "jsrsasign";
-import { isObject, pick, uniq } from "lodash";
-import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
+import {X509} from "jsrsasign";
+import {isObject, pick, uniq} from "lodash";
+import {ISessCtrl} from "@ungate/plugininf/lib/ISessCtrl";
+import {UserModel} from "@ungate/plugininf/lib/entries/UserModel";
 
 const BASIC_PATTERN = "Basic";
 const PASSWORD_PATTERN_NGINX_GSS = "bogus_auth_gss_passwd";
@@ -95,7 +96,7 @@ export default class PKOAuth extends NullSessProvider {
             "description",
             "userCertificate",
         ];
-        this.params.adMapUserAttr.split(";").forEach((val) => {
+        this.params.adMapUserAttr.split(";").forEach((val: string) => {
             const [bdkey, adkey] = val.split("=");
             this.mapUserAttr[adkey] = bdkey;
             if (!userAttr.includes(adkey)) {
@@ -103,7 +104,7 @@ export default class PKOAuth extends NullSessProvider {
             }
         });
         if (this.params.adMapGroups) {
-            this.params.adMapGroups.split(";").forEach((val) => {
+            this.params.adMapGroups.split(";").forEach((val: string) => {
                 const [bdkey, adkey] = val.split("=");
                 this.mapGroupActions[bdkey] = adkey
                     .split(",")
@@ -113,7 +114,7 @@ export default class PKOAuth extends NullSessProvider {
         if (this.params.adDefaultAction) {
             this.listDefaultActions = this.params.adDefaultAction
                 .split(",")
-                .map((val) => parseInt(val, 10));
+                .map((val: string) => parseInt(val, 10));
         }
         this.ad = new ActiveDirectory({
             attributes: {
@@ -136,11 +137,12 @@ export default class PKOAuth extends NullSessProvider {
             gateContext.request.headers.authorization &&
             gateContext.request.headers["forwarded-ssl-client-m-serial"] &&
             gateContext.request.headers.authorization.indexOf(BASIC_PATTERN) >
-                -1
+            -1
         ) {
             return new Promise((resolve, reject) => {
+                const authorization = gateContext.request.headers.authorization || "";
                 const basic = Buffer.from(
-                    gateContext.request.headers.authorization.split(" ")[1],
+                    authorization.split(" ")[1],
                     "base64",
                 ).toString("ascii");
                 const [username, password] = basic.split(":");
@@ -148,7 +150,7 @@ export default class PKOAuth extends NullSessProvider {
                     this.initSession(resolve, reject, username, gateContext);
                     return;
                 }
-                this.ad.authenticate(username, password, (err, isAuth) => {
+                this.ad.authenticate(username, password, (err: any, isAuth: boolean) => {
                     if (err || !isAuth) {
                         this.log.error(
                             err ? err.message : "Invalid password or login",
@@ -169,7 +171,7 @@ export default class PKOAuth extends NullSessProvider {
         context: IContext,
         query: IGateQuery,
     ): Promise<IAuthResult> {
-        const res = await context.connection.executeStmt(
+        const res = await context.connection!.executeStmt(
             query.queryStr,
             query.inParams,
             query.outParams,
@@ -180,7 +182,7 @@ export default class PKOAuth extends NullSessProvider {
                 this.ad.authenticate(
                     query.inParams.cv_login,
                     query.inParams.cv_password,
-                    (err, isAuth) => {
+                    (err: any, isAuth: boolean) => {
                         if (err || !isAuth) {
                             this.log.error(
                                 err ? err.message : "Invalid password or login",
@@ -199,7 +201,7 @@ export default class PKOAuth extends NullSessProvider {
                         );
                     },
                 );
-            }).then((user: IObjectParam) => ({
+            }).then((user: any) => ({
                 idUser: user.ck_id,
                 dataUser: user,
             }));
@@ -211,36 +213,36 @@ export default class PKOAuth extends NullSessProvider {
     }
     public async init(reload?: boolean): Promise<void> {
         await this.dataSource.createPool();
-        const users = {};
+        const users: Record<string, any> = {};
         return this.dataSource
             .executeStmt(
                 "select json_object(array['ck_id',\n" +
-                    "                   'cv_login',\n" +
-                    "                   'cv_name',\n" +
-                    "                   'cv_surname',\n" +
-                    "                   'cv_patronymic',\n" +
-                    "                   'cv_email',\n" +
-                    "                   'cv_timezone']::varchar[] || coalesce(info.key::varchar[], array[]::varchar[]),\n" +
-                    "                   array[u.ck_id,\n" +
-                    "                   u.cv_login,\n" +
-                    "                   u.cv_name,\n" +
-                    "                   u.cv_surname,\n" +
-                    "                   u.cv_patronymic,\n" +
-                    "                   u.cv_email,\n" +
-                    "                   u.cv_timezone]::varchar[] || coalesce(info.value::varchar[], array[]::varchar[])) as json\n" +
-                    "  from s_at.t_account u\n" +
-                    "  left join (select a.ck_id,\n" +
-                    "               array_agg(a.ck_d_info) as key,\n" +
-                    "               array_agg(ainf.cv_value) as value\n" +
-                    "          from (select ac.ck_id, inf.ck_id as ck_d_info, inf.cr_type\n" +
-                    "                  from s_at.t_account ac, s_at.t_d_info inf) a\n" +
-                    "          left join s_at.t_account_info ainf\n" +
-                    "            on a.ck_d_info = ainf.ck_d_info and a.ck_id = ainf.ck_account\n" +
-                    "         group by a.ck_id) as info\n" +
-                    "    on u.ck_id = info.ck_id",
-                null,
-                null,
-                null,
+                "                   'cv_login',\n" +
+                "                   'cv_name',\n" +
+                "                   'cv_surname',\n" +
+                "                   'cv_patronymic',\n" +
+                "                   'cv_email',\n" +
+                "                   'cv_timezone']::varchar[] || coalesce(info.key::varchar[], array[]::varchar[]),\n" +
+                "                   array[u.ck_id,\n" +
+                "                   u.cv_login,\n" +
+                "                   u.cv_name,\n" +
+                "                   u.cv_surname,\n" +
+                "                   u.cv_patronymic,\n" +
+                "                   u.cv_email,\n" +
+                "                   u.cv_timezone]::varchar[] || coalesce(info.value::varchar[], array[]::varchar[])) as json\n" +
+                "  from s_at.t_account u\n" +
+                "  left join (select a.ck_id,\n" +
+                "               array_agg(a.ck_d_info) as key,\n" +
+                "               array_agg(ainf.cv_value) as value\n" +
+                "          from (select ac.ck_id, inf.ck_id as ck_d_info, inf.cr_type\n" +
+                "                  from s_at.t_account ac, s_at.t_d_info inf) a\n" +
+                "          left join s_at.t_account_info ainf\n" +
+                "            on a.ck_d_info = ainf.ck_d_info and a.ck_id = ainf.ck_account\n" +
+                "         group by a.ck_id) as info\n" +
+                "    on u.ck_id = info.ck_id",
+                undefined,
+                undefined,
+                undefined,
                 {
                     resultSet: true,
                 },
@@ -262,11 +264,11 @@ export default class PKOAuth extends NullSessProvider {
                             this.dataSource
                                 .executeStmt(
                                     "select distinct ur.ck_account, dra.ck_action\n" +
-                                        "  from t_account_role ur\n" +
-                                        "  join t_role_action dra on ur.ck_role = dra.ck_role",
-                                    null,
-                                    null,
-                                    null,
+                                    "  from t_account_role ur\n" +
+                                    "  join t_role_action dra on ur.ck_role = dra.ck_role",
+                                    undefined,
+                                    undefined,
+                                    undefined,
                                     {
                                         resultSet: true,
                                     },
@@ -284,7 +286,7 @@ export default class PKOAuth extends NullSessProvider {
                                                     (val) => {
                                                         if (
                                                             users[
-                                                                val.ck_account
+                                                            val.ck_account
                                                             ]
                                                         ) {
                                                             users[
@@ -351,7 +353,7 @@ export default class PKOAuth extends NullSessProvider {
         gateContext: IContext,
         isUserData: boolean = false,
     ): void {
-        this.ad.findUser(username, (err, user) => {
+        this.ad.findUser(username, (err: any, user: any) => {
             if (err || !user) {
                 this.log.error(
                     err ? err.message : `Not found user ${username}`,
@@ -371,7 +373,7 @@ export default class PKOAuth extends NullSessProvider {
             const x509 = new X509();
             try {
                 x509.readCertPEM(user.userCertificate);
-            } catch (e) {
+            } catch (e: any) {
                 this.log.error("User not valid certificate %j", user, e);
                 reject(new ErrorException(ErrorGate.AUTH_UNAUTHORIZED));
                 return;
@@ -380,7 +382,7 @@ export default class PKOAuth extends NullSessProvider {
                 x509.getSerialNumberHex().toLocaleUpperCase() !==
                 (
                     gateContext.request.headers[
-                        "forwarded-ssl-client-m-serial"
+                    "forwarded-ssl-client-m-serial"
                     ] as string
                 ).toLocaleUpperCase()
             ) {
@@ -388,30 +390,28 @@ export default class PKOAuth extends NullSessProvider {
                     `Not valid certificate Serial-In-AD: ${x509
                         .getSerialNumberHex()
                         .toLocaleUpperCase()}, Serial-Forwarded: ${(
-                        gateContext.request.headers[
+                            gateContext.request.headers[
                             "forwarded-ssl-client-m-serial"
-                        ] as string
-                    ).toLocaleUpperCase()}`,
+                            ] as string
+                        ).toLocaleUpperCase()}`,
                 );
                 reject(new ErrorException(ErrorGate.AUTH_UNAUTHORIZED));
                 return;
             }
             this.sessCtrl
-                .getUserDb()
+                .getUserStore()
                 .findOne(
                     {
-                        $and: [
-                            {
-                                ck_d_provider: this.name,
-                            },
-                            {
-                                cv_login: username,
-                            },
-                        ],
+                        where: {
+                            provider: this.name,
+                            login: username,
+                        },
                     },
-                    true,
                 )
-                .then(async (userData) => {
+                .then(async (userData: UserModel | null) => {
+                    if (!userData) {
+                        return reject(new ErrorException(ErrorGate.AUTH_UNAUTHORIZED));
+                    }
                     const data = Object.keys(this.mapUserAttr).reduce(
                         (obj, val) => ({
                             ...obj,
@@ -432,8 +432,8 @@ export default class PKOAuth extends NullSessProvider {
                         await this.sessCtrl.addUser(
                             data.ck_id,
                             this.name,
-                            data,
-                            userData.cv_login || user.sAMAccountName,
+                            data as IUserData,
+                            userData.login || user.sAMAccountName,
                         );
                     }
                     if (isUserData) {
@@ -441,7 +441,7 @@ export default class PKOAuth extends NullSessProvider {
                     }
                     const session = await this.sessCtrl.loadSession(
                         gateContext,
-                        userData.ck_id || user.objectSID,
+                        userData.id || user.objectSID,
                     );
                     if (session) {
                         return resolve(session);
@@ -449,7 +449,7 @@ export default class PKOAuth extends NullSessProvider {
                     return this.createSession({
                         context: gateContext,
                         idUser: data.ck_id,
-                        userData: data,
+                        userData: data as IUserData,
                     })
                         .then((res) => this.sessCtrl.loadSession(res.session))
                         .then((sess) => resolve(sess));
@@ -467,9 +467,9 @@ export default class PKOAuth extends NullSessProvider {
                 groups.reduce(
                     (arr, group) =>
                         user.isMemberOf(group)
-                            ? [...arr, this.mapGroupActions[group]]
+                            ? [...arr, this.mapGroupActions[group] || []]
                             : arr,
-                    actions,
+                    actions || [],
                 ),
             );
         }

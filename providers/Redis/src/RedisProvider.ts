@@ -1,17 +1,17 @@
 import NullProvider from "@ungate/plugininf/lib/NullProvider";
-import IContext, { IFormData } from "@ungate/plugininf/lib/IContext";
-import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
-import { IResultProvider } from "@ungate/plugininf/lib/IResult";
+import IContext, {IFormData} from "@ungate/plugininf/lib/IContext";
+import {IGateQuery} from "@ungate/plugininf/lib/IQuery";
+import {IResultProvider} from "@ungate/plugininf/lib/IResult";
 import IParamsInfo from "@ungate/plugininf/lib/ICCTParams";
-import { IParamsProvider } from "@ungate/plugininf/lib/NullProvider";
-import { RedisClientOptions, createClient } from "redis";
-import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
+import {IParamsProvider} from "@ungate/plugininf/lib/NullProvider";
+import {RedisClientOptions, createClient} from "redis";
+import {initParams, isEmpty} from "@ungate/plugininf/lib/util/Util";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
 import ICCTParams from "@ungate/plugininf/lib/ICCTParams";
-import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
-import { parse } from "@ungate/plugininf/lib/parser/parserAsync";
+import {ISessCtrl} from "@ungate/plugininf/lib/ISessCtrl";
+import {parse} from "@ungate/plugininf/lib/parser/parserAsync";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
-import { deepParam } from "@ungate/plugininf/lib/util/deepParam";
+import {deepParam} from "@ungate/plugininf/lib/util/deepParam";
 
 interface IProviderParam extends RedisClientOptions, IParamsProvider {
     extra?: string;
@@ -24,7 +24,7 @@ async function prepareQuery(
     if (isEmpty(query.queryStr) && isEmpty(query.modifyMethod)) {
         throw new ErrorException(101, "Empty query string");
     }
-    const parser = parse(query.queryStr || query.modifyMethod);
+    const parser = parse(query.queryStr || query.modifyMethod || "");
 
     const config = await parser.runer<IQueryRedis>({
         get: (key: string, isKeyEmpty: boolean) => {
@@ -68,7 +68,7 @@ export class RedisProvider extends NullProvider {
         };
         /* tslint:enable:object-literal-sort-keys */
     }
-    public params: IProviderParam;
+    public params!: IProviderParam;
     constructor(name: string, params: ICCTParams, sessCtrl: ISessCtrl) {
         super(name, params, sessCtrl);
         this.params = initParams(RedisProvider.getParamsInfo(), this.params);
@@ -94,11 +94,11 @@ export class RedisProvider extends NullProvider {
         const param = {
             jt_in_param:
                 typeof context.request.body === "object" &&
-                (context.request.body as IFormData).files
+                    (context.request.body as IFormData).files
                     ? {
-                          ...query.inParams,
-                          ...(context.request.body as IFormData).files,
-                      }
+                        ...query.inParams,
+                        ...(context.request.body as IFormData).files,
+                    }
                     : query.inParams,
             jt_request_header: context.request.headers,
             jt_request_method: context.request.method,
@@ -110,12 +110,12 @@ export class RedisProvider extends NullProvider {
             isEmpty(redisQuery.command) || isEmpty(redisQuery.command.trim())
                 ? false
                 : redisQuery.command.trim().toUpperCase();
-        if (!command || !client[command]) {
+        if (!command || !client[command as keyof typeof client]) {
             throw new Error("Method not implemented.");
         }
         this.log.trace("Redis Param %j", redisQuery);
         const res: IResultProvider = await new Promise((resolve, reject) => {
-            client[command](redisQuery.args, (err, val) => {
+            (client[command as keyof typeof client] as any)(redisQuery.args, (err: any, val: any) => {
                 if (err) {
                     return reject(err);
                 }
@@ -134,7 +134,7 @@ export class RedisProvider extends NullProvider {
                     result = parserResult.runer({
                         get: (key: string, isKeyEmpty: boolean) => {
                             return (
-                                responseParam[key] || (isKeyEmpty ? "" : key)
+                                responseParam[key as keyof typeof responseParam] || (isKeyEmpty ? "" : key)
                             );
                         },
                     }) as any;
@@ -156,7 +156,7 @@ export class RedisProvider extends NullProvider {
                         };
                         return parserRowResult.runer({
                             get: (key: string, isKeyEmpty: boolean) => {
-                                return rowParam[key] || (isKeyEmpty ? "" : key);
+                                return rowParam[key as keyof typeof rowParam] || (isKeyEmpty ? "" : key);
                             },
                         });
                     });

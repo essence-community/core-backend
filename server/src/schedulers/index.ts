@@ -1,5 +1,5 @@
 import Logger from "@ungate/plugininf/lib/Logger";
-import { sendProcess } from "@ungate/plugininf/lib/util/ProcessSender";
+import {sendProcess} from "@ungate/plugininf/lib/util/ProcessSender";
 import PluginManager from "../core/pluginmanager";
 import Property from "../core/property";
 const logger = Logger.getLogger("SchedulersNode");
@@ -11,30 +11,30 @@ class SchedulersNode {
         return Promise.all(
             confSchedulers.map(async (conf) => {
                 const pluginClass = PluginManager.getGateSchedulerClass(
-                    conf.ck_d_plugin.toLowerCase(),
+                    conf.plugin.toLowerCase(),
                 );
                 if (pluginClass) {
                     const plugin = pluginClass.default
                         ? new pluginClass.default(
-                              conf.ck_id,
-                              conf.cct_params,
-                              conf.cv_cron,
-                              !!conf.cl_enable,
-                          )
+                            conf.id,
+                            conf.params,
+                            conf.cron,
+                            !!conf.isEnabled,
+                        )
                         : new pluginClass(
-                              conf.ck_id,
-                              conf.cct_params,
-                              conf.cv_cron,
-                              !!conf.cl_enable,
-                          );
+                            conf.id,
+                            conf.params,
+                            conf.cron,
+                            !!conf.isEnabled,
+                        );
                     return plugin.init().then(
                         () => {
-                            PluginManager.setGateScheduler(conf.ck_id, plugin);
+                            PluginManager.setGateScheduler(conf.id, plugin);
                             return Promise.resolve();
                         },
-                        (err) => {
+                        (err: any) => {
                             logger.error(
-                                `Not init scheduler plugin ${conf.ck_id}\n${err.message}`,
+                                `Not init scheduler plugin ${conf.id}\n${err.message}`,
                                 err,
                             );
                             return Promise.resolve();

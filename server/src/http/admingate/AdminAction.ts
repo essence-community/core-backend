@@ -1,4 +1,3 @@
-import ILocalDB from "@ungate/plugininf/lib/db/local/ILocalDB";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
 import ICCTParams, {
@@ -11,8 +10,8 @@ import {
     isEmpty,
     sortFilesData,
 } from "@ungate/plugininf/lib/util/Util";
-import { isObject } from "lodash";
-import { v4 as uuidv4 } from "uuid";
+import {isObject} from "lodash";
+import {v4 as uuidv4} from "uuid";
 import PluginManager from "../../core/pluginmanager/PluginManager";
 import Property from "../../core/property/Property";
 import resetAction from "./ResetAction";
@@ -23,25 +22,35 @@ import NullPlugin from "@ungate/plugininf/lib/NullPlugin";
 import NullScheduler from "@ungate/plugininf/lib/NullScheduler";
 import NullEvent from "@ungate/plugininf/lib/NullEvent";
 import NullSessProvider from "@ungate/plugininf/lib/NullSessProvider";
-import IContextConfig from "../../core/property/IContextConfig";
-import IProviderConfig from "../../core/property/IProviderConfig";
-import IPluginConfig from "../../core/property/IPluginConfig";
-import IQueryConfig from "../../core/property/IQueryConfig";
-import IServerConfig from "../../core/property/IServerConfig";
-import IShedulerConfig from "../../core/property/IShedulerConfig";
-import IEventConfig from "../../core/property/IEventConfig";
+import {ContextModel} from "../../core/property/entities/ContextModel";
+import {Repository} from "typeorm";
+import {EventModel} from "../../core/property/entities/EventModel";
+import {ProviderModel} from "../../core/property/entities/ProviderModel";
+import {SchedulerModel} from "../../core/property/entities/SchedulerModel";
+import {QueryModel} from "../../core/property/entities/QueryModel";
+import {PluginModel} from "../../core/property/entities/PluginModel";
+import {ServerModel} from "../../core/property/entities/ServerModel";
+import {
+    toContext,
+    toEvent,
+    toPlugin,
+    toProvider,
+    toQuery,
+    toScheduler,
+    toServer,
+} from "../../core/property/map";
 
 export default class AdminAction {
     public params: ICCTParams;
     public name: string;
     public riakAction: RiakAction;
-    public dbContexts: ILocalDB<IContextConfig>;
-    public dbEvents: ILocalDB<IEventConfig>;
-    public dbProviders: ILocalDB<IProviderConfig>;
-    public dbSchedulers: ILocalDB<IShedulerConfig>;
-    public dbPlugins: ILocalDB<IPluginConfig>;
-    public dbQuerys: ILocalDB<IQueryConfig>;
-    public dbServers: ILocalDB<IServerConfig>;
+    public contextStore!: Repository<ContextModel>;
+    public eventStore!: Repository<EventModel>;
+    public providerStore!: Repository<ProviderModel>;
+    public schedulerStore!: Repository<SchedulerModel>;
+    public pluginStore!: Repository<PluginModel>;
+    public queryStore!: Repository<QueryModel>;
+    public serverStore!: Repository<ServerModel>;
     constructor(name: string, params: ICCTParams) {
         this.name = name;
         this.params = params;
@@ -49,13 +58,13 @@ export default class AdminAction {
     }
 
     public async init(): Promise<void> {
-        this.dbContexts = await Property.getContext();
-        this.dbEvents = await Property.getEvents();
-        this.dbProviders = await Property.getProviders();
-        this.dbSchedulers = await Property.getSchedulers();
-        this.dbPlugins = await Property.getPlugins();
-        this.dbQuerys = await Property.getQuery();
-        this.dbServers = await Property.getServers();
+        this.contextStore = await Property.getContext();
+        this.eventStore = await Property.getEvents();
+        this.providerStore = await Property.getProviders();
+        this.schedulerStore = await Property.getSchedulers();
+        this.pluginStore = await Property.getPlugins();
+        this.queryStore = await Property.getQuery();
+        this.serverStore = await Property.getServers();
     }
     /* tslint:disable:object-literal-sort-keys */
     public get handlers() {
@@ -69,7 +78,7 @@ export default class AdminAction {
                         },
                     ]),
                 ),
-            gtrestartgate: (gateContext) =>
+            gtrestartgate: (gateContext: IContext) =>
                 resetAction(
                     gateContext,
                     "ck_id",
@@ -77,7 +86,7 @@ export default class AdminAction {
                     "master",
                     "ck_id",
                 ),
-            gtrestartfullgate: (gateContext) =>
+            gtrestartfullgate: (gateContext: IContext) =>
                 resetAction(
                     gateContext,
                     "ck_id",
@@ -87,14 +96,16 @@ export default class AdminAction {
                 ),
             gtgetusers: (gateContext: IContext) =>
                 gateContext.gateContextPlugin.sessCtrl
-                    .getUserDb()
+                    .getUserStore()
                     .find()
                     .then((docs) =>
                         Promise.resolve(
                             docs
                                 .map((val) => ({
-                                    ...val,
-                                    ...Object.entries(val.data).reduce(
+                                    ck_id: val.id,
+                                    ck_d_provider: val.provider,
+                                    cv_login: val.login,
+                                    ...Object.entries(val.data || {}).reduce(
                                         (obj, arr) => ({
                                             ...obj,
                                             [`data_${arr[0]}`]: arr[1],
@@ -114,30 +125,32 @@ export default class AdminAction {
                                 .filter(filterFilesData(gateContext)),
                         ),
                     ),
-            gtgetsessions: (gateContext: IContext) => /*.find().then((docs) =>
-                    Promise.resolve(
-                        docs
-                            .map((val) => ({
-                                ...val,
-                                data: undefined,
-                                ...Object.entries(val.data).reduce(
-                                    (obj, arr) => ({
-                                        ...obj,
-                                        [`data_${arr[0]}`]: arr[1],
-                                    }),
-                                    {},
-                                ),
-                            }))
-                            .sort(sortFilesData(gateContext))
-                            .filter(filterFilesData(gateContext)),
+            gtgetsessions: (gateContext: IContext) =>
+                this.contextStore.find().then((docs) =>
+                    docs.map((val) => PluginManager.getGateContext(val.id))
+                )
+                    .then((context) => Promise.all(context.map((val) => val.sessCtrl.getSessionStore().find({
+                        take: 100,
+                        skip: 0,
+                        order: {
+                            create: "DESC",
+                        },
+                    }))))
+                    .then((sessions) => sessions.flat().map((val) => ({
+                        id: val.id,
+                        ...val.data?.gsession?.userData || {},
+                    }))
+                        .sort(sortFilesData(gateContext))
+                        .filter(filterFilesData(gateContext))
+                        .slice(0, 20),
                     ),
-                )*/ [],
             gtgetservers: (gateContext: IContext) =>
-                this.dbServers
+                this.serverStore
                     .find()
                     .then((docs) =>
                         Promise.resolve(
                             docs
+                                .map(toServer)
                                 .sort(sortFilesData(gateContext))
                                 .filter(filterFilesData(gateContext)),
                         ),
@@ -152,42 +165,42 @@ export default class AdminAction {
                         return value;
                     },
                 );
-                return this.dbProviders.find().then((docs) =>
+                return this.providerStore.find().then((rows) =>
                     (
                         [
                             ...(json?.filter?.g_providers_add_all === "all"
                                 ? [
-                                      {
-                                          ck_id: "all",
-                                      },
-                                  ]
+                                    {
+                                        ck_id: "all",
+                                    },
+                                ]
                                 : []),
-                            ...docs,
+                            ...rows.map(toProvider),
                         ] as any
                     )
-                        .map((val) =>
+                        .map((val: any) =>
                             json?.filter?.g_providers_add_all === "all"
-                                ? { ck_id: val.ck_id }
+                                ? {ck_id: val.ck_id}
                                 : {
-                                      ...val,
-                                      cv_params: this.ParamsToString(
-                                          PluginManager.getGateProviderClass,
-                                          val.ck_d_plugin,
-                                          val.cct_params,
-                                      ),
-                                      cct_params: undefined,
-                                      ck_d_plugin:
-                                          val.ck_d_plugin.toLowerCase(),
-                                  },
+                                    ...val,
+                                    cv_params: this.ParamsToString(
+                                        PluginManager.getGateProviderClass,
+                                        val.ck_d_plugin,
+                                        val.cct_params,
+                                    ),
+                                    cct_params: undefined,
+                                    ck_d_plugin:
+                                        val.ck_d_plugin.toLowerCase(),
+                                },
                         )
                         .sort(sortFilesData(gateContext))
                         .filter(filterFilesData(gateContext)),
                 );
             },
             gtgetinitedproviders: (gateContext: IContext) =>
-                this.dbProviders.find().then((docs) =>
+                this.providerStore.find().then((docs) =>
                     Promise.resolve(
-                        [{ ck_id: "all" }, ...docs]
+                        [{ck_id: "all"}, ...docs.map(toProvider)]
                             .map((val) => ({
                                 ck_id: val.ck_id,
                             }))
@@ -196,9 +209,10 @@ export default class AdminAction {
                     ),
                 ),
             gtgetevent: (gateContext: IContext) =>
-                this.dbEvents.find().then((docs) =>
+                this.eventStore.find().then((docs) =>
                     Promise.resolve(
                         docs
+                            .map(toEvent)
                             .map((val) => ({
                                 ...val,
                                 cv_params: this.ParamsToString(
@@ -214,9 +228,10 @@ export default class AdminAction {
                     ),
                 ),
             gtgetconfigs: (gateContext: IContext) =>
-                this.dbContexts.find().then((docs) =>
+                this.contextStore.find().then((docs) =>
                     Promise.resolve(
                         docs
+                            .map(toContext)
                             .map((val) => ({
                                 ...val,
                                 cv_params: this.ParamsToString(
@@ -232,9 +247,10 @@ export default class AdminAction {
                     ),
                 ),
             gtgetconfplugins: (gateContext: IContext) =>
-                this.dbPlugins.find().then((docs) =>
+                this.pluginStore.find().then((docs) =>
                     Promise.resolve(
                         docs
+                            .map(toPlugin)
                             .map((val) => ({
                                 ...val,
                                 cv_params: this.ParamsToString(
@@ -250,9 +266,10 @@ export default class AdminAction {
                     ),
                 ),
             gtgetconfquery: (gateContext: IContext) =>
-                this.dbQuerys.find().then((docs) =>
+                this.queryStore.find().then((docs) =>
                     Promise.resolve(
                         docs
+                            .map(toQuery)
                             .map((val) => ({
                                 ...val,
                             }))
@@ -261,9 +278,10 @@ export default class AdminAction {
                     ),
                 ),
             gtgetschedulers: (gateContext: IContext) =>
-                this.dbSchedulers.find().then((docs) =>
+                this.schedulerStore.find().then((docs) =>
                     Promise.resolve(
                         docs
+                            .map(toScheduler)
                             .map((val) => ({
                                 ...val,
                                 cv_params: this.ParamsToString(
@@ -281,35 +299,35 @@ export default class AdminAction {
             gtgetpluginsclass: (gateContext: IContext) =>
                 Promise.resolve(
                     PluginManager.getGateAllPluginsClass()
-                        .map((val) => ({ ck_id: val }))
+                        .map((val) => ({ck_id: val}))
                         .sort(sortFilesData(gateContext))
                         .filter(filterFilesData(gateContext)),
                 ),
             gtgetprovidersclass: (gateContext: IContext) =>
                 Promise.resolve(
                     PluginManager.getGateAllProvidersClass()
-                        .map((val) => ({ ck_id: val }))
+                        .map((val) => ({ck_id: val}))
                         .sort(sortFilesData(gateContext))
                         .filter(filterFilesData(gateContext)),
                 ),
             gtgetconfigclass: (gateContext: IContext) =>
                 Promise.resolve(
                     PluginManager.getGateAllContextClass()
-                        .map((val) => ({ ck_id: val }))
+                        .map((val) => ({ck_id: val}))
                         .sort(sortFilesData(gateContext))
                         .filter(filterFilesData(gateContext)),
                 ),
             gtgetschedulerclass: (gateContext: IContext) =>
                 Promise.resolve(
                     PluginManager.getGateAllSchedulersClass()
-                        .map((val) => ({ ck_id: val }))
+                        .map((val) => ({ck_id: val}))
                         .sort(sortFilesData(gateContext))
                         .filter(filterFilesData(gateContext)),
                 ),
             gtgeteventclass: (gateContext: IContext) =>
                 Promise.resolve(
                     PluginManager.getGateAllEventsClass()
-                        .map((val) => ({ ck_id: val }))
+                        .map((val) => ({ck_id: val}))
                         .sort(sortFilesData(gateContext))
                         .filter(filterFilesData(gateContext)),
                 ),
@@ -366,7 +384,7 @@ export default class AdminAction {
                     "reloadAllScheduler",
                     "schedulerNode",
                 ),
-            gtgetriakbuckets: (...arg) =>
+            gtgetriakbuckets: (...arg: any[]) =>
                 this.riakAction.gtgetriakbuckets.apply(
                     this.riakAction,
                     arg as any,
@@ -382,7 +400,7 @@ export default class AdminAction {
                     gateContext,
                     "ck_id",
                     PluginManager.getGateProviderClass,
-                    this.dbProviders,
+                    this.providerStore,
                     (pkClass) =>
                         pkClass.isAuth
                             ? NullSessProvider.getParamsInfo
@@ -393,7 +411,7 @@ export default class AdminAction {
                     gateContext,
                     "ck_id",
                     PluginManager.getGateContextClass,
-                    this.dbContexts,
+                    this.contextStore,
                     () => NullContext.getParamsInfo,
                 ),
             gtgetpluginsetting: (gateContext: IContext) =>
@@ -401,7 +419,7 @@ export default class AdminAction {
                     gateContext,
                     "ck_id",
                     PluginManager.getGatePluginsClass,
-                    this.dbPlugins,
+                    this.pluginStore,
                     () => NullPlugin.getParamsInfo,
                 ),
             gtgetschedulersetting: (gateContext: IContext) =>
@@ -409,7 +427,7 @@ export default class AdminAction {
                     gateContext,
                     "ck_id",
                     PluginManager.getGateSchedulerClass,
-                    this.dbSchedulers,
+                    this.schedulerStore,
                     () => NullScheduler.getParamsInfo,
                 ),
             gtgeteventsetting: (gateContext: IContext) =>
@@ -417,7 +435,7 @@ export default class AdminAction {
                     gateContext,
                     "ck_id",
                     PluginManager.getGateEventsClass,
-                    this.dbEvents,
+                    this.eventStore,
                     () => NullEvent.getParamsInfo,
                 ),
             gtgetboolean: () =>
@@ -434,17 +452,16 @@ export default class AdminAction {
 
     public ParamsToString(method: any, ckDPlugin: string, cctParams = {}) {
         const PClass = method(ckDPlugin.toLowerCase());
-        let params = {};
+        let params = {} as Record<string, IParamInfo>;
         if (PClass && PClass.getParamsInfo) {
             params = PClass.getParamsInfo();
         }
-        return Object.entries(cctParams).reduce((str, arr) => {
-            if (params[arr[0]] && params[arr[0]].type === "password") {
-                return `${str}${arr[0]}=***<br/>`;
+        return Object.entries(cctParams).reduce((str, [key, value]) => {
+            if (params[key] && (params[key] as IParamInfo).type === "password") {
+                return `${str}${key}=***<br/>`;
             }
-            return `${str}${arr[0]}=${
-                isObject(arr[1]) ? JSON.stringify(arr[1]) : arr[1]
-            }<br/>`;
+            return `${str}${key}=${isObject(value) ? JSON.stringify(value) : value}
+                }<br/>`;
         }, "");
     }
     /**
@@ -457,8 +474,8 @@ export default class AdminAction {
     public async loadSetting(
         gateContext: IContext,
         column: string,
-        method,
-        db,
+        method: (ckDPlugin: string) => any,
+        db: Repository<any>,
         getParamsInfo: (pklass: any) => () => IParamsInfo,
     ): Promise<Record<string, any>[]> {
         if (isEmpty(gateContext.query.inParams.json)) {
@@ -481,24 +498,25 @@ export default class AdminAction {
             const params = PClass.getParamsInfo();
             const doc = await (json.filter.cv_name
                 ? db.findOne({
-                      [column]: json.filter.cv_name,
-                  })
-                : Promise.resolve({}));
+                    where: {id: json.filter.cv_name},
+                })
+                : Promise.resolve(null));
             Object.entries(getParamsInfo(PClass)()).forEach(([key, value]) => {
                 if (!Object.prototype.hasOwnProperty.call(params, key)) {
                     params[key] = value;
                 }
             });
+            const cctParams = doc?.params || {};
             const cctParam = Object.entries(params).reduce(
                 (res, [key, obj]) => {
                     res[key] = this.checkData(
                         key,
                         obj as IParamInfo,
-                        doc.cct_params || (obj as IParamInfo).defaultValue,
+                        cctParams || (obj as IParamInfo).defaultValue,
                     );
                     return res;
                 },
-                {},
+                {} as Record<string, any>,
             );
             return [
                 {
@@ -510,7 +528,7 @@ export default class AdminAction {
                                 json.filter.ck_page,
                                 (json.filter.ca_childs || [])[0],
                                 obj as IParamInfo,
-                                doc.cct_params,
+                                doc?.params,
                             ),
                         )
                         .filter((val) => !isEmpty(val)),
@@ -527,15 +545,15 @@ export default class AdminAction {
         return Promise.resolve([]);
     }
 
-    private checkData(name: string, conf: IParamInfo, params = {}) {
+    private checkData(name: string, conf: IParamInfo, params = {} as Record<string, any>) {
         switch (conf.type) {
             case "string":
             case "long_string": {
                 return isObject(params[name])
                     ? JSON.stringify(params[name])
                     : isEmpty(params[name])
-                      ? conf.defaultValue
-                      : params[name];
+                        ? conf.defaultValue
+                        : params[name];
             }
             case "form_nested": {
                 return Object.entries(conf.childs).reduce((res, [key, obj]) => {
@@ -547,10 +565,10 @@ export default class AdminAction {
                             : params[name],
                     );
                     return res;
-                }, {});
+                }, {} as Record<string, any>);
             }
             case "form_repeater": {
-                return (params[name] || conf.defaultValue || []).map((val) => {
+                return (params[name] || conf.defaultValue || []).map((val: any) => {
                     return Object.entries(conf.childs).reduce(
                         (res, [key, obj]) => {
                             res[key] = this.checkData(
@@ -560,7 +578,7 @@ export default class AdminAction {
                             );
                             return res;
                         },
-                        {},
+                        {} as Record<string, any>,
                     );
                 });
             }
@@ -579,11 +597,11 @@ export default class AdminAction {
                 const value = isEmpty(params[name])
                     ? 0
                     : +(typeof params[name] === "string"
-                          ? params[name] === "1" ||
-                            params[name] === "true" ||
-                            params[name] === "yes" ||
-                            params[name] === "on"
-                          : params[name]);
+                        ? params[name] === "1" ||
+                        params[name] === "true" ||
+                        params[name] === "yes" ||
+                        params[name] === "on"
+                        : params[name]);
                 if (isEmpty(conf.defaultValue)) {
                     return isEmpty(params[name]) ? defaultValue : value;
                 }
@@ -613,10 +631,10 @@ export default class AdminAction {
         ckPage: number | string,
         child = {
             ck_page_object: uuidv4(),
-        },
+        } as Record<string, any>,
         conf: IParamInfo,
-        params = {},
-    ) {
+        params = {} as Record<string, any>,
+    ): Record<string, any> {
         /* tslint:disable:object-literal-sort-keys */
         const defaultAttr = {
             ck_page: ckPage,
@@ -640,13 +658,13 @@ export default class AdminAction {
                     initvalue: isObject(params[name])
                         ? JSON.stringify(params[name])
                         : isEmpty(params[name])
-                          ? conf.defaultValue
-                          : params[name],
+                            ? conf.defaultValue
+                            : params[name],
                     defaultvalue: isObject(params[name])
                         ? JSON.stringify(params[name])
                         : isEmpty(params[name])
-                          ? conf.defaultValue
-                          : params[name],
+                            ? conf.defaultValue
+                            : params[name],
                     type: "IFIELD",
                 };
             }
@@ -690,13 +708,13 @@ export default class AdminAction {
                     initvalue: isObject(params[name])
                         ? JSON.stringify(params[name])
                         : isEmpty(params[name])
-                          ? conf.defaultValue
-                          : params[name],
+                            ? conf.defaultValue
+                            : params[name],
                     defaultvalue: isObject(params[name])
                         ? JSON.stringify(params[name])
                         : isEmpty(params[name])
-                          ? conf.defaultValue
-                          : params[name],
+                            ? conf.defaultValue
+                            : params[name],
                     type: "IFIELD",
                 };
             }
@@ -735,11 +753,11 @@ export default class AdminAction {
                 const value = isEmpty(params[name])
                     ? 0
                     : +(typeof params[name] === "string"
-                          ? params[name] === "1" ||
-                            params[name] === "true" ||
-                            params[name] === "yes" ||
-                            params[name] === "on"
-                          : params[name]);
+                        ? params[name] === "1" ||
+                        params[name] === "true" ||
+                        params[name] === "yes" ||
+                        params[name] === "on"
+                        : params[name]);
                 if (isEmpty(conf.defaultValue)) {
                     return {
                         ...defaultAttr,
@@ -764,7 +782,7 @@ export default class AdminAction {
                                 cv_name: "f0e9877df106481eb257c2c04f8eb039",
                             },
                         ],
-                        valuefield: [{ in: "ck_id" }],
+                        valuefield: [{in: "ck_id"}],
                     };
                 }
                 return {
@@ -807,7 +825,7 @@ export default class AdminAction {
             }
             default: {
                 gateContext.warn(name, conf.type);
-                return undefined;
+                return {} as Record<string, any>;
             }
         }
         /* tslint:enable:object-literal-sort-keys */

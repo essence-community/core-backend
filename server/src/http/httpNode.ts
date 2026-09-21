@@ -1,7 +1,7 @@
 /**
  * Created by artemov_i on 04.12.2018.
  */
-import { IRequest } from "@ungate/plugininf/lib/IContext";
+import {IRequest} from "@ungate/plugininf/lib/IContext";
 import Logger from "@ungate/plugininf/lib/Logger";
 import {
     initProcess,
@@ -11,12 +11,11 @@ import compression from "compression";
 import cors from "cors";
 import * as http from "http";
 import helmet from "helmet";
-import { noop } from "lodash";
+import {noop} from "lodash";
 import Router from "router";
 import expressSession from "express-session-fork";
 import Constants from "../core/Constants";
 import PluginManager from "../core/pluginmanager/PluginManager";
-import IContextConfig from "../core/property/IContextConfig";
 import Property from "../core/property/Property";
 import RequestContext from "../core/request/RequestContext";
 import BodyParse from "./BodyParse";
@@ -24,11 +23,11 @@ import MainController from "./controllers/MainController";
 import NotificationController from "./controllers/NotificationController";
 import ProcessController from "./controllers/ProcessController";
 import ResultController from "./controllers/ResultController";
-import { initParams } from "@ungate/plugininf/lib/util/Util";
+import {initParams} from "@ungate/plugininf/lib/util/Util";
 import NullContext from "@ungate/plugininf/lib/NullContext";
-import { IContextParams } from "@ungate/plugininf/lib/IContextPlugin";
-import { GateSession } from "../core/session/GateSession";
-import { CreateJsonStream } from "@ungate/plugininf/lib/stream/ResultStream";
+import {IContextParams} from "@ungate/plugininf/lib/IContextPlugin";
+import {GateSession} from "../core/session/GateSession";
+import {CreateJsonStream} from "@ungate/plugininf/lib/stream/ResultStream";
 const log = Logger.getLogger("HttpServer");
 
 class HttpServer {
@@ -43,9 +42,8 @@ class HttpServer {
         const contextDb = await Property.getContext();
         const contexts = await contextDb.find({});
         await Promise.all(
-            contexts.map(async (obj) => {
-                const doc = obj as IContextConfig;
-                const gateContext = PluginManager.getGateContext(doc.ck_id);
+            contexts.map(async (doc) => {
+                const gateContext = PluginManager.getGateContext(doc.id);
                 const params: IContextParams = initParams(
                     NullContext.getParamsInfo(),
                     gateContext.params,
@@ -53,16 +51,16 @@ class HttpServer {
                 const route = Router({
                     mergeParams: true,
                 });
-                this.route.use(doc.cv_path, route);
+                this.route.use(doc.path, route);
                 const sessionConf = {
                     name: "essence.sid",
                     ...(params.paramSession || {}),
-                    store: gateContext.sessCtrl.getSessionStore(),
+                    store: gateContext.sessCtrl.getExpressSessionStore(),
                     secret: GateSession.sha1(
                         `${gateContext.name}_cookie_${Constants.SESSION_SECRET}`,
                     ),
                 };
-                sessionConf.cookie.maxAge *= 1000;
+                sessionConf.cookie!.maxAge *= 1000;
                 route.use(expressSession(sessionConf as any));
                 route.use(BodyParse(gateContext));
                 if (params.enableCors) {
@@ -71,7 +69,7 @@ class HttpServer {
                 if (params.enableHelmet) {
                     route.use(helmet(params.helmet));
                 }
-                route.all("/", (req, res) => {
+                route.all("/", (req: any, res: any) => {
                     MainController.execute(
                         new RequestContext(req as IRequest, res, gateContext),
                     ).then(noop, (err) => log.trace(err));
@@ -88,10 +86,10 @@ class HttpServer {
         await this.initRoute();
         await MainController.init();
         await ProcessController.init();
-        initProcess(ProcessController, "cluster");
+        initProcess(ProcessController.handlers, "cluster");
         // tslint:disable-next-line:no-shadowed-variable
         const HttpServer = http.createServer((req, res) => {
-            this.route(req, res, (err) => {
+            this.route(req, res, (err: any) => {
                 if (err) {
                     log.warn(err);
                 }
@@ -102,7 +100,7 @@ class HttpServer {
                             res,
                             err.gateContext,
                         ),
-                        null,
+                        null as any,
                         err,
                     );
                     return;
@@ -110,7 +108,7 @@ class HttpServer {
                 const stream = CreateJsonStream({
                     err_code: 404,
                     err_text: "is not an implemented route",
-                    metaData: { responseTime: 0.0 },
+                    metaData: {responseTime: 0.0},
                     success: false,
                 });
                 res.writeHead(404, {

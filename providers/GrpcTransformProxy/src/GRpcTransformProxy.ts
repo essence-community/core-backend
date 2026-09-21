@@ -1,21 +1,21 @@
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
-import { IParamsInfo } from "@ungate/plugininf/lib/ICCTParams";
-import IContext, { IFormData } from "@ungate/plugininf/lib/IContext";
-import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
-import { parse as parseSync } from "@ungate/plugininf/lib/parser/parser";
-import { parse } from "@ungate/plugininf/lib/parser/parserAsync";
-import { IResultProvider } from "@ungate/plugininf/lib/IResult";
+import {IParamsInfo} from "@ungate/plugininf/lib/ICCTParams";
+import IContext, {IFormData} from "@ungate/plugininf/lib/IContext";
+import {IGateQuery} from "@ungate/plugininf/lib/IQuery";
+import {parse as parseSync} from "@ungate/plugininf/lib/parser/parser";
+import {parse} from "@ungate/plugininf/lib/parser/parserAsync";
+import {IResultProvider} from "@ungate/plugininf/lib/IResult";
 import NullProvider, {
     IParamsProvider,
 } from "@ungate/plugininf/lib/NullProvider";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
 import * as grpc from "@grpc/grpc-js";
 import * as protoLoader from "@grpc/proto-loader";
-import { hiddenSecret, isEmpty } from "@ungate/plugininf/lib/util/Util";
-import { deepParam } from "@ungate/plugininf/lib/util/deepParam";
+import {hiddenSecret, isEmpty} from "@ungate/plugininf/lib/util/Util";
+import {deepParam} from "@ungate/plugininf/lib/util/deepParam";
 import * as fs from "fs";
 import * as path from "path";
-import { v4 as uuid } from "uuid";
+import {v4 as uuid} from "uuid";
 import Constant from "@ungate/plugininf/lib/Constants";
 
 export interface IGRpcTransformProxyParam extends IParamsProvider {
@@ -87,10 +87,10 @@ export default class GRpcTransformProxy extends NullProvider {
                 type: "combo",
                 name: "Type credentials",
                 defaultValue: "insecure",
-                valueField: [{ in: "ck_id" }],
+                valueField: [{in: "ck_id"}],
                 displayField: "ck_id",
-                setGlobal: [{ out: "g_type_credential" }],
-                records: [{ ck_id: "insecure" }, { ck_id: "ssl" }],
+                setGlobal: [{out: "g_type_credential"}],
+                records: [{ck_id: "insecure"}, {ck_id: "ssl"}],
             },
             credentialsSsl: {
                 type: "form_nested",
@@ -124,15 +124,15 @@ export default class GRpcTransformProxy extends NullProvider {
         };
     }
 
-    params: IGRpcTransformProxyParam;
+    params!: IGRpcTransformProxyParam;
 
-    packageDefinition: protoLoader.PackageDefinition;
-    grpcObject: grpc.GrpcObject;
+    packageDefinition!: protoLoader.PackageDefinition;
+    grpcObject!: grpc.GrpcObject;
     clients: {
         [key: string]: IServiceClient;
     } = {};
 
-    channelCredentials: grpc.ChannelCredentials;
+    channelCredentials!: grpc.ChannelCredentials;
 
     public processSql(
         context: IContext,
@@ -164,7 +164,7 @@ export default class GRpcTransformProxy extends NullProvider {
             this.params.credentialsSsl
         ) {
             let opts;
-            if (fs.existsSync(this.params.credentialsSsl.rootCerts)) {
+            if (this.params.credentialsSsl.rootCerts && fs.existsSync(this.params.credentialsSsl.rootCerts)) {
                 this.params.credentialsSsl.rootCerts = fs.readFileSync(
                     this.params.credentialsSsl.rootCerts,
                 );
@@ -175,7 +175,7 @@ export default class GRpcTransformProxy extends NullProvider {
                     this.params.credentialsSsl.rootCerts,
                 );
             }
-            if (fs.existsSync(this.params.credentialsSsl.privateKey)) {
+            if (this.params.credentialsSsl.privateKey && fs.existsSync(this.params.credentialsSsl.privateKey)) {
                 this.params.credentialsSsl.privateKey = fs.readFileSync(
                     this.params.credentialsSsl.privateKey,
                 );
@@ -186,7 +186,7 @@ export default class GRpcTransformProxy extends NullProvider {
                     this.params.credentialsSsl.privateKey,
                 );
             }
-            if (fs.existsSync(this.params.credentialsSsl.certChain)) {
+            if (this.params.credentialsSsl.certChain && fs.existsSync(this.params.credentialsSsl.certChain)) {
                 this.params.credentialsSsl.certChain = fs.readFileSync(
                     this.params.credentialsSsl.certChain,
                 );
@@ -202,7 +202,7 @@ export default class GRpcTransformProxy extends NullProvider {
                     this.params.credentialsSsl.checkServerIdentity,
                 );
                 opts = {
-                    checkServerIdentity: (hostname, cert) => {
+                    checkServerIdentity: (hostname: string, cert: any) => {
                         const res = parser.runer<string | boolean>({
                             hostname,
                             cert,
@@ -262,15 +262,15 @@ export default class GRpcTransformProxy extends NullProvider {
         if (isEmpty(query.queryStr) && isEmpty(query.modifyMethod)) {
             throw new ErrorException(101, "Empty query string");
         }
-        const parser = parse(query.queryStr || query.modifyMethod);
+        const parser = parse(query.queryStr || query.modifyMethod || "");
         const param = {
             jt_in_param:
                 typeof gateContext.request.body === "object" &&
-                (gateContext.request.body as IFormData).files
+                    (gateContext.request.body as IFormData).files
                     ? {
-                          ...query.inParams,
-                          ...(gateContext.request.body as IFormData).files,
-                      }
+                        ...query.inParams,
+                        ...(gateContext.request.body as IFormData).files,
+                    }
                     : query.inParams,
             jt_request_header: gateContext.request.headers,
             jt_request_method: gateContext.request.method,
@@ -279,7 +279,7 @@ export default class GRpcTransformProxy extends NullProvider {
 
         const config = await parser.runer<IQueryConfig>({
             get: (key: string, isKeyEmpty: boolean) => {
-                return param[key] || (isKeyEmpty ? "" : key);
+                return param[key as keyof typeof param] || (isKeyEmpty ? "" : key);
             },
         });
         if (gateContext.isDebugEnabled()) {
@@ -329,22 +329,22 @@ export default class GRpcTransformProxy extends NullProvider {
         }
 
         let result = await new Promise((resolve, reject) => {
-            let call;
+            let call: any;
             let isExit = false;
-            let timer = null;
+            let timer: NodeJS.Timeout | null = null;
             if (config.streamResponse) {
-                const res = [];
+                const res: any[] = [];
                 call =
                     config.args && !config.streamRequest
                         ? method.apply(
-                              client,
-                              Array.isArray(config.args)
-                                  ? config.args
-                                  : [config.args],
-                          )
+                            client,
+                            Array.isArray(config.args)
+                                ? config.args
+                                : [config.args],
+                        )
                         : method.call(client);
-                call.on("data", (data) => res.push(data));
-                call.on("error", (err) => {
+                call.on("data", (data: any) => res.push(data));
+                call.on("error", (err: any) => {
                     isExit = true;
                     if (timer) {
                         clearTimeout(timer);
@@ -376,7 +376,7 @@ export default class GRpcTransformProxy extends NullProvider {
                             ? config.args
                             : [config.args]
                         : []),
-                    (err, res) => {
+                    (err: any, res: any) => {
                         isExit = true;
                         if (timer) {
                             clearTimeout(timer);
@@ -411,7 +411,7 @@ export default class GRpcTransformProxy extends NullProvider {
 
             result = parserResult.runer({
                 get: (key: string, isKeyEmpty: boolean) => {
-                    return responseParam[key] || (isKeyEmpty ? "" : key);
+                    return responseParam[key as keyof typeof responseParam] || (isKeyEmpty ? "" : key);
                 },
             }) as any;
             if (!Array.isArray(result)) {
@@ -432,13 +432,13 @@ export default class GRpcTransformProxy extends NullProvider {
                 };
                 return parserRowResult.runer({
                     get: (key: string, isKeyEmpty: boolean) => {
-                        return rowParam[key] || (isKeyEmpty ? "" : key);
+                        return rowParam[key as keyof typeof rowParam] || (isKeyEmpty ? "" : key);
                     },
                 });
             });
         }
         return {
-            stream: ResultStream(result),
+            stream: ResultStream(result as unknown as Record<string, any>[]),
         };
     }
 }

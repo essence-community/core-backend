@@ -1,5 +1,5 @@
 import IGlobalObject from "@ungate/plugininf/lib/IGlobalObject";
-import { Constants as Constant } from "@ungate/plugininf/lib/Constants";
+import {Constants as Constant} from "@ungate/plugininf/lib/Constants";
 import moment from "moment-timezone";
 import * as os from "os";
 import * as path from "path";
@@ -24,14 +24,8 @@ class Constants extends Constant {
      * Local db of constants
      */
     public LOCAL_DB: string = (
-        process.env.GATE_LOCAL_DB || "nedb"
+        process.env.GATE_LOCAL_DB || "sqlite3"
     ).toLocaleLowerCase();
-    public NEDB_MULTI_PORT: number = process.env.NEDB_MULTI_PORT
-        ? parseInt(process.env.NEDB_MULTI_PORT, 10)
-        : 33030;
-    public NEDB_MULTI_HOST: string = process.env.NEDB_MULTI_HOST || "127.0.0.1";
-    public NEDB_TEMP_DB: string =
-        process.env.NEDB_TEMP_DB || path.join(os.tmpdir(), "db");
 
     public HOME_DIR: string = HOME_DIR;
 

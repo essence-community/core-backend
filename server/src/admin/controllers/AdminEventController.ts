@@ -1,15 +1,15 @@
-import ILocalDB from "@ungate/plugininf/lib/db/local/ILocalDB";
 import Logger from "@ungate/plugininf/lib/Logger";
-import { sendProcess } from "@ungate/plugininf/lib/util/ProcessSender";
+import {sendProcess} from "@ungate/plugininf/lib/util/ProcessSender";
 import * as fs from "fs";
 import * as https from "https";
 import MSG from "msgpack-lite";
 import * as websocket from "websocket";
 import Constants from "../../core/Constants";
-import Property, { getLocalDb } from "../../core/property/Property";
-import IServerConfig from "../../core/property/IServerConfig";
-import { noop } from "lodash";
-import { CreateJsonStream } from "@ungate/plugininf/lib/stream/ResultStream";
+import Property, {getLocalDb} from "../../core/property/Property";
+import {ServerModel} from "../../core/property/entities/ServerModel";
+import {noop} from "lodash";
+import {CreateJsonStream} from "@ungate/plugininf/lib/stream/ResultStream";
+import {In, Not, ObjectLiteral, Repository} from "typeorm";
 const logger = Logger.getLogger("AdminEventController");
 const TIMEOUT_CONNECT = 15000;
 
@@ -21,16 +21,15 @@ interface IServerConnect {
 
 function sendAllDate(
     conn: websocket.connection,
-    db: ILocalDB<any>,
+    db: Repository<ObjectLiteral>,
 ): Promise<void> {
     return db.find().then(async (docs) => {
         conn.sendBytes(
             MSG.encode({
                 data: {
-                    action: "insert",
+                    action: "save",
                     args: [docs],
-                    isTemp: db.isTemp,
-                    name: db.dbname,
+                    name: db.metadata.tableName,
                 },
                 event: "callDb",
             }),
@@ -39,14 +38,14 @@ function sendAllDate(
 }
 
 class AdminEventController {
-    private key: string | Buffer;
-    private cert: string | Buffer;
-    private ca: string | Buffer;
-    private wsServer: websocket.server;
-    protected server: https.Server;
+    private key!: string | Buffer;
+    private cert!: string | Buffer;
+    private ca!: string | Buffer;
+    private wsServer!: websocket.server;
+    protected server!: https.Server;
 
     private servers: Record<string, IServerConnect> = {};
-    private dbServers: ILocalDB<IServerConfig>;
+    private dbServers!: Repository<ServerModel>;
     public async init(): Promise<void> {
         if (!(
             fs.existsSync(Constants.GATE_ADMIN_CLUSTER_KEY) &&
@@ -78,7 +77,7 @@ class AdminEventController {
                     const stream = CreateJsonStream({
                         err_code: 404,
                         err_text: "is not an implemented route",
-                        metaData: { responseTime: 0.0 },
+                        metaData: {responseTime: 0.0},
                         success: false,
                     });
                     res.writeHead(404, {
@@ -101,75 +100,105 @@ class AdminEventController {
         await this.connectServers();
     }
 
-    public command = {
-        callDb: async (conn: websocket.connection, data) => {
-            const db = await getLocalDb(data.name, data.isTemp);
-            logger.trace("callDb: db: %s, action: %s", data.name, data.action);
-            if (db) {
-                return db[data.action](...data.args).then(noop, (err) => {
-                    logger.error(
-                        "Error: callDb: db: %s, action: %s, message: %s",
-                        data.name,
-                        data.action,
-                        err.message,
-                        err,
-                    );
-                    return Promise.resolve();
-                });
-            }
-        },
-        sendServerCallDb: (data) => {
-            const conn = this.servers[data.server].send;
+    public command: Record<string, (conn: websocket.connection, data?: Record<string, any>) => Promise<any>> = {
+        callDb: this.callDb,
+        callProcess: this.callProcess,
+    };
+    public async callDb(conn: websocket.connection, data?: Record<string, any>): Promise<any> {
+        let db: Repository<ObjectLiteral>;
+        try {
+            db = await getLocalDb(data?.name);
+        } catch (err) {
+            logger.error(
+                "Error: callDb: db: %s, action: %s, message: %s",
+                data?.name,
+                data?.action,
+                (err as Error).message,
+                err,
+            );
+            return;
+        }
+        logger.trace("callDb: db: %s, action: %s", data?.name, data?.action);
+        const fn = (db as any)[data?.action];
+        if (typeof fn === "function") {
+            return fn.apply(db, data?.args).then(noop, (err: any) => {
+                logger.error(
+                    "Error: callDb: db: %s, action: %s, message: %s",
+                    data?.name,
+                    data?.action,
+                    err.message,
+                    err,
+                );
+            });
+        }
+    }
+
+    private async callProcess(conn: websocket.connection, data?: Record<string, any>): Promise<any> {
+        logger.trace(
+            "callProcess: command: %s, target: %s",
+            data?.command,
+            data?.target,
+        );
+        sendProcess({
+            command: data?.command,
+            data: data?.data,
+            target: data?.target,
+        });
+    }
+
+    public handlers: Record<string, (data?: Record<string, any>) => Promise<any>> = {
+        sendServerCallDb: async (data?: Record<string, any>): Promise<any> => {
+            const conn = this.servers[data?.server].send;
             if (!conn) {
                 return;
             }
             logger.trace(
                 "sendServerCallDb: Server: %s, db: %s, action: %s",
-                data.server,
-                data.name,
-                data.action,
+                data?.server,
+                data?.name,
+                data?.action,
             );
             conn.sendBytes(
                 MSG.encode({
                     data: {
-                        action: data.action,
-                        args: data.args,
-                        isTemp: data.isTemp,
-                        name: data.name,
+                        action: data?.action,
+                        args: data?.args,
+                        isTemp: data?.isTemp,
+                        name: data?.name,
                     },
                     event: "callDb",
                 }),
             );
         },
 
-        sendAllServerCallDb: (data) => {
+        sendAllServerCallDb: async (data?: Record<string, any>): Promise<any> => {
             const conns = Object.values(this.servers)
                 .filter((val) => val.send)
                 .map((val) => val.send);
             logger.trace(
                 "sendAllServerCallDb: Conns: %s, db: %s, action: %s",
                 conns.length,
-                data.name,
-                data.action,
+                data?.name,
+                data?.action,
             );
             if (conns.length === 0) {
                 return;
             }
             conns.forEach((conn) => {
-                conn.sendBytes(
+                conn?.sendBytes(
                     MSG.encode({
                         data: {
-                            action: data.action,
-                            args: data.args,
-                            isTemp: data.isTemp,
-                            name: data.name,
+                            action: data?.action,
+                            args: data?.args,
+                            isTemp: data?.isTemp,
+                            name: data?.name,
                         },
                         event: "callDb",
                     }),
                 );
             });
         },
-        sendServerAdminCmdAll: (data) => {
+        sendServerAdminCmdAll: async (data?: Record<string, any>): Promise<any> => {
             Object.entries(this.servers).forEach(([name, server]) => {
                 const conn = server.send;
                 if (!conn) {
@@ -178,100 +207,66 @@ class AdminEventController {
                 logger.trace(
                     "sendServerAdminCmdAll: Server: %s, command: %s, target: %s",
                     name,
-                    data.command,
-                    data.target,
+                    data?.command,
+                    data?.target,
                 );
                 conn.sendBytes(
                     MSG.encode({
                         data: {
-                            command: data.command,
-                            data: data.data,
-                            target: data.target,
+                            command: data?.command,
+                            data: data?.data,
+                            target: data?.target,
                         },
                         event: "callProcess",
                     }),
                 );
             });
         },
-        sendServerAdminCmd: (data) => {
-            const conn = this.servers[data.server].send;
+        sendServerAdminCmd: async (data?: Record<string, any>): Promise<any> => {
+            const conn = this.servers[data?.server].send;
             if (!conn) {
                 return;
             }
             logger.trace(
                 "sendServerAdminCmd: Server: %s, command: %s, target: %s",
-                data.server,
-                data.command,
-                data.target,
+                data?.server,
+                data?.command,
+                data?.target,
             );
             conn.sendBytes(
                 MSG.encode({
                     data: {
-                        command: data.command,
-                        data: data.data,
-                        target: data.target,
+                        command: data?.command,
+                        data: data?.data,
+                        target: data?.target,
                     },
                     event: "callProcess",
                 }),
             );
         },
-
-        callProcess: (conn: websocket.connection, data) => {
-            logger.trace(
-                "callProcess: command: %s, target: %s",
-                data.command,
-                data.target,
-            );
-            sendProcess({
-                command: data.command,
-                data: data.data,
-                target: data.target,
-            });
-        },
     };
 
     public async connectServers(name?: string, first = false) {
-        const configs = await this.dbServers.find({
-            ck_id: name
-                ? name
-                : {
-                      $nin: [
-                          Constants.GATE_NODE_NAME,
-                          ...Object.entries(this.servers)
-                              .filter(([key, val]) => val.init || val.send)
-                              .map(([key]) => key),
-                      ],
-                  },
-        });
+        const exclude = [
+            Constants.GATE_NODE_NAME,
+            ...Object.entries(this.servers)
+                .filter(([key, val]) => val.init || val.send)
+                .map(([key]) => key),
+        ];
+        const configs = name
+            ? await this.dbServers.find({where: {id: name}})
+            : await this.dbServers.find({
+                where: {id: Not(In(exclude))},
+            });
         configs.forEach((conf) => {
-            this.onConnectServer(conf.ck_id, conf.cv_ip, conf.cn_port, true);
+            this.onConnectServer(conf.id, conf.ip, conf.port, true);
         });
     }
 
     public loadProperty(conn: websocket.connection) {
         const rows = [];
         rows.push(Property.getProviders().then((db) => sendAllDate(conn, db)));
-        rows.push(
-            Property.getContext().then((db) => {
-                db.find({}).then((configs) => {
-                    if (configs && configs.length) {
-                        configs.forEach((conf) => {
-                            if (
-                                conf.cct_params &&
-                                (!conf.cct_params.paramSession ||
-                                    conf.cct_params.paramSession?.typeStore ===
-                                        "nedb")
-                            ) {
-                                rows.push(Property.getUsers(conf.ck_id));
-                                rows.push(Property.getCache(conf.ck_id));
-                                rows.push(Property.getSession(conf.ck_id));
-                            }
-                        });
-                    }
-                });
-                return sendAllDate(conn, db);
-            }),
-        );
+        rows.push(Property.getContext().then((db) => sendAllDate(conn, db)));
         rows.push(Property.getPlugins().then((db) => sendAllDate(conn, db)));
         rows.push(Property.getServers().then((db) => sendAllDate(conn, db)));
         rows.push(Property.getSchedulers().then((db) => sendAllDate(conn, db)));
@@ -280,14 +275,14 @@ class AdminEventController {
         return Promise.all(rows);
     }
 
-    private onRequest(request) {
+    private onRequest(request: any) {
         const name = request.resourceURL.query.server;
         const connection: websocket.connection = request.accept(
             "adminevents",
             request.origin,
         );
         if (!this.servers[name]) {
-            this.servers[name] = { init: false };
+            this.servers[name] = {init: false};
         }
         this.servers[name].received = connection;
         connection.on("error", (error) => {
@@ -301,8 +296,8 @@ class AdminEventController {
             if (message.type === "binary") {
                 try {
                     const command = MSG.decode(message.binaryData);
-                    await this.command[command.event](connection, command.data);
-                } catch (err) {
+                    await this.command[command.event as keyof typeof this.command](connection, command.data as any);
+                } catch (err: any) {
                     logger.warn(
                         `Cluster message: ${message.binaryData}\nError: ${err.message}`,
                         err,
@@ -319,7 +314,7 @@ class AdminEventController {
         first: boolean = true,
     ) {
         if (!this.servers[name]) {
-            this.servers[name] = { init: false };
+            this.servers[name] = {init: false};
         }
         if (
             this.servers[name] &&

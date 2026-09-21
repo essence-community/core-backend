@@ -3,8 +3,8 @@ import PostgresDB from "@ungate/plugininf/lib/db/postgres";
 import BreakException from "@ungate/plugininf/lib/errors/BreakException";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
-import IContext, { IParam } from "@ungate/plugininf/lib/IContext";
-import { IContextPluginResult } from "@ungate/plugininf/lib/IContextPlugin";
+import IContext, {IParam} from "@ungate/plugininf/lib/IContext";
+import {IContextPluginResult} from "@ungate/plugininf/lib/IContextPlugin";
 import IResult from "@ungate/plugininf/lib/IResult";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
 import {
@@ -12,23 +12,33 @@ import {
     sortFilesData,
     isEmpty,
 } from "@ungate/plugininf/lib/util/Util";
-import CoreContext, { ICoreParams } from "./CoreContext";
-import ICoreController, { IPropertyContext } from "./ICoreController";
-import { isObject, noop } from "lodash";
-import { FIND_SYMBOL, replaceNull } from "./Util";
-import { IRufusLogger } from "@ungate/plugininf/lib/Logger";
-import { safePipe } from "@ungate/plugininf/lib/stream/Util";
-import { Transform } from "stream";
-import { TempTable } from "./TempTable";
-import { IPageData } from "./CoreContext.types";
-import { deepParam } from "@ungate/plugininf/lib/util/deepParam";
-import { resolve } from "path";
+import CoreContext, {ICoreParams} from "./CoreContext";
+import ICoreController, {IPropertyContext} from "./ICoreController";
+import {isObject, noop} from "lodash";
+import {FIND_SYMBOL, replaceNull} from "./Util";
+import {IRufusLogger} from "@ungate/plugininf/lib/Logger";
+import {safePipe} from "@ungate/plugininf/lib/stream/Util";
+import {Transform} from "stream";
+import {TempTable} from "./TempTable";
+import {IPageData} from "./CoreContext.types";
+import {deepParam} from "@ungate/plugininf/lib/util/deepParam";
+import {resolve} from "path";
+import {In} from "typeorm";
+import {
+    fromModify,
+    fromObject,
+    fromPage,
+    fromQuery,
+    fromQueryCache,
+    toAction,
+    toSysSetting,
+} from "./entities/map";
 
 export default class OnlineController implements ICoreController {
     public params: ICoreParams;
     public dataSource: PostgresDB;
     public name: string;
-    public tempTable: TempTable;
+    public tempTable!: TempTable;
     private sysSettings =
         "select s.ck_id, s.cv_value, s.cv_description from s_mt.t_sys_setting s";
     private pageFindSql =
@@ -170,17 +180,17 @@ export default class OnlineController implements ICoreController {
             this.dataSource
                 .executeStmt(
                     this.pageObjectFindSql,
-                    null,
+                    undefined,
                     {
                         ck_page_object: ckPageObject,
                     },
-                    {},
+                    undefined,
                     {
                         resultSet: true,
                     },
                 )
                 .then((res) => {
-                    const data = [];
+                    const data: any[] = [];
                     res.stream.on("data", (row) => {
                         data.push({
                             ...row,
@@ -200,7 +210,7 @@ export default class OnlineController implements ICoreController {
                         const [row] = data;
                         if (this.isSave) {
                             this.tempTable.dbObject
-                                .insert(data)
+                                .save(data.map(fromObject))
                                 .then(noop, noop);
                         }
                         if (
@@ -210,10 +220,10 @@ export default class OnlineController implements ICoreController {
                             return gateContext.session
                                 ? reject(CoreContext.accessDenied())
                                 : reject(
-                                      new ErrorException(
-                                          ErrorGate.REQUIRED_AUTH,
-                                      ),
-                                  );
+                                    new ErrorException(
+                                        ErrorGate.REQUIRED_AUTH,
+                                    ),
+                                );
                         }
                         return reject(
                             new BreakException({
@@ -226,35 +236,34 @@ export default class OnlineController implements ICoreController {
         });
     }
     public async getSetting(gateContext: IContext): Promise<any> {
-        const { js } = gateContext.params;
+        const {js} = gateContext.params;
         const json = JSON.parse(gateContext.params.json || "{}");
         const ckId = json.filter?.ck_id;
         return new Promise((resolve, reject) => {
             this.dataSource
                 .executeStmt(
                     this.sysSettings,
-                    null,
-                    {},
-                    {},
+                    undefined,
+                    undefined,
+                    undefined,
                     {
                         resultSet: true,
                     },
                 )
                 .then(async (res) => {
-                    const data = [
+                    const data: any[] = [
                         {
                             ck_id: "core_gate_version",
                             cv_description: "Версия шлюза",
                             cv_value: gateContext.gateVersion,
                         },
                     ];
+                    const cacheFound =
+                        await this.tempTable.dbSysSettings.findOne({
+                            where: {id: "cache_date"},
+                        });
                     const cacheData =
-                        await this.tempTable.dbSysSettings.findOne(
-                            {
-                                ck_id: "cache_date",
-                            },
-                            true,
-                        );
+                        cacheFound && toSysSetting(cacheFound);
                     if (cacheData) {
                         data.push(cacheData);
                     }
@@ -331,12 +340,12 @@ export default class OnlineController implements ICoreController {
         const self = this;
         if (result.type === "error") {
             return new Promise((resolve, reject) => {
-                const data = [];
-                result.data.on("error", (err) =>
+                const data: any[] = [];
+                result.data!.on("error", (err) =>
                     reject(new Error(err.message)),
                 );
-                result.data.on("data", (row) => data.push(row));
-                result.data.on("end", () => {
+                result.data!.on("data", (row) => data.push(row));
+                result.data!.on("end", () => {
                     const doc = data[0];
                     let res;
                     if (doc.err_code > 0) {
@@ -366,10 +375,10 @@ export default class OnlineController implements ICoreController {
                                     },
                                     ...(this.params.debug
                                         ? {
-                                              cv_stack_trace:
-                                                  doc.err_text ||
-                                                  JSON.stringify(doc),
-                                          }
+                                            cv_stack_trace:
+                                                doc.err_text ||
+                                                JSON.stringify(doc),
+                                        }
                                         : {}),
                                 },
                             ]),
@@ -407,20 +416,20 @@ export default class OnlineController implements ICoreController {
                                 ...(isEmpty(chunk.jt_form_message)
                                     ? []
                                     : Object.entries(
-                                          chunk.jt_form_message,
-                                      ).reduce((arr, [, values]) => {
-                                          return [
-                                              ...arr,
-                                              ...Object.keys(values),
-                                          ];
-                                      }, [])),
+                                        chunk.jt_form_message,
+                                    ).reduce((arr: string[], [, values]: [string, any]) => {
+                                        return [
+                                            ...arr,
+                                            ...Object.keys(values),
+                                        ];
+                                    }, [])),
                             ];
                             if (
                                 chunk.jt_form_message &&
                                 cvErrors.includes("error")
                             ) {
                                 gateContext.connection
-                                    .rollback()
+                                    ?.rollback()
                                     .then(noop)
                                     .catch((err) => {
                                         gateContext.warn(err.message, err);
@@ -435,7 +444,7 @@ export default class OnlineController implements ICoreController {
                                 .then((errors) => {
                                     if (errors) {
                                         gateContext.connection
-                                            .rollback()
+                                            ?.rollback()
                                             .then(noop)
                                             .catch((err) => {
                                                 gateContext.warn(
@@ -456,7 +465,7 @@ export default class OnlineController implements ICoreController {
                             !isEmpty(chunk.jt_message.error)
                         ) {
                             gateContext.connection
-                                .rollback()
+                                ?.rollback()
                                 .then(noop)
                                 .catch((err) => {
                                     gateContext.warn(err.message, err);
@@ -468,9 +477,9 @@ export default class OnlineController implements ICoreController {
                     }).then(
                         () => {
                             rTransform._transform = ((
-                                childChunk,
-                                _encode,
-                                cb,
+                                childChunk: any,
+                                _encode: any,
+                                cb: any,
                             ) => {
                                 cb(null, childChunk);
                             }).bind(rTransform);
@@ -479,9 +488,9 @@ export default class OnlineController implements ICoreController {
                         (err) => {
                             gateContext.warn(err.message, err);
                             rTransform._transform = ((
-                                childChunk,
-                                _encode,
-                                cb,
+                                childChunk: any,
+                                _encode: any,
+                                cb: any,
                             ) => {
                                 cb(null, childChunk);
                             }).bind(rTransform);
@@ -490,12 +499,12 @@ export default class OnlineController implements ICoreController {
                     );
                 },
             });
-            result.data = safePipe(result.data, rTransform);
+            result.data = safePipe(result.data!, rTransform);
         }
         if (isCache) {
-            const data = [];
+            const data: any[] = [];
             result.data = safePipe(
-                result.data,
+                result.data!,
                 new Transform({
                     readableObjectMode: true,
                     writableObjectMode: true,
@@ -514,14 +523,16 @@ export default class OnlineController implements ICoreController {
                         const found = deepParam(value, gateContext.params);
                         res.push(found);
                         return res;
-                    }, []) || [];
+                    }, [] as any[]) || [];
                 const shasum = crypto.createHash("sha1");
                 shasum.update(JSON.stringify(param));
                 this.tempTable.dbQueryCache
-                    .insert({
-                        ck_id: `${gateContext.queryName}_${shasum.digest("hex")}`,
-                        cct_data: data,
-                    })
+                    .save(
+                        fromQueryCache({
+                            ck_id: `${gateContext.queryName}_${shasum.digest("hex")}`,
+                            cct_data: data,
+                        }),
+                    )
                     .catch((err) => this.logger.error(err));
             });
         }
@@ -540,28 +551,25 @@ export default class OnlineController implements ICoreController {
             this.params.anonymousAction,
             ...(gateContext.session?.userData.ca_actions || []),
         ];
-        const isAccess = await this.tempTable.dbModifyAction.findOne(
-            {
-                $and: [
-                    { ck_page_object: pageObject },
-                    { cn_action: { $in: caActions } },
-                ],
+        const isAccess = await this.tempTable.dbModifyAction.findOne({
+            where: {
+                pageObject,
+                action: In(caActions),
             },
-            true,
-        );
+        });
         if (isEmpty(isAccess) && !this.params.disableCheckAccess) {
             throw CoreContext.accessDenied();
         }
         const res = await this.dataSource.executeStmt(
             this.modifyFindSql,
-            null,
+            undefined,
             {
                 page_object: pageObject,
             },
         );
 
         return new Promise((resolve, reject) => {
-            const data = [];
+            const data: any[] = [];
             res.stream.on("error", (err) => reject(new Error(err.message)));
             res.stream.on("data", (row) => {
                 data.push({
@@ -573,7 +581,9 @@ export default class OnlineController implements ICoreController {
             res.stream.on("end", () => {
                 if (data.length) {
                     if (this.isSave) {
-                        this.tempTable.dbQuery.insert(data).then(noop, noop);
+                        this.tempTable.dbModify
+                            .save(data.map(fromModify))
+                            .then(noop, noop);
                     }
                     const doc = data[0];
                     return resolve({
@@ -617,7 +627,7 @@ export default class OnlineController implements ICoreController {
         version: "1" | "2" | "3",
     ): Promise<any> {
         return this.dataSource
-            .executeStmt(this.pageFindSql, null, {
+            .executeStmt(this.pageFindSql, undefined, {
                 ck_page: ckPage,
                 cv_url: ckPage,
             })
@@ -654,7 +664,7 @@ export default class OnlineController implements ICoreController {
                                 ) {
                                     children.length = 0;
                                 }
-                            } catch (e) {
+                            } catch (e: any) {
                                 this.logger.error(
                                     `Error parse: ${row.json} ${e.message}`,
                                     e,
@@ -662,7 +672,7 @@ export default class OnlineController implements ICoreController {
                             }
                         });
                         res.stream.on("end", () => {
-                            let page: IPageData = null;
+                            let page: IPageData | undefined;
                             Object.entries(data).some((arr) => {
                                 if (
                                     arr[0] === ckPage ||
@@ -685,7 +695,7 @@ export default class OnlineController implements ICoreController {
                             }
                             if (this.isSave) {
                                 this.tempTable.dbPage
-                                    .insert(Object.values(data))
+                                    .save(Object.values(data).map(fromPage))
                                     .then(noop, noop);
                             }
                             if (
@@ -695,10 +705,10 @@ export default class OnlineController implements ICoreController {
                                 return gateContext.session
                                     ? reject(CoreContext.accessDenied())
                                     : reject(
-                                          new ErrorException(
-                                              ErrorGate.REQUIRED_AUTH,
-                                          ),
-                                      );
+                                        new ErrorException(
+                                            ErrorGate.REQUIRED_AUTH,
+                                        ),
+                                    );
                             }
                             if (version === "3") {
                                 return reject(
@@ -734,11 +744,11 @@ export default class OnlineController implements ICoreController {
         ];
         const pageObject = (gateContext.params.page_object || "").toLowerCase();
         return this.dataSource
-            .executeStmt(this.queryFindSql, null, { ck_query: name })
+            .executeStmt(this.queryFindSql, undefined, {ck_query: name})
             .then(
                 (res) =>
                     new Promise((resolve, reject) => {
-                        const data = [];
+                        const data: any[] = [];
                         res.stream.on("error", (err) =>
                             reject(new Error(err.message)),
                         );
@@ -762,7 +772,7 @@ export default class OnlineController implements ICoreController {
                             if (data.length) {
                                 if (this.isSave) {
                                     this.tempTable.dbQuery
-                                        .insert(data)
+                                        .save(data.map(fromQuery))
                                         .then(noop, noop);
                                 }
                                 const [doc] = data;
@@ -777,23 +787,17 @@ export default class OnlineController implements ICoreController {
                                     );
                                 }
                                 if (doc.cr_access === "po_session") {
-                                    const access =
+                                    const accessFound =
                                         await this.tempTable.dbQueryAction.findOne(
                                             {
-                                                $and: [
-                                                    {
-                                                        ck_page_object:
-                                                            pageObject,
-                                                    },
-                                                    {
-                                                        cn_action: {
-                                                            $in: caActions,
-                                                        },
-                                                    },
-                                                ],
+                                                where: {
+                                                    pageObject,
+                                                    action: In(caActions),
+                                                },
                                             },
-                                            true,
                                         );
+                                    const access =
+                                        accessFound && toAction(accessFound);
                                     if (
                                         isEmpty(access) &&
                                         !this.params.disableCheckAccess
@@ -825,12 +829,12 @@ export default class OnlineController implements ICoreController {
                                             },
                                             ...(doc.cr_type === "report"
                                                 ? [
-                                                      {
-                                                          cv_name:
-                                                              "EXTRACT_META_DATA",
-                                                          outType: "DEFAULT",
-                                                      },
-                                                  ]
+                                                    {
+                                                        cv_name:
+                                                            "EXTRACT_META_DATA",
+                                                        outType: "DEFAULT",
+                                                    },
+                                                ]
                                                 : []),
                                         ],
                                         needSession: doc.cr_access !== "free",
@@ -840,10 +844,10 @@ export default class OnlineController implements ICoreController {
                                     metaData: this.params.disableCache
                                         ? {}
                                         : {
-                                              cache: doc.cr_cache,
-                                              cache_key_param:
-                                                  doc.cv_cache_key_param,
-                                          },
+                                            cache: doc.cr_cache,
+                                            cache_key_param:
+                                                doc.cv_cache_key_param,
+                                        },
                                 });
                             }
                             return reject(

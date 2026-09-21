@@ -1,5 +1,5 @@
 const fs = require("fs");
-const { Service } = require("node-windows");
+const {Service} = require("node-windows");
 const path = require("path");
 
 const props = {};
@@ -19,9 +19,6 @@ const envName = [
     "GATE_CLUSTER_NUM",
     "GATE_HTTP_PORT",
     "GATE_UPLOAD_DIR",
-    "NEDB_MULTI_PORT",
-    "NEDB_MULTI_HOST",
-    "NEDB_TEMP_DB",
     "CONTEXT_PLUGIN_DIR",
     "PROVIDER_PLUGIN_DIR",
     "DATA_PLUGIN_DIR",

@@ -21,7 +21,7 @@ var debug = require('debug')('express-session');
 var deprecate = require('depd')('express-session');
 var onHeaders = require('on-headers')
 var parseUrl = require('parseurl');
-var uid = require('uid-safe').sync
+var uuid = require('uuid');
 
 var Cookie = require('./session/cookie')
 var MemoryStore = require('./session/memory')
@@ -531,7 +531,7 @@ function session(options) {
  */
 
 function generateSessionId(sess) {
-  return uid(24);
+  return uuid.v4();
 }
 
 /**
@@ -553,7 +553,7 @@ function getcookie(req, name, secrets) {
     raw = cookies[name];
 
     if (raw) {
-      if (raw.substr(0, 2) === 's:') {
+      if (raw.substr(0, 2) === 's.') {
         val = unsigncookie(raw.slice(2), secrets);
 
         if (val === false) {
@@ -580,7 +580,7 @@ function getcookie(req, name, secrets) {
     raw = req.cookies[name];
 
     if (raw) {
-      if (raw.substr(0, 2) === 's:') {
+      if (raw.substr(0, 2) === 's.') {
         val = unsigncookie(raw.slice(2), secrets);
 
         if (val) {
@@ -668,7 +668,7 @@ function issecure(req, trustProxy) {
  */
 
 function setcookie(res, name, val, secret, options) {
-  var signed = 's:' + sign(val, secret);
+  var signed = 's.' + sign(val, secret);
   var data = cookie.stringifyCookie({[name]: signed}, options);
 
   debug('set-cookie %s', data);

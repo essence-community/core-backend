@@ -1,10 +1,10 @@
 import PostgresDB from "@ungate/plugininf/lib/db/postgres";
 import IContext from "@ungate/plugininf/lib/IContext";
-import { IContextPluginResult } from "@ungate/plugininf/lib/IContextPlugin";
+import {IContextPluginResult} from "@ungate/plugininf/lib/IContextPlugin";
 import IResult from "@ungate/plugininf/lib/IResult";
-import { ICoreParams } from "./CoreContext";
-import { IRufusLogger } from "@ungate/plugininf/lib/Logger";
-import { TempTable } from "./TempTable";
+import {ICoreParams} from "./CoreContext";
+import {IRufusLogger} from "@ungate/plugininf/lib/Logger";
+import {TempTable} from "./TempTable";
 
 export default interface ICoreController {
     name: string;
@@ -33,5 +33,12 @@ export interface IPropertyContext {
     dataSource: PostgresDB;
     params: ICoreParams;
     logger: IRufusLogger;
-    tempTable?: TempTable;
+    tempTable: TempTable;
+}
+
+export interface IPropertyTempTable {
+    dataSource: PostgresDB;
+    logger: IRufusLogger;
+    name: string;
+    params: ICoreParams;
 }

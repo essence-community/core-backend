@@ -2,14 +2,15 @@ import Logger from "@ungate/plugininf/lib/Logger";
 import * as crypto from "crypto";
 import * as http from "http";
 import * as https from "https";
-import { delay, forEach } from "lodash";
+import {delay, forEach} from "lodash";
 import * as websocket from "websocket";
 import Mask from "../Mask";
 import PluginManager from "../../core/pluginmanager/PluginManager";
 import IContextPlugin from "@ungate/plugininf/lib/IContextPlugin";
-import { ParsedQs } from "qs";
-import ISession from "@ungate/plugininf/lib/ISession";
-import { GateSession } from "../../core/session/GateSession";
+import {ParsedQs} from "qs";
+import ISession, {IUserData} from "@ungate/plugininf/lib/ISession";
+import {GateSession} from "../../core/session/GateSession";
+import {In} from "typeorm";
 const logger = Logger.getLogger("NotificationController");
 const TIMEOUT = 30000;
 
@@ -35,8 +36,8 @@ interface IConfigSession {
 
 class NotificationController {
     public notificationClient: IClientWs = {};
-    private wsServer: websocket.server;
-    private contexts: IContextPlugin[];
+    private wsServer!: websocket.server;
+    private contexts!: IContextPlugin[];
     public async init(httpServer: http.Server | https.Server): Promise<void> {
         this.wsServer = new websocket.server({
             httpServer,
@@ -50,7 +51,7 @@ class NotificationController {
      * Установка маски
      * @param isMask
      */
-    public changeMask = (isMask) => {
+    public changeMask = async (isMask: boolean) => {
         setTimeout(
             () => {
                 this.sendNotificationAll(
@@ -81,74 +82,78 @@ class NotificationController {
             }
             const sessionId = decodeURIComponent(
                 (Array.isArray((request.resourceURL.query as ParsedQs).session)
-                    ? (request.resourceURL.query as ParsedQs).session[0]
+                    ? (request.resourceURL.query as any).session[0]
                     : (request.resourceURL.query as ParsedQs)
-                          .session) as string,
+                        .session) as string,
             );
             const connection = request.accept(
                 "notification",
                 request.origin,
             ) as IWSConnect;
             const configSession = (await this.contexts.slice(1).reduce(
-                (res, context) => {
-                    if (res) {
-                        return res;
+                (res, context) => res.then((sess) => {
+                    if (sess) {
+                        return sess;
                     }
                     return (context.sessCtrl as GateSession)
-                        .loadSession(null, sessionId, true)
+                        .loadSession(undefined, sessionId, true)
                         .then((session) =>
-                            session ? { session, context } : session,
+                            session ? {session, context} : session,
                         );
-                },
+                }),
                 (this.contexts[0].sessCtrl as GateSession)
-                    .loadSession(null, sessionId, true)
+                    .loadSession(undefined, sessionId, true)
                     .then((session) =>
                         session
-                            ? { session, context: this.contexts[0] }
+                            ? {session, context: this.contexts[0]}
                             : session,
                     ),
             )) as {
                 session: ISession;
                 context: IContextPlugin;
             };
-            if (configSession) {
-                const { session, context } = configSession;
-                logger.info(`WS Connect ${JSON.stringify(session)}`);
-                connection.sessionId = session.session;
-                connection.gateContext = context;
-                connection.session = session;
-                const buf = Buffer.alloc(6);
-                crypto.randomFillSync(buf);
-                connection.uniqhash = buf.toString("hex");
-                connection.on("close", () => {
-                    const obj =
-                        this.notificationClient[
-                            `${session.idUser}:${session.nameProvider}`
-                        ];
-                    delete obj[connection.uniqhash];
-                });
-                if (
-                    this.notificationClient[
-                        `${session.idUser}:${session.nameProvider}`
-                    ]
-                ) {
-                    this.notificationClient[
-                        `${session.idUser}:${session.nameProvider}`
-                    ][connection.uniqhash] = connection;
-                } else {
-                    this.notificationClient[
-                        `${session.idUser}:${session.nameProvider}`
-                    ] = {
-                        [connection.uniqhash]: connection,
-                    };
-                }
+            if (!configSession || !configSession.session) {
+                logger.debug("Close %s", sessionId);
+                connection.sendCloseFrame(
+                    4001,
+                    "Session not found, specified query requires authentication",
+                );
                 return;
             }
-            logger.debug("Close %s", sessionId);
-            connection.sendCloseFrame(
-                4001,
-                "Session not found, specified query requires authentication",
-            );
+            const {session, context} = configSession;
+            if (logger.isDebugEnabled()) {
+                logger.info(`WS Connect ${JSON.stringify(session)}`);
+            } else {
+                logger.info(`WS Connect ${session.idUser} ${session.nameProvider} ${session.session.substring(2, 10)}`);
+            }
+            connection.sessionId = session.session;
+            connection.gateContext = context;
+            connection.session = session;
+            const buf = Buffer.alloc(6);
+            crypto.randomFillSync(buf);
+            connection.uniqhash = buf.toString("hex");
+            connection.on("close", () => {
+                const obj =
+                    this.notificationClient[
+                    `${session.idUser}:${session.nameProvider}`
+                    ];
+                delete obj[connection.uniqhash];
+            });
+            if (
+                this.notificationClient[
+                `${session.idUser}:${session.nameProvider}`
+                ]
+            ) {
+                this.notificationClient[
+                    `${session.idUser}:${session.nameProvider}`
+                ][connection.uniqhash] = connection;
+            } else {
+                this.notificationClient[
+                    `${session.idUser}:${session.nameProvider}`
+                ] = {
+                    [connection.uniqhash]: connection,
+                };
+            }
         } catch (err) {
             logger.error("Fail connect", err);
         }
@@ -161,8 +166,8 @@ class NotificationController {
     public getIdUsers = (nameProvider?: string) => {
         const allConn = Object.values(this.notificationClient || {}).reduce(
             (arr, value) => [...arr, ...Object.values(value)],
-            [],
-        ) as IWSConnect[];
+            [] as IWSConnect[],
+        );
         if (!nameProvider) {
             return allConn.map((conn) => conn.session.idUser);
         }
@@ -184,9 +189,9 @@ class NotificationController {
     ) => {
         const allConn = Object.values(this.notificationClient || {}).reduce(
             (arr, value) => [...arr, ...Object.values(value)],
-            [],
-        ) as IWSConnect[];
-        let filter: (IWSConnect) => boolean = () => true;
+            [] as IWSConnect[],
+        );
+        let filter: (conn: IWSConnect) => boolean = () => true;
         if (ckUser && nameProvider) {
             filter = (conn) =>
                 conn.session.idUser === ckUser &&
@@ -215,9 +220,9 @@ class NotificationController {
     public updateUserInfo = (nameProvider?: string, ckUser?: string) => {
         const allConn = Object.values(this.notificationClient || {}).reduce(
             (arr, value) => [...arr, ...Object.values(value)],
-            [],
-        ) as IWSConnect[];
-        let filter: (IWSConnect) => boolean = () => true;
+            [] as IWSConnect[],
+        );
+        let filter: (conn: IWSConnect) => boolean = () => true;
         if (ckUser && nameProvider) {
             filter = (conn) =>
                 conn.session.idUser === ckUser &&
@@ -240,35 +245,35 @@ class NotificationController {
                 res[conn.gateContext.name].conns.push(conn);
             }
             return res;
-        }, {}) as IConfigSession;
+        }, {} as IConfigSession);
         if (confSessions) {
-            Object.values(confSessions).forEach(({ context, sessions }) => {
+            Object.values(confSessions).forEach(({context, sessions}) => {
                 (context.sessCtrl as GateSession)
                     .findSessions(sessions, false)
                     .then((docs) => {
                         const ckUsers = Object.values(docs).map(
                             (doc) =>
-                                `${doc.gsession.idUser}:${doc.gsession.nameProvider}`,
+                                `${doc.gsession?.idUser}:${doc.gsession?.nameProvider}`,
                         );
                         const data = Object.values(docs).reduce((res, doc) => {
                             res[
-                                `${doc.gsession.idUser}:${doc.gsession.nameProvider}`
-                            ] = doc.gsession.userData;
+                                `${doc.gsession?.idUser}:${doc.gsession?.nameProvider}`
+                            ] = doc.gsession?.userData as IUserData;
                             return res;
-                        }, {});
+                        }, {} as Record<string, IUserData>);
                         return (context.sessCtrl as GateSession)
-                            .getUserDb()
-                            .find({ ck_id: { $in: ckUsers } })
+                            .getUserStore()
+                            .find({where: {id: In(ckUsers)}})
                             .then((users) => {
                                 users.forEach((user) => {
                                     Object.values(
-                                        this.notificationClient[user.ck_id],
+                                        this.notificationClient[user.id],
                                     ).forEach((conn) =>
                                         conn.sendUTF(
                                             JSON.stringify([
                                                 {
                                                     data: {
-                                                        ...data[user.ck_id],
+                                                        ...data[user.id],
                                                         ...user.data,
                                                         session: conn.sessionId,
                                                     },
@@ -291,8 +296,8 @@ class NotificationController {
     public checkConnection = () => {
         const allConn = Object.values(this.notificationClient || {}).reduce(
             (arr, value) => [...arr, ...Object.values(value)],
-            [],
-        ) as IWSConnect[];
+            [] as IWSConnect[],
+        );
         const confSessions = allConn.reduce((res, conn) => {
             if (!res[conn.gateContext.name]) {
                 res[conn.gateContext.name] = {
@@ -305,19 +310,15 @@ class NotificationController {
                 res[conn.gateContext.name].conns.push(conn);
             }
             return res;
-        }, {}) as IConfigSession;
+        }, {} as IConfigSession);
         if (allConn.length) {
             Object.values(confSessions).forEach(
-                ({ context, sessions, conns }) => {
+                ({context, sessions, conns}) => {
                     (context.sessCtrl as GateSession)
-                        .findSessions(sessions, false)
+                        .findSessions(sessions, true)
                         .then((docs) => {
-                            const getSession = Object.values(docs).map(
+                            const disconectedSession = Object.values(docs).map(
                                 (doc) => doc.gsession?.session,
-                            );
-                            const disconectedSession = sessions.filter(
-                                (sessionId) =>
-                                    getSession.indexOf(sessionId) === -1,
                             );
                             disconectedSession.forEach((sessionId) => {
                                 conns.forEach((conn) => {
@@ -332,7 +333,7 @@ class NotificationController {
                                         );
                                         const obj =
                                             this.notificationClient[
-                                                `${conn.session.idUser}:${conn.session.nameProvider}`
+                                            `${conn.session.idUser}:${conn.session.nameProvider}`
                                             ];
                                         delete obj[conn.uniqhash];
                                     }

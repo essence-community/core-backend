@@ -1,24 +1,24 @@
 import IOptions from "@ungate/plugininf/lib/db/IOptions";
 import PostgresDB from "@ungate/plugininf/lib/db/postgres/index";
-import { IPostgresDBConfig } from "@ungate/plugininf/lib/db/postgres/PostgresDB";
+import {IPostgresDBConfig} from "@ungate/plugininf/lib/db/postgres/PostgresDB";
 import BreakException from "@ungate/plugininf/lib/errors/BreakException";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
-import ICCTParams, { IParamsInfo } from "@ungate/plugininf/lib/ICCTParams";
+import ICCTParams, {IParamsInfo} from "@ungate/plugininf/lib/ICCTParams";
 import IContext from "@ungate/plugininf/lib/IContext";
 import IObjectParam from "@ungate/plugininf/lib/IObjectParam";
-import IQuery, { IGateQuery } from "@ungate/plugininf/lib/IQuery";
-import { IResultProvider } from "@ungate/plugininf/lib/IResult";
+import IQuery, {IGateQuery} from "@ungate/plugininf/lib/IQuery";
+import {IResultProvider} from "@ungate/plugininf/lib/IResult";
 import NullProvider, {
     IParamsProvider,
 } from "@ungate/plugininf/lib/NullProvider";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
-import { hiddenSecret, initParams } from "@ungate/plugininf/lib/util/Util";
-import { isEmpty } from "@ungate/plugininf/lib/util/Util";
-import { isObject, noop, pick } from "lodash";
+import {hiddenSecret, initParams} from "@ungate/plugininf/lib/util/Util";
+import {isEmpty} from "@ungate/plugininf/lib/util/Util";
+import {isObject, noop, pick} from "lodash";
 import * as axios from "axios";
 import * as URL from "url";
-import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
+import {ISessCtrl} from "@ungate/plugininf/lib/ISessCtrl";
 
 interface IResultSequence {
     res?: IResultProvider;
@@ -46,7 +46,7 @@ export default class CoreIntegration extends NullProvider {
         };
     }
     public dataSource: PostgresDB;
-    public params: IIntegrationParams;
+    public params!: IIntegrationParams;
     constructor(name: string, params: ICCTParams, sessCtrl: ISessCtrl) {
         super(name, params, sessCtrl);
         this.params = initParams(CoreIntegration.getParamsInfo(), this.params);
@@ -68,11 +68,11 @@ export default class CoreIntegration extends NullProvider {
         try {
             context.connection = conn;
             if (query.queryStr) {
-                query.extraOutParams.push({
+                query.extraOutParams?.push({
                     cv_name: "result",
                     outType: "DEFAULT",
                 });
-                query.extraOutParams.push({
+                query.extraOutParams?.push({
                     cv_name: "cur_result",
                     outType: "CURSOR",
                 });
@@ -80,7 +80,7 @@ export default class CoreIntegration extends NullProvider {
                 if (context.session) {
                     inParam.sess_session = context.session.session;
                     Object.keys(context.session.userData).forEach((key) => {
-                        inParam[`sess_${key}`] = context.session.userData[key];
+                        inParam[`sess_${key}`] = context.session!.userData[key];
                     });
                 }
                 return conn
@@ -99,7 +99,7 @@ export default class CoreIntegration extends NullProvider {
                     .then(
                         (res) =>
                             new Promise((resolve, reject) => {
-                                const data = [];
+                                const data: any[] = [];
                                 res.stream.on("error", (err) => reject(err));
                                 res.stream.on("data", (chunk) =>
                                     data.push(chunk),
@@ -107,7 +107,7 @@ export default class CoreIntegration extends NullProvider {
                                 res.stream.on("end", () => {
                                     if (data.length) {
                                         const doc = data[0];
-                                        query.queryData.querys = data;
+                                        query.queryData!.querys = data;
                                         query.queryStr = doc.cc_request;
                                         return resolve(query);
                                     }
@@ -123,54 +123,54 @@ export default class CoreIntegration extends NullProvider {
             return conn
                 .executeStmt(
                     "with recursive ot_interface as (\n" +
-                        "select\n" +
-                        "    i.ck_id,\n" +
-                        "    i.ck_d_interface,\n" +
-                        "    i.ck_d_provider,\n" +
-                        "    i.cc_request,\n" +
-                        "    i.cc_response,\n" +
-                        "    i.cn_action,\n" +
-                        "    i.cv_url_request,\n" +
-                        "    i.cv_url_response,\n" +
-                        "    i.cv_description,\n" +
-                        "    1 as lvl,\n" +
-                        "    i.ck_parent\n" +
-                        "from\n" +
-                        "    s_it.t_interface i\n" +
-                        "where\n" +
-                        "    upper(i.ck_id) = upper(:ck_query)\n" +
-                        "union all\n" +
-                        "select\n" +
-                        "    i.ck_id,\n" +
-                        "    i.ck_d_interface,\n" +
-                        "    i.ck_d_provider,\n" +
-                        "    i.cc_request,\n" +
-                        "    i.cc_response,\n" +
-                        "    i.cn_action,\n" +
-                        "    i.cv_url_request,\n" +
-                        "    i.cv_url_response,\n" +
-                        "    i.cv_description,\n" +
-                        "    oi.lvl + 1 as lvl,\n" +
-                        "    i.ck_parent\n" +
-                        "from\n" +
-                        "    s_it.t_interface i\n" +
-                        "join ot_interface oi on\n" +
-                        "    oi.ck_id = i.ck_parent )\n" +
-                        "select\n" +
-                        "    ck_id,\n" +
-                        "    ck_d_interface,\n" +
-                        "    ck_d_provider,\n" +
-                        "    cc_request,\n" +
-                        "    cc_response,\n" +
-                        "    cn_action,\n" +
-                        "    cv_url_request,\n" +
-                        "    cv_url_response,\n" +
-                        "    cv_description,\n" +
-                        "    ck_parent\n" +
-                        "from\n" +
-                        "    ot_interface\n" +
-                        "order by\n" +
-                        "    lvl desc\n",
+                    "select\n" +
+                    "    i.ck_id,\n" +
+                    "    i.ck_d_interface,\n" +
+                    "    i.ck_d_provider,\n" +
+                    "    i.cc_request,\n" +
+                    "    i.cc_response,\n" +
+                    "    i.cn_action,\n" +
+                    "    i.cv_url_request,\n" +
+                    "    i.cv_url_response,\n" +
+                    "    i.cv_description,\n" +
+                    "    1 as lvl,\n" +
+                    "    i.ck_parent\n" +
+                    "from\n" +
+                    "    s_it.t_interface i\n" +
+                    "where\n" +
+                    "    upper(i.ck_id) = upper(:ck_query)\n" +
+                    "union all\n" +
+                    "select\n" +
+                    "    i.ck_id,\n" +
+                    "    i.ck_d_interface,\n" +
+                    "    i.ck_d_provider,\n" +
+                    "    i.cc_request,\n" +
+                    "    i.cc_response,\n" +
+                    "    i.cn_action,\n" +
+                    "    i.cv_url_request,\n" +
+                    "    i.cv_url_response,\n" +
+                    "    i.cv_description,\n" +
+                    "    oi.lvl + 1 as lvl,\n" +
+                    "    i.ck_parent\n" +
+                    "from\n" +
+                    "    s_it.t_interface i\n" +
+                    "join ot_interface oi on\n" +
+                    "    oi.ck_id = i.ck_parent )\n" +
+                    "select\n" +
+                    "    ck_id,\n" +
+                    "    ck_d_interface,\n" +
+                    "    ck_d_provider,\n" +
+                    "    cc_request,\n" +
+                    "    cc_response,\n" +
+                    "    cn_action,\n" +
+                    "    cv_url_request,\n" +
+                    "    cv_url_response,\n" +
+                    "    cv_description,\n" +
+                    "    ck_parent\n" +
+                    "from\n" +
+                    "    ot_interface\n" +
+                    "order by\n" +
+                    "    lvl desc\n",
                     {
                         ck_query: context.queryName,
                     },
@@ -182,13 +182,13 @@ export default class CoreIntegration extends NullProvider {
                 .then(
                     (res) =>
                         new Promise((resolve, reject) => {
-                            const data = [];
+                            const data: any[] = [];
                             res.stream.on("error", (err) => reject(err));
                             res.stream.on("data", (chunk) => data.push(chunk));
                             res.stream.on("end", () => {
                                 if (data.length) {
                                     const [doc] = data;
-                                    query.queryData.querys = data;
+                                    query.queryData!.querys = data;
                                     query.queryStr = doc.cc_request;
                                     return resolve(query);
                                 }
@@ -232,7 +232,7 @@ export default class CoreIntegration extends NullProvider {
         return query.queryData.querys
             .slice(1)
             .reduce(
-                (current, queryData) =>
+                (current: Promise<IResultSequence>, queryData: any) =>
                     current.then((res) => {
                         if (res.res) {
                             return Promise.resolve(res);
@@ -245,7 +245,7 @@ export default class CoreIntegration extends NullProvider {
                                     queryData.ck_d_interface,
                                 ),
                             },
-                            { ...res.params, ...query.inParams },
+                            {...res.params, ...query.inParams},
                         );
                     }),
                 this.processIntegration(
@@ -260,13 +260,13 @@ export default class CoreIntegration extends NullProvider {
                 ),
             )
             .then(
-                async (res) => {
+                async (res: IResultSequence) => {
                     return res.row
-                        ? { stream: ResultStream([res.row]) }
+                        ? {stream: ResultStream([res.row])}
                         : res.res;
                 },
-                async (err) => {
-                    gateContext.connection.rollbackAndRelease().then(noop);
+                async (err: any) => {
+                    gateContext.connection!.rollbackAndRelease().then(noop);
                     throw err;
                 },
             );
@@ -298,14 +298,14 @@ export default class CoreIntegration extends NullProvider {
         if (gateContext.isDebugEnabled()) {
             gateContext.debug(
                 `step db cc_request sql: ${queryData.cc_request}` +
-                    `\ninParam: ${JSON.stringify(
-                        hiddenSecret(inParams),
-                    )}\noutParam: ${JSON.stringify(
-                        gateContext.query.outParams,
-                    )}`,
+                `\ninParam: ${JSON.stringify(
+                    hiddenSecret(inParams),
+                )}\noutParam: ${JSON.stringify(
+                    gateContext.query.outParams,
+                )}`,
             );
         }
-        let executeRes = await gateContext.connection.executeStmt(
+        let executeRes = await gateContext.connection!.executeStmt(
             queryData.cc_request,
             inParams,
             gateContext.query.outParams,
@@ -327,15 +327,14 @@ export default class CoreIntegration extends NullProvider {
             });
             if (gateContext.isDebugEnabled()) {
                 gateContext.debug(
-                    `step db cc_response sql: ${
-                        queryData.cc_response
+                    `step db cc_response sql: ${queryData.cc_response
                     }\ninParam: ${JSON.stringify(hiddenSecret(responseInParams))}` +
-                        `\noutParam: ${JSON.stringify(
-                            gateContext.query.outParams,
-                        )}`,
+                    `\noutParam: ${JSON.stringify(
+                        gateContext.query.outParams,
+                    )}`,
                 );
             }
-            executeRes = await gateContext.connection.executeStmt(
+            executeRes = await gateContext.connection!.executeStmt(
                 queryData.cc_response,
                 responseInParams,
                 gateContext.query.outParams,
@@ -414,7 +413,7 @@ export default class CoreIntegration extends NullProvider {
         let param: any = {};
         try {
             param = JSON.parse(row.result) || {};
-        } catch (e) {
+        } catch (e: any) {
             gateContext.error(`${row.result}\n${e.message}`, e);
             throw e;
         }
@@ -437,13 +436,13 @@ export default class CoreIntegration extends NullProvider {
                 const headers = Object.assign(
                     method === "GET"
                         ? {
-                              cookie: gateContext.request.headers.cookie,
-                          }
+                            cookie: gateContext.request.headers.cookie,
+                        }
                         : {
-                              cookie: gateContext.request.headers.cookie,
-                              "Content-Length": length,
-                              "Content-Type": "application/json",
-                          },
+                            cookie: gateContext.request.headers.cookie,
+                            "Content-Length": length,
+                            "Content-Type": "application/json",
+                        },
                     isEmpty(param.headers) ? {} : param.headers,
                 );
                 const params: axios.AxiosRequestConfig = {
@@ -463,16 +462,16 @@ export default class CoreIntegration extends NullProvider {
                     params.proxy = this.params.proxy.startsWith("{")
                         ? proxy
                         : {
-                              host: proxy.host,
-                              port: parseInt(proxy.port, 10),
-                              auth: proxy.auth
-                                  ? {
-                                        username: proxyauth[0],
-                                        password: proxyauth[1],
-                                    }
-                                  : undefined,
-                              protocol: proxy.protocol,
-                          };
+                            host: proxy.host,
+                            port: parseInt(proxy.port, 10),
+                            auth: proxy.auth
+                                ? {
+                                    username: proxyauth[0],
+                                    password: proxyauth[1],
+                                }
+                                : undefined,
+                            protocol: proxy.protocol,
+                        };
                 }
                 if (method === "GET") {
                     delete params.data;
@@ -538,6 +537,6 @@ export default class CoreIntegration extends NullProvider {
         return Object.entries(params).reduce((obj, arr) => {
             obj[arr[0]] = isObject(arr[1]) ? JSON.stringify(arr[1]) : arr[1];
             return obj;
-        }, {});
+        }, {} as Record<string, any>);
     }
 }

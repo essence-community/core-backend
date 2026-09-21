@@ -1,15 +1,15 @@
 import BreakException from "@ungate/plugininf/lib/errors/BreakException";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
-import { IHeader } from "@ungate/plugininf/lib/IContext";
+import {IHeader} from "@ungate/plugininf/lib/IContext";
 import IResult from "@ungate/plugininf/lib/IResult";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
-import { safePipe, safeResponsePipe } from "@ungate/plugininf/lib/stream/Util";
-import { isEmpty } from "@ungate/plugininf/lib/util/Util";
+import {safePipe, safeResponsePipe} from "@ungate/plugininf/lib/stream/Util";
+import {isEmpty} from "@ungate/plugininf/lib/util/Util";
 import accepts from "accepts";
 import * as js2xmlparser from "js2xmlparser";
 import JSONStream from "JSONStream";
-import { isArray, isBoolean, isDate, isNumber, isObject } from "lodash";
+import {isArray, isBoolean, isDate, isNumber, isObject} from "lodash";
 import moment from "moment";
 import through from "through";
 import Constants from "../../core/Constants";
@@ -32,9 +32,8 @@ class ResultController {
             function (data) {
                 let resultData = data;
                 if (first) {
-                    resultData = `{"success":${
-                        result.type === "false" ? "false" : "true"
-                    },"data":${data}`;
+                    resultData = `{"success":${result.type === "false" ? "false" : "true"
+                        },"data":${data}`;
                     first = false;
                 }
                 total += 1;
@@ -120,7 +119,7 @@ class ResultController {
                             }
                             return obj;
                         },
-                        { param: [] },
+                        {param: []},
                     ),
                     {
                         declaration: {
@@ -213,11 +212,9 @@ class ResultController {
                 gateContext.response.end(fileData);
                 if (gateContext.isDebugEnabled()) {
                     gateContext.debug(
-                        `Ответ: FileName: ${
-                            data[Constants.FILE_NAME_COLUMN]
-                        }, FileMimeType: ${
-                            data[Constants.FILE_MIME_COLUMN] ||
-                            Constants.FILE_CONTENT_TYPE
+                        `Ответ: FileName: ${data[Constants.FILE_NAME_COLUMN]
+                        }, FileMimeType: ${data[Constants.FILE_MIME_COLUMN] ||
+                        Constants.FILE_CONTENT_TYPE
                         }`,
                     );
                 }
@@ -226,9 +223,8 @@ class ResultController {
                     "DD.MM.YYYY HH:mm:ss",
                 )})`;
                 this.setHeader(gateContext, 200, {
-                    "Content-Disposition": `attachment; filename="${
-                        data[Constants.ERROR_FILE_NAME]
-                    }"`,
+                    "Content-Disposition": `attachment; filename="${data[Constants.ERROR_FILE_NAME]
+                        }"`,
                     "Content-Length": Buffer.byteLength(error),
                     "Content-Type": Constants.ERROR_FILE_MIME,
                 });
@@ -280,8 +276,7 @@ class ResultController {
                 gateContext.response.end(fileData);
                 if (gateContext.isDebugEnabled()) {
                     gateContext.debug(
-                        `Ответ: FileName: ${
-                            data[Constants.FILE_NAME_COLUMN]
+                        `Ответ: FileName: ${data[Constants.FILE_NAME_COLUMN]
                         }, FileMimeType: ${data[Constants.FILE_MIME_COLUMN]}`,
                     );
                 }
@@ -392,7 +387,7 @@ class ResultController {
      */
     public async responseCheck(
         gateContext: RequestContext,
-        res: IResult,
+        res: IResult | null,
         err?: Error | any,
     ) {
         let result = res;
@@ -402,9 +397,8 @@ class ResultController {
         if (result && result.type === "break") {
             gateContext.info(
                 `${gateContext.request.method}(${gateContext.actionName},${gateContext.queryName}` +
-                    `,${gateContext.providerName}) time execute ${
-                        (new Date().getTime() - gateContext.startTime) / 1000
-                    }`,
+                `,${gateContext.providerName}) time execute ${(new Date().getTime() - gateContext.startTime) / 1000
+                }`,
             );
             return;
         }
@@ -421,12 +415,12 @@ class ResultController {
                 data: ResultStream(
                     err
                         ? [
-                              (err as ErrorException).result ||
-                                  ErrorGate.compileErrorResult(
-                                      -1,
-                                      err.message || "",
-                                  ),
-                          ]
+                            (err as ErrorException).result ||
+                            ErrorGate.compileErrorResult(
+                                -1,
+                                err.message || "",
+                            ),
+                        ]
                         : [ErrorGate.JSON_PARSE],
                 ),
                 type: "error",
@@ -450,12 +444,12 @@ class ResultController {
                     data: ResultStream(
                         err
                             ? [
-                                  (errContext as ErrorException).result ||
-                                      ErrorGate.compileErrorResult(
-                                          -1,
-                                          errContext.message || "",
-                                      ),
-                              ]
+                                (errContext as ErrorException).result ||
+                                ErrorGate.compileErrorResult(
+                                    -1,
+                                    errContext.message || "",
+                                ),
+                            ]
                             : [ErrorGate.JSON_PARSE],
                     ),
                     type: "error",
@@ -464,7 +458,7 @@ class ResultController {
         }
         return new Promise<void>((resolve, reject) => {
             switch (
-                result.type // Разбираем по типу ответа
+            result.type // Разбираем по типу ответа
             ) {
                 case "success":
                 case "false": {
@@ -564,7 +558,7 @@ class ResultController {
     }
 
     private xsiType(val: any): any {
-        const result = { type: "", value: null };
+        const result = {type: "", value: null};
         if (isDate(val)) {
             result.type = "xs:dateTime";
             result.value = moment(val).format();
@@ -582,7 +576,7 @@ class ResultController {
                     obj.param.push(types.value);
                     return obj;
                 },
-                { param: [] },
+                {param: []},
             );
         } else if (isObject(val)) {
             result.type = "object";
@@ -608,7 +602,7 @@ class ResultController {
                     }
                     return obj;
                 },
-                { param: [] },
+                {param: []},
             );
         } else {
             result.type = "xs:string";

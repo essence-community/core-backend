@@ -1,6 +1,6 @@
 import IContext from "@ungate/plugininf/lib/IContext";
-import { Grant } from "keycloak-connect";
-import { GrantManager } from "./GrantManager";
+import {Grant} from "keycloak-connect";
+import {GrantManager} from "./GrantManager";
 
 export async function GrantAttacher(
     name: string,
@@ -48,21 +48,21 @@ export async function GrantAttacher(
     }
     return accessToken
         ? grantManager.createGrant(accessToken).then(async (grant: any) => {
-              // tslint:disable:triple-equals
-              if (
-                  gateContext.request.session[`token_bearer_${name}`] !=
-                  (grant as any).__raw
-              ) {
-                  if (grantManager.tokenVerifyUrl) {
-                      await grantManager.validateAccessToken(
-                          grant.access_token,
-                      );
-                  }
-                  gateContext.request.session[`token_bearer_${name}`] = (
-                      grant as any
-                  ).__raw;
-              }
-              return grant as Grant;
-          })
-        : null;
+            // tslint:disable:triple-equals
+            if (
+                gateContext.request.session[`token_bearer_${name}`] !=
+                (grant as any).__raw
+            ) {
+                if (grantManager.tokenVerifyUrl) {
+                    await grantManager.validateAccessToken(
+                        grant.access_token,
+                    );
+                }
+                gateContext.request.session[`token_bearer_${name}`] = (
+                    grant as any
+                ).__raw;
+            }
+            return grant as Grant;
+        })
+        : null as any;
 }

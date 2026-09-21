@@ -1,19 +1,20 @@
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
-import ICCTParams, { IParamsInfo } from "@ungate/plugininf/lib/ICCTParams";
+import ICCTParams, {IParamsInfo} from "@ungate/plugininf/lib/ICCTParams";
 import IContext from "@ungate/plugininf/lib/IContext";
 import IObjectParam from "@ungate/plugininf/lib/IObjectParam";
 import IQuery from "@ungate/plugininf/lib/IQuery";
-import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
+import {IGateQuery} from "@ungate/plugininf/lib/IQuery";
 import ISession from "@ungate/plugininf/lib/ISession";
 import NullSessProvider, {
     IAuthResult,
 } from "@ungate/plugininf/lib/NullSessProvider";
-import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
+import {initParams, isEmpty} from "@ungate/plugininf/lib/util/Util";
 import * as ActiveDirectory from "activedirectory";
-import { uniq } from "lodash";
-import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
-import { ISessProviderParam } from "@ungate/plugininf/lib/NullSessProvider";
+import {uniq} from "lodash";
+import {ISessCtrl} from "@ungate/plugininf/lib/ISessCtrl";
+import {ISessProviderParam} from "@ungate/plugininf/lib/NullSessProvider";
+import {UserModel} from "@ungate/plugininf/lib/entries/UserModel";
 
 const BASIC_PATTERN = "Basic";
 const PASSWORD_PATTERN_NGINX_GSS = "bogus_auth_gss_passwd";
@@ -71,7 +72,7 @@ export default class AdAuth extends NullSessProvider {
                         allownew: "new#",
                         query: "MTGetPageAction",
                         displayField: "cn_action",
-                        valueField: [{ in: "cn_action" }],
+                        valueField: [{in: "cn_action"}],
                         querymode: "remote",
                         queryparam: "cn_action",
                         idproperty: "cn_action",
@@ -121,7 +122,7 @@ export default class AdAuth extends NullSessProvider {
             },
         };
     }
-    public params: IAdAuthParam;
+    public params!: IAdAuthParam;
     private ad: ActiveDirectory;
     constructor(name: string, params: ICCTParams, sessCtrl: ISessCtrl) {
         super(name, params, sessCtrl);
@@ -139,7 +140,7 @@ export default class AdAuth extends NullSessProvider {
             "comment",
             "description",
         ];
-        this.params.adMapUserAttr.forEach(({ inKey }) => {
+        this.params.adMapUserAttr.forEach(({inKey}) => {
             if (!userAttr.includes(inKey)) {
                 userAttr.push(inKey);
             }
@@ -171,11 +172,12 @@ export default class AdAuth extends NullSessProvider {
             gateContext.actionName !== "auth" &&
             gateContext.request.headers.authorization &&
             gateContext.request.headers.authorization.indexOf(BASIC_PATTERN) >
-                -1
+            -1
         ) {
             return new Promise((resolve, reject) => {
+                const header = gateContext.request.headers.authorization || "";
                 const basic = Buffer.from(
-                    gateContext.request.headers.authorization.split(" ")[1],
+                    header.split(" ")[1],
                     "base64",
                 ).toString("ascii");
                 const [username, password] = basic.split(":");
@@ -187,7 +189,7 @@ export default class AdAuth extends NullSessProvider {
                     this.initSession(gateContext, resolve, reject, username);
                     return;
                 }
-                this.ad.authenticate(username, password, (err, isAuth) => {
+                this.ad.authenticate(username, password, (err: any, isAuth: any) => {
                     if (err || !isAuth) {
                         this.log.warn(
                             err ? err.message : "Invalid password or login",
@@ -215,7 +217,7 @@ export default class AdAuth extends NullSessProvider {
             this.ad.authenticate(
                 query.inParams.cv_login,
                 query.inParams.cv_password,
-                (err, isAuth) => {
+                (err: any, isAuth: any) => {
                     if (err || !isAuth) {
                         this.log.error(
                             err ? err.message : "Invalid password or login",
@@ -232,7 +234,7 @@ export default class AdAuth extends NullSessProvider {
                     );
                 },
             );
-        }).then((user: IObjectParam) => ({
+        }).then((user: any) => ({
             idUser: user.ck_id,
             dataUser: user,
         }));
@@ -243,29 +245,28 @@ export default class AdAuth extends NullSessProvider {
      * @param reload
      */
     public async init(reload?: boolean): Promise<void> {
-        const rows = [];
-        this.params.adMapGroups.forEach(({ group }) => {
+        const rows: Promise<void>[] = [];
+        this.params.adMapGroups.forEach(({group}) => {
             rows.push(
                 new Promise<void>((resolve, reject) => {
                     this.log.trace("Cache users...");
-                    this.ad.getUsersForGroup(group, (err, users) => {
+                    this.ad.getUsersForGroup(group, (err: any, users: any) => {
                         if (err) {
                             reject(err);
                             return;
                         }
                         this.log.trace(
-                            `Find users ${
-                                users ? JSON.stringify(users) : users
+                            `Find users ${users ? JSON.stringify(users) : users
                             }`,
                         );
                         if (!users || users.length) {
                             return;
                         }
-                        const addUsers = [];
+                        const addUsers: Promise<void>[] = [];
 
-                        users.forEach((user) => {
+                        users.forEach((user: any) => {
                             const data = this.params.adMapUserAttr.reduce(
-                                (obj, { inKey, outKey }) => ({
+                                (obj, {inKey, outKey}) => ({
                                     ...obj,
                                     [outKey]: user[inKey],
                                 }),
@@ -323,7 +324,7 @@ export default class AdAuth extends NullSessProvider {
         username: string,
         isUserData: boolean = false,
     ): void {
-        this.ad.findUser(username, (err, user) => {
+        this.ad.findUser(username, (err: any, user: any) => {
             if (err || !user) {
                 this.log.error(
                     err ? err.message : `Not found user ${username}`,
@@ -333,23 +334,20 @@ export default class AdAuth extends NullSessProvider {
                 return;
             }
             this.sessCtrl
-                .getUserDb()
-                .findOne(
-                    {
-                        $and: [
-                            {
-                                ck_d_provider: this.name,
-                            },
-                            {
-                                cv_login: username,
-                            },
-                        ],
+                .getUserStore()
+                .findOne({
+                    where: {
+                        provider: this.name,
+                        login: username,
                     },
-                    true,
-                )
-                .then(async (userData) => {
+                })
+                .then(async (userData: UserModel | null) => {
+                    if (!userData) {
+                        reject(new ErrorException(ErrorGate.AUTH_UNAUTHORIZED));
+                        return;
+                    }
                     const data = this.params.adMapUserAttr.reduce(
-                        (obj, { inKey, outKey }) => ({
+                        (obj, {inKey, outKey}) => ({
                             ...obj,
                             [outKey]: user[inKey],
                         }),
@@ -367,7 +365,7 @@ export default class AdAuth extends NullSessProvider {
                         await this.sessCtrl.addUser(
                             data.ck_id,
                             this.name,
-                            data,
+                            data as any,
                             user.sAMAccountName,
                         );
                     }
@@ -377,7 +375,7 @@ export default class AdAuth extends NullSessProvider {
                     return this.createSession({
                         context,
                         idUser: data.ck_id,
-                        userData: data,
+                        userData: data as any,
                     })
                         .then((res) => this.sessCtrl.loadSession(res.session))
                         .then((sess) => resolve(sess));
@@ -397,14 +395,14 @@ export default class AdAuth extends NullSessProvider {
     private getActionUser(user: any, actions?: number[]) {
         return uniq(
             this.params.adMapGroups.reduce(
-                (arr, { group, action }) =>
+                (arr, {group, action}) =>
                     user.isMemberOf(group)
                         ? [
-                              ...arr,
-                              typeof action === "string"
-                                  ? parseInt(action.replace("new#", ""), 10)
-                                  : action,
-                          ]
+                            ...(arr || []),
+                            typeof action === "string"
+                                ? parseInt(action.replace("new#", ""), 10)
+                                : action,
+                        ]
                         : arr,
                 actions,
             ),

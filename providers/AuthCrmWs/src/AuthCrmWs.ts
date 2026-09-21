@@ -2,17 +2,17 @@ import CrmWsCaller from "@ungate/plugininf/lib/caller/CrmWsCaller";
 import JsonGateCaller from "@ungate/plugininf/lib/caller/JsonGateCaller";
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
-import ICCTParams, { IParamsInfo } from "@ungate/plugininf/lib/ICCTParams";
+import ICCTParams, {IParamsInfo} from "@ungate/plugininf/lib/ICCTParams";
 import IContext from "@ungate/plugininf/lib/IContext";
-import IQuery, { IGateQuery } from "@ungate/plugininf/lib/IQuery";
-import { IResultProvider } from "@ungate/plugininf/lib/IResult";
+import IQuery, {IGateQuery} from "@ungate/plugininf/lib/IQuery";
+import {IResultProvider} from "@ungate/plugininf/lib/IResult";
 import NullSessProvider, {
     IAuthResult,
 } from "@ungate/plugininf/lib/NullSessProvider";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
-import { ReadStreamToArray } from "@ungate/plugininf/lib/stream/Util";
-import { initParams, isEmpty } from "@ungate/plugininf/lib/util/Util";
-import { ISessCtrl } from "@ungate/plugininf/lib/ISessCtrl";
+import {ReadStreamToArray} from "@ungate/plugininf/lib/stream/Util";
+import {initParams, isEmpty} from "@ungate/plugininf/lib/util/Util";
+import {ISessCtrl} from "@ungate/plugininf/lib/ISessCtrl";
 
 export default class AuthCrmWs extends NullSessProvider {
     public static getParamsInfo(): IParamsInfo {
@@ -98,8 +98,7 @@ export default class AuthCrmWs extends NullSessProvider {
                 params,
             );
             this.log.trace(
-                `Ответ ${this.params.queryAuth} ${
-                    result ? JSON.stringify(result) : result
+                `Ответ ${this.params.queryAuth} ${result ? JSON.stringify(result) : result
                 }`,
             );
             if (!result || !result.length) {
@@ -108,7 +107,7 @@ export default class AuthCrmWs extends NullSessProvider {
             return {
                 idUser: result[0].cn_user,
             };
-        } catch (e) {
+        } catch (e: any) {
             this.log.error(
                 `Ошибка вызова внешнего сервиса авторизации ${e.message}`,
                 e,
@@ -120,13 +119,13 @@ export default class AuthCrmWs extends NullSessProvider {
         context: IContext,
         query: IGateQuery,
     ): Promise<IResultProvider> {
-        return this.handlers[query.queryStr](context, query);
+        return this.handlers[query.queryStr as keyof typeof this.handlers](context, query as any);
     }
     public processDml(
         context: IContext,
         query: IGateQuery,
     ): Promise<IResultProvider> {
-        return this.handlers[query.queryStr](context, query);
+        return this.handlers[query.queryStr as keyof typeof this.handlers](context, query as any);
     }
 
     public handlers = {
@@ -137,7 +136,7 @@ export default class AuthCrmWs extends NullSessProvider {
          */
         getCrmUrl: async (gateContext: IContext): Promise<IResultProvider> => {
             const params = {
-                cn_user: gateContext.session.idUser,
+                cn_user: gateContext.session?.idUser || "",
             };
             const res = await this.crmWSCaller.getData(
                 this.params.queryToken,
@@ -163,7 +162,7 @@ export default class AuthCrmWs extends NullSessProvider {
                         cv_error: null,
                         cv_url: (this.params.urlCrmTemplate || "").replace(
                             /{([^}]+)}/g,
-                            (req, value) => obj[value],
+                            (req: any, value: any) => obj[value],
                         ),
                     },
                 ]),
@@ -196,7 +195,7 @@ export default class AuthCrmWs extends NullSessProvider {
             }
             const json = JSON.parse(gateContext.params.json || "{}");
             const params = {
-                cn_user: gateContext.session.idUser,
+                cn_user: gateContext.session?.idUser || "",
             };
             const jsonCaller = await this.nsiJsonGateCaller.callGet(
                 gateContext,
@@ -204,8 +203,8 @@ export default class AuthCrmWs extends NullSessProvider {
                 isTable ? "GetUrlDocReqCreate" : "GetUrlDocReqList",
                 isTable
                     ? {
-                          nm_table: json.filter.cv_table,
-                      }
+                        nm_table: json.filter.cv_table,
+                    }
                     : undefined,
             );
             const respData = await ReadStreamToArray(jsonCaller.stream);
@@ -283,10 +282,9 @@ export default class AuthCrmWs extends NullSessProvider {
         const params = {
             cn_system: this.params.cnSystem,
         };
-        const users = {};
+        const users: Record<string, any> = {};
         this.log.trace(
-            `Вызов сервиса ${
-                this.params.queryMetaUsers
+            `Вызов сервиса ${this.params.queryMetaUsers
             }, параметры ${JSON.stringify(params)}`,
         );
         const usersArr = await this.crmWSCaller.getData(
@@ -295,8 +293,7 @@ export default class AuthCrmWs extends NullSessProvider {
         );
         const rows = [];
         this.log.trace(
-            `Ответ ${this.params.queryMetaUsers} ${
-                usersArr ? JSON.stringify(usersArr) : usersArr
+            `Ответ ${this.params.queryMetaUsers} ${usersArr ? JSON.stringify(usersArr) : usersArr
             }`,
         );
         if (!usersArr || !usersArr.length) {
@@ -306,7 +303,7 @@ export default class AuthCrmWs extends NullSessProvider {
             );
         }
         usersArr.forEach((item) => {
-            users[item.ck_id] = {
+            users[item.ck_id as string] = {
                 ...item,
                 ca_actions: [],
                 ca_department: [],
@@ -316,8 +313,7 @@ export default class AuthCrmWs extends NullSessProvider {
 
         // загружаем экшены пользователей
         this.log.trace(
-            `Вызов сервиса ${
-                this.params.queryUsersActions
+            `Вызов сервиса ${this.params.queryUsersActions
             }, параметры ${JSON.stringify(params)}`,
         );
         rows.push(
@@ -325,13 +321,12 @@ export default class AuthCrmWs extends NullSessProvider {
                 .getData(this.params.queryUsersActions, params)
                 .then((res) => {
                     this.log.trace(
-                        `Ответ ${this.params.queryUsersActions} ${
-                            res ? JSON.stringify(res) : res
+                        `Ответ ${this.params.queryUsersActions} ${res ? JSON.stringify(res) : res
                         }`,
                     );
                     if (res && res.length) {
                         res.forEach((item) => {
-                            item.cv_actions.split(",").forEach((cnAction) => {
+                            item.cv_actions.split(",").forEach((cnAction: any) => {
                                 if (users[item.ck_user]) {
                                     users[item.ck_user].ca_actions.push(
                                         parseInt(cnAction, 10),
@@ -349,8 +344,7 @@ export default class AuthCrmWs extends NullSessProvider {
         );
         // загружаем департаменты пользователей
         this.log.trace(
-            `Вызов сервиса ${
-                this.params.queryUsersDepartments
+            `Вызов сервиса ${this.params.queryUsersDepartments
             }, параметры ${JSON.stringify(params)}`,
         );
         rows.push(
@@ -358,15 +352,14 @@ export default class AuthCrmWs extends NullSessProvider {
                 .getData(this.params.queryUsersDepartments, params)
                 .then((res) => {
                     this.log.trace(
-                        `Ответ ${this.params.queryUsersDepartments} ${
-                            res ? JSON.stringify(res) : res
+                        `Ответ ${this.params.queryUsersDepartments} ${res ? JSON.stringify(res) : res
                         }`,
                     );
                     if (res && res.length) {
                         res.forEach((item) => {
                             item.cv_departments
                                 .split(",")
-                                .forEach((ckDepartment) => {
+                                .forEach((ckDepartment: any) => {
                                     if (users[item.ck_user]) {
                                         users[item.ck_user].ca_department.push(
                                             parseInt(ckDepartment, 10),

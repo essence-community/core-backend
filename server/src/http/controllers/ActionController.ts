@@ -1,17 +1,18 @@
 import ErrorException from "@ungate/plugininf/lib/errors/ErrorException";
 import ErrorGate from "@ungate/plugininf/lib/errors/ErrorGate";
-import IContext, { IFormData } from "@ungate/plugininf/lib/IContext";
+import IContext, {IFormData} from "@ungate/plugininf/lib/IContext";
 import IProvider from "@ungate/plugininf/lib/IProvider";
-import { IGateQuery } from "@ungate/plugininf/lib/IQuery";
+import {IGateQuery} from "@ungate/plugininf/lib/IQuery";
 import IResult from "@ungate/plugininf/lib/IResult";
 import NullSessProvider from "@ungate/plugininf/lib/NullSessProvider";
 import ResultStream from "@ungate/plugininf/lib/stream/ResultStream";
-import { ReadStreamToArray } from "@ungate/plugininf/lib/stream/Util";
-import { hiddenSecret, isEmpty } from "@ungate/plugininf/lib/util/Util";
+import {ReadStreamToArray} from "@ungate/plugininf/lib/stream/Util";
+import {hiddenSecret, isEmpty} from "@ungate/plugininf/lib/util/Util";
 import * as fs from "fs";
-import { forEach, noop } from "lodash";
+import {forEach, noop} from "lodash";
 import Constants from "../../core/Constants";
-import PluginController, { IPlugins } from "./PluginController";
+import PluginController, {IPlugins} from "./PluginController";
+import {IUserData} from "@ungate/plugininf/lib/ISession";
 
 interface IActionOptions {
     gateContext: IContext;
@@ -46,7 +47,7 @@ class ActionController {
         query,
     }: IActionOptions): Promise<IResult> {
         let session;
-        if (gateContext.request.method.toUpperCase() !== "POST") {
+        if (gateContext.request.method?.toUpperCase() !== "POST") {
             throw new ErrorException(ErrorGate.REQUIRED_POST);
         }
         const resPlugin = await PluginController.applyPluginBeforeSession(
@@ -59,8 +60,8 @@ class ActionController {
                     context: gateContext,
                     idUser: resPlugin.idUser,
                     nameProvider: `plugin_${resPlugin.namePlugin}`,
-                    userData: resPlugin.dataUser,
-                    sessionData: resPlugin.sessionData,
+                    userData: resPlugin.dataUser as IUserData,
+                    sessionData: resPlugin.sessionData as Record<string, any>,
                 });
         }
         if (!session) {
@@ -73,7 +74,7 @@ class ActionController {
                 try {
                     await conn.commit();
                     await conn.release();
-                } catch (e) {
+                } catch (e: any) {
                     conn.release().then(noop, noop);
                     gateContext.error(e);
                 }
@@ -126,8 +127,8 @@ class ActionController {
                         gateContext.metaData = isEmpty(data.metaData)
                             ? {}
                             : {
-                                  columnsBc: data.metaData,
-                              };
+                                columnsBc: data.metaData,
+                            };
                     }
                     resolve({
                         type: data.type || "success",
@@ -162,8 +163,8 @@ class ActionController {
                         gateContext.metaData = isEmpty(data.metaData)
                             ? {}
                             : {
-                                  columnsBc: data.metaData,
-                              };
+                                columnsBc: data.metaData,
+                            };
                     }
                     resolve({
                         type: data.type || "success",
@@ -209,7 +210,7 @@ class ActionController {
         query,
     }: IActionOptions): Promise<IResult> {
         gateContext.trace("Process Upload");
-        const result = [];
+        const result: any[] = [];
         if (
             typeof gateContext.request.body !== "object" ||
             !(gateContext.request.body as IFormData).files
@@ -238,7 +239,7 @@ class ActionController {
                                     .then((data) =>
                                         ReadStreamToArray(data.stream),
                                     )
-                                    .then(async (res) => arr.concat(res));
+                                    .then(async (res: any) => arr.concat(res));
                             }),
                         Promise.resolve([]),
                     ),
@@ -260,7 +261,7 @@ class ActionController {
             .catch((err) => {
                 gateContext.error(
                     `${gateContext.queryName},` +
-                        ` Upload.processDml(${query.queryStr}): ${err.message}`,
+                    ` Upload.processDml(${query.queryStr}): ${err.message}`,
                     err,
                 );
                 throw err;
@@ -276,12 +277,12 @@ class ActionController {
             provider
                 .processSql(gateContext, query)
                 .then((data) => {
-                    resolve({ type: data.type || "file", data: data.stream });
+                    resolve({type: data.type || "file", data: data.stream});
                 })
                 .catch((err) => {
                     gateContext.error(
                         `${gateContext.queryName},` +
-                            ` GetFile.handlerGetFile(${query.queryStr}): ${err.message}`,
+                        ` GetFile.handlerGetFile(${query.queryStr}): ${err.message}`,
                         err,
                     );
                     return reject(err);
