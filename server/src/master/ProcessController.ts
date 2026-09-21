@@ -184,17 +184,24 @@ class BuilderProcessController {
         if (removeTempDb && fs.existsSync(Constants.TEMP_DB)) {
             deleteFolderRecursive(Constants.TEMP_DB);
             await Property.reset();
+            await Property.getContext(true);
+            await Property.getProviders(true);
+            await Property.getPlugins(true);
+            await Property.getQuery(true);
+            await Property.getServers(true);
+            await Property.getEvents(true);
+            await Property.getSchedulers(true);
         }
         fs.mkdirSync(Constants.TEMP_DB, {
             recursive: true,
         });
-        await Property.getContext(true);
-        await Property.getProviders(true);
-        await Property.getPlugins(true);
-        await Property.getQuery(true);
-        await Property.getServers(true);
-        await Property.getEvents(true);
-        await Property.getSchedulers(true);
+        await Property.getContext();
+        await Property.getProviders();
+        await Property.getPlugins();
+        await Property.getQuery();
+        await Property.getServers();
+        await Property.getEvents();
+        await Property.getSchedulers();
         initNode(
             this.nodes,
             "http",

@@ -3,6 +3,6 @@ import Logger from "@ungate/plugininf/lib/Logger";
 
 const logger = Logger.getLogger("master");
 
-ProcessController.init().then(() => {
+ProcessController.init(true).then(() => {
     logger.info("Master initialized");
 });
