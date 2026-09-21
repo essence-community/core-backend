@@ -195,6 +195,7 @@ class BuilderProcessController {
         fs.mkdirSync(Constants.TEMP_DB, {
             recursive: true,
         });
+        await Property.reset();
         await Property.getContext();
         await Property.getProviders();
         await Property.getPlugins();
