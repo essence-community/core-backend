@@ -68,7 +68,7 @@ export async function loadProperty<T extends ObjectLiteral>(
                 ],
                 prepareDatabase: (db) => {
                     db.pragma("journal_mode = WAL");
-                    db.pragma("busy_timeout = 2000");
+                    db.pragma("busy_timeout = 5000");
                 },
             });
             await localDataStore.initialize();
