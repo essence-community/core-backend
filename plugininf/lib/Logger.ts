@@ -52,6 +52,7 @@ const pathConf =
     );
 
 let root: pino.Logger = pino({level: "info"});
+let inited = false;
 const children = new Map<string, pino.Logger>();
 
 function toPinoLevel(lvl: string): pino.LevelWithSilent {
@@ -211,6 +212,7 @@ function applyConfig(json: any): void {
         },
         streams.length ? pino.multistream(streams) : process.stdout,
     );
+    inited = true;
 }
 
 class Logger {
@@ -226,6 +228,9 @@ class Logger {
             applyConfig(JSON.parse(fs.readFileSync(pathConf, "utf8")));
         } catch (err) {
             console.error("Ошибка инициализации настроек логера", err);
+            if (inited) {
+                return;
+            }
             applyConfig({
                 handlers: {console: {}},
                 loggers: {root: {level: "INFO", handlers: ["console"]}},
