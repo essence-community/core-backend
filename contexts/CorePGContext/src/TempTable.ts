@@ -593,7 +593,7 @@ export class TempTable {
             database: path.join(Constants.TEMP_DB, `temp_${this.name}.db`),
             synchronize: true,
             logging: true,
-            logger: new TypeOrmLogger(`${this.name}.TempTable`),
+            logger: new TypeOrmLogger(`TempTable.${this.name}`),
             entities: [
                 PageModel,
                 QueryModel,

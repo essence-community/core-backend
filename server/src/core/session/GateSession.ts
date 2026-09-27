@@ -80,7 +80,7 @@ export class GateSession implements ISessCtrl {
                     ? JSON.parse(this.params.paramSession.typeorm.typeOrmExtra)
                     : {}),
                 logging: true,
-                logger: new TypeOrmLogger(`${this.name}:session_store`),
+                logger: new TypeOrmLogger(`SessionStore.${this.name}`),
                 entities: [
                     CacheModel,
                     UserModel,
@@ -103,7 +103,7 @@ export class GateSession implements ISessCtrl {
                 database: path.join(Constants.TEMP_DB, `session_${this.name}.sqlite`),
                 logging: true,
                 synchronize: true,
-                logger: new TypeOrmLogger(`${this.name}:session_store`),
+                logger: new TypeOrmLogger(`SessionStore.${this.name}`),
                 entities: [
                     CacheModel,
                     UserModel,

@@ -4,6 +4,7 @@ import * as util from "util";
 import pino from "pino";
 import {createStream as createRotatingStream} from "rotating-file-stream";
 import IGlobalObject from "./IGlobalObject";
+import {debounce} from "./util/Util";
 
 export interface IRufusLogger {
     _handlers: any[];
@@ -75,10 +76,25 @@ function wrap(name: string): IRufusLogger {
     const get = () => {
         let child = children.get(name);
         if (!child) {
-            child = name ? root.child({name}) : root;
-            children.set(name, child);
+            if (name.indexOf(".") !== -1) {
+                const parents = name.split(".");
+                let key = "";
+                for (const part of parents) {
+                    let logger = children.get(part);
+                    if (!logger) {
+                        const parent = key ? children.get(key.substring(1)) || root : root;
+                        key += "." + part;
+                        logger = parent === root ? parent.child({name: part}) : parent.child({fullName: key.substring(1)});
+                        children.set(key.substring(1), logger);
+                    }
+                }
+                child = children.get(name);
+            } else {
+                child = name ? root.child({name}) : root;
+                children.set(name, child);
+            }
         }
-        return child;
+        return child || root;
     };
     const self: IRufusLogger = {
         _handlers: [],
@@ -184,7 +200,7 @@ function applyConfig(json: any): void {
         .filter(Boolean)
         .flat()
         .map((handler) => ({
-            level: toPinoLevel(handler.level || "info") as pino.Level,
+            level: toPinoLevel(handler.level || rootCfg.level || "trace") as pino.Level,
             stream: openStream(handler),
         }));
     children.clear();
@@ -227,7 +243,7 @@ class Logger {
 }
 
 if (fs.existsSync(pathConf)) {
-    fs.watch(pathConf, () => Logger.loadConfig());
+    fs.watch(pathConf, debounce(() => Logger.loadConfig(), 1000));
 }
 Logger.loadConfig();
 Logger.getLogger("Logger").info("Init Logger");

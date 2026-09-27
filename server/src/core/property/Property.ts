@@ -53,7 +53,7 @@ export async function loadProperty<T extends ObjectLiteral>(
                 database: path.join(Constants.TEMP_DB, `property_gate.sqlite`),
                 logging: true,
                 synchronize: true,
-                logger: new TypeOrmLogger(`Property:config_store`),
+                logger: new TypeOrmLogger(`Property.ConfigStore`),
                 entities: [
                     ContextModel,
                     ProviderModel,

@@ -1,10 +1,10 @@
-import { TypeOrmLogger } from "../db/TypeOrmLogger";
-import { IAuditServiceParam } from "./AuditService.types";
-import { DataSource } from "typeorm";
+import {TypeOrmLogger} from "../db/TypeOrmLogger";
+import {IAuditServiceParam} from "./AuditService.types";
+import {DataSource} from "typeorm";
 import IContext from "../IContext";
-import { LogModel } from "./entries/LogModel";
-import Logger, { IRufusLogger } from "../Logger";
-import { hiddenSecret } from "../util/Util";
+import {LogModel} from "./entries/LogModel";
+import Logger, {IRufusLogger} from "../Logger";
+import {hiddenSecret} from "../util/Util";
 
 export class AuditService {
     private params: IAuditServiceParam;
@@ -27,7 +27,7 @@ export class AuditService {
                 ? JSON.parse(this.params.typeOrmExtra)
                 : {}),
             logging: true,
-            logger: new TypeOrmLogger(`Audit:${this.name}`),
+            logger: new TypeOrmLogger(`Audit.${this.name}`),
             entities: [LogModel],
         });
         this.connection

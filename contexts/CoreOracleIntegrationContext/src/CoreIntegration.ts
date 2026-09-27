@@ -62,7 +62,7 @@ export default class CoreOracleIntegration extends NullContext {
                 database: path.join(Constants.TEMP_DB, `temp_${this.name}.db`),
                 synchronize: true,
                 logging: true,
-                logger: new TypeOrmLogger(`${this.name}.TempTable`),
+                logger: new TypeOrmLogger(`TempTable.${this.name}`),
                 entities: [InterfaceModel],
                 prepareDatabase: (db) => {
                     db.pragma("journal_mode = WAL");
