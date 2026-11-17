@@ -52,6 +52,7 @@ process.on("unhandledRejection", (reason, promise) => {
 
 process.on("uncaughtException", (err, origin) => {
     logger.error("Uncaught Exception at: %s\nreason: %s", err, origin);
+    console.error(err, origin);
     process.exit(1);
 });
 const schedulersNode = new SchedulersNode();

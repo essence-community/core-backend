@@ -1,5 +1,5 @@
 import Logger from "@ungate/plugininf/lib/Logger";
-import { ISenderOptions } from "@ungate/plugininf/lib/util/ProcessSender";
+import {ISenderOptions} from "@ungate/plugininf/lib/util/ProcessSender";
 import cluster from "cluster";
 import Constants from "../core/Constants";
 const logger = Logger.getLogger("Http");
@@ -42,6 +42,7 @@ process.on("uncaughtException", (err, origin) => {
         err,
         origin,
     );
+    console.error(err, origin);
     process.exit(1);
 });
 

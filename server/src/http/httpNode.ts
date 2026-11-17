@@ -138,6 +138,7 @@ server.start().then(
         if (err) {
             log.error(`HTTP Server fail start\n${err.message}`, err);
         }
+        console.error(err);
         process.exit(1);
     },
 );
